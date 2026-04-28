@@ -58,6 +58,20 @@ export type VarianteGenomica = {
   relevancia: "alta" | "media" | "baixa";
 };
 
+export type TipoTarefa = "suplemento" | "medicacao" | "analise";
+
+export type TarefaPlano = {
+  id: string;
+  tipo: TipoTarefa;
+  titulo: string;
+  detalhe: string;
+  marcadorId?: string;
+  criadaEm: string; // ISO
+  prazo?: string; // ISO ou descritivo
+  feita: boolean;
+  feitaEm?: string;
+};
+
 export type Utente = {
   id: string;
   nome: string;
@@ -71,6 +85,7 @@ export type Utente = {
   alertas: Alerta[];
   prescricoes: Prescricao[];
   genomica: VarianteGenomica[];
+  plano_tarefas: TarefaPlano[];
 };
 
 // Deterministic pseudo-random
