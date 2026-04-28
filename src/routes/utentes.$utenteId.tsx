@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { utente, type Categoria } from "@/data/mock-utente";
+import { utente, type Categoria, type Marcador, type TipoTarefa } from "@/data/mock-utente";
 import { PatientHeader } from "@/components/dashboard/PatientHeader";
 import { MarkerList } from "@/components/dashboard/MarkerList";
 import { MarkerDetailPanel } from "@/components/dashboard/MarkerDetailPanel";
 import { GenomicaPanel } from "@/components/dashboard/GenomicaPanel";
 import { PrescricoesPanel } from "@/components/dashboard/PrescricoesPanel";
+import { PlanoPanel } from "@/components/dashboard/PlanoPanel";
 
 export const Route = createFileRoute("/utentes/$utenteId")({
   head: ({ params }) => ({
@@ -31,20 +32,29 @@ export const Route = createFileRoute("/utentes/$utenteId")({
   ),
 });
 
-const tabs: { id: Categoria; label: string }[] = [
+type Tab = Categoria | "plano";
+const tabs: { id: Tab; label: string }[] = [
   { id: "analises", label: "Análises" },
   { id: "composicao", label: "Composição" },
   { id: "wearable", label: "Wearable" },
   { id: "genomica", label: "Genómica" },
   { id: "prescricoes", label: "Prescrições" },
+  { id: "plano", label: "Plano" },
 ];
 
 function DashboardUtente() {
-  const [activeTab, setActiveTab] = useState<Categoria>("analises");
+  const [activeTab, setActiveTab] = useState<Tab>("analises");
   const [selectedId, setSelectedId] = useState<string>("ldl");
+  const [planoPrefill, setPlanoPrefill] = useState<{
+    tipo: TipoTarefa;
+    marcador?: Marcador;
+  } | null>(null);
 
   const marcadoresFiltrados = useMemo(
-    () => utente.marcadores.filter((m) => m.categoria === activeTab),
+    () =>
+      activeTab === "plano" || activeTab === "genomica" || activeTab === "prescricoes"
+        ? []
+        : utente.marcadores.filter((m) => m.categoria === (activeTab as Categoria)),
     [activeTab],
   );
 
@@ -52,13 +62,18 @@ function DashboardUtente() {
     utente.marcadores.find((m) => m.id === selectedId) ?? marcadoresFiltrados[0];
 
   // ao mudar de tab, se o seleccionado não pertence à nova categoria, escolher o primeiro
-  function handleTab(id: Categoria) {
+  function handleTab(id: Tab) {
     setActiveTab(id);
-    if (id === "genomica" || id === "prescricoes") return;
-    const lista = utente.marcadores.filter((m) => m.categoria === id);
+    if (id === "genomica" || id === "prescricoes" || id === "plano") return;
+    const lista = utente.marcadores.filter((m) => m.categoria === (id as Categoria));
     if (!lista.find((m) => m.id === selectedId) && lista[0]) {
       setSelectedId(lista[0].id);
     }
+  }
+
+  function handlePrescrever(tipo: TipoTarefa, marcador: Marcador) {
+    setPlanoPrefill({ tipo, marcador });
+    setActiveTab("plano");
   }
 
   return (
@@ -102,7 +117,13 @@ function DashboardUtente() {
 
       {/* Body */}
       <main className="mx-auto max-w-[1440px] px-8 py-8">
-        {activeTab === "genomica" ? (
+        {activeTab === "plano" ? (
+          <PlanoPanel
+            utente={utente}
+            initialPrefill={planoPrefill}
+            onConsumePrefill={() => setPlanoPrefill(null)}
+          />
+        ) : activeTab === "genomica" ? (
           <GenomicaPanel utente={utente} />
         ) : activeTab === "prescricoes" ? (
           <PrescricoesPanel utente={utente} />
@@ -124,7 +145,14 @@ function DashboardUtente() {
             </aside>
 
             {/* Detail */}
-            <section>{selecionado && <MarkerDetailPanel marcador={selecionado} />}</section>
+            <section>
+              {selecionado && (
+                <MarkerDetailPanel
+                  marcador={selecionado}
+                  onPrescrever={(tipo) => handlePrescrever(tipo, selecionado)}
+                />
+              )}
+            </section>
           </div>
         )}
       </main>
