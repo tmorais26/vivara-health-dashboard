@@ -518,6 +518,60 @@ const genomica: VarianteGenomica[] = [
   { gene: "CYP1A2", variante: "*1F/*1F", impacto: "Metabolizadora rápida de cafeína", relevancia: "baixa" },
 ];
 
+const plano_tarefas: TarefaPlano[] = [
+  {
+    id: "t1",
+    tipo: "suplemento",
+    titulo: "Vitamina D3 5000 UI + K2",
+    detalhe: "1 cápsula ao pequeno-almoço, com gordura. Substitui a dose anterior de 4000 UI.",
+    marcadorId: "vitd",
+    criadaEm: "2026-03-12",
+    prazo: "Diário, 8 semanas",
+    feita: false,
+  },
+  {
+    id: "t2",
+    tipo: "suplemento",
+    titulo: "Berberina 500 mg",
+    detalhe: "1 cápsula antes do almoço e do jantar. Para apoio do perfil lipídico.",
+    marcadorId: "ldl",
+    criadaEm: "2026-03-12",
+    prazo: "Diário, até reavaliação",
+    feita: true,
+    feitaEm: "2026-03-14",
+  },
+  {
+    id: "t3",
+    tipo: "analise",
+    titulo: "Repetir painel lipídico completo",
+    detalhe: "Inclui ApoB e Lp(a). Jejum de 12h. Trazer resultado antes da próxima consulta.",
+    marcadorId: "ldl",
+    criadaEm: "2026-03-12",
+    prazo: "Até 15 Maio 2026",
+    feita: false,
+  },
+  {
+    id: "t4",
+    tipo: "analise",
+    titulo: "Repetir 25-OH Vitamina D",
+    detalhe: "Após 8 semanas de suplementação ajustada.",
+    marcadorId: "vitd",
+    criadaEm: "2026-03-12",
+    prazo: "Até 8 Junho 2026",
+    feita: false,
+  },
+  {
+    id: "t5",
+    tipo: "medicacao",
+    titulo: "Ezetimibe 10 mg",
+    detalhe: "1 comprimido ao deitar. Iniciar apenas se LDL >150 na próxima colheita.",
+    marcadorId: "ldl",
+    criadaEm: "2026-03-12",
+    prazo: "Condicional",
+    feita: false,
+  },
+];
+
 export const utente: Utente = {
   id: "maria-antunes",
   nome: "Maria Antunes",
@@ -531,6 +585,7 @@ export const utente: Utente = {
   alertas,
   prescricoes,
   genomica,
+  plano_tarefas,
 };
 
 // Helpers
