@@ -3,8 +3,9 @@ import {
   formatarData,
   formatarValor,
   type Marcador,
+  type TipoTarefa,
 } from "@/data/mock-utente";
-import { Bell, Pencil } from "lucide-react";
+import { Bell, FlaskConical, Pencil, Pill } from "lucide-react";
 import { LongitudinalChart } from "./LongitudinalChart";
 import { StateTag } from "./StateTag";
 
@@ -16,7 +17,13 @@ const categoriaLabel: Record<string, string> = {
   prescricoes: "Prescrições",
 };
 
-export function MarkerDetailPanel({ marcador }: { marcador: Marcador }) {
+export function MarkerDetailPanel({
+  marcador,
+  onPrescrever,
+}: {
+  marcador: Marcador;
+  onPrescrever?: (tipo: TipoTarefa) => void;
+}) {
   const estado = calcularEstado(marcador);
   const s = marcador.serie;
   const ultimo = s[s.length - 1];
@@ -61,6 +68,26 @@ export function MarkerDetailPanel({ marcador }: { marcador: Marcador }) {
             </span>
             <span className="text-sm text-muted-foreground">{marcador.unidade}</span>
           </div>
+          {onPrescrever && (
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => onPrescrever("suplemento")}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+              >
+                <Pill className="h-3.5 w-3.5" />
+                Prescrever ação
+              </button>
+              <button
+                type="button"
+                onClick={() => onPrescrever("analise")}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+              >
+                <FlaskConical className="h-3.5 w-3.5" />
+                Pedir reanálise
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
