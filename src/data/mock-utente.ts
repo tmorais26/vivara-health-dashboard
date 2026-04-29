@@ -241,6 +241,12 @@ const marcadores: Marcador[] = [
       "Tendência ascendente nos últimos 8 meses. Reforçar fibras solúveis e considerar ezetimibe se >150 na próxima colheita.",
     proximaRecolha: "Maio 2026",
     serie: serieAnalise(11, 118, 142, 14, 6),
+    explicacaoSimples:
+      "É o colesterol que pode acumular-se nas artérias. Quanto mais baixo, melhor para o coração a longo prazo.",
+    porqueImporta:
+      "LDL elevado durante anos é o principal motor de doença cardiovascular. Em medicina de longevidade, mantê-lo baixo cedo evita placa.",
+    percentilPares: 78,
+    coorteDescricao: "mulheres 45–50 anos",
   },
   {
     id: "hdl",
@@ -252,6 +258,9 @@ const marcadores: Marcador[] = [
     alvoFuncional: [60, 90],
     direcaoBoa: "subir",
     serie: serieAnalise(7, 54, 58, 2, 4),
+    explicacaoSimples: "É o colesterol 'limpa-vasos'. Mais alto costuma ser melhor.",
+    percentilPares: 42,
+    coorteDescricao: "mulheres 45–50 anos",
   },
   {
     id: "trig",
@@ -263,6 +272,8 @@ const marcadores: Marcador[] = [
     alvoFuncional: [40, 90],
     direcaoBoa: "baixar",
     serie: serieAnalise(13, 92, 88, -4, 10),
+    explicacaoSimples: "Gorduras circulantes. Sobem com excesso de açúcar, álcool e sedentarismo.",
+    percentilPares: 35,
   },
   {
     id: "hba1c",
@@ -274,6 +285,10 @@ const marcadores: Marcador[] = [
     alvoFuncional: [4.5, 5.3],
     direcaoBoa: "baixar",
     serie: serieAnalise(17, 5.6, 5.4, -0.15, 0.1),
+    explicacaoSimples: "A média do teu açúcar no sangue dos últimos 3 meses.",
+    porqueImporta: "Marcador-chave para risco de diabetes e envelhecimento metabólico.",
+    percentilPares: 28,
+    coorteDescricao: "mulheres 45–50 anos",
   },
   {
     id: "glic",
@@ -308,6 +323,11 @@ const marcadores: Marcador[] = [
     direcaoBoa: "subir",
     notaMedica: "Queda no inverno apesar da suplementação. Avaliar absorção e considerar 5000 UI/dia.",
     serie: serieAnalise(29, 38, 24, -10, 3),
+    explicacaoSimples:
+      "Hormona-vitamina ligada à imunidade, ossos e humor. Em Portugual baixa muito no inverno.",
+    porqueImporta: "Níveis baixos sustentados associam-se a fadiga, dor muscular e maior infecção.",
+    percentilPares: 18,
+    coorteDescricao: "mulheres 45–50 anos",
   },
   {
     id: "b12",
@@ -342,6 +362,8 @@ const marcadores: Marcador[] = [
     direcaoBoa: "baixar",
     notaMedica: "Inflamação sistémica baixa-moderada. Correlacionar com sono reduzido e ganho de % gordura visceral.",
     serie: serieAnalise(41, 1.6, 2.8, 1.0, 0.3),
+    explicacaoSimples: "Mede inflamação no corpo todo. Subidas crónicas aceleram o envelhecimento.",
+    percentilPares: 65,
   },
   {
     id: "homocist",
@@ -446,6 +468,9 @@ const marcadores: Marcador[] = [
     direcaoBoa: "subir",
     notaMedica: "Redução progressiva nos últimos 6 meses. Coincide com aumento de hsCRP.",
     serie: serieWearable(79, 7.2, 0.4, -1.0).map((m) => ({ ...m, valor: Number(m.valor.toFixed(2)) })),
+    explicacaoSimples: "Quantas horas dormes por noite, em média.",
+    porqueImporta: "É a maior alavanca de longevidade que controlas todos os dias.",
+    percentilPares: 38,
   },
   {
     id: "hrv",
@@ -458,6 +483,10 @@ const marcadores: Marcador[] = [
     direcaoBoa: "subir",
     notaMedica: "Linha de base era 55ms há 1 ano. Avaliar carga de stress e qualidade de recuperação.",
     serie: serieWearable(83, 50, 6, -8),
+    explicacaoSimples:
+      "A variação entre batidas. Mais alta = sistema nervoso recuperado. Mais baixa = stress acumulado.",
+    porqueImporta: "Indicador precoce de sobrecarga, doença ou má recuperação.",
+    percentilPares: 34,
   },
   {
     id: "fcrep",
