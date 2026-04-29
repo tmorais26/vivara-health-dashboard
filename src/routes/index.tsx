@@ -82,6 +82,13 @@ function Index() {
         <p className="mt-8 text-xs text-muted-foreground">
           Versão demonstrativa — outros utentes serão sincronizados a partir do PMS clínico.
         </p>
+
+        <Link
+          to="/app"
+          className="mt-6 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+        >
+          Ver app da utente <ArrowRight className="h-3 w-3" />
+        </Link>
       </main>
     </div>
   );
