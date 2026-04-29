@@ -32,6 +32,10 @@ export type Marcador = {
   notaMedica?: string;
   proximaRecolha?: string;
   serie: Medicao[];
+  explicacaoSimples?: string;
+  porqueImporta?: string;
+  percentilPares?: number;
+  coorteDescricao?: string;
 };
 
 export type Alerta = {
@@ -72,6 +76,55 @@ export type TarefaPlano = {
   feitaEm?: string;
 };
 
+export type Mensagem = {
+  id: string;
+  autor: "medica" | "utente" | "sistema";
+  texto: string;
+  enviadaEm: string;
+  lida: boolean;
+  marcadorId?: string;
+};
+
+export type Conversa = {
+  id: string;
+  com: string;
+  papel: string;
+  iniciais: string;
+  mensagens: Mensagem[];
+};
+
+export type Consulta = {
+  id: string;
+  data: string;
+  hora: string;
+  duracao: string;
+  tipo: "presencial" | "video";
+  motivo: string;
+  estado: "agendada" | "realizada" | "cancelada";
+  resumo?: string;
+  preparacao?: string[];
+};
+
+export type Conteudo = {
+  id: string;
+  titulo: string;
+  descricao: string;
+  formato: "artigo" | "video" | "audio";
+  duracao: string;
+  marcadorId?: string;
+  curadoPor: string;
+  novo?: boolean;
+};
+
+export type EntradaDiario = {
+  id: string;
+  data: string;
+  humor: 1 | 2 | 3 | 4 | 5;
+  energia: 1 | 2 | 3 | 4 | 5;
+  sintomas: string[];
+  nota?: string;
+};
+
 export type Utente = {
   id: string;
   nome: string;
@@ -86,6 +139,11 @@ export type Utente = {
   prescricoes: Prescricao[];
   genomica: VarianteGenomica[];
   plano_tarefas: TarefaPlano[];
+  conversas: Conversa[];
+  consultas: Consulta[];
+  conteudos: Conteudo[];
+  diario: EntradaDiario[];
+  streakDias: number;
 };
 
 // Deterministic pseudo-random
