@@ -32,6 +32,10 @@ export type Marcador = {
   notaMedica?: string;
   proximaRecolha?: string;
   serie: Medicao[];
+  explicacaoSimples?: string;
+  porqueImporta?: string;
+  percentilPares?: number;
+  coorteDescricao?: string;
 };
 
 export type Alerta = {
@@ -72,6 +76,55 @@ export type TarefaPlano = {
   feitaEm?: string;
 };
 
+export type Mensagem = {
+  id: string;
+  autor: "medica" | "utente" | "sistema";
+  texto: string;
+  enviadaEm: string;
+  lida: boolean;
+  marcadorId?: string;
+};
+
+export type Conversa = {
+  id: string;
+  com: string;
+  papel: string;
+  iniciais: string;
+  mensagens: Mensagem[];
+};
+
+export type Consulta = {
+  id: string;
+  data: string;
+  hora: string;
+  duracao: string;
+  tipo: "presencial" | "video";
+  motivo: string;
+  estado: "agendada" | "realizada" | "cancelada";
+  resumo?: string;
+  preparacao?: string[];
+};
+
+export type Conteudo = {
+  id: string;
+  titulo: string;
+  descricao: string;
+  formato: "artigo" | "video" | "audio";
+  duracao: string;
+  marcadorId?: string;
+  curadoPor: string;
+  novo?: boolean;
+};
+
+export type EntradaDiario = {
+  id: string;
+  data: string;
+  humor: 1 | 2 | 3 | 4 | 5;
+  energia: 1 | 2 | 3 | 4 | 5;
+  sintomas: string[];
+  nota?: string;
+};
+
 export type Utente = {
   id: string;
   nome: string;
@@ -86,6 +139,11 @@ export type Utente = {
   prescricoes: Prescricao[];
   genomica: VarianteGenomica[];
   plano_tarefas: TarefaPlano[];
+  conversas: Conversa[];
+  consultas: Consulta[];
+  conteudos: Conteudo[];
+  diario: EntradaDiario[];
+  streakDias: number;
 };
 
 // Deterministic pseudo-random
@@ -183,6 +241,12 @@ const marcadores: Marcador[] = [
       "Tendência ascendente nos últimos 8 meses. Reforçar fibras solúveis e considerar ezetimibe se >150 na próxima colheita.",
     proximaRecolha: "Maio 2026",
     serie: serieAnalise(11, 118, 142, 14, 6),
+    explicacaoSimples:
+      "É o colesterol que pode acumular-se nas artérias. Quanto mais baixo, melhor para o coração a longo prazo.",
+    porqueImporta:
+      "LDL elevado durante anos é o principal motor de doença cardiovascular. Em medicina de longevidade, mantê-lo baixo cedo evita placa.",
+    percentilPares: 78,
+    coorteDescricao: "mulheres 45–50 anos",
   },
   {
     id: "hdl",
@@ -194,6 +258,9 @@ const marcadores: Marcador[] = [
     alvoFuncional: [60, 90],
     direcaoBoa: "subir",
     serie: serieAnalise(7, 54, 58, 2, 4),
+    explicacaoSimples: "É o colesterol 'limpa-vasos'. Mais alto costuma ser melhor.",
+    percentilPares: 42,
+    coorteDescricao: "mulheres 45–50 anos",
   },
   {
     id: "trig",
@@ -205,6 +272,8 @@ const marcadores: Marcador[] = [
     alvoFuncional: [40, 90],
     direcaoBoa: "baixar",
     serie: serieAnalise(13, 92, 88, -4, 10),
+    explicacaoSimples: "Gorduras circulantes. Sobem com excesso de açúcar, álcool e sedentarismo.",
+    percentilPares: 35,
   },
   {
     id: "hba1c",
@@ -216,6 +285,10 @@ const marcadores: Marcador[] = [
     alvoFuncional: [4.5, 5.3],
     direcaoBoa: "baixar",
     serie: serieAnalise(17, 5.6, 5.4, -0.15, 0.1),
+    explicacaoSimples: "A média do teu açúcar no sangue dos últimos 3 meses.",
+    porqueImporta: "Marcador-chave para risco de diabetes e envelhecimento metabólico.",
+    percentilPares: 28,
+    coorteDescricao: "mulheres 45–50 anos",
   },
   {
     id: "glic",
@@ -250,6 +323,11 @@ const marcadores: Marcador[] = [
     direcaoBoa: "subir",
     notaMedica: "Queda no inverno apesar da suplementação. Avaliar absorção e considerar 5000 UI/dia.",
     serie: serieAnalise(29, 38, 24, -10, 3),
+    explicacaoSimples:
+      "Hormona-vitamina ligada à imunidade, ossos e humor. Em Portugual baixa muito no inverno.",
+    porqueImporta: "Níveis baixos sustentados associam-se a fadiga, dor muscular e maior infecção.",
+    percentilPares: 18,
+    coorteDescricao: "mulheres 45–50 anos",
   },
   {
     id: "b12",
@@ -284,6 +362,8 @@ const marcadores: Marcador[] = [
     direcaoBoa: "baixar",
     notaMedica: "Inflamação sistémica baixa-moderada. Correlacionar com sono reduzido e ganho de % gordura visceral.",
     serie: serieAnalise(41, 1.6, 2.8, 1.0, 0.3),
+    explicacaoSimples: "Mede inflamação no corpo todo. Subidas crónicas aceleram o envelhecimento.",
+    percentilPares: 65,
   },
   {
     id: "homocist",
@@ -388,6 +468,9 @@ const marcadores: Marcador[] = [
     direcaoBoa: "subir",
     notaMedica: "Redução progressiva nos últimos 6 meses. Coincide com aumento de hsCRP.",
     serie: serieWearable(79, 7.2, 0.4, -1.0).map((m) => ({ ...m, valor: Number(m.valor.toFixed(2)) })),
+    explicacaoSimples: "Quantas horas dormes por noite, em média.",
+    porqueImporta: "É a maior alavanca de longevidade que controlas todos os dias.",
+    percentilPares: 38,
   },
   {
     id: "hrv",
@@ -400,6 +483,10 @@ const marcadores: Marcador[] = [
     direcaoBoa: "subir",
     notaMedica: "Linha de base era 55ms há 1 ano. Avaliar carga de stress e qualidade de recuperação.",
     serie: serieWearable(83, 50, 6, -8),
+    explicacaoSimples:
+      "A variação entre batidas. Mais alta = sistema nervoso recuperado. Mais baixa = stress acumulado.",
+    porqueImporta: "Indicador precoce de sobrecarga, doença ou má recuperação.",
+    percentilPares: 34,
   },
   {
     id: "fcrep",
@@ -586,6 +673,178 @@ export const utente: Utente = {
   prescricoes,
   genomica,
   plano_tarefas,
+  conversas: [
+    {
+      id: "c-sofia",
+      com: "Dra. Sofia Cardoso",
+      papel: "Médica de longevidade",
+      iniciais: "SC",
+      mensagens: [
+        {
+          id: "m1",
+          autor: "medica",
+          texto:
+            "Maria, ajustei a Vitamina D para 5000 UI. Vamos reavaliar em 8 semanas. Continua a caminhar.",
+          enviadaEm: "2026-04-27T09:14:00",
+          lida: true,
+        },
+        {
+          id: "m2",
+          autor: "utente",
+          texto: "Obrigada Dra. Tomei a primeira hoje ao pequeno-almoço. Algum efeito que deva esperar?",
+          enviadaEm: "2026-04-27T11:02:00",
+          lida: true,
+        },
+        {
+          id: "m3",
+          autor: "medica",
+          texto:
+            "Nenhum efeito agudo. Se notares dor de cabeça ou náusea avisa-me. Caso contrário, continuamos.",
+          enviadaEm: "2026-04-27T15:40:00",
+          lida: true,
+          marcadorId: "vitd",
+        },
+        {
+          id: "m4",
+          autor: "medica",
+          texto:
+            "Vi os teus dados de sono desta semana — média 6h12. Queres que marquemos uma chamada curta?",
+          enviadaEm: "2026-04-28T18:25:00",
+          lida: false,
+          marcadorId: "sono",
+        },
+      ],
+    },
+    {
+      id: "c-nutri",
+      com: "Inês Carvalho",
+      papel: "Nutricionista",
+      iniciais: "IC",
+      mensagens: [
+        {
+          id: "n1",
+          autor: "medica",
+          texto:
+            "Enviei-te o plano alimentar de Maio. Foco em fibras solúveis para apoiar o LDL.",
+          enviadaEm: "2026-04-26T10:00:00",
+          lida: false,
+          marcadorId: "ldl",
+        },
+      ],
+    },
+  ],
+  consultas: [
+    {
+      id: "k1",
+      data: "2026-06-08",
+      hora: "10:30",
+      duracao: "60 min",
+      tipo: "presencial",
+      motivo: "Reavaliação de perfil lipídico e Vitamina D",
+      estado: "agendada",
+      preparacao: [
+        "Trazer análises do painel lipídico repetido",
+        "Jejum de 12h se análise no próprio dia",
+        "Anotar 3 perguntas que queiras discutir",
+      ],
+    },
+    {
+      id: "k2",
+      data: "2026-03-12",
+      hora: "11:00",
+      duracao: "75 min",
+      tipo: "presencial",
+      motivo: "Consulta trimestral de longevidade",
+      estado: "realizada",
+      resumo:
+        "Ajustada Vit D para 5000 UI. Adicionada Berberina. Pedido painel lipídico completo com ApoB e Lp(a).",
+    },
+    {
+      id: "k3",
+      data: "2025-12-04",
+      hora: "09:30",
+      duracao: "45 min",
+      tipo: "video",
+      motivo: "Follow-up de wearables",
+      estado: "realizada",
+      resumo: "Revisto sono e HRV. Recomendada higiene de sono e teste de saturação noturna.",
+    },
+  ],
+  conteudos: [
+    {
+      id: "ed1",
+      titulo: "Porque é que o teu LDL está a subir?",
+      descricao:
+        "O que muda na perimenopausa, como a fibra solúvel actua e quando faz sentido medicar.",
+      formato: "artigo",
+      duracao: "6 min",
+      marcadorId: "ldl",
+      curadoPor: "Dra. Sofia Cardoso",
+      novo: true,
+    },
+    {
+      id: "ed2",
+      titulo: "HRV em linguagem simples",
+      descricao: "O que mede, o que não mede, e como interpretar a tua tendência semanal.",
+      formato: "video",
+      duracao: "4 min",
+      marcadorId: "hrv",
+      curadoPor: "Equipa Vivara",
+    },
+    {
+      id: "ed3",
+      titulo: "Vitamina D no inverno português",
+      descricao: "Porque a tua dose de manutenção pode não chegar entre Outubro e Março.",
+      formato: "artigo",
+      duracao: "5 min",
+      marcadorId: "vitd",
+      curadoPor: "Dra. Sofia Cardoso",
+      novo: true,
+    },
+    {
+      id: "ed4",
+      titulo: "Higiene de sono em 7 passos",
+      descricao: "Áudio guiado para implementares esta semana.",
+      formato: "audio",
+      duracao: "12 min",
+      marcadorId: "sono",
+      curadoPor: "Inês Carvalho",
+    },
+    {
+      id: "ed5",
+      titulo: "Treino de força depois dos 45",
+      descricao: "Porque é a alavanca mais subestimada de longevidade saudável.",
+      formato: "video",
+      duracao: "8 min",
+      curadoPor: "Equipa Vivara",
+    },
+  ],
+  diario: [
+    {
+      id: "d1",
+      data: "2026-04-28",
+      humor: 4,
+      energia: 3,
+      sintomas: ["Sono leve"],
+      nota: "Acordei 2x durante a noite.",
+    },
+    {
+      id: "d2",
+      data: "2026-04-27",
+      humor: 4,
+      energia: 4,
+      sintomas: [],
+      nota: "Caminhada longa ao fim da tarde.",
+    },
+    {
+      id: "d3",
+      data: "2026-04-26",
+      humor: 3,
+      energia: 2,
+      sintomas: ["Cefaleia ligeira"],
+    },
+  ],
+  streakDias: 12,
 };
 
 // Helpers
@@ -624,6 +883,52 @@ export function formatarValor(m: Marcador): string {
 }
 
 export function formatarData(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
+  // Determinístico (evita mismatches SSR/cliente por timezone/locale)
+  const meses = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return iso;
+  const [, y, mo, d] = m;
+  return `${d} ${meses[Number(mo) - 1]} ${y}`;
+}
+
+export function formatarDataCurta(iso: string): string {
+  const meses = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return iso;
+  const [, , mo, d] = m;
+  return `${d} ${meses[Number(mo) - 1]}`;
+}
+
+export function formatarDataHora(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso);
+  if (!m) return iso;
+  const [, , , d, h, mi] = m;
+  return `${d} · ${h}:${mi}`;
+}
+
+/**
+ * Score de longevidade 0–100 derivado dos marcadores.
+ * Determinístico: cada marcador contribui com 1 (ok), 0.6 (atenção), 0.2 (alerta).
+ */
+export function calcularScoreLongevidade(): number {
+  const pesos = { ok: 1, atencao: 0.6, alerta: 0.2 } as const;
+  const usados = marcadores.filter(
+    (m) => m.categoria === "analises" || m.categoria === "wearable" || m.categoria === "composicao",
+  );
+  const soma = usados.reduce((acc, m) => acc + pesos[calcularEstado(m)], 0);
+  return Math.round((soma / usados.length) * 100);
+}
+
+export function scoreBreakdown(): { pilar: string; valor: number }[] {
+  const pilares: { pilar: string; cats: Categoria[] }[] = [
+    { pilar: "Cardio-metabólico", cats: ["analises"] },
+    { pilar: "Composição", cats: ["composicao"] },
+    { pilar: "Recuperação", cats: ["wearable"] },
+  ];
+  const pesos = { ok: 1, atencao: 0.6, alerta: 0.2 } as const;
+  return pilares.map(({ pilar, cats }) => {
+    const lista = marcadores.filter((m) => cats.includes(m.categoria));
+    const soma = lista.reduce((acc, m) => acc + pesos[calcularEstado(m)], 0);
+    return { pilar, valor: Math.round((soma / lista.length) * 100) };
+  });
 }
