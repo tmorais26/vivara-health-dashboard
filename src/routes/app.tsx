@@ -6,9 +6,11 @@ import {
   Bell,
   BookOpen,
   CalendarClock,
+  Camera,
   CheckCircle2,
   ChevronRight,
   Circle,
+  Edit3,
   FileText,
   Flame,
   FlaskConical,
@@ -28,9 +30,11 @@ import {
   Stethoscope,
   TrendingDown,
   TrendingUp,
+  Upload,
   User,
   Users,
   Video,
+  X,
 } from "lucide-react";
 import {
   utente,
@@ -49,8 +53,10 @@ import {
   type EntradaDiario,
   type Marcador,
   type Mensagem,
+  type Notificacao,
   type TarefaPlano,
   type TipoTarefa,
+  type ValorExtraido,
 } from "@/data/mock-utente";
 import { Sparkline } from "@/components/dashboard/Sparkline";
 import { StateDot, StateTag } from "@/components/dashboard/StateTag";
