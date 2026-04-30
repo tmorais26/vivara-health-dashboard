@@ -1870,3 +1870,677 @@ function PerfilRow({
     </button>
   );
 }
+
+/* ============================================================
+   NEW: Center nav button (Carregar)
+   ============================================================ */
+
+function CenterNavItem({
+  id,
+  label,
+  Icon,
+  active,
+  onClick,
+}: {
+  id: Tab;
+  label: string;
+  Icon: typeof Upload;
+  active: boolean;
+  onClick: (t: Tab) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(id)}
+      className="relative -mt-5 flex flex-col items-center gap-1"
+    >
+      <div
+        className={`flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-colors ${
+          active
+            ? "bg-foreground text-background"
+            : "bg-foreground text-background hover:opacity-90"
+        }`}
+      >
+        <Icon className="h-5 w-5" strokeWidth={2.2} />
+      </div>
+      <span
+        className={`text-[10px] tracking-wide ${
+          active ? "text-foreground font-medium" : "text-muted-foreground"
+        }`}
+      >
+        {label}
+      </span>
+    </button>
+  );
+}
+
+/* ============================================================
+   NEW: Plano sub-view (chamado a partir do "Hoje")
+   ============================================================ */
+
+function PlanoSub({
+  onBack,
+  tarefas,
+  onToggle,
+}: {
+  onBack: () => void;
+  tarefas: TarefaPlano[];
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <div>
+      <SubHeader onBack={onBack} title="Plano" subtitle="O que tens a fazer" />
+      <PlanoView tarefas={tarefas} onToggle={onToggle} />
+    </div>
+  );
+}
+
+/* ============================================================
+   NEW: Avisos (timeline de notificações)
+   ============================================================ */
+
+const tipoNotifMeta: Record<
+  Notificacao["tipo"],
+  { Icon: typeof Bell; tone: string }
+> = {
+  resumo: { Icon: FileText, tone: "bg-accent text-foreground" },
+  lembrete: { Icon: Pill, tone: "bg-state-ok-soft text-state-ok" },
+  agenda: { Icon: FlaskConical, tone: "bg-accent text-foreground" },
+  consulta: { Icon: CalendarClock, tone: "bg-state-warn-soft text-state-warn" },
+  sistema: { Icon: Info, tone: "bg-accent text-foreground" },
+};
+
+function AvisosView({
+  notificacoes,
+  onAbrir,
+  onAbrirMensagens,
+}: {
+  notificacoes: Notificacao[];
+  onAbrir: (n: Notificacao) => void;
+  onAbrirMensagens: () => void;
+}) {
+  const hoje = notificacoes.filter((n) => n.quando.startsWith("2026-04-29"));
+  const proximos = notificacoes.filter((n) => !n.quando.startsWith("2026-04-29"));
+  const naoLidasMsg = utente.conversas
+    .flatMap((c) => c.mensagens)
+    .filter((m) => !m.lida && m.autor === "medica").length;
+
+  return (
+    <div className="space-y-4 px-5 pt-3">
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Avisos</div>
+          <h2 className="font-serif mt-0.5 text-[26px] leading-tight text-foreground">
+            Notificações
+          </h2>
+        </div>
+        <button
+          type="button"
+          onClick={onAbrirMensagens}
+          className="relative mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface-raised hover:border-foreground/20"
+          aria-label="Mensagens"
+        >
+          <MessageCircle className="h-4 w-4 text-foreground" />
+          {naoLidasMsg > 0 && (
+            <span className="tabular absolute -right-1 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-state-alert px-1 text-[9px] font-medium text-state-alert-soft">
+              {naoLidasMsg}
+            </span>
+          )}
+        </button>
+      </header>
+
+      {hoje.length > 0 && (
+        <section>
+          <div className="mb-2 px-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+            Hoje
+          </div>
+          <div className="space-y-2">
+            {hoje.map((n) => (
+              <NotificacaoCard key={n.id} notificacao={n} onClick={() => onAbrir(n)} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {proximos.length > 0 && (
+        <section>
+          <div className="mb-2 px-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+            Próximos
+          </div>
+          <div className="space-y-2">
+            {proximos.map((n) => (
+              <NotificacaoCard key={n.id} notificacao={n} onClick={() => onAbrir(n)} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {notificacoes.length === 0 && (
+        <div className="rounded-2xl border border-border bg-surface-raised p-6 text-center text-xs text-muted-foreground">
+          Sem avisos.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NotificacaoCard({
+  notificacao,
+  onClick,
+}: {
+  notificacao: Notificacao;
+  onClick: () => void;
+}) {
+  const meta = tipoNotifMeta[notificacao.tipo];
+  const Icon = meta.Icon;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full items-start gap-3 rounded-2xl border p-3.5 text-left transition-colors hover:border-foreground/20 ${
+        notificacao.lida
+          ? "border-border bg-surface-raised"
+          : "border-foreground/30 bg-accent/40"
+      }`}
+    >
+      <div
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${meta.tone}`}
+      >
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[9.5px] uppercase tracking-wider text-muted-foreground">
+            {formatarDataHora(notificacao.quando)}
+          </span>
+          {!notificacao.lida && (
+            <span className="h-1.5 w-1.5 rounded-full bg-state-alert" />
+          )}
+        </div>
+        <div className="font-serif mt-0.5 text-[15px] leading-snug text-foreground">
+          {notificacao.titulo}
+        </div>
+        <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+          {notificacao.detalhe}
+        </p>
+        {notificacao.cta && (
+          <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-foreground">
+            {notificacao.cta} <ChevronRight className="h-3 w-3" />
+          </div>
+        )}
+      </div>
+    </button>
+  );
+}
+
+/* ============================================================
+   NEW: Perfil tab (versão sem back, integrada no tab)
+   ============================================================ */
+
+function PerfilTabView({ onOpenSub }: { onOpenSub: (v: SubView, ctx?: string) => void }) {
+  const naoLidas = utente.conversas
+    .flatMap((c) => c.mensagens)
+    .filter((m) => !m.lida && m.autor === "medica").length;
+
+  return (
+    <div className="space-y-4 px-5 pt-3">
+      <header className="flex items-center gap-3">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent font-serif text-xl text-foreground">
+          MA
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="font-serif text-xl leading-tight text-foreground">{utente.nome}</div>
+          <div className="text-[11px] text-muted-foreground">
+            {utente.idade} anos · {utente.cidade}
+          </div>
+        </div>
+      </header>
+
+      <section className="rounded-2xl border border-border bg-surface-raised p-4">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          Equipa clínica
+        </div>
+        <div className="mt-2 space-y-2.5">
+          {utente.conversas.map((c) => (
+            <div key={c.id} className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
+                {c.iniciais}
+              </div>
+              <div>
+                <div className="text-[13px] font-medium text-foreground">{c.com}</div>
+                <div className="text-[10.5px] text-muted-foreground">{c.papel}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 rounded-xl border border-border bg-surface px-3 py-2 text-[11px] text-muted-foreground">
+          Plano: <span className="text-foreground">{utente.plano}</span>
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-2 px-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+          Atalhos
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
+          <AtalhoRow
+            Icon={MessageCircle}
+            label="Mensagens"
+            hint="Equipa clínica"
+            badge={naoLidas || undefined}
+            onClick={() => onOpenSub("mensagens")}
+          />
+          <AtalhoRow
+            Icon={CalendarClock}
+            label="Consultas"
+            hint="Agenda e histórico"
+            onClick={() => onOpenSub("consultas")}
+          />
+          <AtalhoRow
+            Icon={CheckCircle2}
+            label="Plano"
+            hint="Suplementos e medicação"
+            onClick={() => onOpenSub("plano")}
+          />
+          <AtalhoRow
+            Icon={BookOpen}
+            label="Aprender"
+            hint="Conteúdos personalizados"
+            onClick={() => onOpenSub("aprender")}
+          />
+          <AtalhoRow
+            Icon={Heart}
+            label="Diário"
+            hint="Como te sentiste"
+            onClick={() => onOpenSub("diario")}
+          />
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-2 px-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+          Definições
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
+          <PerfilRow Icon={Bell} label="Notificações" hint="Lembretes 30 min antes" />
+          <PerfilRow Icon={Activity} label="Wearables" hint="Apple Watch · Withings" />
+          <PerfilRow Icon={Settings} label="Definições gerais" />
+        </div>
+      </section>
+
+      <p className="px-1 text-center text-[10px] text-muted-foreground">
+        Vivara Health · v0.2 demo
+      </p>
+    </div>
+  );
+}
+
+function AtalhoRow({
+  Icon,
+  label,
+  hint,
+  badge,
+  onClick,
+}: {
+  Icon: typeof Bell;
+  label: string;
+  hint?: string;
+  badge?: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 border-b border-border px-4 py-3.5 text-left last:border-b-0 hover:bg-accent/40"
+    >
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent">
+        <Icon className="h-4 w-4 text-foreground" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[13px] text-foreground">{label}</div>
+        {hint && <div className="text-[10.5px] text-muted-foreground">{hint}</div>}
+      </div>
+      {badge !== undefined && badge > 0 && (
+        <span className="tabular rounded-full bg-state-alert px-2 py-0.5 text-[9.5px] font-medium text-state-alert-soft">
+          {badge}
+        </span>
+      )}
+      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+    </button>
+  );
+}
+
+/* ============================================================
+   NEW: Carregar — fluxo de upload de análises com IA
+   3 passos: origem → revisão → confirmação
+   ============================================================ */
+
+type CarregarPasso = "origem" | "revisao" | "sucesso";
+
+// valores extraídos pela "IA" — mock determinístico
+const VALORES_EXTRAIDOS: ValorExtraido[] = [
+  { marcadorId: "ldl", marcadorNome: "Colesterol total", unidade: "mg/dL", valor: 218, confianca: 0.99 },
+  { marcadorId: "ldl", marcadorNome: "LDL-C", unidade: "mg/dL", valor: 118, confianca: 0.98 },
+  { marcadorId: "hdl", marcadorNome: "HDL-C", unidade: "mg/dL", valor: 62, confianca: 0.99 },
+  { marcadorId: "trig", marcadorNome: "Triglicéridos", unidade: "mg/dL", valor: 92, confianca: 0.97 },
+  { marcadorId: "apob", marcadorNome: "ApoB", unidade: "mg/dL", valor: 102, confianca: 0.94 },
+  { marcadorId: "glic", marcadorNome: "Glicose jejum", unidade: "mg/dL", valor: 98, confianca: 0.99 },
+  {
+    marcadorId: "hba1c",
+    marcadorNome: "HbA1c",
+    unidade: "%",
+    valor: 5.7,
+    confianca: 0.61,
+    precisaRevisao: true,
+    alternativas: [5.1, 5.7],
+  },
+  { marcadorId: "ins", marcadorNome: "Insulina jejum", unidade: "mUI/mL", valor: 12.4, confianca: 0.92 },
+  { marcadorId: "pcr", marcadorNome: "PCR-us", unidade: "mg/L", valor: 1.2, confianca: 0.96 },
+  { marcadorId: "tsh", marcadorNome: "TSH", unidade: "mUI/L", valor: 2.1, confianca: 0.99 },
+];
+
+function CarregarFlow({
+  onConcluir,
+  onCancelar,
+}: {
+  onConcluir: (n: Notificacao) => void;
+  onCancelar: () => void;
+}) {
+  const [passo, setPasso] = useState<CarregarPasso>("origem");
+  const [origem, setOrigem] = useState<"camara" | "pdf" | null>(null);
+  const [valores, setValores] = useState<ValorExtraido[]>(VALORES_EXTRAIDOS);
+
+  function escolherOrigem(o: "camara" | "pdf") {
+    setOrigem(o);
+    // simula extracção
+    setPasso("revisao");
+  }
+
+  function confirmar() {
+    setPasso("sucesso");
+    // notificação para a médica
+    const notif: Notificacao = {
+      id: `n-upload-${Date.now()}`,
+      tipo: "sistema",
+      titulo: "Análises enviadas para a Dra. Sofia",
+      detalhe: `${valores.length} valores carregados via ${origem === "pdf" ? "PDF" : "câmara"}. Disponíveis no portal clínico.`,
+      quando: "2026-04-29T09:42:00",
+      lida: false,
+      cta: "Ver no histórico",
+    };
+    setTimeout(() => onConcluir(notif), 1400);
+  }
+
+  if (passo === "origem") {
+    return <CarregarOrigemView onEscolher={escolherOrigem} onCancelar={onCancelar} />;
+  }
+  if (passo === "revisao") {
+    return (
+      <CarregarRevisaoView
+        valores={valores}
+        onChange={setValores}
+        onCancelar={() => setPasso("origem")}
+        onConfirmar={confirmar}
+      />
+    );
+  }
+  return <CarregarSucessoView numValores={valores.length} />;
+}
+
+function CarregarOrigemView({
+  onEscolher,
+  onCancelar,
+}: {
+  onEscolher: (o: "camara" | "pdf") => void;
+  onCancelar: () => void;
+}) {
+  return (
+    <div className="space-y-5 px-5 pt-3">
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Carregar análises
+          </div>
+          <h2 className="font-serif mt-0.5 text-[26px] leading-tight text-foreground">
+            Origem
+          </h2>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            A Vivara extrai os valores e tu confirmas antes de enviar à médica.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onCancelar}
+          className="mt-1 flex h-8 w-8 items-center justify-center rounded-full hover:bg-accent"
+          aria-label="Cancelar"
+        >
+          <X className="h-4 w-4 text-foreground" />
+        </button>
+      </header>
+
+      {/* "papel digitalizado" */}
+      <div className="relative flex h-44 items-center justify-center overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-accent/40 via-surface-raised to-accent/30">
+        <FileText className="h-14 w-14 text-foreground/40" strokeWidth={1.4} />
+        <div className="absolute inset-x-8 top-10 h-[2px] bg-foreground/10" />
+        <div className="absolute inset-x-12 top-16 h-[2px] bg-foreground/10" />
+        <div className="absolute inset-x-10 top-22 h-[2px] bg-foreground/10" />
+      </div>
+
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={() => onEscolher("camara")}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-foreground py-3.5 text-[13px] font-medium text-background hover:opacity-90"
+        >
+          <Camera className="h-4 w-4" />
+          Capturar com câmara
+        </button>
+        <div className="text-center text-[10px] uppercase tracking-wider text-muted-foreground">
+          ou
+        </div>
+        <button
+          type="button"
+          onClick={() => onEscolher("pdf")}
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-surface-raised py-3 text-[12.5px] font-medium text-foreground hover:bg-accent/40"
+        >
+          <FileText className="h-4 w-4" />
+          Escolher ficheiro PDF
+        </button>
+      </div>
+
+      <section>
+        <div className="mb-2 px-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+          Recentes
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
+          {utente.uploadsRecentes.map((u, i) => (
+            <div
+              key={u.id}
+              className={`flex items-center gap-3 px-4 py-3 ${
+                i !== utente.uploadsRecentes.length - 1 ? "border-b border-border" : ""
+              }`}
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-[9px] font-medium uppercase tracking-wider text-foreground">
+                {u.origem === "pdf" ? "PDF" : "IMG"}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[12.5px] font-medium text-foreground">
+                  {u.ficheiro}
+                </div>
+                <div className="text-[10.5px] text-muted-foreground">
+                  há {u.id === "u-1" ? "5 dias" : "3 sem"} · {u.numValores} valores extraídos
+                </div>
+              </div>
+              <CheckCircle2 className="h-4 w-4 text-state-ok" />
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function CarregarRevisaoView({
+  valores,
+  onChange,
+  onCancelar,
+  onConfirmar,
+}: {
+  valores: ValorExtraido[];
+  onChange: (v: ValorExtraido[]) => void;
+  onCancelar: () => void;
+  onConfirmar: () => void;
+}) {
+  const precisaRevisao = valores.filter((v) => v.precisaRevisao).length;
+  const confiancaMedia = Math.round(
+    (valores.reduce((acc, v) => acc + v.confianca, 0) / valores.length) * 100,
+  );
+
+  function corrigirValor(idx: number, novo: number) {
+    const copia = [...valores];
+    copia[idx] = { ...copia[idx], valor: novo, precisaRevisao: false, confianca: 0.99 };
+    onChange(copia);
+  }
+
+  return (
+    <div className="flex h-full flex-col">
+      <header className="sticky top-0 z-10 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onCancelar}
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-accent"
+          >
+            <ArrowLeft className="h-4 w-4 text-foreground" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <div className="font-serif text-[15px] leading-tight text-foreground">
+              {valores.length} valores extraídos
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              {precisaRevisao > 0
+                ? `${precisaRevisao} precisa de revisão`
+                : "Tudo confirmado"}
+            </div>
+          </div>
+          <div className="tabular text-right text-[11px] font-medium text-foreground">
+            {confiancaMedia}%
+          </div>
+        </div>
+      </header>
+
+      <div className="flex-1 overflow-y-auto px-4 py-3 pb-32">
+        <ul className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
+          {valores.map((v, i) => {
+            const conf = Math.round(v.confianca * 100);
+            return (
+              <li
+                key={`${v.marcadorId}-${i}`}
+                className={`px-4 py-3 ${
+                  i !== valores.length - 1 ? "border-b border-border" : ""
+                } ${v.precisaRevisao ? "bg-state-warn-soft/40" : ""}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-medium text-foreground">
+                      {v.marcadorNome}
+                    </div>
+                    <div className="tabular mt-0.5 text-[10px] text-muted-foreground">
+                      confiança {conf}%
+                    </div>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-serif tabular text-[18px] text-foreground">
+                      {v.valor}
+                    </span>
+                    <span className="text-[10.5px] text-muted-foreground">{v.unidade}</span>
+                  </div>
+                </div>
+                {v.precisaRevisao && v.alternativas && (
+                  <div className="mt-2.5 rounded-lg border border-state-warn/30 bg-surface px-3 py-2">
+                    <div className="flex items-center gap-1.5 text-[10.5px] text-state-warn">
+                      <Info className="h-3 w-3" />
+                      Possível {v.alternativas.join(" ou ")} — confirme
+                    </div>
+                    <div className="mt-2 flex gap-1.5">
+                      {v.alternativas.map((alt) => (
+                        <button
+                          key={alt}
+                          type="button"
+                          onClick={() => corrigirValor(i, alt)}
+                          className={`tabular rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
+                            alt === v.valor
+                              ? "border-foreground bg-foreground text-background"
+                              : "border-border bg-surface-raised text-foreground hover:border-foreground/40"
+                          }`}
+                        >
+                          {alt}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => corrigirValor(i, v.valor)}
+                        className="ml-auto inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+                      >
+                        <Edit3 className="h-3 w-3" />
+                        Outro
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        <button
+          type="button"
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full border border-dashed border-foreground/30 py-2.5 text-[11.5px] font-medium text-foreground hover:bg-accent/40"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Adicionar marcador em falta
+        </button>
+      </div>
+
+      {/* footer fixo */}
+      <div className="absolute inset-x-0 bottom-[68px] z-20 border-t border-border bg-surface-raised/95 px-4 py-3 backdrop-blur">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onCancelar}
+            className="flex-1 rounded-full border border-border py-2.5 text-[12px] font-medium text-foreground hover:bg-accent/40"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={onConfirmar}
+            className="flex-[2] rounded-full bg-foreground py-2.5 text-[12px] font-medium text-background hover:opacity-90"
+          >
+            Confirmar {valores.length} valores
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CarregarSucessoView({ numValores }: { numValores: number }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-state-ok-soft">
+        <CheckCircle2 className="h-8 w-8 text-state-ok" strokeWidth={2} />
+      </div>
+      <div>
+        <h2 className="font-serif text-[22px] leading-tight text-foreground">
+          Análises enviadas
+        </h2>
+        <p className="mt-2 text-[12.5px] leading-relaxed text-muted-foreground">
+          {numValores} valores foram adicionados ao teu histórico e a Dra. Sofia recebeu
+          notificação no portal clínico.
+        </p>
+      </div>
+    </div>
+  );
+}
