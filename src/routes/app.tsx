@@ -119,6 +119,15 @@ function AppUtente() {
   const [tarefas, setTarefas] = useState<TarefaPlano[]>(utente.plano_tarefas);
   const [marcadorAberto, setMarcadorAberto] = useState<Marcador | null>(null);
   const [diario, setDiario] = useState<EntradaDiario[]>(utente.diario);
+  const [notificacoes, setNotificacoes] = useState<Notificacao[]>(utente.notificacoes);
+
+  function marcarNotificacaoLida(id: string) {
+    setNotificacoes((prev) => prev.map((n) => (n.id === id ? { ...n, lida: true } : n)));
+  }
+
+  function adicionarNotificacao(n: Notificacao) {
+    setNotificacoes((prev) => [n, ...prev]);
+  }
 
   function toggle(id: string) {
     setTarefas((prev) =>
@@ -174,18 +183,41 @@ function AppUtente() {
                     <HojeView
                       tarefas={tarefas}
                       onToggle={toggle}
-                      onJump={() => setTab("plano")}
+                      onJump={() => openSub("plano")}
                       onOpenSub={openSub}
                     />
                   )}
-                  {tab === "plano" && <PlanoView tarefas={tarefas} onToggle={toggle} />}
-                  {tab === "saude" && (
+                  {tab === "dados" && (
                     <SaudeView onOpen={(m) => setMarcadorAberto(m)} />
                   )}
-                  {tab === "mais" && <MaisHub onOpenSub={openSub} />}
+                  {tab === "carregar" && (
+                    <CarregarFlow
+                      onConcluir={(notif) => {
+                        adicionarNotificacao(notif);
+                        setTab("avisos");
+                      }}
+                      onCancelar={() => setTab("hoje")}
+                    />
+                  )}
+                  {tab === "avisos" && (
+                    <AvisosView
+                      notificacoes={notificacoes}
+                      onAbrir={(n) => {
+                        marcarNotificacaoLida(n.id);
+                        if (n.consultaId) openSub("consulta", n.consultaId);
+                      }}
+                      onAbrirMensagens={() => openSub("mensagens")}
+                    />
+                  )}
+                  {tab === "perfil" && (
+                    <PerfilTabView onOpenSub={openSub} />
+                  )}
                 </>
               )}
 
+              {sub === "plano" && (
+                <PlanoSub onBack={() => setSub(null)} tarefas={tarefas} onToggle={toggle} />
+              )}
               {sub === "mensagens" && (
                 <MensagensView
                   onBack={() => setSub(null)}
@@ -229,15 +261,14 @@ function AppUtente() {
                   }}
                 />
               )}
-              {sub === "perfil" && <PerfilView onBack={() => setSub(null)} />}
             </div>
 
             {/* bottom nav */}
             <nav className="absolute inset-x-0 bottom-0 z-10 border-t border-border bg-surface-raised/95 backdrop-blur">
-              <div className="grid grid-cols-4 px-2 pb-3 pt-2">
+              <div className="grid grid-cols-5 items-end px-2 pb-3 pt-2">
                 <NavItem
                   id="hoje"
-                  label="Hoje"
+                  label="Início"
                   Icon={Home}
                   active={tab === "hoje" && sub === null}
                   onClick={(t) => {
@@ -246,38 +277,45 @@ function AppUtente() {
                   }}
                 />
                 <NavItem
-                  id="plano"
-                  label="Plano"
-                  Icon={CheckCircle2}
-                  active={tab === "plano" && sub === null}
-                  onClick={(t) => {
-                    setTab(t);
-                    setSub(null);
-                  }}
-                  badge={tarefas.filter((t) => !t.feita).length}
-                />
-                <NavItem
-                  id="saude"
-                  label="Saúde"
+                  id="dados"
+                  label="Dados"
                   Icon={Activity}
-                  active={tab === "saude" && sub === null}
+                  active={tab === "dados" && sub === null}
+                  onClick={(t) => {
+                    setTab(t);
+                    setSub(null);
+                  }}
+                />
+                <CenterNavItem
+                  id="carregar"
+                  label="Carregar"
+                  Icon={Upload}
+                  active={tab === "carregar" && sub === null}
                   onClick={(t) => {
                     setTab(t);
                     setSub(null);
                   }}
                 />
                 <NavItem
-                  id="mais"
-                  label="Mais"
-                  Icon={MoreHorizontal}
-                  active={tab === "mais" || sub !== null}
+                  id="avisos"
+                  label="Avisos"
+                  Icon={Bell}
+                  active={tab === "avisos" && sub === null}
                   onClick={(t) => {
                     setTab(t);
                     setSub(null);
                   }}
-                  badge={
-                    utente.conversas.flatMap((c) => c.mensagens).filter((m) => !m.lida).length
-                  }
+                  badge={notificacoes.filter((n) => !n.lida).length}
+                />
+                <NavItem
+                  id="perfil"
+                  label="Perfil"
+                  Icon={User}
+                  active={tab === "perfil" && sub === null}
+                  onClick={(t) => {
+                    setTab(t);
+                    setSub(null);
+                  }}
                 />
               </div>
             </nav>
