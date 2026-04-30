@@ -1085,12 +1085,6 @@ function MaisHub({ onOpenSub }: { onOpenSub: (v: SubView, ctx?: string) => void 
       label: "Diário",
       hint: "Como te sentiste hoje?",
     },
-    {
-      id: "perfil",
-      Icon: User,
-      label: "Perfil e definições",
-      hint: utente.plano,
-    },
   ];
 
   return (
