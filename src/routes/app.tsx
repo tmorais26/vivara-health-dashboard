@@ -20,7 +20,6 @@ import {
   Info,
   LineChart as LineChartIcon,
   MessageCircle,
-  MoreHorizontal,
   Pill,
   Play,
   Plus,
