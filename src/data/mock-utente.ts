@@ -879,6 +879,74 @@ export const utente: Utente = {
     },
   ],
   streakDias: 12,
+  notificacoes: [
+    {
+      id: "n-resumo",
+      tipo: "resumo",
+      titulo: "Resumo da consulta",
+      detalhe:
+        "Plano actualizado. Manter Metformina 500mg 2×/dia. Aumentar Magnésio para 400mg ao deitar. Pedir painel hormonal completo em 6 semanas.",
+      quando: "2026-04-29T18:42:00",
+      consultaId: "k2",
+      lida: false,
+      cta: "Abrir resumo",
+    },
+    {
+      id: "n-suplemento",
+      tipo: "lembrete",
+      titulo: "Suplementos da manhã",
+      detalhe: "Vitamina D3 4000 UI · Ómega-3 EPA/DHA",
+      quando: "2026-04-29T09:00:00",
+      lida: false,
+      cta: "Marcar como tomado",
+    },
+    {
+      id: "n-receita",
+      tipo: "lembrete",
+      titulo: "Receita Metformina termina em 18 dias",
+      detalhe:
+        "Renovação automática agendada. A Dra. Sofia recebe pedido na próxima sessão.",
+      quando: "2026-04-30T08:00:00",
+      lida: true,
+      cta: "Ver detalhes",
+    },
+    {
+      id: "n-analises",
+      tipo: "agenda",
+      titulo: "Pedido de análises agendado",
+      detalhe: "Painel hormonal: FSH, LH, progesterona, SHBG.",
+      quando: "2026-06-01T10:00:00",
+      lida: true,
+      cta: "Ver pedido",
+    },
+    {
+      id: "n-consulta",
+      tipo: "consulta",
+      titulo: "Próxima consulta",
+      detalhe: "Discussão sobre TRH personalizada · Clínica Lumiar",
+      quando: "2026-06-08T10:30:00",
+      consultaId: "k1",
+      lida: true,
+    },
+  ],
+  uploadsRecentes: [
+    {
+      id: "u-1",
+      ficheiro: "Synlab_Analises_22Abr.pdf",
+      origem: "pdf",
+      dataUpload: "2026-04-22T11:14:00",
+      estado: "processado",
+      numValores: 14,
+    },
+    {
+      id: "u-2",
+      ficheiro: "Painel hormonal Mar 26",
+      origem: "camara",
+      dataUpload: "2026-04-08T19:02:00",
+      estado: "processado",
+      numValores: 6,
+    },
+  ],
 };
 
 // Helpers
