@@ -156,14 +156,15 @@ function seeded(seed: number) {
 }
 
 function mesesAtras(n: number): string {
-  const d = new Date(2026, 3, 15); // 15 Abril 2026 (estável)
-  d.setMonth(d.getMonth() - n);
+  // UTC explícito para evitar mismatches SSR/cliente entre fusos horários
+  const d = new Date(Date.UTC(2026, 3, 15));
+  d.setUTCMonth(d.getUTCMonth() - n);
   return d.toISOString().slice(0, 10);
 }
 
 function diasAtras(n: number): string {
-  const d = new Date(2026, 3, 15);
-  d.setDate(d.getDate() - n);
+  const d = new Date(Date.UTC(2026, 3, 15));
+  d.setUTCDate(d.getUTCDate() - n);
   return d.toISOString().slice(0, 10);
 }
 
