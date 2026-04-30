@@ -1791,60 +1791,6 @@ function NovoDiarioView({
 
 /* ---------- PERFIL ---------- */
 
-function PerfilView({ onBack }: { onBack: () => void }) {
-  return (
-    <div>
-      <SubHeader onBack={onBack} title="Perfil" subtitle="Definições" />
-      <div className="space-y-4 px-5 py-3">
-        <header className="flex items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent font-serif text-xl text-foreground">
-            MA
-          </div>
-          <div className="min-w-0">
-            <div className="font-serif text-xl leading-tight text-foreground">{utente.nome}</div>
-            <div className="text-[11px] text-muted-foreground">
-              {utente.idade} anos · {utente.cidade}
-            </div>
-          </div>
-        </header>
-
-        <section className="rounded-2xl border border-border bg-surface-raised p-4">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            Equipa clínica
-          </div>
-          <div className="mt-2 space-y-2.5">
-            {utente.conversas.map((c) => (
-              <div key={c.id} className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
-                  {c.iniciais}
-                </div>
-                <div>
-                  <div className="text-[13px] font-medium text-foreground">{c.com}</div>
-                  <div className="text-[10.5px] text-muted-foreground">{c.papel}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 rounded-xl border border-border bg-surface px-3 py-2 text-[11px] text-muted-foreground">
-            Plano: <span className="text-foreground">{utente.plano}</span>
-          </div>
-        </section>
-
-        <section className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
-          <PerfilRow Icon={Bell} label="Notificações" hint="Lembretes 30 min antes" />
-          <PerfilRow Icon={Activity} label="Wearables" hint="Apple Watch · Withings" />
-          <PerfilRow Icon={MessageCircle} label="Mensagens" hint="2 não lidas" />
-          <PerfilRow Icon={Settings} label="Definições" />
-        </section>
-
-        <p className="px-1 text-center text-[10px] text-muted-foreground">
-          Vivara Health · v0.2 demo
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function PerfilRow({
   Icon,
   label,
