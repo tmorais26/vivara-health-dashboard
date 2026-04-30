@@ -75,7 +75,7 @@ export const Route = createFileRoute("/app")({
   component: AppUtente,
 });
 
-type Tab = "hoje" | "plano" | "saude" | "mais";
+type Tab = "hoje" | "dados" | "carregar" | "avisos" | "perfil";
 type SubView =
   | null
   | "mensagens"
@@ -86,7 +86,7 @@ type SubView =
   | "conteudo"
   | "diario"
   | "novoDiario"
-  | "perfil";
+  | "plano";
 
 const tipoMeta: Record<
   TipoTarefa,
