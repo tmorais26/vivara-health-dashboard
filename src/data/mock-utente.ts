@@ -125,6 +125,37 @@ export type EntradaDiario = {
   nota?: string;
 };
 
+export type Notificacao = {
+  id: string;
+  tipo: "resumo" | "lembrete" | "agenda" | "consulta" | "sistema";
+  titulo: string;
+  detalhe: string;
+  quando: string; // ISO
+  marcadorId?: string;
+  consultaId?: string;
+  lida: boolean;
+  cta?: string;
+};
+
+export type ValorExtraido = {
+  marcadorId: string;
+  marcadorNome: string;
+  unidade: string;
+  valor: number;
+  confianca: number; // 0-1
+  precisaRevisao?: boolean;
+  alternativas?: number[];
+};
+
+export type UploadAnalise = {
+  id: string;
+  ficheiro: string;
+  origem: "camara" | "pdf";
+  dataUpload: string; // ISO
+  estado: "processado" | "a_processar";
+  numValores: number;
+};
+
 export type Utente = {
   id: string;
   nome: string;
@@ -144,6 +175,8 @@ export type Utente = {
   conteudos: Conteudo[];
   diario: EntradaDiario[];
   streakDias: number;
+  notificacoes: Notificacao[];
+  uploadsRecentes: UploadAnalise[];
 };
 
 // Deterministic pseudo-random
