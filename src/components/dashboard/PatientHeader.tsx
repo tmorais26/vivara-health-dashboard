@@ -2,6 +2,7 @@ import { ArrowLeft, Download, FileText, Settings2 } from "lucide-react";
 import type { Alerta, Utente } from "@/data/mock-utente";
 import { formatarData } from "@/data/mock-utente";
 import { Link } from "@tanstack/react-router";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function PatientHeader({
   utente,
@@ -34,6 +35,7 @@ export function PatientHeader({
           </div>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <ThemeToggle />
           <span>{utente.medicaResponsavel}</span>
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
             SC
