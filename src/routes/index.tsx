@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { utente, calcularEstado } from "@/data/mock-utente";
 import { ArrowRight } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -29,6 +30,7 @@ function Index() {
             <span className="font-serif text-base text-foreground">Vivara Health</span>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <ThemeToggle />
             <span>Dra. Sofia Cardoso</span>
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
               SC
