@@ -508,11 +508,14 @@ function HojeView({
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2">
           {breakdown.map((b) => (
-            <div key={b.pilar} className="rounded-xl border border-border bg-surface p-2.5">
-              <div className="text-[9.5px] uppercase tracking-wider text-muted-foreground">
+            <div
+              key={b.pilar}
+              className="min-w-0 rounded-xl border border-border bg-surface px-2 py-2.5"
+            >
+              <div className="text-[9px] uppercase tracking-wide leading-tight text-muted-foreground break-words hyphens-auto">
                 {b.pilar}
               </div>
-              <div className="font-serif tabular mt-0.5 text-base text-foreground">
+              <div className="font-serif tabular mt-1 text-base text-foreground">
                 {b.valor}
                 <span className="text-[10px] text-muted-foreground">/100</span>
               </div>
