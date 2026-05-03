@@ -35,6 +35,7 @@ import {
   Video,
   X,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   utente,
   calcularDirecao,
@@ -471,19 +472,22 @@ function HojeView({
             Olá, {utente.nome.split(" ")[0]}
           </h2>
         </div>
-        <button
-          type="button"
-          onClick={() => onOpenSub("mensagens")}
-          className="relative mt-1 flex h-9 w-9 items-center justify-center rounded-full bg-surface-raised border border-border hover:border-foreground/20"
-          aria-label="Mensagens"
-        >
-          <MessageCircle className="h-4 w-4 text-foreground" />
-          {naoLidas > 0 && (
-            <span className="tabular absolute -right-1 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-state-alert px-1 text-[9px] font-medium text-state-alert-soft">
-              {naoLidas}
-            </span>
-          )}
-        </button>
+        <div className="mt-1 flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            type="button"
+            onClick={() => onOpenSub("mensagens")}
+            className="relative flex h-8 w-8 items-center justify-center rounded-full bg-surface-raised border border-border hover:border-foreground/20"
+            aria-label="Mensagens"
+          >
+            <MessageCircle className="h-4 w-4 text-foreground" />
+            {naoLidas > 0 && (
+              <span className="tabular absolute -right-1 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-state-alert px-1 text-[9px] font-medium text-state-alert-soft">
+                {naoLidas}
+              </span>
+            )}
+          </button>
+        </div>
       </header>
 
       {/* Score de longevidade */}
