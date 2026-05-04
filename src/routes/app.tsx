@@ -1062,13 +1062,13 @@ function MarkerSheet({ marcador, onClose }: { marcador: Marcador; onClose: () =>
           </div>
         )}
 
-        {marcador.notaMedica && (
+        {marcador.notaPartilhada && (
           <div className="mt-3 rounded-xl border border-border bg-surface p-3">
             <div className="text-[9.5px] uppercase tracking-wider text-muted-foreground">
               Nota da Dra. Sofia
             </div>
             <p className="font-serif mt-1 text-[13px] leading-snug text-foreground">
-              {marcador.notaMedica}
+              {marcador.notaPartilhada}
             </p>
           </div>
         )}
