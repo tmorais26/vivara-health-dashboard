@@ -395,6 +395,7 @@ const marcadores: Marcador[] = [
     alvoFuncional: [50, 80],
     direcaoBoa: "subir",
     notaMedica: "Queda no inverno apesar da suplementação. Avaliar absorção e considerar 5000 UI/dia.",
+    notaPartilhada: "Os teus níveis caem no inverno. Ajustámos a dose para 5000 UI/dia.",
     serie: serieAnalise(29, 38, 24, -10, 3),
     explicacaoSimples:
       "Hormona-vitamina ligada à imunidade, ossos e humor. Em Portugual baixa muito no inverno.",
