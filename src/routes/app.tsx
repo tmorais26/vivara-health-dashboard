@@ -75,7 +75,7 @@ export const Route = createFileRoute("/app")({
   component: AppUtente,
 });
 
-type Tab = "hoje" | "dados" | "carregar" | "avisos" | "perfil";
+type Tab = "hoje" | "dados" | "avisos" | "perfil";
 type SubView =
   | null
   | "mensagens"
