@@ -174,23 +174,52 @@ export function MarkerDetailPanel({
 
       {/* Notas + próxima recolha */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-surface-raised p-5 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Nota da médica
+        <div className="space-y-3 lg:col-span-2">
+          {/* Nota interna — só médico */}
+          <div className="rounded-2xl border border-state-warn/30 bg-state-warn-soft/30 p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-state-warn">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-state-warn" />
+                Nota interna · só visível ao médico
+              </div>
+              <button
+                type="button"
+                onClick={() => setNotaInternaAberta((v) => !v)}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Pencil className="h-3 w-3" />
+                Editar
+              </button>
             </div>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <Pencil className="h-3 w-3" />
-              Editar
-            </button>
+            <p className="font-serif mt-3 text-lg leading-relaxed text-foreground">
+              {marcador.notaMedica ??
+                "Sem notas internas. A tendência mantém-se dentro do alvo funcional definido."}
+            </p>
           </div>
-          <p className="font-serif mt-3 text-lg leading-relaxed text-foreground">
-            {marcador.notaMedica ??
-              "Sem notas para este marcador. A tendência mantém-se dentro do alvo funcional definido."}
-          </p>
+
+          {/* Nota partilhada — visível na app */}
+          <div className="rounded-2xl border border-border bg-surface-raised p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-state-ok" />
+                Nota partilhada · visível na app da utente
+              </div>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Pencil className="h-3 w-3" />
+                Editar
+              </button>
+            </div>
+            <p className="font-serif mt-3 text-base leading-relaxed text-foreground">
+              {marcador.notaPartilhada ?? (
+                <span className="text-muted-foreground italic">
+                  Nada partilhado com a utente para este marcador.
+                </span>
+              )}
+            </p>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-border bg-surface-raised p-5">
