@@ -129,7 +129,11 @@ export function LongitudinalChart({ marcador }: { marcador: Marcador }) {
                 boxShadow: "0 4px 24px rgb(0 0 0 / 0.06)",
               }}
               labelFormatter={(t) => formatarData(new Date(t as number).toISOString())}
-              formatter={(v: number) => [`${v} ${marcador.unidade}`, marcador.nomeCurto]}
+              formatter={(v: number, _name, item) => {
+                const fonte = (item?.payload as { fonte?: string } | undefined)?.fonte;
+                const fonteLabel = fonte === "laboratorio" ? "Lab Synlab" : fonte ?? "—";
+                return [`${v} ${marcador.unidade} · ${fonteLabel}`, marcador.nomeCurto];
+              }}
             />
             <Line
               type="monotone"
