@@ -188,6 +188,11 @@ function AppUtente() {
                       onToggle={toggle}
                       onJump={() => openSub("plano")}
                       onOpenSub={openSub}
+                      onGoTab={(t) => {
+                        setTab(t);
+                        setSub(null);
+                      }}
+                      onCarregar={() => openSub("carregar")}
                     />
                   )}
                   {tab === "dados" && (
