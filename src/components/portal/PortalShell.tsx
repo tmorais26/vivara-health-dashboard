@@ -143,11 +143,18 @@ export function MobileNavTabs() {
           <Link
             key={it.to}
             to={it.to}
-            className={`flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] ${
+            className={`relative flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] ${
               active ? "text-foreground" : "text-muted-foreground"
             }`}
           >
-            <it.icon className="h-4 w-4" />
+            <span className="relative">
+              <it.icon className="h-4 w-4" />
+              {it.badge ? (
+                <span className="tabular absolute -right-2 -top-1.5 inline-flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-state-alert px-1 text-[9px] font-medium text-primary-foreground">
+                  {it.badge}
+                </span>
+              ) : null}
+            </span>
             {it.label}
           </Link>
         );
