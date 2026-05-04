@@ -106,7 +106,7 @@ export function PortalShell({
           </div>
         </header>
         {!hideSidebarChrome && (
-          <header className="border-b border-border bg-surface-raised">
+          <header className="hidden border-b border-border bg-surface-raised lg:block">
             <div className="flex items-center justify-between px-6 py-3">
               <div className="flex items-center gap-3 text-xs text-muted-foreground lg:hidden">
                 <span className="inline-block h-2 w-2 rounded-full bg-state-ok" />
