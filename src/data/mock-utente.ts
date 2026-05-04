@@ -688,6 +688,8 @@ const plano_tarefas: TarefaPlano[] = [
     marcadorId: "vitd",
     criadaEm: "2026-03-12",
     prazo: "Diário, 8 semanas",
+    hora: "08:00",
+    comRefeicao: "pequeno-almoço",
     feita: false,
   },
   {
@@ -698,6 +700,8 @@ const plano_tarefas: TarefaPlano[] = [
     marcadorId: "ldl",
     criadaEm: "2026-03-12",
     prazo: "Diário, até reavaliação",
+    hora: "13:00",
+    comRefeicao: "almoço",
     feita: true,
     feitaEm: "2026-03-14",
   },
@@ -709,6 +713,7 @@ const plano_tarefas: TarefaPlano[] = [
     marcadorId: "ldl",
     criadaEm: "2026-03-12",
     prazo: "Até 15 Maio 2026",
+    comRefeicao: "em jejum",
     feita: false,
   },
   {
@@ -729,6 +734,8 @@ const plano_tarefas: TarefaPlano[] = [
     marcadorId: "ldl",
     criadaEm: "2026-03-12",
     prazo: "Condicional",
+    hora: "22:30",
+    comRefeicao: "ao deitar",
     feita: false,
   },
 ];
