@@ -464,11 +464,11 @@ function HojeView({
     fonte: "Apple Watch · sincronizado há 4 min",
   };
 
-  const acessos: { label: string; Icon: typeof Upload; onClick: () => void }[] = [
-    { label: "Carregar", Icon: Upload, onClick: onCarregar },
-    { label: "Análises", Icon: FlaskConical, onClick: () => onGoTab("dados") },
-    { label: "Resumo", Icon: FileText, onClick: () => onGoTab("avisos") },
-    { label: "Privacidade", Icon: Shield, onClick: () => onGoTab("perfil") },
+  const acessos: { label: string; Icon: typeof Upload; onClick: () => void; darkTone: string }[] = [
+    { label: "Carregar", Icon: Upload, onClick: onCarregar, darkTone: "dark:bg-state-ok dark:text-background" },
+    { label: "Análises", Icon: FlaskConical, onClick: () => onGoTab("dados"), darkTone: "dark:bg-primary dark:text-primary-foreground" },
+    { label: "Resumo", Icon: FileText, onClick: () => onGoTab("avisos"), darkTone: "dark:bg-[oklch(0.55_0.18_300)] dark:text-white" },
+    { label: "Privacidade", Icon: Shield, onClick: () => onGoTab("perfil"), darkTone: "dark:bg-white/10 dark:text-white" },
   ];
 
   return (
