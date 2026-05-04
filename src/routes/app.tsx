@@ -500,19 +500,19 @@ function HojeView({
         </div>
       </header>
 
-      {/* Score de longevidade */}
+      {/* Score de acompanhamento */}
       <section className="rounded-2xl border border-border bg-surface-raised p-4">
         <div className="flex items-center gap-4">
           <ScoreRing value={score} />
           <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Score de longevidade
+              Score de acompanhamento
             </div>
             <div className="font-serif mt-0.5 text-[22px] leading-tight text-foreground">
               {score} <span className="text-muted-foreground text-base">/100</span>
             </div>
             <div className="mt-0.5 text-[11px] text-muted-foreground">
-              Calculado a partir dos teus 24 marcadores
+              Validado por {utente.medicaResponsavel} · 12 mar 2026
             </div>
           </div>
         </div>
@@ -531,6 +531,14 @@ function HojeView({
               </div>
             </div>
           ))}
+        </div>
+        <div className="mt-3 flex items-start gap-2 rounded-xl bg-accent/40 px-3 py-2 text-[10.5px] leading-snug text-muted-foreground">
+          <Info className="mt-0.5 h-3 w-3 shrink-0" />
+          <span>
+            Métrica de acompanhamento pessoal calculada a partir dos teus marcadores e
+            validada pela tua médica. Não constitui diagnóstico nem substitui avaliação
+            clínica.
+          </span>
         </div>
       </section>
 
