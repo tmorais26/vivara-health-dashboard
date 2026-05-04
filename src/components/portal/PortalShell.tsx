@@ -88,6 +88,23 @@ export function PortalShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <SessionTimeoutBanner />
+        {/* Mobile top bar — sempre visível em <lg, mesmo nas rotas com header próprio */}
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-surface-raised px-4 py-2.5 lg:hidden">
+          <Link to="/" className="flex items-center gap-2">
+            <span className="inline-block h-2 w-2 rounded-full bg-state-ok" />
+            <span className="font-serif text-sm text-foreground">Vivara Health</span>
+          </Link>
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-full border border-state-ok/30 bg-state-ok-soft/60 px-2 py-0.5 text-[10px] font-medium text-state-ok">
+              <ShieldCheck className="h-2.5 w-2.5" />
+              MFA
+            </span>
+            <ThemeToggle />
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+              SC
+            </div>
+          </div>
+        </header>
         {!hideSidebarChrome && (
           <header className="border-b border-border bg-surface-raised">
             <div className="flex items-center justify-between px-6 py-3">
