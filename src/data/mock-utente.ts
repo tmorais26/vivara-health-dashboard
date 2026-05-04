@@ -310,6 +310,8 @@ const marcadores: Marcador[] = [
     direcaoBoa: "baixar",
     notaMedica:
       "Tendência ascendente nos últimos 8 meses. Reforçar fibras solúveis e considerar ezetimibe se >150 na próxima colheita.",
+    notaPartilhada:
+      "O teu LDL tem subido nos últimos meses. Vamos reforçar fibra solúvel e reavaliar na próxima colheita.",
     proximaRecolha: "Maio 2026",
     serie: serieAnalise(11, 118, 142, 14, 6),
     explicacaoSimples:
