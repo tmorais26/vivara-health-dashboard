@@ -7,6 +7,7 @@ import { MarkerDetailPanel } from "@/components/dashboard/MarkerDetailPanel";
 import { GenomicaPanel } from "@/components/dashboard/GenomicaPanel";
 import { PrescricoesPanel } from "@/components/dashboard/PrescricoesPanel";
 import { PlanoPanel } from "@/components/dashboard/PlanoPanel";
+import { AnamnesePanel } from "@/components/dashboard/AnamnesePanel";
 
 export const Route = createFileRoute("/utentes/$utenteId")({
   head: ({ params }) => ({
@@ -32,8 +33,9 @@ export const Route = createFileRoute("/utentes/$utenteId")({
   ),
 });
 
-type Tab = Categoria | "plano";
+type Tab = Categoria | "plano" | "anamnese";
 const tabs: { id: Tab; label: string }[] = [
+  { id: "anamnese", label: "Anamnese" },
   { id: "analises", label: "Análises" },
   { id: "composicao", label: "Composição" },
   { id: "wearable", label: "Wearable" },
@@ -52,7 +54,10 @@ function DashboardUtente() {
 
   const marcadoresFiltrados = useMemo(
     () =>
-      activeTab === "plano" || activeTab === "genomica" || activeTab === "prescricoes"
+      activeTab === "plano" ||
+      activeTab === "genomica" ||
+      activeTab === "prescricoes" ||
+      activeTab === "anamnese"
         ? []
         : utente.marcadores.filter((m) => m.categoria === (activeTab as Categoria)),
     [activeTab],
@@ -64,7 +69,13 @@ function DashboardUtente() {
   // ao mudar de tab, se o seleccionado não pertence à nova categoria, escolher o primeiro
   function handleTab(id: Tab) {
     setActiveTab(id);
-    if (id === "genomica" || id === "prescricoes" || id === "plano") return;
+    if (
+      id === "genomica" ||
+      id === "prescricoes" ||
+      id === "plano" ||
+      id === "anamnese"
+    )
+      return;
     const lista = utente.marcadores.filter((m) => m.categoria === (id as Categoria));
     if (!lista.find((m) => m.id === selectedId) && lista[0]) {
       setSelectedId(lista[0].id);
@@ -117,7 +128,9 @@ function DashboardUtente() {
 
       {/* Body */}
       <main className="mx-auto max-w-[1440px] px-8 py-8">
-        {activeTab === "plano" ? (
+        {activeTab === "anamnese" ? (
+          <AnamnesePanel utente={utente} />
+        ) : activeTab === "plano" ? (
           <PlanoPanel
             utente={utente}
             initialPrefill={planoPrefill}
