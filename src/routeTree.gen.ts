@@ -9,13 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PrescricoesRouteImport } from './routes/prescricoes'
+import { Route as DefinicoesRouteImport } from './routes/definicoes'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UtentesUtenteIdRouteImport } from './routes/utentes.$utenteId'
 
+const PrescricoesRoute = PrescricoesRouteImport.update({
+  id: '/prescricoes',
+  path: '/prescricoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DefinicoesRoute = DefinicoesRouteImport.update({
+  id: '/definicoes',
+  path: '/definicoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendaRoute = AgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -31,41 +49,93 @@ const UtentesUtenteIdRoute = UtentesUtenteIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/app': typeof AppRoute
+  '/definicoes': typeof DefinicoesRoute
+  '/prescricoes': typeof PrescricoesRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/app': typeof AppRoute
+  '/definicoes': typeof DefinicoesRoute
+  '/prescricoes': typeof PrescricoesRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/app': typeof AppRoute
+  '/definicoes': typeof DefinicoesRoute
+  '/prescricoes': typeof PrescricoesRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/utentes/$utenteId'
+  fullPaths:
+    | '/'
+    | '/agenda'
+    | '/app'
+    | '/definicoes'
+    | '/prescricoes'
+    | '/utentes/$utenteId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app' | '/utentes/$utenteId'
-  id: '__root__' | '/' | '/app' | '/utentes/$utenteId'
+  to:
+    | '/'
+    | '/agenda'
+    | '/app'
+    | '/definicoes'
+    | '/prescricoes'
+    | '/utentes/$utenteId'
+  id:
+    | '__root__'
+    | '/'
+    | '/agenda'
+    | '/app'
+    | '/definicoes'
+    | '/prescricoes'
+    | '/utentes/$utenteId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgendaRoute: typeof AgendaRoute
   AppRoute: typeof AppRoute
+  DefinicoesRoute: typeof DefinicoesRoute
+  PrescricoesRoute: typeof PrescricoesRoute
   UtentesUtenteIdRoute: typeof UtentesUtenteIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/prescricoes': {
+      id: '/prescricoes'
+      path: '/prescricoes'
+      fullPath: '/prescricoes'
+      preLoaderRoute: typeof PrescricoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/definicoes': {
+      id: '/definicoes'
+      path: '/definicoes'
+      fullPath: '/definicoes'
+      preLoaderRoute: typeof DefinicoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app': {
       id: '/app'
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agenda': {
+      id: '/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AgendaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -87,7 +157,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgendaRoute: AgendaRoute,
   AppRoute: AppRoute,
+  DefinicoesRoute: DefinicoesRoute,
+  PrescricoesRoute: PrescricoesRoute,
   UtentesUtenteIdRoute: UtentesUtenteIdRoute,
 }
 export const routeTree = rootRouteImport

@@ -5,10 +5,29 @@ import {
   type Marcador,
   type TipoTarefa,
 } from "@/data/mock-utente";
-import { Bell, ChevronDown, FlaskConical, MessageSquare, Pencil, Pill, Stethoscope } from "lucide-react";
+import {
+  Bell,
+  CheckCircle2,
+  ChevronDown,
+  FlaskConical,
+  MessageSquare,
+  Pencil,
+  Pill,
+  Stethoscope,
+  Target,
+} from "lucide-react";
 import { useState } from "react";
 import { LongitudinalChart } from "./LongitudinalChart";
 import { StateTag } from "./StateTag";
+import {
+  Field,
+  ModalActions,
+  PrimaryButton,
+  SecondaryButton,
+  SimpleModal,
+  inputClass,
+  textareaClass,
+} from "@/components/portal/SimpleModal";
 
 const categoriaLabel: Record<string, string> = {
   analises: "Análises clínicas",
@@ -46,6 +65,7 @@ export function MarkerDetailPanel({
   const [alvoMin, alvoMax] = marcador.alvoFuncional;
   const [labMin, labMax] = marcador.intervaloLab;
   const [novaPrescAberta, setNovaPrescAberta] = useState(false);
+  const [editarAlvoOpen, setEditarAlvoOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-5">
@@ -167,6 +187,14 @@ export function MarkerDetailPanel({
             <span className="tabular text-xs text-muted-foreground">
               Lab: {labMin}–{labMax}
             </span>
+            <button
+              type="button"
+              onClick={() => setEditarAlvoOpen(true)}
+              className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              <Target className="h-3 w-3" />
+              Editar alvo (com justificação)
+            </button>
           </div>
         </Card>
       </div>
@@ -236,6 +264,15 @@ export function MarkerDetailPanel({
           </button>
         </div>
       </div>
+
+      {/* Adesão ao plano (visível à médica) */}
+      <AdesaoCard marcador={marcador} />
+
+      <EditarAlvoModal
+        open={editarAlvoOpen}
+        onClose={() => setEditarAlvoOpen(false)}
+        marcador={marcador}
+      />
     </div>
   );
 }
@@ -255,5 +292,105 @@ function Card({
       <div className="mt-3">{children}</div>
       {sub && <div className="mt-2 text-[11px] text-muted-foreground">{sub}</div>}
     </div>
+  );
+}
+
+function AdesaoCard({ marcador }: { marcador: Marcador }) {
+  // Mock determinístico de adesão por marcador.
+  const tomas = 30;
+  const feitas = marcador.id === "vitd" ? 25 : marcador.id === "ldl" ? 22 : 28;
+  const taxa = Math.round((feitas / tomas) * 100);
+  const tone =
+    taxa >= 85
+      ? "text-state-ok bg-state-ok-soft border-state-ok/30"
+      : taxa >= 60
+        ? "text-state-warn bg-state-warn-soft border-state-warn/30"
+        : "text-state-alert bg-state-alert-soft border-state-alert/30";
+  return (
+    <div className="rounded-2xl border border-border bg-surface-raised p-5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <CheckCircle2 className="h-3 w-3" />
+          Adesão ao plano · últimos 30 dias
+        </div>
+        <span className={`tabular rounded-full border px-2.5 py-1 text-[11px] font-medium ${tone}`}>
+          {taxa}%
+        </span>
+      </div>
+      <p className="mt-3 text-sm text-foreground">
+        Marcou <span className="tabular font-medium">{feitas}</span> em{" "}
+        <span className="tabular font-medium">{tomas}</span> dias as tomas associadas a este marcador.
+      </p>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        Dados sincronizados a partir do plano da app. Falhas registadas pelo próprio utente.
+      </p>
+    </div>
+  );
+}
+
+function EditarAlvoModal({
+  open,
+  onClose,
+  marcador,
+}: {
+  open: boolean;
+  onClose: () => void;
+  marcador: Marcador;
+}) {
+  const [min, setMin] = useState(marcador.alvoFuncional[0]);
+  const [max, setMax] = useState(marcador.alvoFuncional[1]);
+  return (
+    <SimpleModal
+      open={open}
+      onClose={onClose}
+      title={`Editar alvo funcional · ${marcador.nomeCurto}`}
+      description="Cada alteração fica registada com data e justificação clínica. O gráfico marca o ponto de mudança."
+      width="md"
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={`Mínimo (${marcador.unidade})`}>
+            <input
+              type="number"
+              value={min}
+              onChange={(e) => setMin(Number(e.target.value))}
+              className={inputClass}
+            />
+          </Field>
+          <Field label={`Máximo (${marcador.unidade})`}>
+            <input
+              type="number"
+              value={max}
+              onChange={(e) => setMax(Number(e.target.value))}
+              className={inputClass}
+            />
+          </Field>
+        </div>
+        <Field
+          label="Justificação clínica"
+          hint="Visível em auditoria. Necessária para conformidade RGPD/Art. 9."
+        >
+          <textarea
+            className={textareaClass}
+            placeholder="Ex.: alvo mais agressivo dada a história familiar paterna de enfarte aos 58 anos."
+          />
+        </Field>
+        <div className="rounded-xl border border-border bg-background p-3 text-[11px] text-muted-foreground">
+          Alvo anterior:{" "}
+          <span className="tabular text-foreground">
+            {marcador.alvoFuncional[0]}–{marcador.alvoFuncional[1]} {marcador.unidade}
+          </span>
+          <span className="mx-2">→</span>
+          Novo:{" "}
+          <span className="tabular text-foreground">
+            {min}–{max} {marcador.unidade}
+          </span>
+        </div>
+      </div>
+      <ModalActions>
+        <SecondaryButton onClick={onClose}>Cancelar</SecondaryButton>
+        <PrimaryButton onClick={onClose}>Guardar alteração</PrimaryButton>
+      </ModalActions>
+    </SimpleModal>
   );
 }
