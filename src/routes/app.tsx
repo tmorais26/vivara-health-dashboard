@@ -188,6 +188,11 @@ function AppUtente() {
                       onToggle={toggle}
                       onJump={() => openSub("plano")}
                       onOpenSub={openSub}
+                      onGoTab={(t) => {
+                        setTab(t);
+                        setSub(null);
+                      }}
+                      onCarregar={() => openSub("carregar")}
                     />
                   )}
                   {tab === "dados" && (
@@ -431,11 +436,15 @@ function HojeView({
   onToggle,
   onJump,
   onOpenSub,
+  onGoTab,
+  onCarregar,
 }: {
   tarefas: TarefaPlano[];
   onToggle: (id: string) => void;
   onJump: () => void;
   onOpenSub: (v: SubView, ctx?: string) => void;
+  onGoTab: (t: Tab) => void;
+  onCarregar: () => void;
 }) {
   const score = useMemo(() => calcularScoreLongevidade(), []);
   const breakdown = useMemo(() => scoreBreakdown(), []);
@@ -455,11 +464,11 @@ function HojeView({
     fonte: "Apple Watch · sincronizado há 4 min",
   };
 
-  const acessos: { id: SubView; ctx?: string; label: string; Icon: typeof Upload; tone: string }[] = [
-    { id: "carregar", label: "Carregar", Icon: Upload, tone: "bg-state-ok text-background" },
-    { id: "plano", label: "Análises", Icon: FlaskConical, tone: "bg-primary text-primary-foreground" },
-    { id: "consultas", label: "Resumo", Icon: FileText, tone: "bg-foreground/80 text-background" },
-    { id: "perfil" as SubView, label: "Privacidade", Icon: Shield, tone: "bg-accent text-foreground border border-border" },
+  const acessos: { label: string; Icon: typeof Upload; onClick: () => void }[] = [
+    { label: "Carregar", Icon: Upload, onClick: onCarregar },
+    { label: "Análises", Icon: FlaskConical, onClick: () => onGoTab("dados") },
+    { label: "Resumo", Icon: FileText, onClick: () => onGoTab("avisos") },
+    { label: "Privacidade", Icon: Shield, onClick: () => onGoTab("perfil") },
   ];
 
   return (
@@ -480,42 +489,41 @@ function HojeView({
         </div>
       </header>
 
-      {/* Score destacado — cartão escuro */}
-      <section className="rounded-2xl bg-gradient-to-br from-foreground to-foreground/85 p-4 text-background dark:from-surface-raised dark:to-surface-raised dark:text-foreground dark:border dark:border-border">
+      {/* Score destacado */}
+      <section className="rounded-2xl border border-border bg-surface-raised p-4">
         <div className="flex items-center justify-between">
-          <div className="text-[10px] uppercase tracking-wider opacity-70 inline-flex items-center gap-1">
+          <div className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
             Score de acompanhamento <Info className="h-3 w-3" />
           </div>
         </div>
         <div className="mt-2 flex items-end justify-between gap-3">
           <div>
-            <div className="font-serif tabular text-[44px] leading-none">
+            <div className="font-serif tabular text-[44px] leading-none text-foreground">
               {score}
-              <span className="text-[18px] opacity-60">/100</span>
+              <span className="text-[18px] text-muted-foreground">/100</span>
             </div>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-state-ok-soft/20 border border-state-ok/40 px-2.5 py-1 text-[10.5px] font-medium text-state-ok">
+          <span className="inline-flex items-center gap-1 rounded-full border border-state-ok/40 bg-state-ok-soft px-2.5 py-1 text-[10.5px] font-medium text-state-ok">
             <TrendingUp className="h-3 w-3" /> 2 esta semana
           </span>
         </div>
-        <p className="mt-2 text-[10.5px] leading-snug opacity-70">
+        <p className="mt-2 text-[10.5px] leading-snug text-muted-foreground">
           Calculado para acompanhamento pessoal pela {utente.medicaResponsavel}. Não substitui avaliação clínica.
         </p>
         <div className="mt-3 grid grid-cols-3 gap-2">
-          {breakdown.map((b, i) => {
-            const colors = ["bg-state-ok", "bg-state-warn", "bg-primary"];
-            return (
-              <div key={b.pilar} className="rounded-xl bg-background/10 dark:bg-surface px-2.5 py-2">
-                <div className="text-[9px] uppercase tracking-wide opacity-70 truncate">
-                  {b.pilar.length > 11 ? b.pilar.slice(0, 10) + "." : b.pilar}
-                </div>
-                <div className="font-serif tabular mt-0.5 text-[18px] leading-none">{b.valor}</div>
-                <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-background/15 dark:bg-border">
-                  <div className={`h-full rounded-full ${colors[i % 3]}`} style={{ width: `${b.valor}%` }} />
-                </div>
+          {breakdown.map((b) => (
+            <div key={b.pilar} className="rounded-xl border border-border bg-surface px-2.5 py-2">
+              <div className="text-[9px] uppercase tracking-wide text-muted-foreground truncate">
+                {b.pilar.length > 11 ? b.pilar.slice(0, 10) + "." : b.pilar}
               </div>
-            );
-          })}
+              <div className="font-serif tabular mt-0.5 text-[18px] leading-none text-foreground">
+                {b.valor}
+              </div>
+              <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-border">
+                <div className="h-full rounded-full bg-foreground/70" style={{ width: `${b.valor}%` }} />
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -525,10 +533,10 @@ function HojeView({
           <button
             key={a.label}
             type="button"
-            onClick={() => onOpenSub(a.id, a.ctx)}
+            onClick={a.onClick}
             className="flex flex-col items-center gap-1.5 rounded-xl py-1 text-center"
           >
-            <span className={`flex h-11 w-11 items-center justify-center rounded-full ${a.tone}`}>
+            <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-raised text-foreground transition-colors hover:bg-accent">
               <a.Icon className="h-4 w-4" />
             </span>
             <span className="text-[10.5px] text-foreground">{a.label}</span>
