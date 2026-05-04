@@ -156,6 +156,34 @@ export type UploadAnalise = {
   numValores: number;
 };
 
+// Ficha clínica preenchida na primeira consulta — apenas visível ao médico
+export type FichaClinica = {
+  preenchidaEm: string; // ISO
+  preenchidaPor: string;
+  antecedentesPessoais: string[];
+  medicacaoHabitual: { nome: string; posologia: string; desde?: string }[];
+  suplementacao: { nome: string; posologia: string; desde?: string }[];
+  antecedentesCirurgicos: { intervencao: string; ano: string; nota?: string }[];
+  antecedentesFamiliares: { familiar: string; condicao: string; idadeDiagnostico?: string }[];
+  alergiasMedicamentos: { substancia: string; reacao: string; gravidade: "leve" | "moderada" | "grave" }[];
+  habitos?: { tabaco?: string; alcool?: string; exercicio?: string; sono?: string };
+  notasGerais?: string;
+};
+
+// Diário privado do médico — uma entrada por consulta
+export type NotaConsultaMedico = {
+  id: string;
+  consultaId?: string;
+  data: string; // ISO
+  autor: string;
+  tipo: "primeira" | "seguimento" | "intercorrencia";
+  subjetivo?: string; // o que a utente relatou
+  objetivo?: string; // exame, observação
+  avaliacao?: string; // raciocínio clínico
+  plano?: string; // próximos passos
+  proximaRevisao?: string;
+};
+
 export type Utente = {
   id: string;
   nome: string;
@@ -177,6 +205,8 @@ export type Utente = {
   streakDias: number;
   notificacoes: Notificacao[];
   uploadsRecentes: UploadAnalise[];
+  fichaClinica: FichaClinica;
+  notasMedicas: NotaConsultaMedico[];
 };
 
 // Deterministic pseudo-random
