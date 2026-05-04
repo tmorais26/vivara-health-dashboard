@@ -80,8 +80,6 @@ export type TarefaPlano = {
   feitaEm?: string;
 };
 
-export type HorarioToma = "pequeno-almoço" | "almoço" | "jantar" | "ao deitar" | "em jejum" | "livre";
-
 export type Mensagem = {
   id: string;
   autor: "medica" | "utente" | "sistema";
