@@ -12,6 +12,7 @@ import { PlanoPanel } from "@/components/dashboard/PlanoPanel";
 import { AnamnesePanel } from "@/components/dashboard/AnamnesePanel";
 import { ConsultasPanel } from "@/components/dashboard/ConsultasPanel";
 import { CompararPanel } from "@/components/dashboard/CompararPanel";
+import { DocumentosPanel } from "@/components/dashboard/DocumentosPanel";
 
 export const Route = createFileRoute("/utentes/$utenteId")({
   head: ({ params }) => ({
@@ -37,7 +38,7 @@ export const Route = createFileRoute("/utentes/$utenteId")({
   ),
 });
 
-type Tab = Categoria | "plano" | "anamnese" | "consultas" | "comparar";
+type Tab = Categoria | "plano" | "anamnese" | "consultas" | "comparar" | "documentos";
 const tabs: { id: Tab; label: string }[] = [
   { id: "anamnese", label: "Anamnese" },
   { id: "analises", label: "Análises" },
@@ -47,6 +48,7 @@ const tabs: { id: Tab; label: string }[] = [
   { id: "genomica", label: "Genómica" },
   { id: "prescricoes", label: "Prescrições" },
   { id: "consultas", label: "Consultas" },
+  { id: "documentos", label: "Documentos" },
   { id: "plano", label: "Plano" },
 ];
 
@@ -65,7 +67,8 @@ function DashboardUtente() {
       activeTab === "prescricoes" ||
       activeTab === "anamnese" ||
       activeTab === "consultas" ||
-      activeTab === "comparar"
+      activeTab === "comparar" ||
+      activeTab === "documentos"
         ? []
         : utente.marcadores.filter((m) => m.categoria === (activeTab as Categoria)),
     [activeTab],
@@ -83,7 +86,8 @@ function DashboardUtente() {
       id === "plano" ||
       id === "anamnese" ||
       id === "consultas" ||
-      id === "comparar"
+      id === "comparar" ||
+      id === "documentos"
     )
       return;
     const lista = utente.marcadores.filter((m) => m.categoria === (id as Categoria));
@@ -160,6 +164,8 @@ function DashboardUtente() {
           <ConsultasPanel utente={utente} />
         ) : activeTab === "comparar" ? (
           <CompararPanel utente={utente} />
+        ) : activeTab === "documentos" ? (
+          <DocumentosPanel utente={utente} />
         ) : activeTab === "plano" ? (
           <PlanoPanel
             utente={utente}
