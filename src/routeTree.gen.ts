@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PrescricoesRouteImport } from './routes/prescricoes'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UtentesUtenteIdRouteImport } from './routes/utentes.$utenteId'
 
+const PrescricoesRoute = PrescricoesRouteImport.update({
+  id: '/prescricoes',
+  path: '/prescricoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/app': typeof AppRoute
+  '/prescricoes': typeof PrescricoesRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/app': typeof AppRoute
+  '/prescricoes': typeof PrescricoesRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
 export interface FileRoutesById {
@@ -52,25 +60,40 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/app': typeof AppRoute
+  '/prescricoes': typeof PrescricoesRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agenda' | '/app' | '/utentes/$utenteId'
+  fullPaths: '/' | '/agenda' | '/app' | '/prescricoes' | '/utentes/$utenteId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agenda' | '/app' | '/utentes/$utenteId'
-  id: '__root__' | '/' | '/agenda' | '/app' | '/utentes/$utenteId'
+  to: '/' | '/agenda' | '/app' | '/prescricoes' | '/utentes/$utenteId'
+  id:
+    | '__root__'
+    | '/'
+    | '/agenda'
+    | '/app'
+    | '/prescricoes'
+    | '/utentes/$utenteId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgendaRoute: typeof AgendaRoute
   AppRoute: typeof AppRoute
+  PrescricoesRoute: typeof PrescricoesRoute
   UtentesUtenteIdRoute: typeof UtentesUtenteIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/prescricoes': {
+      id: '/prescricoes'
+      path: '/prescricoes'
+      fullPath: '/prescricoes'
+      preLoaderRoute: typeof PrescricoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app': {
       id: '/app'
       path: '/app'
@@ -106,6 +129,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
   AppRoute: AppRoute,
+  PrescricoesRoute: PrescricoesRoute,
   UtentesUtenteIdRoute: UtentesUtenteIdRoute,
 }
 export const routeTree = rootRouteImport
