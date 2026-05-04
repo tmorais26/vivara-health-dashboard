@@ -930,6 +930,7 @@ export const utente: Utente = {
     {
       id: "n-resumo",
       tipo: "resumo",
+      severidade: "info",
       titulo: "Resumo da consulta",
       detalhe:
         "Plano actualizado. Manter Metformina 500mg 2×/dia. Aumentar Magnésio para 400mg ao deitar. Pedir painel hormonal completo em 6 semanas.",
@@ -941,6 +942,7 @@ export const utente: Utente = {
     {
       id: "n-suplemento",
       tipo: "lembrete",
+      severidade: "info",
       titulo: "Suplementos da manhã",
       detalhe: "Vitamina D3 4000 UI · Ómega-3 EPA/DHA",
       quando: "2026-04-29T09:00:00",
@@ -950,6 +952,7 @@ export const utente: Utente = {
     {
       id: "n-receita",
       tipo: "lembrete",
+      severidade: "atencao",
       titulo: "Receita Metformina termina em 18 dias",
       detalhe:
         "Renovação automática agendada. A Dra. Sofia recebe pedido na próxima sessão.",
@@ -960,6 +963,7 @@ export const utente: Utente = {
     {
       id: "n-analises",
       tipo: "agenda",
+      severidade: "info",
       titulo: "Pedido de análises agendado",
       detalhe: "Painel hormonal: FSH, LH, progesterona, SHBG.",
       quando: "2026-06-01T10:00:00",
@@ -969,6 +973,7 @@ export const utente: Utente = {
     {
       id: "n-consulta",
       tipo: "consulta",
+      severidade: "info",
       titulo: "Próxima consulta",
       detalhe: "Discussão sobre TRH personalizada · Clínica Lumiar",
       quando: "2026-06-08T10:30:00",
