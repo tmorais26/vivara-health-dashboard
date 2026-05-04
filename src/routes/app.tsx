@@ -2491,6 +2491,24 @@ function CarregarRevisaoView({
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 py-3 pb-32">
+        {ficheiros.length > 0 && (
+          <div className="mb-3 flex items-center gap-2 rounded-xl border border-border bg-surface-raised px-3 py-2">
+            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[11.5px] font-medium text-foreground">
+                {ficheiros[0].nome}
+                {ficheiros.length > 1 && (
+                  <span className="text-muted-foreground"> +{ficheiros.length - 1}</span>
+                )}
+              </div>
+              <div className="tabular text-[10px] text-muted-foreground">
+                {ficheiros[0].tamanhoKb < 1024
+                  ? `${ficheiros[0].tamanhoKb} KB`
+                  : `${(ficheiros[0].tamanhoKb / 1024).toFixed(1)} MB`}
+              </div>
+            </div>
+          </div>
+        )}
         <ul className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
           {valores.map((v, i) => {
             const conf = Math.round(v.confianca * 100);
