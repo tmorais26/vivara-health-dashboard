@@ -156,6 +156,34 @@ export type UploadAnalise = {
   numValores: number;
 };
 
+// Ficha clínica preenchida na primeira consulta — apenas visível ao médico
+export type FichaClinica = {
+  preenchidaEm: string; // ISO
+  preenchidaPor: string;
+  antecedentesPessoais: string[];
+  medicacaoHabitual: { nome: string; posologia: string; desde?: string }[];
+  suplementacao: { nome: string; posologia: string; desde?: string }[];
+  antecedentesCirurgicos: { intervencao: string; ano: string; nota?: string }[];
+  antecedentesFamiliares: { familiar: string; condicao: string; idadeDiagnostico?: string }[];
+  alergiasMedicamentos: { substancia: string; reacao: string; gravidade: "leve" | "moderada" | "grave" }[];
+  habitos?: { tabaco?: string; alcool?: string; exercicio?: string; sono?: string };
+  notasGerais?: string;
+};
+
+// Diário privado do médico — uma entrada por consulta
+export type NotaConsultaMedico = {
+  id: string;
+  consultaId?: string;
+  data: string; // ISO
+  autor: string;
+  tipo: "primeira" | "seguimento" | "intercorrencia";
+  subjetivo?: string; // o que a utente relatou
+  objetivo?: string; // exame, observação
+  avaliacao?: string; // raciocínio clínico
+  plano?: string; // próximos passos
+  proximaRevisao?: string;
+};
+
 export type Utente = {
   id: string;
   nome: string;
@@ -177,6 +205,8 @@ export type Utente = {
   streakDias: number;
   notificacoes: Notificacao[];
   uploadsRecentes: UploadAnalise[];
+  fichaClinica: FichaClinica;
+  notasMedicas: NotaConsultaMedico[];
 };
 
 // Deterministic pseudo-random
@@ -945,6 +975,93 @@ export const utente: Utente = {
       dataUpload: "2026-04-08T19:02:00",
       estado: "processado",
       numValores: 6,
+    },
+  ],
+  fichaClinica: {
+    preenchidaEm: "2024-10-14",
+    preenchidaPor: "Dra. Sofia Cardoso",
+    antecedentesPessoais: [
+      "Hipotiroidismo subclínico (diagnóstico em 2019)",
+      "Enxaqueca catamenial — episódica",
+      "Insulinorresistência ligeira (HOMA-IR 2.6 em 2023)",
+      "Défice crónico de vitamina D",
+    ],
+    medicacaoHabitual: [
+      { nome: "Levotiroxina 50 mcg", posologia: "1 cp em jejum, 30 min antes do pequeno-almoço", desde: "2019-05" },
+      { nome: "Sumatriptano 50 mg", posologia: "SOS em crise de enxaqueca, máx. 2/mês", desde: "2021-02" },
+    ],
+    suplementacao: [
+      { nome: "Vitamina D3 5000 UI", posologia: "1 cápsula ao pequeno-almoço", desde: "2026-04" },
+      { nome: "Magnésio bisglicinato 300 mg", posologia: "1 ao deitar", desde: "2025-09" },
+      { nome: "Ómega-3 EPA/DHA 2 g", posologia: "1 ao almoço", desde: "2025-06" },
+      { nome: "Creatina monohidratada 5 g", posologia: "1 dose diária", desde: "2025-11" },
+    ],
+    antecedentesCirurgicos: [
+      { intervencao: "Apendicectomia", ano: "2002", nota: "Sem complicações" },
+      { intervencao: "Cesariana eletiva", ano: "2014", nota: "Gravidez de termo, recém-nascido saudável" },
+    ],
+    antecedentesFamiliares: [
+      { familiar: "Pai", condicao: "Enfarte agudo do miocárdio", idadeDiagnostico: "58" },
+      { familiar: "Pai", condicao: "Hipertensão arterial", idadeDiagnostico: "45" },
+      { familiar: "Mãe", condicao: "Cancro da mama (ER+)", idadeDiagnostico: "62" },
+      { familiar: "Mãe", condicao: "Hipotiroidismo de Hashimoto", idadeDiagnostico: "50" },
+      { familiar: "Avô materno", condicao: "Diabetes tipo 2", idadeDiagnostico: "60" },
+    ],
+    alergiasMedicamentos: [
+      { substancia: "Penicilina", reacao: "Urticária generalizada", gravidade: "moderada" },
+      { substancia: "AINEs (ibuprofeno)", reacao: "Dispepsia marcada", gravidade: "leve" },
+    ],
+    habitos: {
+      tabaco: "Não fumadora (ex-fumadora social até 2015)",
+      alcool: "1–2 copos de vinho por semana",
+      exercicio: "Caminhada 5x/semana, força 2x/semana",
+      sono: "Média 6h30, deitar inconsistente",
+    },
+    notasGerais:
+      "Utente muito aderente, boa literacia em saúde. Foco principal: redução de risco cardiovascular (história paterna) e otimização hormonal na transição perimenopausa.",
+  },
+  notasMedicas: [
+    {
+      id: "nm-1",
+      data: "2024-10-14",
+      autor: "Dra. Sofia Cardoso",
+      tipo: "primeira",
+      subjetivo:
+        "Primeira consulta de longevidade. Procura abordagem preventiva pela história familiar cardiovascular. Refere fadiga vespertina e sono fragmentado.",
+      objetivo:
+        "TA 118/76, FC 68, IMC 23.4. Tiroide sem nódulos palpáveis. Restante exame sem alterações.",
+      avaliacao:
+        "Perfil de risco moderado (ApoB elevada, LDL 142). Hipotiroidismo bem controlado. Sinais precoces de perimenopausa.",
+      plano:
+        "Painel completo (lipidograma avançado, hormonal, metabólico). DEXA. CGM 14 dias. Reavaliar em 8 semanas.",
+      proximaRevisao: "2024-12-10",
+    },
+    {
+      id: "nm-2",
+      consultaId: "cons-2",
+      data: "2025-06-18",
+      autor: "Dra. Sofia Cardoso",
+      tipo: "seguimento",
+      subjetivo: "Refere melhoria da energia. Sono ainda inconsistente, deita-se tarde 2–3x/semana.",
+      objetivo: "Composição corporal estável. Massa muscular +0.8 kg desde basal.",
+      avaliacao: "Boa resposta à intervenção nutricional e força. ApoB ainda acima do alvo.",
+      plano:
+        "Iniciar ómega-3 2 g/dia. Reforçar treino de força. Manter CGM ocasional. Reavaliar lipidograma em 3 meses.",
+      proximaRevisao: "2025-09-20",
+    },
+    {
+      id: "nm-3",
+      data: "2026-03-12",
+      autor: "Dra. Sofia Cardoso",
+      tipo: "seguimento",
+      subjetivo:
+        "Mais ativa, refere mais clareza mental. Episódio único de enxaqueca em fevereiro. Preocupada com ondas de calor noturnas.",
+      objetivo: "TA 116/74. Composição corporal mantida. HRV em melhoria progressiva.",
+      avaliacao:
+        "ApoB descida para 92 mg/dL. Vitamina D 22 ng/mL — necessita reposição. Quadro compatível com perimenopausa inicial.",
+      plano:
+        "Vitamina D3 5000 UI/dia 12 semanas. Discutir TRH em próxima consulta. Pedido de FSH/LH/Estradiol seriado.",
+      proximaRevisao: "2026-06-08",
     },
   ],
 };
