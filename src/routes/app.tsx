@@ -508,7 +508,7 @@ function HojeView({
         </p>
         <div className="mt-3 grid grid-cols-3 gap-2">
           {breakdown.map((b, i) => {
-            const barColors = ["bg-state-ok", "bg-state-warn", "bg-primary"];
+            const darkBar = ["dark:bg-state-ok", "dark:bg-state-warn", "dark:bg-primary"][i % 3];
             return (
               <div
                 key={b.pilar}
@@ -522,7 +522,7 @@ function HojeView({
                 </div>
                 <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-border dark:bg-white/10">
                   <div
-                    className={`h-full rounded-full bg-foreground/70 dark:${barColors[i % 3]}`}
+                    className={`h-full rounded-full bg-foreground/70 ${darkBar}`}
                     style={{ width: `${b.valor}%` }}
                   />
                 </div>
