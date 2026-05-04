@@ -183,7 +183,6 @@ export function MarkerDetailPanel({
               </div>
               <button
                 type="button"
-                onClick={() => setNotaInternaAberta((v) => !v)}
                 className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
                 <Pencil className="h-3 w-3" />
