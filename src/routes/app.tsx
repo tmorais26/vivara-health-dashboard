@@ -27,6 +27,8 @@ import {
   Settings,
   Sparkles,
   Stethoscope,
+  Search,
+  Shield,
   TrendingDown,
   TrendingUp,
   Upload,
@@ -435,214 +437,183 @@ function HojeView({
   onJump: () => void;
   onOpenSub: (v: SubView, ctx?: string) => void;
 }) {
-  const total = tarefas.length;
-  const feitas = tarefas.filter((t) => t.feita).length;
-  const pct = total === 0 ? 0 : Math.round((feitas / total) * 100);
-  const proximas = tarefas.filter((t) => !t.feita).slice(0, 3);
-
   const score = useMemo(() => calcularScoreLongevidade(), []);
   const breakdown = useMemo(() => scoreBreakdown(), []);
 
-  // Quick health snapshot
   const sono = utente.marcadores.find((m) => m.id === "sono")!;
   const hrv = utente.marcadores.find((m) => m.id === "hrv")!;
   const passos = utente.marcadores.find((m) => m.id === "passos")!;
 
-  // Mensagens não lidas
-  const naoLidas = utente.conversas
-    .flatMap((c) => c.mensagens)
-    .filter((m) => !m.lida && m.autor === "medica").length;
+  const observacao = {
+    label: "27 abr",
+    titulo: (
+      <>
+        O teu HRV ficou <strong className="font-semibold">18% abaixo</strong> da média de 12 meses.
+        Ontem dormiste <strong className="font-semibold">5h42</strong>, menos 1h12 que a tua mediana.
+      </>
+    ),
+    fonte: "Apple Watch · sincronizado há 4 min",
+  };
 
-  // Observação do dia — factual, sem prescrição. Templates aprovados pela médica.
-  const insight = useMemo(() => {
-    const hrvEstado = calcularEstado(hrv);
-    if (hrvEstado !== "ok") {
-      return {
-        titulo: "O teu HRV está abaixo da tua média",
-        texto:
-          "Esta semana 18% abaixo da tua linha de base de 12 meses. Sono médio nos últimos 3 dias: 5h42.",
-        cta: { label: "Saber mais sobre HRV", action: () => onOpenSub("aprender", "ed2") },
-      };
-    }
-    return {
-      titulo: "Recuperação dentro do teu padrão",
-      texto: "HRV e sono nos últimos 7 dias estão alinhados com a tua média de 12 meses.",
-      cta: { label: "Ver Saúde", action: onJump },
-    };
-  }, [hrv, onJump, onOpenSub]);
+  const acessos: { id: SubView; ctx?: string; label: string; Icon: typeof Upload; tone: string }[] = [
+    { id: "carregar", label: "Carregar", Icon: Upload, tone: "bg-state-ok text-background" },
+    { id: "plano", label: "Análises", Icon: FlaskConical, tone: "bg-primary text-primary-foreground" },
+    { id: "consultas", label: "Resumo", Icon: FileText, tone: "bg-foreground/80 text-background" },
+    { id: "perfil" as SubView, label: "Privacidade", Icon: Shield, tone: "bg-accent text-foreground border border-border" },
+  ];
 
   return (
-    <div className="space-y-5 px-5 pt-3">
+    <div className="space-y-4 px-5 pt-3">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            Quarta · 29 abril
-          </div>
-          <h2 className="font-serif mt-0.5 text-[28px] leading-tight text-foreground">
-            Olá, {utente.nome.split(" ")[0]}
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Olá</div>
+          <h2 className="font-serif mt-0.5 text-[26px] leading-tight text-foreground">
+            {utente.nome.split(" ")[0]} {utente.nome.split(" ").slice(-1)[0][0]}.
           </h2>
         </div>
         <div className="mt-1 flex items-center gap-2">
           <ThemeToggle />
-          <button
-            type="button"
-            onClick={() => onOpenSub("mensagens")}
-            className="relative flex h-8 w-8 items-center justify-center rounded-full bg-surface-raised border border-border hover:border-foreground/20"
-            aria-label="Mensagens"
-          >
-            <MessageCircle className="h-4 w-4 text-foreground" />
-            {naoLidas > 0 && (
-              <span className="tabular absolute -right-1 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-state-alert px-1 text-[9px] font-medium text-state-alert-soft">
-                {naoLidas}
-              </span>
-            )}
-          </button>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[12px] font-medium text-primary-foreground">
+            {utente.nome.split(" ")[0][0]}
+            {utente.nome.split(" ").slice(-1)[0][0]}
+          </div>
         </div>
       </header>
 
-      {/* Score de acompanhamento */}
-      <section className="rounded-2xl border border-border bg-surface-raised p-4">
-        <div className="flex items-center gap-4">
-          <ScoreRing value={score} />
-          <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Score de acompanhamento
-            </div>
-            <div className="font-serif mt-0.5 text-[22px] leading-tight text-foreground">
-              {score} <span className="text-muted-foreground text-base">/100</span>
-            </div>
-            <div className="mt-0.5 text-[11px] text-muted-foreground">
-              Validado por {utente.medicaResponsavel} · 12 mar 2026
-            </div>
+      {/* Score destacado — cartão escuro */}
+      <section className="rounded-2xl bg-gradient-to-br from-foreground to-foreground/85 p-4 text-background dark:from-surface-raised dark:to-surface-raised dark:text-foreground dark:border dark:border-border">
+        <div className="flex items-center justify-between">
+          <div className="text-[10px] uppercase tracking-wider opacity-70 inline-flex items-center gap-1">
+            Score de acompanhamento <Info className="h-3 w-3" />
           </div>
         </div>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {breakdown.map((b) => (
-            <div
-              key={b.pilar}
-              className="min-w-0 rounded-xl border border-border bg-surface px-2 py-2.5"
-            >
-              <div className="text-[9px] uppercase tracking-wide leading-tight text-muted-foreground break-words hyphens-auto">
-                {b.pilar}
-              </div>
-              <div className="font-serif tabular mt-1 text-base text-foreground">
-                {b.valor}
-                <span className="text-[10px] text-muted-foreground">/100</span>
-              </div>
+        <div className="mt-2 flex items-end justify-between gap-3">
+          <div>
+            <div className="font-serif tabular text-[44px] leading-none">
+              {score}
+              <span className="text-[18px] opacity-60">/100</span>
             </div>
-          ))}
-        </div>
-        <div className="mt-3 flex items-start gap-2 rounded-xl bg-accent/40 px-3 py-2 text-[10.5px] leading-snug text-muted-foreground">
-          <Info className="mt-0.5 h-3 w-3 shrink-0" />
-          <span>
-            Métrica de acompanhamento pessoal calculada a partir dos teus marcadores e
-            validada pela tua médica. Não constitui diagnóstico nem substitui avaliação
-            clínica.
+          </div>
+          <span className="inline-flex items-center gap-1 rounded-full bg-state-ok-soft/20 border border-state-ok/40 px-2.5 py-1 text-[10.5px] font-medium text-state-ok">
+            <TrendingUp className="h-3 w-3" /> 2 esta semana
           </span>
         </div>
-      </section>
-
-      {/* Observação do dia */}
-      <section className="rounded-2xl border border-border bg-gradient-to-br from-accent/60 to-accent/20 p-4">
-        <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-foreground/70">
-          <Sparkles className="h-3 w-3" />
-          Observação do dia
-        </div>
-        <div className="font-serif mt-1.5 text-[17px] leading-snug text-foreground">
-          {insight.titulo}
-        </div>
-        <p className="mt-1.5 text-[12.5px] leading-relaxed text-foreground/75">
-          {insight.texto}
+        <p className="mt-2 text-[10.5px] leading-snug opacity-70">
+          Calculado para acompanhamento pessoal pela {utente.medicaResponsavel}. Não substitui avaliação clínica.
         </p>
-        <button
-          type="button"
-          onClick={insight.cta.action}
-          className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-foreground hover:opacity-80"
-        >
-          {insight.cta.label} <ChevronRight className="h-3 w-3" />
-        </button>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {breakdown.map((b, i) => {
+            const colors = ["bg-state-ok", "bg-state-warn", "bg-primary"];
+            return (
+              <div key={b.pilar} className="rounded-xl bg-background/10 dark:bg-surface px-2.5 py-2">
+                <div className="text-[9px] uppercase tracking-wide opacity-70 truncate">
+                  {b.pilar.length > 11 ? b.pilar.slice(0, 10) + "." : b.pilar}
+                </div>
+                <div className="font-serif tabular mt-0.5 text-[18px] leading-none">{b.valor}</div>
+                <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-background/15 dark:bg-border">
+                  <div className={`h-full rounded-full ${colors[i % 3]}`} style={{ width: `${b.valor}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
-      {/* Plano de hoje */}
-      <button
-        type="button"
-        onClick={onJump}
-        className="flex w-full items-center gap-4 rounded-2xl border border-border bg-surface-raised p-4 text-left transition-colors hover:border-foreground/20"
-      >
-        <ProgressRing pct={pct} />
-        <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            Plano de hoje
-          </div>
-          <div className="font-serif mt-0.5 text-xl text-foreground">
-            {feitas} de {total} feitas
-          </div>
-          <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Flame className="h-3 w-3 text-state-warn" />
-            <span className="tabular">{utente.streakDias} dias</span> de sequência
-          </div>
-        </div>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-      </button>
+      {/* Acessos rápidos — grelha 4 */}
+      <section className="grid grid-cols-4 gap-2">
+        {acessos.map((a) => (
+          <button
+            key={a.label}
+            type="button"
+            onClick={() => onOpenSub(a.id, a.ctx)}
+            className="flex flex-col items-center gap-1.5 rounded-xl py-1 text-center"
+          >
+            <span className={`flex h-11 w-11 items-center justify-center rounded-full ${a.tone}`}>
+              <a.Icon className="h-4 w-4" />
+            </span>
+            <span className="text-[10.5px] text-foreground">{a.label}</span>
+          </button>
+        ))}
+      </section>
 
-      {/* Próximas ações */}
+      {/* Sinal de hoje */}
       <section>
         <div className="mb-2 flex items-center justify-between px-1">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            A seguir
-          </div>
+          <div className="text-[11px] font-medium text-foreground">Sinal de hoje</div>
           <button
             type="button"
             onClick={onJump}
-            className="text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+            className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
           >
-            Ver tudo
+            Histórico
+          </button>
+        </div>
+        <div className="rounded-2xl border border-border bg-surface-raised p-3.5">
+          <div className="flex items-center gap-1.5 text-[9.5px] uppercase tracking-wider text-muted-foreground">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-state-warn" />
+            Observação · {observacao.label}
+          </div>
+          <p className="mt-2 text-[12.5px] leading-relaxed text-foreground">{observacao.titulo}</p>
+          <div className="mt-2 text-[10px] text-muted-foreground">Fonte: {observacao.fonte}</div>
+        </div>
+      </section>
+
+      {/* Últimos 7 dias */}
+      <section>
+        <div className="mb-2 flex items-center justify-between px-1">
+          <div className="text-[11px] font-medium text-foreground">Últimos 7 dias</div>
+          <button
+            type="button"
+            onClick={onJump}
+            className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+          >
+            Ver dados
           </button>
         </div>
         <div className="space-y-2">
-          {proximas.length === 0 && (
-            <div className="rounded-2xl border border-border bg-surface-raised p-4 text-center text-xs text-muted-foreground">
-              Tudo concluído. Bom trabalho.
-            </div>
-          )}
-          {proximas.map((t) => (
-            <TarefaCard key={t.id} tarefa={t} onToggle={() => onToggle(t.id)} />
-          ))}
+          <Sinal7d marcador={sono} Icon={Activity} />
+          <Sinal7d marcador={hrv} Icon={Heart} />
+          <Sinal7d marcador={passos} Icon={TrendingUp} />
         </div>
       </section>
 
-      {/* Saúde rápida */}
-      <section>
-        <div className="mb-2 px-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-          Os teus sinais — últimos 7 dias
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <MiniMarker marcador={sono} />
-          <MiniMarker marcador={hrv} />
-          <MiniMarker marcador={passos} />
-        </div>
-      </section>
-
-      {/* Próxima consulta */}
+      {/* Próxima consulta — discreta no fim */}
       <button
         type="button"
         onClick={() => onOpenSub("consultas")}
-        className="flex w-full items-center gap-3 rounded-2xl border border-border bg-accent/40 p-4 text-left transition-colors hover:bg-accent/60"
+        className="flex w-full items-center gap-3 rounded-2xl border border-border bg-accent/30 p-3.5 text-left transition-colors hover:bg-accent/50"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-raised">
-          <CalendarClock className="h-4 w-4 text-foreground" />
-        </div>
+        <CalendarClock className="h-4 w-4 shrink-0 text-foreground" />
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            Próxima consulta
-          </div>
-          <div className="font-serif mt-0.5 text-[15px] leading-tight text-foreground">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Próxima consulta</div>
+          <div className="font-serif mt-0.5 text-[13.5px] leading-tight text-foreground">
             {formatarData(utente.proximaConsulta)} · 10:30
           </div>
-          <div className="text-[11px] text-muted-foreground">com {utente.medicaResponsavel}</div>
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
+    </div>
+  );
+}
+
+function Sinal7d({ marcador, Icon }: { marcador: Marcador; Icon: typeof Activity }) {
+  const estado = calcularEstado(marcador);
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface-raised px-3.5 py-3">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent">
+        <Icon className="h-4 w-4 text-foreground" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[12.5px] font-medium text-foreground">{marcador.nomeCurto}</div>
+        <div className="text-[10px] text-muted-foreground">Mediana 7 dias</div>
+      </div>
+      <div className="font-serif tabular text-[15px] text-foreground">
+        {formatarValor(marcador)}
+        <span className="ml-1 text-[10px] text-muted-foreground">{marcador.unidade}</span>
+      </div>
+      <div className="w-[70px]">
+        <Sparkline marcador={marcador} estado={estado} height={26} />
+      </div>
     </div>
   );
 }
@@ -885,85 +856,132 @@ function SaudeView({
   onOpen: (m: Marcador) => void;
   onCarregar: () => void;
 }) {
-  const [cat, setCat] = useState<Categoria>("analises");
-  const lista = useMemo(
-    () => utente.marcadores.filter((m) => m.categoria === cat),
-    [cat],
+  const [periodo, setPeriodo] = useState<"3M" | "6M" | "1A" | "2A" | "Tudo">("1A");
+  const periodos: typeof periodo[] = ["3M", "6M", "1A", "2A", "Tudo"];
+
+  // Apenas marcadores quantitativos relevantes para esta vista (análises + composição)
+  const todos = useMemo(
+    () => utente.marcadores.filter((m) => m.categoria === "analises" || m.categoria === "composicao"),
+    [],
   );
-  const visiveis: Categoria[] = ["analises", "composicao", "wearable"];
+  const fora = todos.filter((m) => calcularEstado(m) !== "ok");
+  const dentro = todos.filter((m) => calcularEstado(m) === "ok");
 
   return (
-    <div className="space-y-4 px-5 pt-3">
-      <header className="flex items-end justify-between gap-3">
-        <div>
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            A tua saúde
-          </div>
-          <h2 className="font-serif mt-0.5 text-[26px] leading-tight text-foreground">
-            Marcadores
-          </h2>
-        </div>
-        <button
-          type="button"
-          onClick={onCarregar}
-          className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-2 text-[11px] font-medium text-background transition-opacity hover:opacity-90"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Carregar análise
-        </button>
-      </header>
-
-      <div className="flex gap-1 rounded-full border border-border bg-surface-raised p-1">
-        {visiveis.map((c) => (
+    <div className="relative">
+      <div className="space-y-4 px-5 pt-3 pb-6">
+        <header className="flex items-center justify-between gap-3">
+          <h2 className="font-serif text-[20px] leading-tight text-foreground">Dados</h2>
           <button
-            key={c}
             type="button"
-            onClick={() => setCat(c)}
-            className={`flex-1 rounded-full px-3 py-1.5 text-[11px] font-medium transition-colors ${
-              cat === c
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface-raised hover:border-foreground/20"
+            aria-label="Procurar"
           >
-            {categoriaLabels[c]}
+            <Search className="h-4 w-4 text-foreground" />
           </button>
-        ))}
+        </header>
+
+        {/* Filtros de período */}
+        <div className="flex gap-1.5">
+          {periodos.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPeriodo(p)}
+              className={`flex-1 rounded-full border px-2 py-1.5 text-[11px] font-medium transition-colors ${
+                periodo === p
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border bg-surface-raised text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+
+        {fora.length > 0 && (
+          <section>
+            <div className="mb-2 flex items-center gap-1.5 px-1 text-[10.5px] font-medium uppercase tracking-wider text-state-alert">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-state-alert" />
+              Fora do alvo · {fora.length}
+            </div>
+            <div className="space-y-2">
+              {fora.map((m) => (
+                <DadosRow key={m.id} marcador={m} onOpen={() => onOpen(m)} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {dentro.length > 0 && (
+          <section>
+            <div className="mb-2 flex items-center gap-1.5 px-1 text-[10.5px] font-medium uppercase tracking-wider text-state-ok">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-state-ok" />
+              Dentro do alvo · {dentro.length}
+            </div>
+            <div className="space-y-2">
+              {dentro.map((m) => (
+                <DadosRow key={m.id} marcador={m} onOpen={() => onOpen(m)} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
-      <div className="space-y-2">
-        {lista.map((m) => {
-          const estado = calcularEstado(m);
-          const dir = calcularDirecao(m);
-          const TrendIcon = dir === "up" ? TrendingUp : dir === "down" ? TrendingDown : null;
-          return (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => onOpen(m)}
-              className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface-raised p-3.5 text-left transition-colors hover:border-foreground/20"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <StateDot estado={estado} />
-                  <span className="text-[13px] font-medium text-foreground">{m.nomeCurto}</span>
-                </div>
-                <div className="mt-0.5 truncate text-[10.5px] text-muted-foreground">{m.nome}</div>
-              </div>
-              <Sparkline marcador={m} estado={estado} height={24} />
-              <div className="text-right">
-                <div className="font-serif tabular text-base leading-none text-foreground">
-                  {formatarValor(m)}
-                </div>
-                <div className="mt-1 flex items-center justify-end gap-0.5 text-[9.5px] text-muted-foreground">
-                  {TrendIcon && <TrendIcon className="h-2.5 w-2.5" />}
-                  {m.unidade}
-                </div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+      {/* FAB carregar */}
+      <button
+        type="button"
+        onClick={onCarregar}
+        className="fixed-fab absolute bottom-20 right-5 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-state-ok text-background shadow-[0_8px_24px_-6px_color-mix(in_oklab,var(--state-ok)_60%,transparent)] hover:opacity-90"
+        aria-label="Carregar análise"
+      >
+        <Plus className="h-5 w-5" />
+      </button>
     </div>
+  );
+}
+
+function DadosRow({ marcador, onOpen }: { marcador: Marcador; onOpen: () => void }) {
+  const estado = calcularEstado(marcador);
+  const dir = calcularDirecao(marcador);
+  const TrendIcon = dir === "up" ? TrendingUp : dir === "down" ? TrendingDown : null;
+  const ultimo = marcador.serie[marcador.serie.length - 1];
+  const anterior = marcador.serie[marcador.serie.length - 2];
+  const deltaPct =
+    anterior && anterior.valor !== 0
+      ? Math.round(((ultimo.valor - anterior.valor) / anterior.valor) * 1000) / 10
+      : 0;
+  const deltaTone =
+    estado === "ok"
+      ? "text-state-ok"
+      : estado === "atencao"
+        ? "text-state-warn"
+        : "text-state-alert";
+  const alvoStr = `alvo ${marcador.alvoFuncional[0]}–${marcador.alvoFuncional[1]}`;
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface-raised px-3.5 py-3 text-left transition-colors hover:border-foreground/20"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="text-[13px] font-medium text-foreground truncate">{marcador.nomeCurto}</div>
+        <div className="tabular text-[10px] text-muted-foreground">{alvoStr}</div>
+      </div>
+      <div className="w-[80px]">
+        <Sparkline marcador={marcador} estado={estado} height={24} />
+      </div>
+      <div className="text-right">
+        <div className={`font-serif tabular text-[16px] leading-none ${deltaTone}`}>
+          {formatarValor(marcador)}
+        </div>
+        <div className={`tabular mt-1 inline-flex items-center justify-end gap-0.5 text-[9.5px] ${deltaTone}`}>
+          {TrendIcon && <TrendIcon className="h-2.5 w-2.5" />}
+          {deltaPct > 0 ? "+" : ""}
+          {deltaPct}%
+        </div>
+      </div>
+    </button>
   );
 }
 
