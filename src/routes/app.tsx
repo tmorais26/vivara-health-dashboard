@@ -27,6 +27,8 @@ import {
   Settings,
   Sparkles,
   Stethoscope,
+  Search,
+  Shield,
   TrendingDown,
   TrendingUp,
   Upload,
