@@ -542,11 +542,11 @@ function HojeView({
         </div>
       </section>
 
-      {/* Insight do dia */}
+      {/* Observação do dia */}
       <section className="rounded-2xl border border-border bg-gradient-to-br from-accent/60 to-accent/20 p-4">
         <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-foreground/70">
           <Sparkles className="h-3 w-3" />
-          Insight do dia
+          Observação do dia
         </div>
         <div className="font-serif mt-1.5 text-[17px] leading-snug text-foreground">
           {insight.titulo}
