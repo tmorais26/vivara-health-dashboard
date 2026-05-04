@@ -86,7 +86,8 @@ type SubView =
   | "conteudo"
   | "diario"
   | "novoDiario"
-  | "plano";
+  | "plano"
+  | "carregar";
 
 const tipoMeta: Record<
   TipoTarefa,
