@@ -256,11 +256,21 @@ function AppUtente() {
                   }}
                 />
               )}
+              {sub === "carregar" && (
+                <CarregarFlow
+                  onConcluir={(notif) => {
+                    adicionarNotificacao(notif);
+                    setSub(null);
+                    setTab("avisos");
+                  }}
+                  onCancelar={() => setSub(null)}
+                />
+              )}
             </div>
 
             {/* bottom nav */}
             <nav className="absolute inset-x-0 bottom-0 z-10 border-t border-border bg-surface-raised/95 backdrop-blur">
-              <div className="grid grid-cols-5 items-end px-2 pb-3 pt-2">
+              <div className="grid grid-cols-4 items-end px-2 pb-3 pt-2">
                 <NavItem
                   id="hoje"
                   label="Início"
@@ -281,16 +291,6 @@ function AppUtente() {
                     setSub(null);
                   }}
                 />
-                <CenterNavItem
-                  id="carregar"
-                  label="Carregar"
-                  Icon={Upload}
-                  active={tab === "carregar" && sub === null}
-                  onClick={(t) => {
-                    setTab(t);
-                    setSub(null);
-                  }}
-                />
                 <NavItem
                   id="avisos"
                   label="Avisos"
@@ -301,6 +301,13 @@ function AppUtente() {
                     setSub(null);
                   }}
                   badge={notificacoes.filter((n) => !n.lida).length}
+                  badgeTone={
+                    notificacoes.some((n) => !n.lida && n.severidade === "alerta")
+                      ? "alerta"
+                      : notificacoes.some((n) => !n.lida && n.severidade === "atencao")
+                        ? "atencao"
+                        : "info"
+                  }
                 />
                 <NavItem
                   id="perfil"
