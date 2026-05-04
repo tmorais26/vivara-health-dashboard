@@ -189,15 +189,9 @@ function AppUtente() {
                     />
                   )}
                   {tab === "dados" && (
-                    <SaudeView onOpen={(m) => setMarcadorAberto(m)} />
-                  )}
-                  {tab === "carregar" && (
-                    <CarregarFlow
-                      onConcluir={(notif) => {
-                        adicionarNotificacao(notif);
-                        setTab("avisos");
-                      }}
-                      onCancelar={() => setTab("hoje")}
+                    <SaudeView
+                      onOpen={(m) => setMarcadorAberto(m)}
+                      onCarregar={() => openSub("carregar")}
                     />
                   )}
                   {tab === "avisos" && (
