@@ -349,6 +349,7 @@ function NavItem({
   active,
   onClick,
   badge,
+  badgeTone = "alerta",
 }: {
   id: Tab;
   label: string;
@@ -356,7 +357,14 @@ function NavItem({
   active: boolean;
   onClick: (t: Tab) => void;
   badge?: number;
+  badgeTone?: "alerta" | "atencao" | "info";
 }) {
+  const badgeBg =
+    badgeTone === "alerta"
+      ? "bg-state-alert text-state-alert-soft"
+      : badgeTone === "atencao"
+        ? "bg-state-warn text-state-warn-soft"
+        : "bg-foreground/70 text-background";
   return (
     <button
       type="button"
@@ -368,7 +376,7 @@ function NavItem({
       <div className="relative">
         <Icon className={`h-5 w-5 ${active ? "stroke-[2.2]" : ""}`} />
         {badge !== undefined && badge > 0 && (
-          <span className="tabular absolute -right-2 -top-1.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-state-alert px-1 text-[9px] font-medium text-state-alert-soft">
+          <span className={`tabular absolute -right-2 -top-1.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-medium ${badgeBg}`}>
             {badge}
           </span>
         )}
