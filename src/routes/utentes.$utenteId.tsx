@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { utente, type Categoria, type Marcador, type TipoTarefa } from "@/data/mock-utente";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
 import { PatientHeader } from "@/components/dashboard/PatientHeader";
+import { PatientMobileView } from "@/components/portal/PatientMobileView";
 import { MarkerList } from "@/components/dashboard/MarkerList";
 import { MarkerDetailPanel } from "@/components/dashboard/MarkerDetailPanel";
 import { GenomicaPanel } from "@/components/dashboard/GenomicaPanel";
@@ -98,6 +99,22 @@ function DashboardUtente() {
 
   return (
     <PortalShell hideSidebarChrome>
+      {/* Vista mobile focada — apenas <lg */}
+      <div className="lg:hidden">
+        <PatientMobileView
+          utente={utente}
+          onAlertClick={(a) => {
+            const m = utente.marcadores.find((mm) => mm.id === a.marcadorId);
+            if (m) {
+              setActiveTab(m.categoria);
+              setSelectedId(m.id);
+            }
+          }}
+        />
+      </div>
+
+      {/* Vista desktop completa — apenas lg+ */}
+      <div className="hidden lg:block">
       <PatientHeader
         utente={utente}
         onAlertClick={(a) => {
@@ -182,6 +199,7 @@ function DashboardUtente() {
           </div>
         )}
       </main>
+      </div>
       <MobileNavTabs />
     </PortalShell>
   );
