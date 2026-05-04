@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Activity,
@@ -6,6 +7,7 @@ import {
   Bell,
   BellPlus,
   CalendarPlus,
+  Camera,
   ChevronDown,
   ChevronRight,
   Footprints,
@@ -18,6 +20,7 @@ import {
   Send,
   Plus,
   Sparkles,
+  Upload,
 } from "lucide-react";
 import type { Alerta, Utente } from "@/data/mock-utente";
 import { calcularEstado, formatarData, formatarValor } from "@/data/mock-utente";
@@ -41,6 +44,9 @@ export function PatientMobileView({
   const [notaAberta, setNotaAberta] = useState(false);
   const [notasLocais, setNotasLocais] = useState<{ id: string; texto: string; ts: string }[]>([]);
   const [toast, setToast] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const camRef = useRef<HTMLInputElement | null>(null);
+  const [docsCarregados, setDocsCarregados] = useState<{ id: string; nome: string }[]>([]);
 
   function flash(msg: string) {
     setToast(msg);
@@ -452,6 +458,90 @@ export function PatientMobileView({
             <CalendarPlus className="h-3.5 w-3.5" />
             Agendar
           </button>
+        </div>
+
+        {/* Carregar documento — usa input nativo, abre câmara/galeria/ficheiros do SO */}
+        <div className="mt-4 rounded-xl border border-border bg-surface-raised p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              Carregar documento
+            </span>
+            {docsCarregados.length > 0 && (
+              <span className="text-[10.5px] text-muted-foreground">
+                {docsCarregados.length} nesta sessão
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => camRef.current?.click()}
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-foreground px-3 py-3 text-[12px] font-medium text-background"
+            >
+              <Camera className="h-3.5 w-3.5" />
+              Tirar foto
+            </button>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 py-3 text-[12px] font-medium text-foreground"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              Ficheiros
+            </button>
+          </div>
+          <input
+            ref={camRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const fs = e.target.files;
+              if (fs && fs.length) {
+                const novos = Array.from(fs).map((f, i) => ({
+                  id: `lc-${Date.now()}-${i}`,
+                  nome: f.name,
+                }));
+                setDocsCarregados((p) => [...novos, ...p]);
+                flash("Foto capturada · a processar");
+              }
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={fileRef}
+            type="file"
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png,.heic,.csv,.xlsx"
+            className="hidden"
+            onChange={(e) => {
+              const fs = e.target.files;
+              if (fs && fs.length) {
+                const novos = Array.from(fs).map((f, i) => ({
+                  id: `lf-${Date.now()}-${i}`,
+                  nome: f.name,
+                }));
+                setDocsCarregados((p) => [...novos, ...p]);
+                flash(`${novos.length} ficheiro(s) a processar`);
+              }
+              e.target.value = "";
+            }}
+          />
+          {docsCarregados.length > 0 && (
+            <ul className="mt-2 flex flex-col gap-1.5">
+              {docsCarregados.slice(0, 3).map((d) => (
+                <li
+                  key={d.id}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px]"
+                >
+                  <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />
+                  <span className="truncate text-foreground">{d.nome}</span>
+                  <span className="ml-auto shrink-0 text-state-warn">a processar…</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div className="mt-4 flex items-start gap-2 rounded-xl border border-dashed border-border bg-surface px-3 py-3 text-[11.5px] text-muted-foreground">
