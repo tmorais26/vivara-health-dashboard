@@ -453,20 +453,20 @@ function HojeView({
     .flatMap((c) => c.mensagens)
     .filter((m) => !m.lida && m.autor === "medica").length;
 
-  // Insight do dia (determinístico)
+  // Observação do dia — factual, sem prescrição. Templates aprovados pela médica.
   const insight = useMemo(() => {
     const hrvEstado = calcularEstado(hrv);
     if (hrvEstado !== "ok") {
       return {
-        titulo: "O teu HRV está abaixo da linha de base",
+        titulo: "O teu HRV está abaixo da tua média",
         texto:
-          "Esta semana 18% abaixo da tua média de 12 meses. Ontem dormiste menos. Tenta deitar-te 30 min mais cedo hoje.",
-        cta: { label: "Ver HRV", action: () => onOpenSub("aprender", "ed2") },
+          "Esta semana 18% abaixo da tua linha de base de 12 meses. Sono médio nos últimos 3 dias: 5h42.",
+        cta: { label: "Saber mais sobre HRV", action: () => onOpenSub("aprender", "ed2") },
       };
     }
     return {
-      titulo: "Estás em boa forma",
-      texto: "A tua recuperação esta semana está dentro do teu normal. Continua.",
+      titulo: "Recuperação dentro do teu padrão",
+      texto: "HRV e sono nos últimos 7 dias estão alinhados com a tua média de 12 meses.",
       cta: { label: "Ver Saúde", action: onJump },
     };
   }, [hrv, onJump, onOpenSub]);
