@@ -292,3 +292,221 @@ function AuditRow({ when, who, what }: { when: string; who: string; what: string
     </li>
   );
 }
+
+function NovaNotaModal({
+  open,
+  onClose,
+  utente,
+}: {
+  open: boolean;
+  onClose: () => void;
+  utente: Utente;
+}) {
+  const [tipo, setTipo] = useState<"consulta" | "avulsa" | "followup">("consulta");
+  const [enviarUtente, setEnviarUtente] = useState(false);
+  return (
+    <SimpleModal
+      open={open}
+      onClose={onClose}
+      title="Nova nota"
+      description={`Anexada ao perfil de ${utente.nome}. Por defeito é interna.`}
+      width="md"
+    >
+      <div className="space-y-4">
+        <Field label="Tipo de nota">
+          <div className="grid grid-cols-3 gap-2">
+            {(["consulta", "avulsa", "followup"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTipo(t)}
+                className={`rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${
+                  tipo === t
+                    ? "border-foreground/40 bg-accent text-foreground"
+                    : "border-border bg-background text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t === "consulta" ? "Consulta" : t === "avulsa" ? "Avulsa" : "Follow-up"}
+              </button>
+            ))}
+          </div>
+        </Field>
+        <Field label="Conteúdo">
+          <textarea
+            className={textareaClass}
+            placeholder="O que foi falado, raciocínio clínico, próximos passos…"
+          />
+        </Field>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <Sparkles className="h-3 w-3" />
+          Gerar rascunho com IA · revistas pela médica
+        </button>
+        <label className="flex items-start gap-2 rounded-xl border border-border bg-background p-3">
+          <input
+            type="checkbox"
+            checked={enviarUtente}
+            onChange={(e) => setEnviarUtente(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span className="text-xs text-foreground">
+            Enviar versão partilhada para a app da utente
+            <span className="block text-[11px] text-muted-foreground">
+              A nota interna fica sempre privada. Só o resumo aprovado é enviado.
+            </span>
+          </span>
+        </label>
+      </div>
+      <ModalActions>
+        <SecondaryButton onClick={onClose}>Cancelar</SecondaryButton>
+        <PrimaryButton onClick={onClose}>
+          {enviarUtente ? "Guardar e enviar" : "Guardar interna"}
+        </PrimaryButton>
+      </ModalActions>
+    </SimpleModal>
+  );
+}
+
+function NovoAlertaModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <SimpleModal
+      open={open}
+      onClose={onClose}
+      title="Novo alerta personalizado"
+      description="Define uma regra que dispara uma notificação no portal e/ou na app."
+      width="md"
+    >
+      <div className="space-y-4">
+        <Field label="Marcador">
+          <select className={inputClass}>
+            <option>HbA1c</option>
+            <option>LDL-C</option>
+            <option>hsCRP</option>
+            <option>Vitamina D</option>
+          </select>
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Condição">
+            <select className={inputClass}>
+              <option>maior que</option>
+              <option>menor que</option>
+              <option>variação ≥ %</option>
+            </select>
+          </Field>
+          <Field label="Valor">
+            <input className={inputClass} placeholder="5.7" />
+          </Field>
+        </div>
+        <Field label="Quem é avisado">
+          <div className="flex flex-col gap-2 text-xs text-foreground">
+            <label className="inline-flex items-center gap-2">
+              <input type="checkbox" defaultChecked /> Médica responsável (portal + email)
+            </label>
+            <label className="inline-flex items-center gap-2">
+              <input type="checkbox" /> Utente (notificação na app)
+            </label>
+          </div>
+        </Field>
+      </div>
+      <ModalActions>
+        <SecondaryButton onClick={onClose}>Cancelar</SecondaryButton>
+        <PrimaryButton onClick={onClose}>Criar alerta</PrimaryButton>
+      </ModalActions>
+    </SimpleModal>
+  );
+}
+
+function MensagemModal({
+  open,
+  onClose,
+  utente,
+}: {
+  open: boolean;
+  onClose: () => void;
+  utente: Utente;
+}) {
+  return (
+    <SimpleModal
+      open={open}
+      onClose={onClose}
+      title={`Mensagem para ${utente.nome}`}
+      description="Aparece imediatamente na app. Curta e específica."
+      width="md"
+    >
+      <div className="space-y-3">
+        <textarea
+          className={textareaClass}
+          placeholder="Maria, os teus resultados chegaram. Falta repetir Vitamina D…"
+        />
+        <div className="text-[11px] text-muted-foreground">
+          A utente vê a mensagem na inbox da app e pode responder. Tudo fica registado em RGPD/Art. 30.
+        </div>
+      </div>
+      <ModalActions>
+        <SecondaryButton onClick={onClose}>Cancelar</SecondaryButton>
+        <PrimaryButton onClick={onClose}>Enviar mensagem</PrimaryButton>
+      </ModalActions>
+    </SimpleModal>
+  );
+}
+
+function PreviewAppModal({
+  open,
+  onClose,
+  utente,
+}: {
+  open: boolean;
+  onClose: () => void;
+  utente: Utente;
+}) {
+  return (
+    <SimpleModal
+      open={open}
+      onClose={onClose}
+      title="O que a utente vê"
+      description="Pré-visualização read-only da app de Maria. Nada do que vês aqui é editável."
+      width="lg"
+    >
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <PreviewCard title="Plano de hoje">
+          <ul className="space-y-2 text-xs text-foreground">
+            <li>· 08:00 — Vitamina D3 5000 UI ao p.almoço</li>
+            <li>· 13:00 — Berberina 500 mg ao almoço</li>
+            <li>· 22:30 — Magnésio bisglicinato ao deitar</li>
+          </ul>
+        </PreviewCard>
+        <PreviewCard title="Notas partilhadas activas">
+          <p className="text-xs text-foreground">
+            “O teu LDL tem subido nos últimos meses. Vamos reforçar fibra solúvel e reavaliar.”
+          </p>
+          <p className="mt-2 text-[11px] text-muted-foreground">Sobre LDL-C · Dra. Sofia Cardoso</p>
+        </PreviewCard>
+        <PreviewCard title="Próxima consulta">
+          <p className="text-xs text-foreground">
+            {formatarData(utente.proximaConsulta)} · 10:30 · presencial
+          </p>
+        </PreviewCard>
+        <PreviewCard title="Lembretes activos">
+          <ul className="space-y-1 text-xs text-foreground">
+            <li>· Repetir painel lipídico até 15 Mai</li>
+            <li>· Repetir Vitamina D após 8 semanas</li>
+          </ul>
+        </PreviewCard>
+      </div>
+      <ModalActions>
+        <PrimaryButton onClick={onClose}>Fechar</PrimaryButton>
+      </ModalActions>
+    </SimpleModal>
+  );
+}
+
+function PreviewCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-border bg-background p-4">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{title}</div>
+      <div className="mt-2">{children}</div>
+    </div>
+  );
+}
