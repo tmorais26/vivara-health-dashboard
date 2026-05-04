@@ -5,7 +5,8 @@ import {
   type Marcador,
   type TipoTarefa,
 } from "@/data/mock-utente";
-import { Bell, FlaskConical, Pencil, Pill } from "lucide-react";
+import { Bell, ChevronDown, FlaskConical, MessageSquare, Pencil, Pill, Stethoscope } from "lucide-react";
+import { useState } from "react";
 import { LongitudinalChart } from "./LongitudinalChart";
 import { StateTag } from "./StateTag";
 
@@ -44,6 +45,8 @@ export function MarkerDetailPanel({
 
   const [alvoMin, alvoMax] = marcador.alvoFuncional;
   const [labMin, labMax] = marcador.intervaloLab;
+  const [novaPrescAberta, setNovaPrescAberta] = useState(false);
+  const [notaInternaAberta, setNotaInternaAberta] = useState(false);
 
   return (
     <div className="flex flex-col gap-5">
@@ -69,19 +72,68 @@ export function MarkerDetailPanel({
             <span className="text-sm text-muted-foreground">{marcador.unidade}</span>
           </div>
           {onPrescrever && (
-            <div className="mt-3 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => onPrescrever("suplemento")}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
-              >
-                <Pill className="h-3.5 w-3.5" />
-                Prescrever ação
-              </button>
+            <div className="relative mt-3 flex items-center justify-end gap-2">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setNovaPrescAberta((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+                >
+                  <Pill className="h-3.5 w-3.5" />
+                  Nova prescrição
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+                {novaPrescAberta && (
+                  <div className="absolute right-0 z-20 mt-1.5 w-56 overflow-hidden rounded-xl border border-border bg-surface-raised shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onPrescrever("medicacao");
+                        setNovaPrescAberta(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-foreground hover:bg-accent"
+                    >
+                      <Stethoscope className="h-3.5 w-3.5" />
+                      Medicamento
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onPrescrever("suplemento");
+                        setNovaPrescAberta(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-foreground hover:bg-accent"
+                    >
+                      <Pill className="h-3.5 w-3.5" />
+                      Suplemento
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onPrescrever("analise");
+                        setNovaPrescAberta(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-foreground hover:bg-accent"
+                    >
+                      <FlaskConical className="h-3.5 w-3.5" />
+                      Análise / reanálise
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNovaPrescAberta(false)}
+                      className="flex w-full items-center gap-2 border-t border-border px-3 py-2 text-left text-xs text-foreground hover:bg-accent"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      Nota partilhada à utente
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => onPrescrever("analise")}
                 className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+                title="Cria uma tarefa no plano e lembrete na app da utente"
               >
                 <FlaskConical className="h-3.5 w-3.5" />
                 Pedir reanálise
