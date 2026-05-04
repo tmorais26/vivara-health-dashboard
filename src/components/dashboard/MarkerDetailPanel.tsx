@@ -46,7 +46,6 @@ export function MarkerDetailPanel({
   const [alvoMin, alvoMax] = marcador.alvoFuncional;
   const [labMin, labMax] = marcador.intervaloLab;
   const [novaPrescAberta, setNovaPrescAberta] = useState(false);
-  const [notaInternaAberta, setNotaInternaAberta] = useState(false);
 
   return (
     <div className="flex flex-col gap-5">
