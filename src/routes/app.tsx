@@ -121,12 +121,6 @@ function AppUtente() {
   const [marcadorAberto, setMarcadorAberto] = useState<Marcador | null>(null);
   const [diario, setDiario] = useState<EntradaDiario[]>(utente.diario);
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>(utente.notificacoes);
-  const [setupAberto, setSetupAberto] = useState(true);
-  const [consentimentos, setConsentimentos] = useState({
-    partilhaMedico: true,
-    processamentoIA: true,
-    armazenamentoSaude: true,
-  });
 
   function marcarNotificacaoLida(id: string) {
     setNotificacoes((prev) => prev.map((n) => (n.id === id ? { ...n, lida: true } : n)));
