@@ -464,11 +464,11 @@ function HojeView({
     fonte: "Apple Watch · sincronizado há 4 min",
   };
 
-  const acessos: { label: string; Icon: typeof Upload; onClick: () => void }[] = [
-    { label: "Carregar", Icon: Upload, onClick: onCarregar },
-    { label: "Análises", Icon: FlaskConical, onClick: () => onGoTab("dados") },
-    { label: "Resumo", Icon: FileText, onClick: () => onGoTab("avisos") },
-    { label: "Privacidade", Icon: Shield, onClick: () => onGoTab("perfil") },
+  const acessos: { label: string; Icon: typeof Upload; onClick: () => void; darkTone: string }[] = [
+    { label: "Carregar", Icon: Upload, onClick: onCarregar, darkTone: "dark:bg-state-ok dark:text-background" },
+    { label: "Análises", Icon: FlaskConical, onClick: () => onGoTab("dados"), darkTone: "dark:bg-primary dark:text-primary-foreground" },
+    { label: "Resumo", Icon: FileText, onClick: () => onGoTab("avisos"), darkTone: "dark:bg-[oklch(0.55_0.18_300)] dark:text-white" },
+    { label: "Privacidade", Icon: Shield, onClick: () => onGoTab("perfil"), darkTone: "dark:bg-white/10 dark:text-white" },
   ];
 
   return (
@@ -489,45 +489,50 @@ function HojeView({
         </div>
       </header>
 
-      {/* Score destacado */}
-      <section className="rounded-2xl border border-border bg-surface-raised p-4">
-        <div className="flex items-center justify-between">
-          <div className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-            Score de acompanhamento <Info className="h-3 w-3" />
-          </div>
+      {/* Score destacado — light: superfície neutra; dark: cartão azul-noite */}
+      <section className="rounded-2xl border border-border bg-surface-raised p-4 dark:border-transparent dark:bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.32_0.09_255)_0%,oklch(0.18_0.05_260)_55%,oklch(0.14_0.03_260)_100%)] dark:text-white dark:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.6)]">
+        <div className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground dark:text-white/60">
+          Score de acompanhamento <Info className="h-3 w-3" />
         </div>
         <div className="mt-2 flex items-end justify-between gap-3">
-          <div>
-            <div className="font-serif tabular text-[44px] leading-none text-foreground">
-              {score}
-              <span className="text-[18px] text-muted-foreground">/100</span>
-            </div>
+          <div className="font-serif tabular text-[44px] leading-none text-foreground dark:text-white">
+            {score}
+            <span className="text-[18px] text-muted-foreground dark:text-white/50">/100</span>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full border border-state-ok/40 bg-state-ok-soft px-2.5 py-1 text-[10.5px] font-medium text-state-ok">
+          <span className="inline-flex items-center gap-1 rounded-full border border-state-ok/40 bg-state-ok-soft px-2.5 py-1 text-[10.5px] font-medium text-state-ok dark:border-state-ok/50 dark:bg-state-ok/15">
             <TrendingUp className="h-3 w-3" /> 2 esta semana
           </span>
         </div>
-        <p className="mt-2 text-[10.5px] leading-snug text-muted-foreground">
+        <p className="mt-2 text-[10.5px] leading-snug text-muted-foreground dark:text-white/55">
           Calculado para acompanhamento pessoal pela {utente.medicaResponsavel}. Não substitui avaliação clínica.
         </p>
         <div className="mt-3 grid grid-cols-3 gap-2">
-          {breakdown.map((b) => (
-            <div key={b.pilar} className="rounded-xl border border-border bg-surface px-2.5 py-2">
-              <div className="text-[9px] uppercase tracking-wide text-muted-foreground truncate">
-                {b.pilar.length > 11 ? b.pilar.slice(0, 10) + "." : b.pilar}
+          {breakdown.map((b, i) => {
+            const darkBar = ["dark:bg-state-ok", "dark:bg-state-warn", "dark:bg-primary"][i % 3];
+            return (
+              <div
+                key={b.pilar}
+                className="rounded-xl border border-border bg-surface px-2.5 py-2 dark:border-white/10 dark:bg-white/5"
+              >
+                <div className="text-[9px] uppercase tracking-wide text-muted-foreground truncate dark:text-white/55">
+                  {b.pilar.length > 11 ? b.pilar.slice(0, 10) + "." : b.pilar}
+                </div>
+                <div className="font-serif tabular mt-0.5 text-[18px] leading-none text-foreground dark:text-white">
+                  {b.valor}
+                </div>
+                <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-border dark:bg-white/10">
+                  <div
+                    className={`h-full rounded-full bg-foreground/70 ${darkBar}`}
+                    style={{ width: `${b.valor}%` }}
+                  />
+                </div>
               </div>
-              <div className="font-serif tabular mt-0.5 text-[18px] leading-none text-foreground">
-                {b.valor}
-              </div>
-              <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-border">
-                <div className="h-full rounded-full bg-foreground/70" style={{ width: `${b.valor}%` }} />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
-      {/* Acessos rápidos — grelha 4 */}
+      {/* Acessos rápidos — grelha 4. Light: neutro. Dark: ícones com cor à imagem-referência. */}
       <section className="grid grid-cols-4 gap-2">
         {acessos.map((a) => (
           <button
@@ -536,7 +541,9 @@ function HojeView({
             onClick={a.onClick}
             className="flex flex-col items-center gap-1.5 rounded-xl py-1 text-center"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-raised text-foreground transition-colors hover:bg-accent">
+            <span
+              className={`flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-raised text-foreground transition-colors hover:bg-accent dark:border-transparent ${a.darkTone}`}
+            >
               <a.Icon className="h-4 w-4" />
             </span>
             <span className="text-[10.5px] text-foreground">{a.label}</span>
