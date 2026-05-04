@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { utente, type Categoria, type Marcador, type TipoTarefa } from "@/data/mock-utente";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
 import { PatientHeader } from "@/components/dashboard/PatientHeader";
+import { PatientMobileView } from "@/components/portal/PatientMobileView";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { MarkerList } from "@/components/dashboard/MarkerList";
 import { MarkerDetailPanel } from "@/components/dashboard/MarkerDetailPanel";
 import { GenomicaPanel } from "@/components/dashboard/GenomicaPanel";
@@ -50,6 +52,7 @@ const tabs: { id: Tab; label: string }[] = [
 ];
 
 function DashboardUtente() {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<Tab>("analises");
   const [selectedId, setSelectedId] = useState<string>("ldl");
   const [planoPrefill, setPlanoPrefill] = useState<{
@@ -94,6 +97,24 @@ function DashboardUtente() {
   function handlePrescrever(tipo: TipoTarefa, marcador: Marcador) {
     setPlanoPrefill({ tipo, marcador });
     setActiveTab("plano");
+  }
+
+  if (isMobile) {
+    return (
+      <PortalShell hideSidebarChrome>
+        <PatientMobileView
+          utente={utente}
+          onAlertClick={(a) => {
+            const m = utente.marcadores.find((mm) => mm.id === a.marcadorId);
+            if (m) {
+              setActiveTab(m.categoria);
+              setSelectedId(m.id);
+            }
+          }}
+        />
+        <MobileNavTabs />
+      </PortalShell>
+    );
   }
 
   return (
