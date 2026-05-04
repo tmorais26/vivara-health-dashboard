@@ -132,6 +132,7 @@ export type EntradaDiario = {
 export type Notificacao = {
   id: string;
   tipo: "resumo" | "lembrete" | "agenda" | "consulta" | "sistema";
+  severidade?: "info" | "atencao" | "alerta";
   titulo: string;
   detalhe: string;
   quando: string; // ISO
