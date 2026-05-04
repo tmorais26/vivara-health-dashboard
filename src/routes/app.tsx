@@ -436,11 +436,15 @@ function HojeView({
   onToggle,
   onJump,
   onOpenSub,
+  onGoTab,
+  onCarregar,
 }: {
   tarefas: TarefaPlano[];
   onToggle: (id: string) => void;
   onJump: () => void;
   onOpenSub: (v: SubView, ctx?: string) => void;
+  onGoTab: (t: Tab) => void;
+  onCarregar: () => void;
 }) {
   const score = useMemo(() => calcularScoreLongevidade(), []);
   const breakdown = useMemo(() => scoreBreakdown(), []);
@@ -460,11 +464,11 @@ function HojeView({
     fonte: "Apple Watch · sincronizado há 4 min",
   };
 
-  const acessos: { id: SubView; ctx?: string; label: string; Icon: typeof Upload; tone: string }[] = [
-    { id: "carregar", label: "Carregar", Icon: Upload, tone: "bg-state-ok text-background" },
-    { id: "plano", label: "Análises", Icon: FlaskConical, tone: "bg-primary text-primary-foreground" },
-    { id: "consultas", label: "Resumo", Icon: FileText, tone: "bg-foreground/80 text-background" },
-    { id: "perfil" as SubView, label: "Privacidade", Icon: Shield, tone: "bg-accent text-foreground border border-border" },
+  const acessos: { label: string; Icon: typeof Upload; onClick: () => void }[] = [
+    { label: "Carregar", Icon: Upload, onClick: onCarregar },
+    { label: "Análises", Icon: FlaskConical, onClick: () => onGoTab("dados") },
+    { label: "Resumo", Icon: FileText, onClick: () => onGoTab("avisos") },
+    { label: "Privacidade", Icon: Shield, onClick: () => onGoTab("perfil") },
   ];
 
   return (
@@ -530,10 +534,10 @@ function HojeView({
           <button
             key={a.label}
             type="button"
-            onClick={() => onOpenSub(a.id, a.ctx)}
+            onClick={a.onClick}
             className="flex flex-col items-center gap-1.5 rounded-xl py-1 text-center"
           >
-            <span className={`flex h-11 w-11 items-center justify-center rounded-full ${a.tone}`}>
+            <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-raised text-foreground transition-colors hover:bg-accent">
               <a.Icon className="h-4 w-4" />
             </span>
             <span className="text-[10.5px] text-foreground">{a.label}</span>
