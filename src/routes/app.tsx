@@ -830,6 +830,19 @@ function TarefaCard({
             <Icon className="h-3 w-3" />
             {meta.label}
           </span>
+          {tarefa.hora && (
+            <span className="tabular inline-flex items-center gap-1 rounded-full bg-accent/60 px-2 py-0.5 text-[9.5px] font-medium text-foreground/80">
+              {tarefa.hora}
+              {tarefa.comRefeicao && tarefa.comRefeicao !== "livre" && (
+                <span className="text-foreground/50">· {tarefa.comRefeicao}</span>
+              )}
+            </span>
+          )}
+          {!tarefa.hora && tarefa.comRefeicao && tarefa.comRefeicao !== "livre" && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-accent/60 px-2 py-0.5 text-[9.5px] font-medium text-foreground/80">
+              {tarefa.comRefeicao}
+            </span>
+          )}
           {tarefa.prazo && (
             <span className="tabular text-[10px] text-muted-foreground">{tarefa.prazo}</span>
           )}
