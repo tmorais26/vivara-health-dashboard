@@ -8,6 +8,8 @@ import { GenomicaPanel } from "@/components/dashboard/GenomicaPanel";
 import { PrescricoesPanel } from "@/components/dashboard/PrescricoesPanel";
 import { PlanoPanel } from "@/components/dashboard/PlanoPanel";
 import { AnamnesePanel } from "@/components/dashboard/AnamnesePanel";
+import { ConsultasPanel } from "@/components/dashboard/ConsultasPanel";
+import { CompararPanel } from "@/components/dashboard/CompararPanel";
 
 export const Route = createFileRoute("/utentes/$utenteId")({
   head: ({ params }) => ({
@@ -33,14 +35,16 @@ export const Route = createFileRoute("/utentes/$utenteId")({
   ),
 });
 
-type Tab = Categoria | "plano" | "anamnese";
+type Tab = Categoria | "plano" | "anamnese" | "consultas" | "comparar";
 const tabs: { id: Tab; label: string }[] = [
   { id: "anamnese", label: "Anamnese" },
   { id: "analises", label: "Análises" },
   { id: "composicao", label: "Composição" },
   { id: "wearable", label: "Wearable" },
+  { id: "comparar", label: "Comparar" },
   { id: "genomica", label: "Genómica" },
   { id: "prescricoes", label: "Prescrições" },
+  { id: "consultas", label: "Consultas" },
   { id: "plano", label: "Plano" },
 ];
 
@@ -57,7 +61,9 @@ function DashboardUtente() {
       activeTab === "plano" ||
       activeTab === "genomica" ||
       activeTab === "prescricoes" ||
-      activeTab === "anamnese"
+      activeTab === "anamnese" ||
+      activeTab === "consultas" ||
+      activeTab === "comparar"
         ? []
         : utente.marcadores.filter((m) => m.categoria === (activeTab as Categoria)),
     [activeTab],
@@ -73,7 +79,9 @@ function DashboardUtente() {
       id === "genomica" ||
       id === "prescricoes" ||
       id === "plano" ||
-      id === "anamnese"
+      id === "anamnese" ||
+      id === "consultas" ||
+      id === "comparar"
     )
       return;
     const lista = utente.marcadores.filter((m) => m.categoria === (id as Categoria));
@@ -130,6 +138,10 @@ function DashboardUtente() {
       <main className="mx-auto max-w-[1440px] px-8 py-8">
         {activeTab === "anamnese" ? (
           <AnamnesePanel utente={utente} />
+        ) : activeTab === "consultas" ? (
+          <ConsultasPanel utente={utente} />
+        ) : activeTab === "comparar" ? (
+          <CompararPanel utente={utente} />
         ) : activeTab === "plano" ? (
           <PlanoPanel
             utente={utente}
