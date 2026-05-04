@@ -30,6 +30,8 @@ export type Marcador = {
   alvoFuncional: [number, number];
   direcaoBoa: DirecaoBoa;
   notaMedica?: string;
+  /** Nota visível à utente na app. Se ausente, nota não é partilhada. */
+  notaPartilhada?: string;
   proximaRecolha?: string;
   serie: Medicao[];
   explicacaoSimples?: string;
