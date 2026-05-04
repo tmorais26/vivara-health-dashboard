@@ -72,6 +72,8 @@ export type TarefaPlano = {
   marcadorId?: string;
   criadaEm: string; // ISO
   prazo?: string; // ISO ou descritivo
+  hora?: string; // ex: "08:00"
+  comRefeicao?: HorarioToma;
   feita: boolean;
   feitaEm?: string;
 };
