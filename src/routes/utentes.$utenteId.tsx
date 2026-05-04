@@ -4,7 +4,6 @@ import { utente, type Categoria, type Marcador, type TipoTarefa } from "@/data/m
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
 import { PatientHeader } from "@/components/dashboard/PatientHeader";
 import { PatientMobileView } from "@/components/portal/PatientMobileView";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { MarkerList } from "@/components/dashboard/MarkerList";
 import { MarkerDetailPanel } from "@/components/dashboard/MarkerDetailPanel";
 import { GenomicaPanel } from "@/components/dashboard/GenomicaPanel";
@@ -52,7 +51,6 @@ const tabs: { id: Tab; label: string }[] = [
 ];
 
 function DashboardUtente() {
-  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<Tab>("analises");
   const [selectedId, setSelectedId] = useState<string>("ldl");
   const [planoPrefill, setPlanoPrefill] = useState<{
@@ -99,9 +97,10 @@ function DashboardUtente() {
     setActiveTab("plano");
   }
 
-  if (isMobile) {
-    return (
-      <PortalShell hideSidebarChrome>
+  return (
+    <PortalShell hideSidebarChrome>
+      {/* Vista mobile focada — apenas <lg */}
+      <div className="lg:hidden">
         <PatientMobileView
           utente={utente}
           onAlertClick={(a) => {
@@ -112,13 +111,10 @@ function DashboardUtente() {
             }
           }}
         />
-        <MobileNavTabs />
-      </PortalShell>
-    );
-  }
+      </div>
 
-  return (
-    <PortalShell hideSidebarChrome>
+      {/* Vista desktop completa — apenas lg+ */}
+      <div className="hidden lg:block">
       <PatientHeader
         utente={utente}
         onAlertClick={(a) => {
@@ -203,6 +199,7 @@ function DashboardUtente() {
           </div>
         )}
       </main>
+      </div>
       <MobileNavTabs />
     </PortalShell>
   );
