@@ -30,6 +30,8 @@ export type Marcador = {
   alvoFuncional: [number, number];
   direcaoBoa: DirecaoBoa;
   notaMedica?: string;
+  /** Nota visível à utente na app. Se ausente, nota não é partilhada. */
+  notaPartilhada?: string;
   proximaRecolha?: string;
   serie: Medicao[];
   explicacaoSimples?: string;
@@ -64,6 +66,8 @@ export type VarianteGenomica = {
 
 export type TipoTarefa = "suplemento" | "medicacao" | "analise";
 
+export type HorarioToma = "pequeno-almoço" | "almoço" | "jantar" | "ao deitar" | "em jejum" | "livre";
+
 export type TarefaPlano = {
   id: string;
   tipo: TipoTarefa;
@@ -72,6 +76,8 @@ export type TarefaPlano = {
   marcadorId?: string;
   criadaEm: string; // ISO
   prazo?: string; // ISO ou descritivo
+  hora?: string; // ex: "08:00"
+  comRefeicao?: HorarioToma;
   feita: boolean;
   feitaEm?: string;
 };
@@ -128,6 +134,7 @@ export type EntradaDiario = {
 export type Notificacao = {
   id: string;
   tipo: "resumo" | "lembrete" | "agenda" | "consulta" | "sistema";
+  severidade?: "info" | "atencao" | "alerta";
   titulo: string;
   detalhe: string;
   quando: string; // ISO
@@ -303,6 +310,8 @@ const marcadores: Marcador[] = [
     direcaoBoa: "baixar",
     notaMedica:
       "Tendência ascendente nos últimos 8 meses. Reforçar fibras solúveis e considerar ezetimibe se >150 na próxima colheita.",
+    notaPartilhada:
+      "O teu LDL tem subido nos últimos meses. Vamos reforçar fibra solúvel e reavaliar na próxima colheita.",
     proximaRecolha: "Maio 2026",
     serie: serieAnalise(11, 118, 142, 14, 6),
     explicacaoSimples:
@@ -386,6 +395,7 @@ const marcadores: Marcador[] = [
     alvoFuncional: [50, 80],
     direcaoBoa: "subir",
     notaMedica: "Queda no inverno apesar da suplementação. Avaliar absorção e considerar 5000 UI/dia.",
+    notaPartilhada: "Os teus níveis caem no inverno. Ajustámos a dose para 5000 UI/dia.",
     serie: serieAnalise(29, 38, 24, -10, 3),
     explicacaoSimples:
       "Hormona-vitamina ligada à imunidade, ossos e humor. Em Portugual baixa muito no inverno.",
@@ -678,6 +688,8 @@ const plano_tarefas: TarefaPlano[] = [
     marcadorId: "vitd",
     criadaEm: "2026-03-12",
     prazo: "Diário, 8 semanas",
+    hora: "08:00",
+    comRefeicao: "pequeno-almoço",
     feita: false,
   },
   {
@@ -688,6 +700,8 @@ const plano_tarefas: TarefaPlano[] = [
     marcadorId: "ldl",
     criadaEm: "2026-03-12",
     prazo: "Diário, até reavaliação",
+    hora: "13:00",
+    comRefeicao: "almoço",
     feita: true,
     feitaEm: "2026-03-14",
   },
@@ -699,6 +713,7 @@ const plano_tarefas: TarefaPlano[] = [
     marcadorId: "ldl",
     criadaEm: "2026-03-12",
     prazo: "Até 15 Maio 2026",
+    comRefeicao: "em jejum",
     feita: false,
   },
   {
@@ -719,6 +734,8 @@ const plano_tarefas: TarefaPlano[] = [
     marcadorId: "ldl",
     criadaEm: "2026-03-12",
     prazo: "Condicional",
+    hora: "22:30",
+    comRefeicao: "ao deitar",
     feita: false,
   },
 ];
@@ -913,6 +930,7 @@ export const utente: Utente = {
     {
       id: "n-resumo",
       tipo: "resumo",
+      severidade: "info",
       titulo: "Resumo da consulta",
       detalhe:
         "Plano actualizado. Manter Metformina 500mg 2×/dia. Aumentar Magnésio para 400mg ao deitar. Pedir painel hormonal completo em 6 semanas.",
@@ -924,6 +942,7 @@ export const utente: Utente = {
     {
       id: "n-suplemento",
       tipo: "lembrete",
+      severidade: "info",
       titulo: "Suplementos da manhã",
       detalhe: "Vitamina D3 4000 UI · Ómega-3 EPA/DHA",
       quando: "2026-04-29T09:00:00",
@@ -933,6 +952,7 @@ export const utente: Utente = {
     {
       id: "n-receita",
       tipo: "lembrete",
+      severidade: "atencao",
       titulo: "Receita Metformina termina em 18 dias",
       detalhe:
         "Renovação automática agendada. A Dra. Sofia recebe pedido na próxima sessão.",
@@ -943,6 +963,7 @@ export const utente: Utente = {
     {
       id: "n-analises",
       tipo: "agenda",
+      severidade: "info",
       titulo: "Pedido de análises agendado",
       detalhe: "Painel hormonal: FSH, LH, progesterona, SHBG.",
       quando: "2026-06-01T10:00:00",
@@ -952,6 +973,7 @@ export const utente: Utente = {
     {
       id: "n-consulta",
       tipo: "consulta",
+      severidade: "info",
       titulo: "Próxima consulta",
       detalhe: "Discussão sobre TRH personalizada · Clínica Lumiar",
       quando: "2026-06-08T10:30:00",

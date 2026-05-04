@@ -5,7 +5,8 @@ import {
   type Marcador,
   type TipoTarefa,
 } from "@/data/mock-utente";
-import { Bell, FlaskConical, Pencil, Pill } from "lucide-react";
+import { Bell, ChevronDown, FlaskConical, MessageSquare, Pencil, Pill, Stethoscope } from "lucide-react";
+import { useState } from "react";
 import { LongitudinalChart } from "./LongitudinalChart";
 import { StateTag } from "./StateTag";
 
@@ -44,6 +45,7 @@ export function MarkerDetailPanel({
 
   const [alvoMin, alvoMax] = marcador.alvoFuncional;
   const [labMin, labMax] = marcador.intervaloLab;
+  const [novaPrescAberta, setNovaPrescAberta] = useState(false);
 
   return (
     <div className="flex flex-col gap-5">
@@ -69,19 +71,68 @@ export function MarkerDetailPanel({
             <span className="text-sm text-muted-foreground">{marcador.unidade}</span>
           </div>
           {onPrescrever && (
-            <div className="mt-3 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => onPrescrever("suplemento")}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
-              >
-                <Pill className="h-3.5 w-3.5" />
-                Prescrever ação
-              </button>
+            <div className="relative mt-3 flex items-center justify-end gap-2">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setNovaPrescAberta((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+                >
+                  <Pill className="h-3.5 w-3.5" />
+                  Nova prescrição
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+                {novaPrescAberta && (
+                  <div className="absolute right-0 z-20 mt-1.5 w-56 overflow-hidden rounded-xl border border-border bg-surface-raised shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onPrescrever("medicacao");
+                        setNovaPrescAberta(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-foreground hover:bg-accent"
+                    >
+                      <Stethoscope className="h-3.5 w-3.5" />
+                      Medicamento
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onPrescrever("suplemento");
+                        setNovaPrescAberta(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-foreground hover:bg-accent"
+                    >
+                      <Pill className="h-3.5 w-3.5" />
+                      Suplemento
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onPrescrever("analise");
+                        setNovaPrescAberta(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-foreground hover:bg-accent"
+                    >
+                      <FlaskConical className="h-3.5 w-3.5" />
+                      Análise / reanálise
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNovaPrescAberta(false)}
+                      className="flex w-full items-center gap-2 border-t border-border px-3 py-2 text-left text-xs text-foreground hover:bg-accent"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      Nota partilhada à utente
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => onPrescrever("analise")}
                 className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+                title="Cria uma tarefa no plano e lembrete na app da utente"
               >
                 <FlaskConical className="h-3.5 w-3.5" />
                 Pedir reanálise
@@ -122,23 +173,51 @@ export function MarkerDetailPanel({
 
       {/* Notas + próxima recolha */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-surface-raised p-5 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Nota da médica
+        <div className="space-y-3 lg:col-span-2">
+          {/* Nota interna — só médico */}
+          <div className="rounded-2xl border border-state-warn/30 bg-state-warn-soft/30 p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-state-warn">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-state-warn" />
+                Nota interna · só visível ao médico
+              </div>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Pencil className="h-3 w-3" />
+                Editar
+              </button>
             </div>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <Pencil className="h-3 w-3" />
-              Editar
-            </button>
+            <p className="font-serif mt-3 text-lg leading-relaxed text-foreground">
+              {marcador.notaMedica ??
+                "Sem notas internas. A tendência mantém-se dentro do alvo funcional definido."}
+            </p>
           </div>
-          <p className="font-serif mt-3 text-lg leading-relaxed text-foreground">
-            {marcador.notaMedica ??
-              "Sem notas para este marcador. A tendência mantém-se dentro do alvo funcional definido."}
-          </p>
+
+          {/* Nota partilhada — visível na app */}
+          <div className="rounded-2xl border border-border bg-surface-raised p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-state-ok" />
+                Nota partilhada · visível na app da utente
+              </div>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Pencil className="h-3 w-3" />
+                Editar
+              </button>
+            </div>
+            <p className="font-serif mt-3 text-base leading-relaxed text-foreground">
+              {marcador.notaPartilhada ?? (
+                <span className="text-muted-foreground italic">
+                  Nada partilhado com a utente para este marcador.
+                </span>
+              )}
+            </p>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-border bg-surface-raised p-5">

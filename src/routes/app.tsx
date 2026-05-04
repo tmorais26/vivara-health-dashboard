@@ -75,7 +75,7 @@ export const Route = createFileRoute("/app")({
   component: AppUtente,
 });
 
-type Tab = "hoje" | "dados" | "carregar" | "avisos" | "perfil";
+type Tab = "hoje" | "dados" | "avisos" | "perfil";
 type SubView =
   | null
   | "mensagens"
@@ -86,7 +86,8 @@ type SubView =
   | "conteudo"
   | "diario"
   | "novoDiario"
-  | "plano";
+  | "plano"
+  | "carregar";
 
 const tipoMeta: Record<
   TipoTarefa,
@@ -188,15 +189,9 @@ function AppUtente() {
                     />
                   )}
                   {tab === "dados" && (
-                    <SaudeView onOpen={(m) => setMarcadorAberto(m)} />
-                  )}
-                  {tab === "carregar" && (
-                    <CarregarFlow
-                      onConcluir={(notif) => {
-                        adicionarNotificacao(notif);
-                        setTab("avisos");
-                      }}
-                      onCancelar={() => setTab("hoje")}
+                    <SaudeView
+                      onOpen={(m) => setMarcadorAberto(m)}
+                      onCarregar={() => openSub("carregar")}
                     />
                   )}
                   {tab === "avisos" && (
@@ -261,11 +256,21 @@ function AppUtente() {
                   }}
                 />
               )}
+              {sub === "carregar" && (
+                <CarregarFlow
+                  onConcluir={(notif) => {
+                    adicionarNotificacao(notif);
+                    setSub(null);
+                    setTab("avisos");
+                  }}
+                  onCancelar={() => setSub(null)}
+                />
+              )}
             </div>
 
             {/* bottom nav */}
             <nav className="absolute inset-x-0 bottom-0 z-10 border-t border-border bg-surface-raised/95 backdrop-blur">
-              <div className="grid grid-cols-5 items-end px-2 pb-3 pt-2">
+              <div className="grid grid-cols-4 items-end px-2 pb-3 pt-2">
                 <NavItem
                   id="hoje"
                   label="Início"
@@ -286,16 +291,6 @@ function AppUtente() {
                     setSub(null);
                   }}
                 />
-                <CenterNavItem
-                  id="carregar"
-                  label="Carregar"
-                  Icon={Upload}
-                  active={tab === "carregar" && sub === null}
-                  onClick={(t) => {
-                    setTab(t);
-                    setSub(null);
-                  }}
-                />
                 <NavItem
                   id="avisos"
                   label="Avisos"
@@ -306,6 +301,13 @@ function AppUtente() {
                     setSub(null);
                   }}
                   badge={notificacoes.filter((n) => !n.lida).length}
+                  badgeTone={
+                    notificacoes.some((n) => !n.lida && n.severidade === "alerta")
+                      ? "alerta"
+                      : notificacoes.some((n) => !n.lida && n.severidade === "atencao")
+                        ? "atencao"
+                        : "info"
+                  }
                 />
                 <NavItem
                   id="perfil"
@@ -347,6 +349,7 @@ function NavItem({
   active,
   onClick,
   badge,
+  badgeTone = "alerta",
 }: {
   id: Tab;
   label: string;
@@ -354,7 +357,14 @@ function NavItem({
   active: boolean;
   onClick: (t: Tab) => void;
   badge?: number;
+  badgeTone?: "alerta" | "atencao" | "info";
 }) {
+  const badgeBg =
+    badgeTone === "alerta"
+      ? "bg-state-alert text-state-alert-soft"
+      : badgeTone === "atencao"
+        ? "bg-state-warn text-state-warn-soft"
+        : "bg-foreground/70 text-background";
   return (
     <button
       type="button"
@@ -366,7 +376,7 @@ function NavItem({
       <div className="relative">
         <Icon className={`h-5 w-5 ${active ? "stroke-[2.2]" : ""}`} />
         {badge !== undefined && badge > 0 && (
-          <span className="tabular absolute -right-2 -top-1.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-state-alert px-1 text-[9px] font-medium text-state-alert-soft">
+          <span className={`tabular absolute -right-2 -top-1.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-medium ${badgeBg}`}>
             {badge}
           </span>
         )}
@@ -443,20 +453,20 @@ function HojeView({
     .flatMap((c) => c.mensagens)
     .filter((m) => !m.lida && m.autor === "medica").length;
 
-  // Insight do dia (determinístico)
+  // Observação do dia — factual, sem prescrição. Templates aprovados pela médica.
   const insight = useMemo(() => {
     const hrvEstado = calcularEstado(hrv);
     if (hrvEstado !== "ok") {
       return {
-        titulo: "O teu HRV está abaixo da linha de base",
+        titulo: "O teu HRV está abaixo da tua média",
         texto:
-          "Esta semana 18% abaixo da tua média de 12 meses. Ontem dormiste menos. Tenta deitar-te 30 min mais cedo hoje.",
-        cta: { label: "Ver HRV", action: () => onOpenSub("aprender", "ed2") },
+          "Esta semana 18% abaixo da tua linha de base de 12 meses. Sono médio nos últimos 3 dias: 5h42.",
+        cta: { label: "Saber mais sobre HRV", action: () => onOpenSub("aprender", "ed2") },
       };
     }
     return {
-      titulo: "Estás em boa forma",
-      texto: "A tua recuperação esta semana está dentro do teu normal. Continua.",
+      titulo: "Recuperação dentro do teu padrão",
+      texto: "HRV e sono nos últimos 7 dias estão alinhados com a tua média de 12 meses.",
       cta: { label: "Ver Saúde", action: onJump },
     };
   }, [hrv, onJump, onOpenSub]);
@@ -490,19 +500,19 @@ function HojeView({
         </div>
       </header>
 
-      {/* Score de longevidade */}
+      {/* Score de acompanhamento */}
       <section className="rounded-2xl border border-border bg-surface-raised p-4">
         <div className="flex items-center gap-4">
           <ScoreRing value={score} />
           <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Score de longevidade
+              Score de acompanhamento
             </div>
             <div className="font-serif mt-0.5 text-[22px] leading-tight text-foreground">
               {score} <span className="text-muted-foreground text-base">/100</span>
             </div>
             <div className="mt-0.5 text-[11px] text-muted-foreground">
-              Calculado a partir dos teus 24 marcadores
+              Validado por {utente.medicaResponsavel} · 12 mar 2026
             </div>
           </div>
         </div>
@@ -522,13 +532,21 @@ function HojeView({
             </div>
           ))}
         </div>
+        <div className="mt-3 flex items-start gap-2 rounded-xl bg-accent/40 px-3 py-2 text-[10.5px] leading-snug text-muted-foreground">
+          <Info className="mt-0.5 h-3 w-3 shrink-0" />
+          <span>
+            Métrica de acompanhamento pessoal calculada a partir dos teus marcadores e
+            validada pela tua médica. Não constitui diagnóstico nem substitui avaliação
+            clínica.
+          </span>
+        </div>
       </section>
 
-      {/* Insight do dia */}
+      {/* Observação do dia */}
       <section className="rounded-2xl border border-border bg-gradient-to-br from-accent/60 to-accent/20 p-4">
         <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-foreground/70">
           <Sparkles className="h-3 w-3" />
-          Insight do dia
+          Observação do dia
         </div>
         <div className="font-serif mt-1.5 text-[17px] leading-snug text-foreground">
           {insight.titulo}
@@ -812,6 +830,19 @@ function TarefaCard({
             <Icon className="h-3 w-3" />
             {meta.label}
           </span>
+          {tarefa.hora && (
+            <span className="tabular inline-flex items-center gap-1 rounded-full bg-accent/60 px-2 py-0.5 text-[9.5px] font-medium text-foreground/80">
+              {tarefa.hora}
+              {tarefa.comRefeicao && tarefa.comRefeicao !== "livre" && (
+                <span className="text-foreground/50">· {tarefa.comRefeicao}</span>
+              )}
+            </span>
+          )}
+          {!tarefa.hora && tarefa.comRefeicao && tarefa.comRefeicao !== "livre" && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-accent/60 px-2 py-0.5 text-[9.5px] font-medium text-foreground/80">
+              {tarefa.comRefeicao}
+            </span>
+          )}
           {tarefa.prazo && (
             <span className="tabular text-[10px] text-muted-foreground">{tarefa.prazo}</span>
           )}
@@ -847,7 +878,13 @@ const categoriaLabels: Record<Categoria, string> = {
   prescricoes: "Prescrições",
 };
 
-function SaudeView({ onOpen }: { onOpen: (m: Marcador) => void }) {
+function SaudeView({
+  onOpen,
+  onCarregar,
+}: {
+  onOpen: (m: Marcador) => void;
+  onCarregar: () => void;
+}) {
   const [cat, setCat] = useState<Categoria>("analises");
   const lista = useMemo(
     () => utente.marcadores.filter((m) => m.categoria === cat),
@@ -857,13 +894,23 @@ function SaudeView({ onOpen }: { onOpen: (m: Marcador) => void }) {
 
   return (
     <div className="space-y-4 px-5 pt-3">
-      <header>
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          A tua saúde
+      <header className="flex items-end justify-between gap-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            A tua saúde
+          </div>
+          <h2 className="font-serif mt-0.5 text-[26px] leading-tight text-foreground">
+            Marcadores
+          </h2>
         </div>
-        <h2 className="font-serif mt-0.5 text-[26px] leading-tight text-foreground">
-          Marcadores
-        </h2>
+        <button
+          type="button"
+          onClick={onCarregar}
+          className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-2 text-[11px] font-medium text-background transition-opacity hover:opacity-90"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Carregar análise
+        </button>
       </header>
 
       <div className="flex gap-1 rounded-full border border-border bg-surface-raised p-1">
@@ -1015,13 +1062,13 @@ function MarkerSheet({ marcador, onClose }: { marcador: Marcador; onClose: () =>
           </div>
         )}
 
-        {marcador.notaMedica && (
+        {marcador.notaPartilhada && (
           <div className="mt-3 rounded-xl border border-border bg-surface p-3">
             <div className="text-[9.5px] uppercase tracking-wider text-muted-foreground">
               Nota da Dra. Sofia
             </div>
             <p className="font-serif mt-1 text-[13px] leading-snug text-foreground">
-              {marcador.notaMedica}
+              {marcador.notaPartilhada}
             </p>
           </div>
         )}
