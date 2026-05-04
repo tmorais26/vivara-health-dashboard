@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { utente, type Categoria, type Marcador, type TipoTarefa } from "@/data/mock-utente";
+import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
 import { PatientHeader } from "@/components/dashboard/PatientHeader";
 import { MarkerList } from "@/components/dashboard/MarkerList";
 import { MarkerDetailPanel } from "@/components/dashboard/MarkerDetailPanel";
@@ -96,7 +97,7 @@ function DashboardUtente() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <PortalShell hideSidebarChrome>
       <PatientHeader
         utente={utente}
         onAlertClick={(a) => {
@@ -135,7 +136,7 @@ function DashboardUtente() {
       </nav>
 
       {/* Body */}
-      <main className="mx-auto max-w-[1440px] px-8 py-8">
+      <main className="mx-auto max-w-[1440px] px-8 py-8 pb-24 lg:pb-8">
         {activeTab === "anamnese" ? (
           <AnamnesePanel utente={utente} />
         ) : activeTab === "consultas" ? (
@@ -181,6 +182,7 @@ function DashboardUtente() {
           </div>
         )}
       </main>
-    </div>
+      <MobileNavTabs />
+    </PortalShell>
   );
 }
