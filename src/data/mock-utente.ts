@@ -64,6 +64,8 @@ export type VarianteGenomica = {
 
 export type TipoTarefa = "suplemento" | "medicacao" | "analise";
 
+export type HorarioToma = "pequeno-almoço" | "almoço" | "jantar" | "ao deitar" | "em jejum" | "livre";
+
 export type TarefaPlano = {
   id: string;
   tipo: TipoTarefa;
