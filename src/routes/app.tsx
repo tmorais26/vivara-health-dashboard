@@ -204,6 +204,7 @@ function AppUtente() {
                         setSub(null);
                       }}
                       onCarregar={() => openSub("carregar")}
+                      notificacoes={notificacoes}
                     />
                   )}
                   {tab === "dados" && (
@@ -466,6 +467,7 @@ function HojeView({
   onOpenSub,
   onGoTab,
   onCarregar,
+  notificacoes,
 }: {
   tarefas: TarefaPlano[];
   onToggle: (id: string) => void;
@@ -473,6 +475,7 @@ function HojeView({
   onOpenSub: (v: SubView, ctx?: string) => void;
   onGoTab: (t: Tab) => void;
   onCarregar: () => void;
+  notificacoes: Notificacao[];
 }) {
   const score = useMemo(() => calcularScoreLongevidade(), []);
   const breakdown = useMemo(() => scoreBreakdown(), []);
@@ -495,9 +498,21 @@ function HojeView({
   const acessos: { label: string; Icon: typeof Upload; onClick: () => void; darkTone: string }[] = [
     { label: "Carregar", Icon: Upload, onClick: onCarregar, darkTone: "dark:bg-state-ok dark:text-background" },
     { label: "Análises", Icon: FlaskConical, onClick: () => onGoTab("dados"), darkTone: "dark:bg-primary dark:text-primary-foreground" },
-    { label: "Resumo", Icon: FileText, onClick: () => onGoTab("avisos"), darkTone: "dark:bg-[oklch(0.55_0.18_300)] dark:text-white" },
+    { label: "Última consulta", Icon: FileText, onClick: () => onGoTab("avisos"), darkTone: "dark:bg-[oklch(0.55_0.18_300)] dark:text-white" },
     { label: "Privacidade", Icon: Shield, onClick: () => onGoTab("perfil"), darkTone: "dark:bg-white/10 dark:text-white" },
   ];
+
+  // Resumo da última consulta (notificação tipo "resumo")
+  const resumoConsulta = notificacoes.find((n) => n.tipo === "resumo");
+
+  // Plano de hoje — só os items diários relevantes (suplementos, medicação)
+  const tarefasHoje = tarefas.filter(
+    (t) => t.tipo === "suplemento" || t.tipo === "medicacao",
+  );
+  const feitasHoje = tarefasHoje.filter((t) => t.feita).length;
+  const totalHoje = tarefasHoje.length;
+  const diasSemana = ["S", "T", "Q", "Q", "S", "S", "D"];
+  const hoje = 2; // mock: 4ª feira
 
   return (
     <div className="space-y-4 px-5 pt-3">
@@ -573,6 +588,36 @@ function HojeView({
         </div>
       </section>
 
+      {/* Resumo da última consulta — destacado se recente (≤14 dias) */}
+      {resumoConsulta && (
+        <button
+          type="button"
+          onClick={() => {
+            if (resumoConsulta.consultaId) onOpenSub("consulta", resumoConsulta.consultaId);
+            else onGoTab("avisos");
+          }}
+          className="flex w-full items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-3.5 text-left transition-colors hover:bg-primary/10 dark:border-primary/30 dark:bg-primary/10"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <FileText className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[10px] uppercase tracking-wider text-primary">
+                Última consulta · {formatarDataCurta(utente.ultimaConsulta)}
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-primary/70" />
+            </div>
+            <div className="font-serif mt-0.5 text-[14px] leading-tight text-foreground">
+              {resumoConsulta.titulo}
+            </div>
+            <p className="mt-1 line-clamp-2 text-[11.5px] leading-snug text-muted-foreground">
+              {resumoConsulta.detalhe}
+            </p>
+          </div>
+        </button>
+      )}
+
       {/* Acessos rápidos — grelha 4. Light: neutro. Dark: ícones com cor à imagem-referência. */}
       <section className="grid grid-cols-4 gap-2">
         {acessos.map((a) => (
@@ -592,10 +637,102 @@ function HojeView({
         ))}
       </section>
 
-      {/* Sinal de hoje */}
+      {/* Plano de hoje — suplementos / medicação do dia */}
+      {totalHoje > 0 && (
+        <section>
+          <div className="mb-2 flex items-center justify-between px-1">
+            <div className="text-[11px] font-medium text-foreground">Plano de hoje</div>
+            <button
+              type="button"
+              onClick={onJump}
+              className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+            >
+              Ver plano
+            </button>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface-raised p-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Suplementos & medicação
+              </div>
+              <div className="tabular text-[11px] text-foreground">
+                <span className="font-semibold">{feitasHoje}</span>
+                <span className="text-muted-foreground">/{totalHoje}</span>
+              </div>
+            </div>
+
+            {/* Sequência da semana */}
+            <div className="mt-2.5 grid grid-cols-7 gap-1">
+              {diasSemana.map((d, i) => {
+                const isHoje = i === hoje;
+                const passado = i < hoje;
+                const cumprido = passado && Math.random() > 0.25; // mock streak
+                return (
+                  <div key={i} className="flex flex-col items-center gap-1">
+                    <span
+                      className={`text-[9px] uppercase ${
+                        isHoje ? "font-semibold text-foreground" : "text-muted-foreground"
+                      }`}
+                    >
+                      {d}
+                    </span>
+                    <span
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] ${
+                        isHoje
+                          ? "border-2 border-primary bg-primary/10 font-semibold text-primary"
+                          : passado
+                            ? cumprido
+                              ? "bg-state-ok/20 text-state-ok"
+                              : "bg-border text-muted-foreground"
+                            : "border border-dashed border-border text-muted-foreground/60"
+                      }`}
+                    >
+                      {passado ? (cumprido ? "✓" : "·") : isHoje ? feitasHoje : ""}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Lista compacta dos items */}
+            <ul className="mt-3 space-y-1.5">
+              {tarefasHoje.slice(0, 3).map((t) => (
+                <li key={t.id} className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => onToggle(t.id)}
+                    aria-label={t.feita ? "Desmarcar" : "Marcar como feito"}
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                      t.feita
+                        ? "border-state-ok bg-state-ok text-background"
+                        : "border-border bg-background hover:border-foreground/40"
+                    }`}
+                  >
+                    {t.feita && <CheckCircle2 className="h-3 w-3" strokeWidth={2.5} />}
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className={`truncate text-[12px] ${
+                        t.feita ? "text-muted-foreground line-through" : "text-foreground"
+                      }`}
+                    >
+                      {t.titulo}
+                    </div>
+                  </div>
+                  {t.hora && (
+                    <span className="tabular text-[10px] text-muted-foreground">{t.hora}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {/* Dados de hoje */}
       <section>
         <div className="mb-2 flex items-center justify-between px-1">
-          <div className="text-[11px] font-medium text-foreground">Sinal de hoje</div>
+          <div className="text-[11px] font-medium text-foreground">Dados de hoje</div>
           <button
             type="button"
             onClick={onJump}
@@ -623,7 +760,7 @@ function HojeView({
             onClick={onJump}
             className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
           >
-            Ver dados
+            Ver histórico
           </button>
         </div>
         <div className="space-y-2">
@@ -654,6 +791,28 @@ function HojeView({
 
 function Sinal7d({ marcador, Icon }: { marcador: Marcador; Icon: typeof Activity }) {
   const estado = calcularEstado(marcador);
+
+  // Micro-tendência: comparar média dos últimos 7 com os 7 anteriores
+  const serie = marcador.serie;
+  const recentes = serie.slice(-7).map((p) => p.valor);
+  const anteriores = serie.slice(-14, -7).map((p) => p.valor);
+  const media = (a: number[]) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0);
+  const mRecente = media(recentes);
+  const mAnterior = media(anteriores);
+  const deltaPct = mAnterior > 0 ? Math.round(((mRecente - mAnterior) / mAnterior) * 100) : 0;
+  const sobeBom = marcador.direcaoBoa === "subir";
+  const desceBom = marcador.direcaoBoa === "baixar";
+  const isUp = deltaPct > 0;
+  const isFlat = Math.abs(deltaPct) < 2;
+  const tone = isFlat
+    ? "text-muted-foreground"
+    : (isUp && sobeBom) || (!isUp && desceBom)
+      ? "text-state-ok"
+      : (isUp && desceBom) || (!isUp && sobeBom)
+        ? "text-state-alert"
+        : "text-muted-foreground";
+  const TrendIcon = isFlat ? null : isUp ? TrendingUp : TrendingDown;
+
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface-raised px-3.5 py-3">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent">
@@ -663,11 +822,17 @@ function Sinal7d({ marcador, Icon }: { marcador: Marcador; Icon: typeof Activity
         <div className="text-[12.5px] font-medium text-foreground">{marcador.nomeCurto}</div>
         <div className="text-[10px] text-muted-foreground">Mediana 7 dias</div>
       </div>
-      <div className="font-serif tabular text-[15px] text-foreground">
-        {formatarValor(marcador)}
-        <span className="ml-1 text-[10px] text-muted-foreground">{marcador.unidade}</span>
+      <div className="flex flex-col items-end">
+        <div className="font-serif tabular text-[15px] leading-none text-foreground">
+          {formatarValor(marcador)}
+          <span className="ml-1 text-[10px] text-muted-foreground">{marcador.unidade}</span>
+        </div>
+        <div className={`tabular mt-1 inline-flex items-center gap-0.5 text-[10px] ${tone}`}>
+          {TrendIcon && <TrendIcon className="h-2.5 w-2.5" strokeWidth={2.5} />}
+          {isFlat ? "estável" : `${isUp ? "+" : ""}${deltaPct}% vs sem. ant.`}
+        </div>
       </div>
-      <div className="w-[70px]">
+      <div className="w-[60px]">
         <Sparkline marcador={marcador} estado={estado} height={26} />
       </div>
     </div>
