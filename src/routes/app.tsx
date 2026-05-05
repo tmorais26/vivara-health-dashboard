@@ -791,6 +791,28 @@ function HojeView({
 
 function Sinal7d({ marcador, Icon }: { marcador: Marcador; Icon: typeof Activity }) {
   const estado = calcularEstado(marcador);
+
+  // Micro-tendência: comparar média dos últimos 7 com os 7 anteriores
+  const serie = marcador.serie;
+  const recentes = serie.slice(-7).map((p) => p.valor);
+  const anteriores = serie.slice(-14, -7).map((p) => p.valor);
+  const media = (a: number[]) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0);
+  const mRecente = media(recentes);
+  const mAnterior = media(anteriores);
+  const deltaPct = mAnterior > 0 ? Math.round(((mRecente - mAnterior) / mAnterior) * 100) : 0;
+  const sobeBom = marcador.direcaoBoa === "subir";
+  const desceBom = marcador.direcaoBoa === "baixar";
+  const isUp = deltaPct > 0;
+  const isFlat = Math.abs(deltaPct) < 2;
+  const tone = isFlat
+    ? "text-muted-foreground"
+    : (isUp && sobeBom) || (!isUp && desceBom)
+      ? "text-state-ok"
+      : (isUp && desceBom) || (!isUp && sobeBom)
+        ? "text-state-alert"
+        : "text-muted-foreground";
+  const TrendIcon = isFlat ? null : isUp ? TrendingUp : TrendingDown;
+
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface-raised px-3.5 py-3">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent">
@@ -800,11 +822,17 @@ function Sinal7d({ marcador, Icon }: { marcador: Marcador; Icon: typeof Activity
         <div className="text-[12.5px] font-medium text-foreground">{marcador.nomeCurto}</div>
         <div className="text-[10px] text-muted-foreground">Mediana 7 dias</div>
       </div>
-      <div className="font-serif tabular text-[15px] text-foreground">
-        {formatarValor(marcador)}
-        <span className="ml-1 text-[10px] text-muted-foreground">{marcador.unidade}</span>
+      <div className="flex flex-col items-end">
+        <div className="font-serif tabular text-[15px] leading-none text-foreground">
+          {formatarValor(marcador)}
+          <span className="ml-1 text-[10px] text-muted-foreground">{marcador.unidade}</span>
+        </div>
+        <div className={`tabular mt-1 inline-flex items-center gap-0.5 text-[10px] ${tone}`}>
+          {TrendIcon && <TrendIcon className="h-2.5 w-2.5" strokeWidth={2.5} />}
+          {isFlat ? "estável" : `${isUp ? "+" : ""}${deltaPct}% vs sem. ant.`}
+        </div>
       </div>
-      <div className="w-[70px]">
+      <div className="w-[60px]">
         <Sparkline marcador={marcador} estado={estado} height={26} />
       </div>
     </div>
