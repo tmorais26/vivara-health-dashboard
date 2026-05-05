@@ -750,7 +750,12 @@ function HojeView({
 
       {/* Ciclo menstrual — apenas para utentes do sexo feminino */}
       {utente.sexo === "feminino" && (
-        <CicloMenstrualCard ciclos={ciclos} onChange={onCiclosChange} />
+        <CicloMenstrualCard
+          ciclos={ciclos}
+          onChange={onCiclosChange}
+          registos={registosCiclo}
+          onRegistosChange={onRegistosCicloChange}
+        />
       )}
 
       {/* Dados de hoje */}
