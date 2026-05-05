@@ -55,14 +55,15 @@ const tabs: { id: Tab; label: string }[] = [
 function DashboardUtente() {
   const [activeTab, setActiveTab] = useState<Tab>("analises");
   const [selectedId, setSelectedId] = useState<string>("ldl");
+  const [novosDadosFiltro, setNovosDadosFiltro] = useState(false);
   const [planoPrefill, setPlanoPrefill] = useState<{
     tipo: TipoTarefa;
     marcador?: Marcador;
   } | null>(null);
 
   const marcadoresFiltrados = useMemo(
-    () =>
-      activeTab === "plano" ||
+    () => {
+      const base = activeTab === "plano" ||
       activeTab === "genomica" ||
       activeTab === "prescricoes" ||
       activeTab === "anamnese" ||
@@ -70,8 +71,16 @@ function DashboardUtente() {
       activeTab === "comparar" ||
       activeTab === "documentos"
         ? []
-        : utente.marcadores.filter((m) => m.categoria === (activeTab as Categoria)),
-    [activeTab],
+        : utente.marcadores.filter((m) => m.categoria === (activeTab as Categoria));
+      if (!novosDadosFiltro) return base;
+      // Considera "novo" se a última medição é nos últimos 14 dias
+      const cutoff = Date.now() - 14 * 24 * 3600 * 1000;
+      return base.filter((m) => {
+        const last = m.serie[m.serie.length - 1];
+        return last && new Date(last.data).getTime() >= cutoff;
+      });
+    },
+    [activeTab, novosDadosFiltro],
   );
 
   const selecionado =
@@ -121,6 +130,11 @@ function DashboardUtente() {
       <div className="hidden lg:block">
       <PatientHeader
         utente={utente}
+        novosDadosAtivo={novosDadosFiltro}
+        onShowNovosDados={() => {
+          setActiveTab("analises");
+          setNovosDadosFiltro((v) => !v);
+        }}
         onAlertClick={(a) => {
           const m = utente.marcadores.find((mm) => mm.id === a.marcadorId);
           if (m) {
