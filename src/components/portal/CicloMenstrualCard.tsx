@@ -546,14 +546,16 @@ function Chip({
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
-  tone?: "default" | "primary" | "alert";
+  tone?: "default" | "primary" | "alert" | "ok";
 }) {
   const activeCls =
     tone === "alert"
       ? "bg-state-alert/15 border-state-alert/50 text-state-alert"
-      : tone === "primary"
-        ? "bg-primary/15 border-primary/50 text-primary"
-        : "bg-foreground text-background border-foreground";
+      : tone === "ok"
+        ? "bg-state-ok/15 border-state-ok/50 text-state-ok"
+        : tone === "primary"
+          ? "bg-primary/15 border-primary/50 text-primary"
+          : "bg-foreground text-background border-foreground";
   return (
     <button
       type="button"
@@ -707,7 +709,7 @@ function RegistoDiarioSection({
             <Chip
               key={o.value}
               active={registo.relacao === o.value}
-              tone={o.value === "desprotegida" ? "alert" : "primary"}
+              tone={o.value === "desprotegida" ? "alert" : "ok"}
               onClick={() =>
                 onPatch({
                   relacao: registo.relacao === o.value ? undefined : o.value,
