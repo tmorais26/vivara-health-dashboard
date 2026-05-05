@@ -214,6 +214,8 @@ function AppUtente() {
                       notificacoes={notificacoes}
                       ciclos={ciclos}
                       onCiclosChange={setCiclos}
+                      registosCiclo={registosCiclo}
+                      onRegistosCicloChange={setRegistosCiclo}
                     />
                   )}
                   {tab === "dados" && (
