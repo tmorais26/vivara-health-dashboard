@@ -7,7 +7,6 @@ import {
   Eye,
   FileText,
   History,
-  Info,
   Lock,
   MessageSquare,
   Phone,
