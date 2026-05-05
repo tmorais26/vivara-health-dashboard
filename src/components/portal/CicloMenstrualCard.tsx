@@ -17,6 +17,7 @@ import {
   type HumorCiclo,
   type SintomaCiclo,
   type EstiloVidaTag,
+  type RelacaoSexual,
   formatarData,
   formatarDataCurta,
 } from "@/data/mock-utente";
