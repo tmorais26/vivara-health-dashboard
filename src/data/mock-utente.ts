@@ -769,6 +769,23 @@ export const utente: Utente = {
       com: "Dra. Sofia Cardoso",
       papel: "Médica de longevidade",
       iniciais: "SC",
+      especialidade: "Medicina interna · Medicina de longevidade",
+      bio:
+        "Acompanha doentes adultos numa abordagem longitudinal: marcadores metabólicos, composição corporal, sono e sinais inflamatórios. Foco em decisões clínicas explicadas em linguagem simples.",
+      formacao: [
+        "Faculdade de Medicina da Universidade de Lisboa",
+        "Internato de Medicina Interna · Hospital de Santa Maria",
+        "Pós-graduação em Medicina de Longevidade · Pavia (IT)",
+      ],
+      idiomas: ["Português", "Inglês", "Espanhol"],
+      email: "sofia.cardoso@vivarahealth.pt",
+      telefone: "+351 21 000 0000",
+      cidade: "Lisboa · Lumiar Longevidade Clínica",
+      horario: "Seg a Qui · 9h–18h",
+      redes: [
+        { tipo: "linkedin", url: "#", label: "linkedin.com/in/sofiacardoso" },
+        { tipo: "website", url: "#", label: "vivarahealth.pt/equipa/sofia" },
+      ],
       mensagens: [
         {
           id: "m1",
@@ -810,6 +827,22 @@ export const utente: Utente = {
       com: "Inês Carvalho",
       papel: "Nutricionista",
       iniciais: "IC",
+      especialidade: "Nutrição clínica · Saúde metabólica",
+      bio:
+        "Constrói planos alimentares realistas a partir das tuas análises e rotina. Trabalha em conjunto com a Dra. Sofia para apoiar marcadores como LDL, glicose e composição corporal.",
+      formacao: [
+        "Licenciatura em Ciências da Nutrição · Universidade do Porto",
+        "Mestrado em Nutrição Clínica · NOVA Medical School",
+      ],
+      idiomas: ["Português", "Inglês"],
+      email: "ines.carvalho@vivarahealth.pt",
+      telefone: "+351 21 000 0001",
+      cidade: "Lisboa · Lumiar Longevidade Clínica",
+      horario: "Ter, Qua e Sex · 10h–17h",
+      redes: [
+        { tipo: "instagram", url: "#", label: "@ines.nutricao" },
+        { tipo: "linkedin", url: "#", label: "linkedin.com/in/inescarvalho" },
+      ],
       mensagens: [
         {
           id: "n1",
