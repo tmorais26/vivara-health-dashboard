@@ -25,6 +25,7 @@ import {
 import type { Alerta, Utente } from "@/data/mock-utente";
 import { calcularEstado, formatarData, formatarValor } from "@/data/mock-utente";
 import { ALERTA_VS_ALVO_EXPLICACAO } from "@/data/mock-portal";
+import { InfoHint } from "@/components/portal/InfoHint";
 
 /**
  * Vista mobile focada para a médica — consulta rápida entre consultas.
@@ -154,11 +155,18 @@ export function PatientMobileView({
       {/* Alertas */}
       {utente.alertas.length > 0 && (
         <section className="border-b border-border px-4 py-5">
-          <div
-            className="mb-2.5 flex items-center justify-between text-[10.5px] uppercase tracking-wider text-muted-foreground"
-            title={ALERTA_VS_ALVO_EXPLICACAO}
-          >
-            <span>{utente.alertas.length} alertas clínicos</span>
+          <div className="mb-2.5 flex items-center justify-between text-[10.5px] uppercase tracking-wider text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              {utente.alertas.length} alertas clínicos
+              <InfoHint title="Alertas clínicos vs. fora do alvo">
+                <p>{ALERTA_VS_ALVO_EXPLICACAO}</p>
+                <p className="text-muted-foreground">
+                  Nem tudo o que está fora do alvo gera alerta — só os
+                  marcadores com tendência ou magnitude relevante surgem como
+                  alerta para acção.
+                </p>
+              </InfoHint>
+            </span>
             <span>11 fora do alvo</span>
           </div>
           <ul className="space-y-2">

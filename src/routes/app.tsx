@@ -47,6 +47,7 @@ import {
   X,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { InfoHint } from "@/components/portal/InfoHint";
 import {
   utente,
   calcularDirecao,
@@ -519,7 +520,20 @@ function HojeView({
       {/* Score destacado — light: superfície neutra; dark: cartão azul-noite */}
       <section className="rounded-2xl border border-border bg-surface-raised p-4 dark:border-transparent dark:bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.32_0.09_255)_0%,oklch(0.18_0.05_260)_55%,oklch(0.14_0.03_260)_100%)] dark:text-white dark:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.6)]">
         <div className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground dark:text-white/60">
-          Score de acompanhamento <Info className="h-3 w-3" />
+          Score de acompanhamento
+          <InfoHint
+            title="Score de acompanhamento"
+            className="inline-flex items-center justify-center text-muted-foreground transition-colors hover:text-foreground dark:text-white/60 dark:hover:text-white"
+          >
+            <p>
+              Indicador interno (0–100) calculado a partir dos teus marcadores,
+              hábitos do diário e adesão ao plano. Serve para visualizar, semana
+              a semana, a tua evolução geral.
+            </p>
+            <p className="text-muted-foreground">
+              Não é um diagnóstico nem substitui a avaliação da equipa clínica.
+            </p>
+          </InfoHint>
         </div>
         <div className="mt-2 flex items-end justify-between gap-3">
           <div className="font-serif tabular text-[44px] leading-none text-foreground dark:text-white">
@@ -1304,7 +1318,19 @@ function MarkerSheet({ marcador, onClose }: { marcador: Marcador; onClose: () =>
         {marcador.explicacaoSimples && (
           <div className="mt-3 rounded-xl border border-border bg-accent/30 p-3">
             <div className="flex items-center gap-1.5 text-[9.5px] uppercase tracking-wider text-foreground/70">
-              <Info className="h-3 w-3" />O que é isto?
+              <InfoHint
+                title={`${marcador.nome} — o que é?`}
+                className="inline-flex items-center justify-center text-foreground/70 transition-colors hover:text-foreground"
+              >
+                <p>{marcador.explicacaoSimples}</p>
+                {marcador.porqueImporta && (
+                  <p>
+                    <span className="font-medium text-foreground">Porque importa: </span>
+                    {marcador.porqueImporta}
+                  </p>
+                )}
+              </InfoHint>
+              O que é isto?
             </div>
             <p className="mt-1 text-[12.5px] leading-relaxed text-foreground/85">
               {marcador.explicacaoSimples}
@@ -2839,7 +2865,21 @@ function CarregarRevisaoView({
                 {v.precisaRevisao && v.alternativas && (
                   <div className="mt-2.5 rounded-lg border border-state-warn/30 bg-surface px-3 py-2">
                     <div className="flex items-center gap-1.5 text-[10.5px] text-state-warn">
-                      <Info className="h-3 w-3" />
+                      <InfoHint
+                        title="Confirmação de leitura"
+                        className="inline-flex items-center justify-center text-state-warn transition-opacity hover:opacity-80"
+                      >
+                        <p>
+                          A leitura automática deste valor não atingiu confiança
+                          suficiente. Selecciona o valor correcto entre as
+                          alternativas para garantir que entra correctamente no
+                          teu histórico.
+                        </p>
+                        <p className="text-muted-foreground">
+                          Podes sempre corrigir mais tarde a partir do detalhe
+                          do marcador.
+                        </p>
+                      </InfoHint>
                       Possível {v.alternativas.join(" ou ")} — confirme
                     </div>
                     <div className="mt-2 flex gap-1.5">
