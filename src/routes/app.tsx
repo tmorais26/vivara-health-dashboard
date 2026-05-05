@@ -133,6 +133,7 @@ function AppUtente() {
   const [marcadorAberto, setMarcadorAberto] = useState<Marcador | null>(null);
   const [diario, setDiario] = useState<EntradaDiario[]>(utente.diario);
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>(utente.notificacoes);
+  const [infoAberto, setInfoAberto] = useState<{ title: string; body: string } | null>(null);
 
   function marcarNotificacaoLida(id: string) {
     setNotificacoes((prev) => prev.map((n) => (n.id === id ? { ...n, lida: true } : n)));
@@ -159,6 +160,10 @@ function AppUtente() {
   function openSub(view: SubView, ctx?: string) {
     setSub(view);
     setSubContext(ctx ?? null);
+  }
+
+  function openInfo(title: string, body: string) {
+    setInfoAberto({ title, body });
   }
 
   return (
