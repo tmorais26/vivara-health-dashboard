@@ -97,6 +97,7 @@ type SubView =
   | "conteudo"
   | "diario"
   | "novoDiario"
+  | "membroEquipa"
   | "plano"
   | "carregar";
 
