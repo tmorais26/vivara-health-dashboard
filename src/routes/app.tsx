@@ -262,15 +262,32 @@ function AppUtente() {
                   diario={diario}
                   onBack={() => setSub(null)}
                   onNovo={() => setSub("novoDiario")}
+                  onEditarHoje={() => setSub("novoDiario")}
                 />
               )}
               {sub === "novoDiario" && (
                 <NovoDiarioView
+                  entradaExistente={diario.find((d) => d.data === "2026-04-29")}
                   onBack={() => setSub("diario")}
                   onSave={(e) => {
-                    setDiario((prev) => [e, ...prev]);
+                    setDiario((prev) => {
+                      const idx = prev.findIndex((x) => x.data === e.data);
+                      if (idx >= 0) {
+                        const copy = [...prev];
+                        copy[idx] = e;
+                        return copy;
+                      }
+                      return [e, ...prev];
+                    });
                     setSub("diario");
                   }}
+                />
+              )}
+              {sub === "membroEquipa" && subContext && (
+                <MembroEquipaView
+                  conversaId={subContext}
+                  onBack={() => setSub(null)}
+                  onMensagem={(id) => openSub("conversa", id)}
                 />
               )}
               {sub === "carregar" && (
