@@ -705,6 +705,7 @@ function RegistoDiarioSection({
           {([
             { value: "protegida", label: "Protegida" },
             { value: "desprotegida", label: "Desprotegida" },
+            { value: "sem-registo", label: "Sem registo" },
           ] as { value: RelacaoSexual; label: string }[]).map((o) => (
             <Chip
               key={o.value}
@@ -719,14 +720,6 @@ function RegistoDiarioSection({
               {o.label}
             </Chip>
           ))}
-          {registo.relacao !== undefined && (
-            <Chip
-              active={false}
-              onClick={() => onPatch({ relacao: undefined })}
-            >
-              Limpar
-            </Chip>
-          )}
         </div>
       </div>
 
