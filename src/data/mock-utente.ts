@@ -267,7 +267,7 @@ export type EstiloVidaTag =
   | "meditacao"
   | "ar-livre";
 
-export type RelacaoSexual = "protegida" | "desprotegida";
+export type RelacaoSexual = "protegida" | "desprotegida" | "sem-registo";
 
 export type RegistoCicloDia = {
   id: string;
