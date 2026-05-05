@@ -660,6 +660,202 @@ function Sinal7d({ marcador, Icon }: { marcador: Marcador; Icon: typeof Activity
   );
 }
 
+/* ============================================================
+   Membro da equipa — perfil
+   ============================================================ */
+
+function MembroEquipaView({
+  conversaId,
+  onBack,
+  onMensagem,
+}: {
+  conversaId: string;
+  onBack: () => void;
+  onMensagem: (id: string) => void;
+}) {
+  const c = utente.conversas.find((x) => x.id === conversaId);
+  if (!c) return null;
+
+  const proxima = utente.consultas.find((k) => k.estado === "agendada");
+
+  return (
+    <div>
+      <SubHeader onBack={onBack} title="Equipa clínica" subtitle={c.papel} />
+
+      <div className="space-y-4 px-4 py-3">
+        <section className="rounded-2xl border border-border bg-surface-raised p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-[14px] font-medium text-primary-foreground">
+              {c.iniciais}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="font-serif text-[18px] leading-tight text-foreground">{c.com}</div>
+              <div className="text-[11px] text-muted-foreground">
+                {c.especialidade ?? c.papel}
+              </div>
+            </div>
+          </div>
+
+          {c.bio && (
+            <p className="font-serif mt-3 text-[13px] leading-snug text-foreground/90">
+              {c.bio}
+            </p>
+          )}
+
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => onMensagem(c.id)}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-foreground py-2 text-[12px] font-medium text-background hover:opacity-90"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              Mensagem
+            </button>
+            {c.telefone && (
+              <a
+                href={`tel:${c.telefone.replace(/\s/g, "")}`}
+                className="flex items-center justify-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2 text-[12px] text-foreground hover:bg-accent/40"
+              >
+                <Phone className="h-3.5 w-3.5" />
+              </a>
+            )}
+            {c.email && (
+              <a
+                href={`mailto:${c.email}`}
+                className="flex items-center justify-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2 text-[12px] text-foreground hover:bg-accent/40"
+              >
+                <Mail className="h-3.5 w-3.5" />
+              </a>
+            )}
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
+          <div className="border-b border-border px-4 py-2.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+            Contacto
+          </div>
+          {c.email && <InfoLine Icon={Mail} label="Email" value={c.email} />}
+          {c.telefone && <InfoLine Icon={Phone} label="Telefone" value={c.telefone} />}
+          {c.cidade && <InfoLine Icon={MapPin} label="Localização" value={c.cidade} />}
+          {c.horario && <InfoLine Icon={Clock} label="Horário" value={c.horario} />}
+        </section>
+
+        {(c.formacao?.length || c.idiomas?.length) && (
+          <section className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
+            <div className="border-b border-border px-4 py-2.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+              Sobre
+            </div>
+            {c.formacao && c.formacao.length > 0 && (
+              <div className="px-4 py-3">
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <GraduationCap className="h-3.5 w-3.5" />
+                  Formação
+                </div>
+                <ul className="mt-1.5 space-y-1">
+                  {c.formacao.map((f) => (
+                    <li key={f} className="text-[12.5px] leading-snug text-foreground">
+                      · {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {c.idiomas && c.idiomas.length > 0 && (
+              <div className="border-t border-border px-4 py-3">
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <Languages className="h-3.5 w-3.5" />
+                  Idiomas
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {c.idiomas.map((i) => (
+                    <span
+                      key={i}
+                      className="rounded-full border border-border bg-surface px-2.5 py-0.5 text-[11px] text-foreground"
+                    >
+                      {i}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {c.redes && c.redes.length > 0 && (
+          <section className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
+            <div className="border-b border-border px-4 py-2.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+              Online
+            </div>
+            {c.redes.map((r) => {
+              const Icon =
+                r.tipo === "linkedin"
+                  ? Linkedin
+                  : r.tipo === "instagram"
+                    ? Instagram
+                    : Globe;
+              return (
+                <a
+                  key={r.label}
+                  href={r.url}
+                  className="flex w-full items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 hover:bg-accent/40"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent">
+                    <Icon className="h-4 w-4 text-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[12.5px] text-foreground capitalize">{r.tipo}</div>
+                    <div className="truncate text-[10.5px] text-muted-foreground">{r.label}</div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </a>
+              );
+            })}
+          </section>
+        )}
+
+        {proxima && c.id === "c-sofia" && (
+          <section className="rounded-2xl border border-border bg-accent/30 p-4">
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <CalendarClock className="h-3.5 w-3.5" />
+              Próxima consulta convosco
+            </div>
+            <div className="mt-1 text-[13.5px] font-medium text-foreground">
+              {formatarData(proxima.data)} · {proxima.hora}
+            </div>
+            <div className="text-[11px] text-muted-foreground">{proxima.motivo}</div>
+          </section>
+        )}
+
+        <p className="px-1 text-center text-[10px] text-muted-foreground">
+          Em emergências liga 112 ou contacta a tua clínica.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function InfoLine({
+  Icon,
+  label,
+  value,
+}: {
+  Icon: typeof Mail;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-b-0">
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent">
+        <Icon className="h-4 w-4 text-foreground" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className="truncate text-[12.5px] text-foreground">{value}</div>
+      </div>
+    </div>
+  );
+}
+
 function ProgressRing({ pct }: { pct: number }) {
   const r = 22;
   const c = 2 * Math.PI * r;
