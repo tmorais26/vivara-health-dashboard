@@ -112,12 +112,20 @@ function calcularPrevisao(ciclos: CicloMenstrual[]): Previsao | null {
 export function CicloMenstrualCard({
   ciclos,
   onChange,
+  registos = [],
+  onRegistosChange,
 }: {
   ciclos: CicloMenstrual[];
   onChange: (next: CicloMenstrual[]) => void;
+  registos?: RegistoCicloDia[];
+  onRegistosChange?: (next: RegistoCicloDia[]) => void;
 }) {
   const [open, setOpen] = useState(false);
   const previsao = useMemo(() => calcularPrevisao(ciclos), [ciclos]);
+  const registoHoje = useMemo(
+    () => registos.find((r) => r.data === HOJE_ISO),
+    [registos],
+  );
 
   const status = previsao?.emMenstruacao
     ? { label: "Menstruação", tone: "bg-state-alert/15 text-state-alert", dot: "bg-state-alert" }
@@ -200,6 +208,8 @@ export function CicloMenstrualCard({
           previsao={previsao}
           onClose={() => setOpen(false)}
           onChange={onChange}
+          registos={registos}
+          onRegistosChange={onRegistosChange}
         />
       )}
     </section>
