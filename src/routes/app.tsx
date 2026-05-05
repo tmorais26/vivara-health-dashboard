@@ -504,7 +504,7 @@ function HojeView({
           </span>
         </div>
         <p className="mt-2 text-[10.5px] leading-snug text-muted-foreground dark:text-white/55">
-          Calculado para acompanhamento pessoal pela {utente.medicaResponsavel}. Não substitui avaliação clínica.
+          Calculado para acompanhamento pessoal. Não substitui avaliação clínica.
         </p>
         <div className="mt-3 grid grid-cols-3 gap-2">
           {breakdown.map((b, i) => {
