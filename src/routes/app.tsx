@@ -473,6 +473,8 @@ function HojeView({
   onGoTab,
   onCarregar,
   notificacoes,
+  ciclos,
+  onCiclosChange,
 }: {
   tarefas: TarefaPlano[];
   onToggle: (id: string) => void;
@@ -481,6 +483,8 @@ function HojeView({
   onGoTab: (t: Tab) => void;
   onCarregar: () => void;
   notificacoes: Notificacao[];
+  ciclos: CicloMenstrual[];
+  onCiclosChange: (next: CicloMenstrual[]) => void;
 }) {
   const score = useMemo(() => calcularScoreLongevidade(), []);
   const breakdown = useMemo(() => scoreBreakdown(), []);
