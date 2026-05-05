@@ -200,6 +200,31 @@ export function CicloMenstrualCard({
             Regista o início do teu ciclo para veres a previsão.
           </div>
         )}
+
+        {/* Resumo do registo de hoje */}
+        <div className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-2.5 text-[10.5px] text-muted-foreground">
+          <NotebookPen className="h-3 w-3 shrink-0" />
+          {registoHoje &&
+          (registoHoje.fluxo ||
+            registoHoje.energia ||
+            registoHoje.humor.length ||
+            registoHoje.sintomas.length ||
+            registoHoje.estiloVida.length) ? (
+            <span className="truncate text-foreground/70">
+              Hoje ·{" "}
+              {[
+                registoHoje.fluxo && `fluxo ${registoHoje.fluxo}`,
+                registoHoje.humor.length && `${registoHoje.humor.length} humor`,
+                registoHoje.sintomas.length &&
+                  `${registoHoje.sintomas.length} sintoma${registoHoje.sintomas.length > 1 ? "s" : ""}`,
+              ]
+                .filter(Boolean)
+                .join(" · ") || "registado"}
+            </span>
+          ) : (
+            <span>Regista como te sentes hoje</span>
+          )}
+        </div>
       </button>
 
       {open && (
