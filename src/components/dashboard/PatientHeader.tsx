@@ -21,6 +21,7 @@ import { formatarData } from "@/data/mock-utente";
 import { Link } from "@tanstack/react-router";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ALERTA_VS_ALVO_EXPLICACAO } from "@/data/mock-portal";
+import { InfoHint } from "@/components/portal/InfoHint";
 import {
   Field,
   ModalActions,
@@ -231,12 +232,16 @@ export function PatientHeader({
         {/* Alerts band */}
         {utente.alertas.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center gap-2">
-            <span
-              className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-muted-foreground"
-              title={ALERTA_VS_ALVO_EXPLICACAO}
-            >
+            <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-muted-foreground">
               {utente.alertas.length} alertas clínicos · 11 fora do alvo
-              <Info className="h-3 w-3" />
+              <InfoHint title="Alertas clínicos vs. fora do alvo">
+                <p>{ALERTA_VS_ALVO_EXPLICACAO}</p>
+                <p className="text-muted-foreground">
+                  Em prática: nem tudo o que está fora do alvo gera alerta —
+                  apenas os marcadores com tendência ou magnitude clinicamente
+                  relevante surgem como alerta para acção.
+                </p>
+              </InfoHint>
             </span>
             <span className="text-muted-foreground/40">·</span>
             {utente.alertas.map((a) => {
