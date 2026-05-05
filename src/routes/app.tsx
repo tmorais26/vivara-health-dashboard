@@ -61,6 +61,7 @@ import {
   scoreBreakdown,
   type Categoria,
   type CicloMenstrual,
+  type RegistoCicloDia,
   type Conteudo,
   type Conversa,
   type Consulta,
