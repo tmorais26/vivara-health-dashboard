@@ -16,6 +16,7 @@ export type ResumoUtente = {
   totalMarcadores: number;
   ultimaConsulta: string; // ISO
   proximaConsulta?: string; // ISO
+  proximaConsultaHora?: string; // HH:mm
   novosDados?: boolean;
   novosDadosDetalhe?: string;
   acessivel: boolean; // apenas demo: só Maria abre o perfil
@@ -35,6 +36,7 @@ export const resumosUtentes: ResumoUtente[] = [
     totalMarcadores: maria.marcadores.length,
     ultimaConsulta: maria.ultimaConsulta,
     proximaConsulta: maria.proximaConsulta,
+    proximaConsultaHora: "10:30",
     novosDados: true,
     novosDadosDetalhe: "Análise Synlab carregada há 6 dias",
     acessivel: true,
@@ -52,6 +54,7 @@ export const resumosUtentes: ResumoUtente[] = [
     totalMarcadores: 22,
     ultimaConsulta: "2026-02-04",
     proximaConsulta: "2026-05-05",
+    proximaConsultaHora: "11:30",
     novosDados: true,
     novosDadosDetalhe: "Painel hormonal carregado ontem",
     acessivel: false,
@@ -69,6 +72,7 @@ export const resumosUtentes: ResumoUtente[] = [
     totalMarcadores: 18,
     ultimaConsulta: "2025-11-18",
     proximaConsulta: "2026-05-12",
+    proximaConsultaHora: "10:00",
     acessivel: false,
   },
   {
@@ -84,6 +88,7 @@ export const resumosUtentes: ResumoUtente[] = [
     totalMarcadores: 24,
     ultimaConsulta: "2026-04-22",
     proximaConsulta: "2026-05-04",
+    proximaConsultaHora: "09:00",
     acessivel: false,
   },
   {
@@ -99,6 +104,7 @@ export const resumosUtentes: ResumoUtente[] = [
     totalMarcadores: 18,
     ultimaConsulta: "2025-09-30",
     proximaConsulta: "2026-05-19",
+    proximaConsultaHora: "16:30",
     novosDados: true,
     novosDadosDetalhe: "Dados de wearable sincronizados",
     acessivel: false,
@@ -116,6 +122,7 @@ export const resumosUtentes: ResumoUtente[] = [
     totalMarcadores: 22,
     ultimaConsulta: "2026-03-28",
     proximaConsulta: "2026-06-22",
+    proximaConsultaHora: "14:00",
     acessivel: false,
   },
   {
