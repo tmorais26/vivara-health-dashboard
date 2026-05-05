@@ -468,3 +468,219 @@ function CicloDrawer({
     </div>
   );
 }
+
+const FLUXO_OPCOES: { value: FluxoMenstrual; label: string }[] = [
+  { value: "nenhum", label: "Sem fluxo" },
+  { value: "leve", label: "Leve" },
+  { value: "moderado", label: "Moderado" },
+  { value: "intenso", label: "Intenso" },
+];
+
+const HUMOR_OPCOES: { value: HumorCiclo; label: string; emoji: string }[] = [
+  { value: "calma", label: "Calma", emoji: "😌" },
+  { value: "alegre", label: "Alegre", emoji: "😊" },
+  { value: "motivada", label: "Motivada", emoji: "💪" },
+  { value: "sensivel", label: "Sensível", emoji: "🥺" },
+  { value: "ansiosa", label: "Ansiosa", emoji: "😟" },
+  { value: "irritada", label: "Irritada", emoji: "😤" },
+  { value: "triste", label: "Triste", emoji: "😔" },
+];
+
+const SINTOMA_OPCOES: { value: SintomaCiclo; label: string }[] = [
+  { value: "colicas", label: "Cólicas" },
+  { value: "dor-cabeca", label: "Dor de cabeça" },
+  { value: "inchaco", label: "Inchaço" },
+  { value: "acne", label: "Acne" },
+  { value: "dor-lombar", label: "Dor lombar" },
+  { value: "sensibilidade-mamaria", label: "Sensibilidade mamária" },
+  { value: "fadiga", label: "Fadiga" },
+  { value: "nausea", label: "Náusea" },
+  { value: "insonia", label: "Insónia" },
+  { value: "desejo-doces", label: "Desejo de doces" },
+];
+
+const ESTILO_OPCOES: { value: EstiloVidaTag; label: string }[] = [
+  { value: "exercicio", label: "Exercício" },
+  { value: "ar-livre", label: "Ar livre" },
+  { value: "meditacao", label: "Meditação" },
+  { value: "boa-hidratacao", label: "Boa hidratação" },
+  { value: "sono-mau", label: "Sono mau" },
+  { value: "stress-alto", label: "Stress alto" },
+  { value: "cafe-extra", label: "Café extra" },
+  { value: "alcool", label: "Álcool" },
+  { value: "acucar", label: "Açúcar" },
+];
+
+function Chip({
+  active,
+  onClick,
+  children,
+  tone = "default",
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  tone?: "default" | "primary" | "alert";
+}) {
+  const activeCls =
+    tone === "alert"
+      ? "bg-state-alert/15 border-state-alert/50 text-state-alert"
+      : tone === "primary"
+        ? "bg-primary/15 border-primary/50 text-primary"
+        : "bg-foreground text-background border-foreground";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+        active
+          ? activeCls
+          : "border-border bg-background text-foreground/70 hover:bg-accent"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function RegistoDiarioSection({
+  registo,
+  onPatch,
+  toggleArr,
+}: {
+  registo: RegistoCicloDia;
+  onPatch: (patch: Partial<RegistoCicloDia>) => void;
+  toggleArr: <T extends string>(arr: T[], v: T) => T[];
+}) {
+  return (
+    <div className="mt-5 rounded-2xl border border-border bg-surface p-3.5">
+      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <NotebookPen className="h-3 w-3" /> Como te sentes hoje
+      </div>
+      <p className="mt-0.5 text-[10.5px] text-muted-foreground">
+        Toca para registar. Ajuda a relacionar sintomas com o ciclo.
+      </p>
+
+      {/* Fluxo */}
+      <div className="mt-3">
+        <div className="mb-1.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-foreground/70">
+          <Droplet className="h-2.5 w-2.5 text-state-alert" /> Fluxo
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {FLUXO_OPCOES.map((o) => (
+            <Chip
+              key={o.value}
+              active={registo.fluxo === o.value}
+              tone="alert"
+              onClick={() =>
+                onPatch({ fluxo: registo.fluxo === o.value ? undefined : o.value })
+              }
+            >
+              {o.label}
+            </Chip>
+          ))}
+        </div>
+      </div>
+
+      {/* Energia */}
+      <div className="mt-3">
+        <div className="mb-1.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-foreground/70">
+          <Activity className="h-2.5 w-2.5" /> Energia
+        </div>
+        <div className="flex gap-1.5">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <Chip
+              key={n}
+              active={registo.energia === n}
+              onClick={() =>
+                onPatch({
+                  energia:
+                    registo.energia === n
+                      ? undefined
+                      : (n as RegistoCicloDia["energia"]),
+                })
+              }
+            >
+              {n}
+            </Chip>
+          ))}
+        </div>
+      </div>
+
+      {/* Humor */}
+      <div className="mt-3">
+        <div className="mb-1.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-foreground/70">
+          <Heart className="h-2.5 w-2.5 text-primary" /> Humor
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {HUMOR_OPCOES.map((o) => (
+            <Chip
+              key={o.value}
+              active={registo.humor.includes(o.value)}
+              tone="primary"
+              onClick={() => onPatch({ humor: toggleArr(registo.humor, o.value) })}
+            >
+              <span className="mr-1">{o.emoji}</span>
+              {o.label}
+            </Chip>
+          ))}
+        </div>
+      </div>
+
+      {/* Sintomas */}
+      <div className="mt-3">
+        <div className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-foreground/70">
+          Sintomas
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {SINTOMA_OPCOES.map((o) => (
+            <Chip
+              key={o.value}
+              active={registo.sintomas.includes(o.value)}
+              tone="alert"
+              onClick={() =>
+                onPatch({ sintomas: toggleArr(registo.sintomas, o.value) })
+              }
+            >
+              {o.label}
+            </Chip>
+          ))}
+        </div>
+      </div>
+
+      {/* Estilo de vida */}
+      <div className="mt-3">
+        <div className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-foreground/70">
+          Estilo de vida
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {ESTILO_OPCOES.map((o) => (
+            <Chip
+              key={o.value}
+              active={registo.estiloVida.includes(o.value)}
+              onClick={() =>
+                onPatch({ estiloVida: toggleArr(registo.estiloVida, o.value) })
+              }
+            >
+              {o.label}
+            </Chip>
+          ))}
+        </div>
+      </div>
+
+      {/* Nota */}
+      <div className="mt-3">
+        <div className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-foreground/70">
+          Nota
+        </div>
+        <textarea
+          value={registo.nota ?? ""}
+          onChange={(e) => onPatch({ nota: e.target.value })}
+          placeholder="Algo a acrescentar?"
+          rows={2}
+          className="w-full resize-none rounded-lg border border-border bg-background px-2.5 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground focus:border-foreground/40 focus:outline-none"
+        />
+      </div>
+    </div>
+  );
+}
