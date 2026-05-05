@@ -96,6 +96,15 @@ export type Conversa = {
   com: string;
   papel: string;
   iniciais: string;
+  especialidade?: string;
+  bio?: string;
+  formacao?: string[];
+  idiomas?: string[];
+  email?: string;
+  telefone?: string;
+  cidade?: string;
+  horario?: string;
+  redes?: { tipo: "linkedin" | "instagram" | "website"; url: string; label: string }[];
   mensagens: Mensagem[];
 };
 
