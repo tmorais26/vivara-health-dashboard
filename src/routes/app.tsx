@@ -1805,14 +1805,21 @@ function DiarioView({
 function NovoDiarioView({
   onBack,
   onSave,
+  entradaExistente,
 }: {
   onBack: () => void;
   onSave: (e: EntradaDiario) => void;
+  entradaExistente?: EntradaDiario;
 }) {
-  const [humor, setHumor] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const [energia, setEnergia] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const [sintomas, setSintomas] = useState<string[]>([]);
-  const [nota, setNota] = useState("");
+  const [humor, setHumor] = useState<1 | 2 | 3 | 4 | 5>(
+    (entradaExistente?.humor as 1 | 2 | 3 | 4 | 5) ?? 3,
+  );
+  const [energia, setEnergia] = useState<1 | 2 | 3 | 4 | 5>(
+    (entradaExistente?.energia as 1 | 2 | 3 | 4 | 5) ?? 3,
+  );
+  const [sintomas, setSintomas] = useState<string[]>(entradaExistente?.sintomas ?? []);
+  const [nota, setNota] = useState(entradaExistente?.nota ?? "");
+  const isEdit = !!entradaExistente;
 
   const opcoesSint = ["Sono leve", "Cefaleia", "Cansaço", "Stress", "Dor articular", "Tudo bem"];
 
@@ -1824,7 +1831,7 @@ function NovoDiarioView({
 
   function save() {
     onSave({
-      id: `local-${Date.now()}`,
+      id: entradaExistente?.id ?? `local-${Date.now()}`,
       data: "2026-04-29",
       humor,
       energia,
@@ -1835,7 +1842,11 @@ function NovoDiarioView({
 
   return (
     <div>
-      <SubHeader onBack={onBack} title="Como te sentes?" subtitle="29 abril" />
+      <SubHeader
+        onBack={onBack}
+        title={isEdit ? "Editar registo" : "Como te sentes?"}
+        subtitle="29 abril"
+      />
       <div className="space-y-5 px-5 py-4">
         <section>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Humor</div>
