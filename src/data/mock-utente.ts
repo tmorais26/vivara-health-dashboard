@@ -267,6 +267,8 @@ export type EstiloVidaTag =
   | "meditacao"
   | "ar-livre";
 
+export type RelacaoSexual = "protegida" | "desprotegida";
+
 export type RegistoCicloDia = {
   id: string;
   data: string; // ISO yyyy-mm-dd
@@ -275,6 +277,7 @@ export type RegistoCicloDia = {
   humor: HumorCiclo[];
   sintomas: SintomaCiclo[];
   estiloVida: EstiloVidaTag[];
+  relacao?: RelacaoSexual;
   nota?: string;
 };
 

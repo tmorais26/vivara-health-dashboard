@@ -17,6 +17,7 @@ import {
   type HumorCiclo,
   type SintomaCiclo,
   type EstiloVidaTag,
+  type RelacaoSexual,
   formatarData,
   formatarDataCurta,
 } from "@/data/mock-utente";
@@ -690,6 +691,38 @@ function RegistoDiarioSection({
               {o.label}
             </Chip>
           ))}
+        </div>
+      </div>
+
+      {/* Relações sexuais */}
+      <div className="mt-3">
+        <div className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-foreground/70">
+          Relações sexuais hoje
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {([
+            { value: "protegida", label: "Protegida" },
+            { value: "desprotegida", label: "Desprotegida" },
+          ] as { value: RelacaoSexual; label: string }[]).map((o) => (
+            <Chip
+              key={o.value}
+              active={registo.relacao === o.value}
+              tone={o.value === "desprotegida" ? "alert" : "primary"}
+              onClick={() =>
+                onPatch({
+                  relacao: registo.relacao === o.value ? undefined : o.value,
+                })
+              }
+            >
+              {o.label}
+            </Chip>
+          ))}
+          <Chip
+            active={registo.relacao === undefined}
+            onClick={() => onPatch({ relacao: undefined })}
+          >
+            Sem registo
+          </Chip>
         </div>
       </div>
 
