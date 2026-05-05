@@ -1697,13 +1697,16 @@ function DiarioView({
   diario,
   onBack,
   onNovo,
+  onEditarHoje,
 }: {
   diario: EntradaDiario[];
   onBack: () => void;
   onNovo: () => void;
+  onEditarHoje: () => void;
 }) {
   const hoje = "2026-04-29";
-  const jaEscrevi = diario.some((d) => d.data === hoje);
+  const entradaHoje = diario.find((d) => d.data === hoje);
+  const jaEscrevi = !!entradaHoje;
 
   return (
     <div>
@@ -1712,14 +1715,16 @@ function DiarioView({
         title="Diário"
         subtitle="Como te sentiste"
         action={
-          <button
-            type="button"
-            onClick={onNovo}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background hover:opacity-90"
-            aria-label="Novo registo"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
+          jaEscrevi ? null : (
+            <button
+              type="button"
+              onClick={onNovo}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background hover:opacity-90"
+              aria-label="Novo registo"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          )
         }
       />
       <div className="space-y-3 px-4 py-3">
@@ -1734,6 +1739,24 @@ function DiarioView({
               <div className="font-serif text-[15px] text-foreground">Como te sentes hoje?</div>
               <div className="text-[11px] text-muted-foreground">
                 Demora 30 segundos. Ajuda a Dra. Sofia a perceber o que os números não dizem.
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+        )}
+        {jaEscrevi && (
+          <button
+            type="button"
+            onClick={onEditarHoje}
+            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-accent/30 p-3.5 text-left hover:bg-accent/50"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-background">
+              <Edit3 className="h-4 w-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[13px] font-medium text-foreground">Editar registo de hoje</div>
+              <div className="text-[10.5px] text-muted-foreground">
+                Podes ajustar enquanto não fechares o dia.
               </div>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
