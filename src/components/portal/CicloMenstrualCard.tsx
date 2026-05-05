@@ -417,6 +417,14 @@ function CicloDrawer({
           )}
         </div>
 
+        {onRegistosChange && (
+          <RegistoDiarioSection
+            registo={registoHoje}
+            onPatch={atualizarRegisto}
+            toggleArr={toggleArr}
+          />
+        )}
+
         <div className="mt-5">
           <div className="mb-2 px-1 text-[10px] uppercase tracking-wider text-muted-foreground">
             Histórico
