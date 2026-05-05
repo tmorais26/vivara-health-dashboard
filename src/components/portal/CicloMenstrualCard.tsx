@@ -221,11 +221,15 @@ function CicloDrawer({
   previsao,
   onClose,
   onChange,
+  registos = [],
+  onRegistosChange,
 }: {
   ciclos: CicloMenstrual[];
   previsao: Previsao | null;
   onClose: () => void;
   onChange: (next: CicloMenstrual[]) => void;
+  registos?: RegistoCicloDia[];
+  onRegistosChange?: (next: RegistoCicloDia[]) => void;
 }) {
   const ord = useMemo(
     () => [...ciclos].sort((a, b) => (a.inicio < b.inicio ? 1 : -1)),
