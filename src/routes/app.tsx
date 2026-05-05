@@ -138,6 +138,9 @@ function AppUtente() {
   const [diario, setDiario] = useState<EntradaDiario[]>(utente.diario);
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>(utente.notificacoes);
   const [ciclos, setCiclos] = useState<CicloMenstrual[]>(utente.ciclos ?? []);
+  const [registosCiclo, setRegistosCiclo] = useState<RegistoCicloDia[]>(
+    utente.registosCiclo ?? [],
+  );
 
   function marcarNotificacaoLida(id: string) {
     setNotificacoes((prev) => prev.map((n) => (n.id === id ? { ...n, lida: true } : n)));
