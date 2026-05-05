@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { calcularEstado, formatarData, type Marcador } from "@/data/mock-utente";
+import { FileText } from "lucide-react";
 
 const ranges = [
   { id: "3m", label: "3M", dias: 90 },
@@ -120,19 +121,43 @@ export function LongitudinalChart({ marcador }: { marcador: Marcador }) {
             />
             <Tooltip
               cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
-              contentStyle={{
-                background: "var(--surface-raised)",
-                border: "1px solid var(--border)",
-                borderRadius: 10,
-                fontSize: 12,
-                padding: "8px 12px",
-                boxShadow: "0 4px 24px rgb(0 0 0 / 0.06)",
-              }}
-              labelFormatter={(t) => formatarData(new Date(t as number).toISOString())}
-              formatter={(v: number, _name, item) => {
-                const fonte = (item?.payload as { fonte?: string } | undefined)?.fonte;
-                const fonteLabel = fonte === "laboratorio" ? "Lab Synlab" : fonte ?? "—";
-                return [`${v} ${marcador.unidade} · ${fonteLabel}`, marcador.nomeCurto];
+              content={({ active, payload }) => {
+                if (!active || !payload || !payload[0]) return null;
+                const p = payload[0].payload as {
+                  data: string;
+                  valor: number;
+                  fonte?: string;
+                };
+                const fonteLabel =
+                  p.fonte === "laboratorio"
+                    ? "Lab Synlab"
+                    : p.fonte === "wearable"
+                      ? "Wearable"
+                      : p.fonte ?? "—";
+                return (
+                  <div className="rounded-xl border border-border bg-surface-raised p-3 text-xs shadow-lg">
+                    <div className="text-[10.5px] uppercase tracking-wider text-muted-foreground">
+                      {marcador.nomeCurto}
+                    </div>
+                    <div className="tabular mt-1 text-base font-semibold text-foreground">
+                      {p.valor} <span className="text-[11px] text-muted-foreground">{marcador.unidade}</span>
+                    </div>
+                    <div className="tabular mt-1 text-[11px] text-muted-foreground">
+                      {formatarData(p.data)}
+                    </div>
+                    <div className="mt-1 text-[11px] text-muted-foreground">{fonteLabel}</div>
+                    {p.fonte === "laboratorio" && (
+                      <a
+                        href="#"
+                        onClick={(e) => e.preventDefault()}
+                        className="mt-2 inline-flex items-center gap-1 text-[11px] text-foreground hover:underline"
+                      >
+                        <FileText className="h-3 w-3" />
+                        Abrir PDF original
+                      </a>
+                    )}
+                  </div>
+                );
               }}
             />
             <Line

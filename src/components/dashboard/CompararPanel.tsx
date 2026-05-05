@@ -16,6 +16,12 @@ const palette = ["var(--state-alert)", "var(--state-warn)", "var(--state-ok)"];
 
 export function CompararPanel({ utente }: { utente: Utente }) {
   const [ids, setIds] = useState<string[]>(["ldl", "hscrp"]);
+  const pairs: { label: string; ids: string[] }[] = [
+    { label: "LDL + hsCRP", ids: ["ldl", "hscrp"] },
+    { label: "TSH + T4L", ids: ["tsh", "t4l"] },
+    { label: "Glicose + HbA1c", ids: ["glicose", "hba1c"] },
+    { label: "Ferritina + B12", ids: ["ferritina", "b12"] },
+  ].filter((p) => p.ids.every((id) => utente.marcadores.some((m) => m.id === id)));
   const disponiveis = utente.marcadores.filter((m) => !ids.includes(m.id));
   const seleccionados = ids
     .map((id) => utente.marcadores.find((m) => m.id === id))
@@ -59,6 +65,31 @@ export function CompararPanel({ utente }: { utente: Utente }) {
           (ex.: LDL + hsCRP, TSH + T4L).
         </p>
       </div>
+
+      {pairs.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            Pares sugeridos
+          </span>
+          {pairs.map((p) => {
+            const ativo = p.ids.length === ids.length && p.ids.every((id) => ids.includes(id));
+            return (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => setIds(p.ids)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  ativo
+                    ? "border-foreground/40 bg-accent text-foreground"
+                    : "border-border bg-surface-raised text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Chips dos seleccionados */}
       <div className="flex flex-wrap items-center gap-2">

@@ -34,9 +34,13 @@ import {
 export function PatientHeader({
   utente,
   onAlertClick,
+  onShowNovosDados,
+  novosDadosAtivo = false,
 }: {
   utente: Utente;
   onAlertClick: (a: Alerta) => void;
+  onShowNovosDados?: () => void;
+  novosDadosAtivo?: boolean;
 }) {
   const [exportOpen, setExportOpen] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
@@ -123,6 +127,12 @@ export function PatientHeader({
                 <span className="inline-flex items-center gap-1 text-foreground">
                   <Bell className="h-3 w-3 text-state-warn" />
                   Próxima {formatarData(utente.proximaConsulta)}
+                  {(() => {
+                    const c = utente.consultas.find(
+                      (x) => x.estado === "agendada" && x.data === utente.proximaConsulta,
+                    );
+                    return c?.hora ? ` · ${c.hora}` : "";
+                  })()}
                 </span>
                 <span>·</span>
                 <a href="mailto:maria@example.pt" className="inline-flex items-center gap-1 hover:text-foreground">
@@ -131,10 +141,21 @@ export function PatientHeader({
                 </a>
               </div>
               <div className="mt-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-state-alert/30 bg-state-alert-soft px-2.5 py-1 text-[10.5px] font-medium text-state-alert">
+                <button
+                  type="button"
+                  onClick={() => onShowNovosDados?.()}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10.5px] font-medium transition-colors ${
+                    novosDadosAtivo
+                      ? "border-state-alert bg-state-alert text-primary-foreground"
+                      : "border-state-alert/30 bg-state-alert-soft text-state-alert hover:bg-state-alert-soft/80"
+                  }`}
+                  title="Filtrar a lista para mostrar só os marcadores actualizados desde a última visita"
+                >
                   <Sparkles className="h-2.5 w-2.5" />
-                  Novos dados desde a tua última visita · 14 valores
-                </span>
+                  {novosDadosAtivo
+                    ? "A mostrar só novos dados · limpar"
+                    : "Novos dados desde a tua última visita · 14 valores"}
+                </button>
               </div>
             </div>
           </div>

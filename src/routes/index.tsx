@@ -179,6 +179,7 @@ function UtenteCard({ u }: { u: ResumoUtente }) {
               <span className="inline-flex items-center gap-1 text-foreground">
                 <Bell className="h-3 w-3 text-state-warn" />
                 Próxima: {formatarData(u.proximaConsulta)}
+                {u.proximaConsultaHora ? ` · ${u.proximaConsultaHora}` : ""}
               </span>
             )}
           </div>
