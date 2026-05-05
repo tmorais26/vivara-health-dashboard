@@ -2190,20 +2190,31 @@ function PerfilTabView({ onOpenSub }: { onOpenSub: (v: SubView, ctx?: string) =>
       </header>
 
       <section className="rounded-2xl border border-border bg-surface-raised p-4">
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Equipa clínica
+        <div className="flex items-center justify-between">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Equipa clínica
+          </div>
+          <span className="text-[10px] text-muted-foreground">Toca para ver perfil</span>
         </div>
-        <div className="mt-2 space-y-2.5">
+        <div className="mt-2 -mx-1 space-y-1">
           {utente.conversas.map((c) => (
-            <div key={c.id} className="flex items-center gap-3">
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => onOpenSub("membroEquipa", c.id)}
+              className="flex w-full items-center gap-3 rounded-xl px-1 py-1.5 text-left hover:bg-accent/40"
+            >
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
                 {c.iniciais}
               </div>
-              <div>
-                <div className="text-[13px] font-medium text-foreground">{c.com}</div>
-                <div className="text-[10.5px] text-muted-foreground">{c.papel}</div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[13px] font-medium text-foreground">{c.com}</div>
+                <div className="truncate text-[10.5px] text-muted-foreground">
+                  {c.especialidade ?? c.papel}
+                </div>
               </div>
-            </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </button>
           ))}
         </div>
         <div className="mt-3 rounded-xl border border-border bg-surface px-3 py-2 text-[11px] text-muted-foreground">
