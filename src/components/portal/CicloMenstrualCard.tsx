@@ -717,12 +717,14 @@ function RegistoDiarioSection({
               {o.label}
             </Chip>
           ))}
-          <Chip
-            active={registo.relacao === undefined}
-            onClick={() => onPatch({ relacao: undefined })}
-          >
-            Sem registo
-          </Chip>
+          {registo.relacao !== undefined && (
+            <Chip
+              active={false}
+              onClick={() => onPatch({ relacao: undefined })}
+            >
+              Limpar
+            </Chip>
+          )}
         </div>
       </div>
 
