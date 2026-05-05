@@ -133,7 +133,6 @@ function AppUtente() {
   const [marcadorAberto, setMarcadorAberto] = useState<Marcador | null>(null);
   const [diario, setDiario] = useState<EntradaDiario[]>(utente.diario);
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>(utente.notificacoes);
-  const [infoAberto, setInfoAberto] = useState<{ title: string; body: string } | null>(null);
 
   function marcarNotificacaoLida(id: string) {
     setNotificacoes((prev) => prev.map((n) => (n.id === id ? { ...n, lida: true } : n)));
@@ -160,10 +159,6 @@ function AppUtente() {
   function openSub(view: SubView, ctx?: string) {
     setSub(view);
     setSubContext(ctx ?? null);
-  }
-
-  function openInfo(title: string, body: string) {
-    setInfoAberto({ title, body });
   }
 
   return (
@@ -208,7 +203,6 @@ function AppUtente() {
                         setSub(null);
                       }}
                       onCarregar={() => openSub("carregar")}
-                      onInfo={openInfo}
                     />
                   )}
                   {tab === "dados" && (
@@ -369,15 +363,6 @@ function AppUtente() {
                 onClose={() => setMarcadorAberto(null)}
               />
             )}
-
-            {/* Info drawer (descrições dos infopoints) */}
-            {infoAberto && (
-              <InfoSheet
-                title={infoAberto.title}
-                body={infoAberto.body}
-                onClose={() => setInfoAberto(null)}
-              />
-            )}
           </div>
         </div>
       </div>
@@ -480,7 +465,6 @@ function HojeView({
   onOpenSub,
   onGoTab,
   onCarregar,
-  onInfo,
 }: {
   tarefas: TarefaPlano[];
   onToggle: (id: string) => void;
@@ -488,7 +472,6 @@ function HojeView({
   onOpenSub: (v: SubView, ctx?: string) => void;
   onGoTab: (t: Tab) => void;
   onCarregar: () => void;
-  onInfo: (title: string, body: string) => void;
 }) {
   const score = useMemo(() => calcularScoreLongevidade(), []);
   const breakdown = useMemo(() => scoreBreakdown(), []);
@@ -535,18 +518,9 @@ function HojeView({
 
       {/* Score destacado — light: superfície neutra; dark: cartão azul-noite */}
       <section className="rounded-2xl border border-border bg-surface-raised p-4 dark:border-transparent dark:bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.32_0.09_255)_0%,oklch(0.18_0.05_260)_55%,oklch(0.14_0.03_260)_100%)] dark:text-white dark:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.6)]">
-        <button
-          type="button"
-          onClick={() =>
-            onInfo(
-              "Score de acompanhamento",
-              "Indicador composto (0–100) que combina três pilares — metabólico, cardiovascular e recuperação — para acompanhar a evolução da tua saúde ao longo do tempo. É calculado a partir das análises mais recentes, dos dados do wearable e das entradas do diário. Serve apenas para acompanhamento pessoal e não substitui avaliação clínica.",
-            )
-          }
-          className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground dark:text-white/60 dark:hover:text-white"
-        >
+        <div className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground dark:text-white/60">
           Score de acompanhamento <Info className="h-3 w-3" />
-        </button>
+        </div>
         <div className="mt-2 flex items-end justify-between gap-3">
           <div className="font-serif tabular text-[44px] leading-none text-foreground dark:text-white">
             {score}
@@ -586,24 +560,7 @@ function HojeView({
       </section>
 
       {/* Acessos rápidos — grelha 4. Light: neutro. Dark: ícones com cor à imagem-referência. */}
-      <section>
-        <div className="mb-2 flex items-center justify-between px-1">
-          <div className="text-[11px] font-medium text-foreground">Acessos rápidos</div>
-          <button
-            type="button"
-            aria-label="Sobre acessos rápidos"
-            onClick={() =>
-              onInfo(
-                "Acessos rápidos",
-                "Atalhos para as ações mais usadas: carregar uma análise nova (foto ou PDF), abrir o painel de Análises com todos os marcadores, ver o resumo de avisos e mensagens da equipa, e gerir a tua privacidade no perfil.",
-              )
-            }
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <Info className="h-3.5 w-3.5" />
-          </button>
-        </div>
-        <div className="grid grid-cols-4 gap-2">
+      <section className="grid grid-cols-4 gap-2">
         {acessos.map((a) => (
           <button
             key={a.label}
@@ -619,28 +576,12 @@ function HojeView({
             <span className="text-[10.5px] text-foreground">{a.label}</span>
           </button>
         ))}
-        </div>
       </section>
 
       {/* Sinal de hoje */}
       <section>
         <div className="mb-2 flex items-center justify-between px-1">
-          <div className="flex items-center gap-1.5">
-            <div className="text-[11px] font-medium text-foreground">Sinal de hoje</div>
-            <button
-              type="button"
-              aria-label="Sobre sinal de hoje"
-              onClick={() =>
-                onInfo(
-                  "Sinal de hoje",
-                  "Observação automática gerada a partir da tua atividade e wearable nas últimas 24 horas. Destaca um padrão fora do habitual (sono, HRV, ritmo cardíaco) para que possas decidir se queres ajustar o teu dia ou falar com a equipa.",
-                )
-              }
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Info className="h-3.5 w-3.5" />
-            </button>
-          </div>
+          <div className="text-[11px] font-medium text-foreground">Sinal de hoje</div>
           <button
             type="button"
             onClick={onJump}
@@ -662,22 +603,7 @@ function HojeView({
       {/* Últimos 7 dias */}
       <section>
         <div className="mb-2 flex items-center justify-between px-1">
-          <div className="flex items-center gap-1.5">
-            <div className="text-[11px] font-medium text-foreground">Últimos 7 dias</div>
-            <button
-              type="button"
-              aria-label="Sobre últimos 7 dias"
-              onClick={() =>
-                onInfo(
-                  "Últimos 7 dias",
-                  "Mediana semanal dos teus principais sinais vitais — sono, variabilidade da frequência cardíaca (HRV) e passos. Permite ver, num só ecrã, se a última semana ficou dentro, acima ou abaixo do teu padrão habitual.",
-                )
-              }
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Info className="h-3.5 w-3.5" />
-            </button>
-          </div>
+          <div className="text-[11px] font-medium text-foreground">Últimos 7 dias</div>
           <button
             type="button"
             onClick={onJump}
@@ -1294,44 +1220,6 @@ function DadosRow({ marcador, onOpen }: { marcador: Marcador; onOpen: () => void
         </div>
       </div>
     </button>
-  );
-}
-
-function InfoSheet({
-  title,
-  body,
-  onClose,
-}: {
-  title: string;
-  body: string;
-  onClose: () => void;
-}) {
-  return (
-    <div className="absolute inset-0 z-30 flex flex-col bg-background/60 backdrop-blur-sm">
-      <button type="button" onClick={onClose} className="flex-1" aria-label="Fechar" />
-      <div className="max-h-[78%] overflow-y-auto rounded-t-3xl border-t border-border bg-surface-raised px-5 pb-6 pt-3 shadow-2xl">
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-              <Info className="h-3 w-3" /> O que é isto?
-            </div>
-            <h3 className="font-serif mt-1 text-[22px] leading-tight text-foreground">
-              {title}
-            </h3>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar"
-            className="rounded-full p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <p className="mt-4 text-[13px] leading-relaxed text-foreground/85">{body}</p>
-      </div>
-    </div>
   );
 }
 
