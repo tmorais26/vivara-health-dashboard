@@ -368,6 +368,15 @@ function AppUtente() {
                 onClose={() => setMarcadorAberto(null)}
               />
             )}
+
+            {/* Info drawer (descrições dos infopoints) */}
+            {infoAberto && (
+              <InfoSheet
+                title={infoAberto.title}
+                body={infoAberto.body}
+                onClose={() => setInfoAberto(null)}
+              />
+            )}
           </div>
         </div>
       </div>
