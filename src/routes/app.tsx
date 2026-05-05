@@ -481,6 +481,8 @@ function HojeView({
   notificacoes,
   ciclos,
   onCiclosChange,
+  registosCiclo,
+  onRegistosCicloChange,
 }: {
   tarefas: TarefaPlano[];
   onToggle: (id: string) => void;
@@ -491,6 +493,8 @@ function HojeView({
   notificacoes: Notificacao[];
   ciclos: CicloMenstrual[];
   onCiclosChange: (next: CicloMenstrual[]) => void;
+  registosCiclo: RegistoCicloDia[];
+  onRegistosCicloChange: (next: RegistoCicloDia[]) => void;
 }) {
   const score = useMemo(() => calcularScoreLongevidade(), []);
   const breakdown = useMemo(() => scoreBreakdown(), []);
