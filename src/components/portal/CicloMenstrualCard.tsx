@@ -1,6 +1,25 @@
 import { useMemo, useState, useEffect } from "react";
-import { Calendar as CalendarIcon, Droplet, Sparkles, X, Plus, Pencil } from "lucide-react";
-import { type CicloMenstrual, formatarData, formatarDataCurta } from "@/data/mock-utente";
+import {
+  Calendar as CalendarIcon,
+  Droplet,
+  Sparkles,
+  X,
+  Plus,
+  Pencil,
+  Heart,
+  Activity,
+  NotebookPen,
+} from "lucide-react";
+import {
+  type CicloMenstrual,
+  type RegistoCicloDia,
+  type FluxoMenstrual,
+  type HumorCiclo,
+  type SintomaCiclo,
+  type EstiloVidaTag,
+  formatarData,
+  formatarDataCurta,
+} from "@/data/mock-utente";
 
 /**
  * Hoje fictício da app — alinhado com o resto do mock.
