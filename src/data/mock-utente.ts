@@ -994,12 +994,12 @@ export const utente: Utente = {
     {
       id: "n-receita",
       tipo: "lembrete",
-      severidade: "alerta",
+      severidade: "atencao",
       titulo: "Receita Metformina termina em 18 dias",
       detalhe:
         "Renovação automática agendada. A Dra. Sofia recebe pedido na próxima sessão.",
       quando: "2026-04-30T08:00:00",
-      lida: false,
+      lida: true,
       cta: "Ver detalhes",
     },
     {
