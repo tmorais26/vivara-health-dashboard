@@ -738,6 +738,11 @@ function HojeView({
         </section>
       )}
 
+      {/* Ciclo menstrual — apenas para utentes do sexo feminino */}
+      {utente.sexo === "feminino" && (
+        <CicloMenstrualCard ciclos={ciclos} onChange={onCiclosChange} />
+      )}
+
       {/* Dados de hoje */}
       <section>
         <div className="mb-2 flex items-center justify-between px-1">
