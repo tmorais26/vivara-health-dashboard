@@ -208,6 +208,7 @@ function AppUtente() {
                         setSub(null);
                       }}
                       onCarregar={() => openSub("carregar")}
+                      onInfo={openInfo}
                     />
                   )}
                   {tab === "dados" && (
