@@ -1929,7 +1929,7 @@ function NovoDiarioView({
           onClick={save}
           className="w-full rounded-full bg-foreground py-3 text-[13px] font-medium text-background hover:opacity-90"
         >
-          Guardar registo
+          {isEdit ? "Guardar alterações" : "Guardar registo"}
         </button>
       </div>
     </div>
