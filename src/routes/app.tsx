@@ -480,6 +480,7 @@ function HojeView({
   onOpenSub,
   onGoTab,
   onCarregar,
+  onInfo,
 }: {
   tarefas: TarefaPlano[];
   onToggle: (id: string) => void;
@@ -487,6 +488,7 @@ function HojeView({
   onOpenSub: (v: SubView, ctx?: string) => void;
   onGoTab: (t: Tab) => void;
   onCarregar: () => void;
+  onInfo: (title: string, body: string) => void;
 }) {
   const score = useMemo(() => calcularScoreLongevidade(), []);
   const breakdown = useMemo(() => scoreBreakdown(), []);
