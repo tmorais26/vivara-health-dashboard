@@ -762,6 +762,7 @@ export const utente: Utente = {
   id: "maria-antunes",
   nome: "Maria Antunes",
   idade: 47,
+  sexo: "feminino",
   cidade: "Lisboa",
   plano: "Longevidade Premium",
   medicaResponsavel: "Dra. Sofia Cardoso",
