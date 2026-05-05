@@ -535,9 +535,18 @@ function HojeView({
 
       {/* Score destacado — light: superfície neutra; dark: cartão azul-noite */}
       <section className="rounded-2xl border border-border bg-surface-raised p-4 dark:border-transparent dark:bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.32_0.09_255)_0%,oklch(0.18_0.05_260)_55%,oklch(0.14_0.03_260)_100%)] dark:text-white dark:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.6)]">
-        <div className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground dark:text-white/60">
+        <button
+          type="button"
+          onClick={() =>
+            onInfo(
+              "Score de acompanhamento",
+              "Indicador composto (0–100) que combina três pilares — metabólico, cardiovascular e recuperação — para acompanhar a evolução da tua saúde ao longo do tempo. É calculado a partir das análises mais recentes, dos dados do wearable e das entradas do diário. Serve apenas para acompanhamento pessoal e não substitui avaliação clínica.",
+            )
+          }
+          className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground dark:text-white/60 dark:hover:text-white"
+        >
           Score de acompanhamento <Info className="h-3 w-3" />
-        </div>
+        </button>
         <div className="mt-2 flex items-end justify-between gap-3">
           <div className="font-serif tabular text-[44px] leading-none text-foreground dark:text-white">
             {score}
@@ -577,7 +586,24 @@ function HojeView({
       </section>
 
       {/* Acessos rápidos — grelha 4. Light: neutro. Dark: ícones com cor à imagem-referência. */}
-      <section className="grid grid-cols-4 gap-2">
+      <section>
+        <div className="mb-2 flex items-center justify-between px-1">
+          <div className="text-[11px] font-medium text-foreground">Acessos rápidos</div>
+          <button
+            type="button"
+            aria-label="Sobre acessos rápidos"
+            onClick={() =>
+              onInfo(
+                "Acessos rápidos",
+                "Atalhos para as ações mais usadas: carregar uma análise nova (foto ou PDF), abrir o painel de Análises com todos os marcadores, ver o resumo de avisos e mensagens da equipa, e gerir a tua privacidade no perfil.",
+              )
+            }
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Info className="h-3.5 w-3.5" />
+          </button>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
         {acessos.map((a) => (
           <button
             key={a.label}
@@ -593,12 +619,28 @@ function HojeView({
             <span className="text-[10.5px] text-foreground">{a.label}</span>
           </button>
         ))}
+        </div>
       </section>
 
       {/* Sinal de hoje */}
       <section>
         <div className="mb-2 flex items-center justify-between px-1">
-          <div className="text-[11px] font-medium text-foreground">Sinal de hoje</div>
+          <div className="flex items-center gap-1.5">
+            <div className="text-[11px] font-medium text-foreground">Sinal de hoje</div>
+            <button
+              type="button"
+              aria-label="Sobre sinal de hoje"
+              onClick={() =>
+                onInfo(
+                  "Sinal de hoje",
+                  "Observação automática gerada a partir da tua atividade e wearable nas últimas 24 horas. Destaca um padrão fora do habitual (sono, HRV, ritmo cardíaco) para que possas decidir se queres ajustar o teu dia ou falar com a equipa.",
+                )
+              }
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Info className="h-3.5 w-3.5" />
+            </button>
+          </div>
           <button
             type="button"
             onClick={onJump}
@@ -620,7 +662,22 @@ function HojeView({
       {/* Últimos 7 dias */}
       <section>
         <div className="mb-2 flex items-center justify-between px-1">
-          <div className="text-[11px] font-medium text-foreground">Últimos 7 dias</div>
+          <div className="flex items-center gap-1.5">
+            <div className="text-[11px] font-medium text-foreground">Últimos 7 dias</div>
+            <button
+              type="button"
+              aria-label="Sobre últimos 7 dias"
+              onClick={() =>
+                onInfo(
+                  "Últimos 7 dias",
+                  "Mediana semanal dos teus principais sinais vitais — sono, variabilidade da frequência cardíaca (HRV) e passos. Permite ver, num só ecrã, se a última semana ficou dentro, acima ou abaixo do teu padrão habitual.",
+                )
+              }
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Info className="h-3.5 w-3.5" />
+            </button>
+          </div>
           <button
             type="button"
             onClick={onJump}
