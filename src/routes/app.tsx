@@ -18,6 +18,15 @@ import {
   Heart,
   Home,
   Info,
+  Instagram,
+  Linkedin,
+  Globe,
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  GraduationCap,
+  Languages,
   LineChart as LineChartIcon,
   MessageCircle,
   Pill,
@@ -88,6 +97,7 @@ type SubView =
   | "conteudo"
   | "diario"
   | "novoDiario"
+  | "membroEquipa"
   | "plano"
   | "carregar";
 
@@ -252,15 +262,32 @@ function AppUtente() {
                   diario={diario}
                   onBack={() => setSub(null)}
                   onNovo={() => setSub("novoDiario")}
+                  onEditarHoje={() => setSub("novoDiario")}
                 />
               )}
               {sub === "novoDiario" && (
                 <NovoDiarioView
+                  entradaExistente={diario.find((d) => d.data === "2026-04-29")}
                   onBack={() => setSub("diario")}
                   onSave={(e) => {
-                    setDiario((prev) => [e, ...prev]);
+                    setDiario((prev) => {
+                      const idx = prev.findIndex((x) => x.data === e.data);
+                      if (idx >= 0) {
+                        const copy = [...prev];
+                        copy[idx] = e;
+                        return copy;
+                      }
+                      return [e, ...prev];
+                    });
                     setSub("diario");
                   }}
+                />
+              )}
+              {sub === "membroEquipa" && subContext && (
+                <MembroEquipaView
+                  conversaId={subContext}
+                  onBack={() => setSub(null)}
+                  onMensagem={(id) => openSub("conversa", id)}
                 />
               )}
               {sub === "carregar" && (
@@ -628,6 +655,202 @@ function Sinal7d({ marcador, Icon }: { marcador: Marcador; Icon: typeof Activity
       </div>
       <div className="w-[70px]">
         <Sparkline marcador={marcador} estado={estado} height={26} />
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   Membro da equipa — perfil
+   ============================================================ */
+
+function MembroEquipaView({
+  conversaId,
+  onBack,
+  onMensagem,
+}: {
+  conversaId: string;
+  onBack: () => void;
+  onMensagem: (id: string) => void;
+}) {
+  const c = utente.conversas.find((x) => x.id === conversaId);
+  if (!c) return null;
+
+  const proxima = utente.consultas.find((k) => k.estado === "agendada");
+
+  return (
+    <div>
+      <SubHeader onBack={onBack} title="Equipa clínica" subtitle={c.papel} />
+
+      <div className="space-y-4 px-4 py-3">
+        <section className="rounded-2xl border border-border bg-surface-raised p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-[14px] font-medium text-primary-foreground">
+              {c.iniciais}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="font-serif text-[18px] leading-tight text-foreground">{c.com}</div>
+              <div className="text-[11px] text-muted-foreground">
+                {c.especialidade ?? c.papel}
+              </div>
+            </div>
+          </div>
+
+          {c.bio && (
+            <p className="font-serif mt-3 text-[13px] leading-snug text-foreground/90">
+              {c.bio}
+            </p>
+          )}
+
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => onMensagem(c.id)}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-foreground py-2 text-[12px] font-medium text-background hover:opacity-90"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              Mensagem
+            </button>
+            {c.telefone && (
+              <a
+                href={`tel:${c.telefone.replace(/\s/g, "")}`}
+                className="flex items-center justify-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2 text-[12px] text-foreground hover:bg-accent/40"
+              >
+                <Phone className="h-3.5 w-3.5" />
+              </a>
+            )}
+            {c.email && (
+              <a
+                href={`mailto:${c.email}`}
+                className="flex items-center justify-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2 text-[12px] text-foreground hover:bg-accent/40"
+              >
+                <Mail className="h-3.5 w-3.5" />
+              </a>
+            )}
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
+          <div className="border-b border-border px-4 py-2.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+            Contacto
+          </div>
+          {c.email && <InfoLine Icon={Mail} label="Email" value={c.email} />}
+          {c.telefone && <InfoLine Icon={Phone} label="Telefone" value={c.telefone} />}
+          {c.cidade && <InfoLine Icon={MapPin} label="Localização" value={c.cidade} />}
+          {c.horario && <InfoLine Icon={Clock} label="Horário" value={c.horario} />}
+        </section>
+
+        {(c.formacao?.length || c.idiomas?.length) && (
+          <section className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
+            <div className="border-b border-border px-4 py-2.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+              Sobre
+            </div>
+            {c.formacao && c.formacao.length > 0 && (
+              <div className="px-4 py-3">
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <GraduationCap className="h-3.5 w-3.5" />
+                  Formação
+                </div>
+                <ul className="mt-1.5 space-y-1">
+                  {c.formacao.map((f) => (
+                    <li key={f} className="text-[12.5px] leading-snug text-foreground">
+                      · {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {c.idiomas && c.idiomas.length > 0 && (
+              <div className="border-t border-border px-4 py-3">
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <Languages className="h-3.5 w-3.5" />
+                  Idiomas
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {c.idiomas.map((i) => (
+                    <span
+                      key={i}
+                      className="rounded-full border border-border bg-surface px-2.5 py-0.5 text-[11px] text-foreground"
+                    >
+                      {i}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {c.redes && c.redes.length > 0 && (
+          <section className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
+            <div className="border-b border-border px-4 py-2.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+              Online
+            </div>
+            {c.redes.map((r) => {
+              const Icon =
+                r.tipo === "linkedin"
+                  ? Linkedin
+                  : r.tipo === "instagram"
+                    ? Instagram
+                    : Globe;
+              return (
+                <a
+                  key={r.label}
+                  href={r.url}
+                  className="flex w-full items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 hover:bg-accent/40"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent">
+                    <Icon className="h-4 w-4 text-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[12.5px] text-foreground capitalize">{r.tipo}</div>
+                    <div className="truncate text-[10.5px] text-muted-foreground">{r.label}</div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </a>
+              );
+            })}
+          </section>
+        )}
+
+        {proxima && c.id === "c-sofia" && (
+          <section className="rounded-2xl border border-border bg-accent/30 p-4">
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <CalendarClock className="h-3.5 w-3.5" />
+              Próxima consulta convosco
+            </div>
+            <div className="mt-1 text-[13.5px] font-medium text-foreground">
+              {formatarData(proxima.data)} · {proxima.hora}
+            </div>
+            <div className="text-[11px] text-muted-foreground">{proxima.motivo}</div>
+          </section>
+        )}
+
+        <p className="px-1 text-center text-[10px] text-muted-foreground">
+          Em emergências liga 112 ou contacta a tua clínica.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function InfoLine({
+  Icon,
+  label,
+  value,
+}: {
+  Icon: typeof Mail;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-b-0">
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent">
+        <Icon className="h-4 w-4 text-foreground" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className="truncate text-[12.5px] text-foreground">{value}</div>
       </div>
     </div>
   );
@@ -1670,13 +1893,16 @@ function DiarioView({
   diario,
   onBack,
   onNovo,
+  onEditarHoje,
 }: {
   diario: EntradaDiario[];
   onBack: () => void;
   onNovo: () => void;
+  onEditarHoje: () => void;
 }) {
   const hoje = "2026-04-29";
-  const jaEscrevi = diario.some((d) => d.data === hoje);
+  const entradaHoje = diario.find((d) => d.data === hoje);
+  const jaEscrevi = !!entradaHoje;
 
   return (
     <div>
@@ -1685,14 +1911,16 @@ function DiarioView({
         title="Diário"
         subtitle="Como te sentiste"
         action={
-          <button
-            type="button"
-            onClick={onNovo}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background hover:opacity-90"
-            aria-label="Novo registo"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
+          jaEscrevi ? null : (
+            <button
+              type="button"
+              onClick={onNovo}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background hover:opacity-90"
+              aria-label="Novo registo"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          )
         }
       />
       <div className="space-y-3 px-4 py-3">
@@ -1707,6 +1935,24 @@ function DiarioView({
               <div className="font-serif text-[15px] text-foreground">Como te sentes hoje?</div>
               <div className="text-[11px] text-muted-foreground">
                 Demora 30 segundos. Ajuda a Dra. Sofia a perceber o que os números não dizem.
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+        )}
+        {jaEscrevi && (
+          <button
+            type="button"
+            onClick={onEditarHoje}
+            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-accent/30 p-3.5 text-left hover:bg-accent/50"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-background">
+              <Edit3 className="h-4 w-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[13px] font-medium text-foreground">Editar registo de hoje</div>
+              <div className="text-[10.5px] text-muted-foreground">
+                Podes ajustar enquanto não fechares o dia.
               </div>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -1755,14 +2001,21 @@ function DiarioView({
 function NovoDiarioView({
   onBack,
   onSave,
+  entradaExistente,
 }: {
   onBack: () => void;
   onSave: (e: EntradaDiario) => void;
+  entradaExistente?: EntradaDiario;
 }) {
-  const [humor, setHumor] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const [energia, setEnergia] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const [sintomas, setSintomas] = useState<string[]>([]);
-  const [nota, setNota] = useState("");
+  const [humor, setHumor] = useState<1 | 2 | 3 | 4 | 5>(
+    (entradaExistente?.humor as 1 | 2 | 3 | 4 | 5) ?? 3,
+  );
+  const [energia, setEnergia] = useState<1 | 2 | 3 | 4 | 5>(
+    (entradaExistente?.energia as 1 | 2 | 3 | 4 | 5) ?? 3,
+  );
+  const [sintomas, setSintomas] = useState<string[]>(entradaExistente?.sintomas ?? []);
+  const [nota, setNota] = useState(entradaExistente?.nota ?? "");
+  const isEdit = !!entradaExistente;
 
   const opcoesSint = ["Sono leve", "Cefaleia", "Cansaço", "Stress", "Dor articular", "Tudo bem"];
 
@@ -1774,7 +2027,7 @@ function NovoDiarioView({
 
   function save() {
     onSave({
-      id: `local-${Date.now()}`,
+      id: entradaExistente?.id ?? `local-${Date.now()}`,
       data: "2026-04-29",
       humor,
       energia,
@@ -1785,7 +2038,11 @@ function NovoDiarioView({
 
   return (
     <div>
-      <SubHeader onBack={onBack} title="Como te sentes?" subtitle="29 abril" />
+      <SubHeader
+        onBack={onBack}
+        title={isEdit ? "Editar registo" : "Como te sentes?"}
+        subtitle="29 abril"
+      />
       <div className="space-y-5 px-5 py-4">
         <section>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Humor</div>
@@ -1868,7 +2125,7 @@ function NovoDiarioView({
           onClick={save}
           className="w-full rounded-full bg-foreground py-3 text-[13px] font-medium text-background hover:opacity-90"
         >
-          Guardar registo
+          {isEdit ? "Guardar alterações" : "Guardar registo"}
         </button>
       </div>
     </div>
@@ -2129,20 +2386,31 @@ function PerfilTabView({ onOpenSub }: { onOpenSub: (v: SubView, ctx?: string) =>
       </header>
 
       <section className="rounded-2xl border border-border bg-surface-raised p-4">
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Equipa clínica
+        <div className="flex items-center justify-between">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Equipa clínica
+          </div>
+          <span className="text-[10px] text-muted-foreground">Toca para ver perfil</span>
         </div>
-        <div className="mt-2 space-y-2.5">
+        <div className="mt-2 -mx-1 space-y-1">
           {utente.conversas.map((c) => (
-            <div key={c.id} className="flex items-center gap-3">
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => onOpenSub("membroEquipa", c.id)}
+              className="flex w-full items-center gap-3 rounded-xl px-1 py-1.5 text-left hover:bg-accent/40"
+            >
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
                 {c.iniciais}
               </div>
-              <div>
-                <div className="text-[13px] font-medium text-foreground">{c.com}</div>
-                <div className="text-[10.5px] text-muted-foreground">{c.papel}</div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[13px] font-medium text-foreground">{c.com}</div>
+                <div className="truncate text-[10.5px] text-muted-foreground">
+                  {c.especialidade ?? c.papel}
+                </div>
               </div>
-            </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </button>
           ))}
         </div>
         <div className="mt-3 rounded-xl border border-border bg-surface px-3 py-2 text-[11px] text-muted-foreground">
