@@ -1297,6 +1297,44 @@ function DadosRow({ marcador, onOpen }: { marcador: Marcador; onOpen: () => void
   );
 }
 
+function InfoSheet({
+  title,
+  body,
+  onClose,
+}: {
+  title: string;
+  body: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="absolute inset-0 z-30 flex flex-col bg-background/60 backdrop-blur-sm">
+      <button type="button" onClick={onClose} className="flex-1" aria-label="Fechar" />
+      <div className="max-h-[78%] overflow-y-auto rounded-t-3xl border-t border-border bg-surface-raised px-5 pb-6 pt-3 shadow-2xl">
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+              <Info className="h-3 w-3" /> O que é isto?
+            </div>
+            <h3 className="font-serif mt-1 text-[22px] leading-tight text-foreground">
+              {title}
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="mt-4 text-[13px] leading-relaxed text-foreground/85">{body}</p>
+      </div>
+    </div>
+  );
+}
+
 function MarkerSheet({ marcador, onClose }: { marcador: Marcador; onClose: () => void }) {
   const estado = calcularEstado(marcador);
   const ultimas = [...marcador.serie].slice(-6).reverse();
