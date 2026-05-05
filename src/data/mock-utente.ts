@@ -1189,6 +1189,52 @@ export const utente: Utente = {
     { id: "cic-2026-01", inicio: "2026-01-16", fim: "2026-01-21" },
     { id: "cic-2025-12", inicio: "2025-12-19", fim: "2025-12-24" },
   ],
+  registosCiclo: [
+    {
+      id: "reg-2026-04-28",
+      data: "2026-04-28",
+      energia: 4,
+      humor: ["calma", "motivada"],
+      sintomas: [],
+      estiloVida: ["exercicio", "boa-hidratacao"],
+    },
+    {
+      id: "reg-2026-04-27",
+      data: "2026-04-27",
+      energia: 3,
+      humor: ["sensivel"],
+      sintomas: ["fadiga"],
+      estiloVida: ["sono-mau", "cafe-extra"],
+      nota: "Dormi pouco, café a mais à tarde.",
+    },
+    {
+      id: "reg-2026-04-15",
+      data: "2026-04-15",
+      fluxo: "leve",
+      energia: 3,
+      humor: ["calma"],
+      sintomas: ["dor-lombar"],
+      estiloVida: ["meditacao"],
+    },
+    {
+      id: "reg-2026-04-12",
+      data: "2026-04-12",
+      fluxo: "intenso",
+      energia: 2,
+      humor: ["irritada", "sensivel"],
+      sintomas: ["colicas", "dor-cabeca", "inchaco"],
+      estiloVida: ["acucar", "stress-alto"],
+    },
+    {
+      id: "reg-2026-04-10",
+      data: "2026-04-10",
+      fluxo: "moderado",
+      energia: 2,
+      humor: ["triste"],
+      sintomas: ["colicas", "fadiga"],
+      estiloVida: [],
+    },
+  ],
 };
 
 // Helpers
