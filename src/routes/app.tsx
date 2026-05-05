@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InfoHint } from "@/components/portal/InfoHint";
+import { CicloMenstrualCard } from "@/components/portal/CicloMenstrualCard";
 import {
   utente,
   calcularDirecao,
@@ -59,6 +60,7 @@ import {
   formatarValor,
   scoreBreakdown,
   type Categoria,
+  type CicloMenstrual,
   type Conteudo,
   type Conversa,
   type Consulta,
@@ -134,6 +136,7 @@ function AppUtente() {
   const [marcadorAberto, setMarcadorAberto] = useState<Marcador | null>(null);
   const [diario, setDiario] = useState<EntradaDiario[]>(utente.diario);
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>(utente.notificacoes);
+  const [ciclos, setCiclos] = useState<CicloMenstrual[]>(utente.ciclos ?? []);
 
   function marcarNotificacaoLida(id: string) {
     setNotificacoes((prev) => prev.map((n) => (n.id === id ? { ...n, lida: true } : n)));
@@ -205,6 +208,8 @@ function AppUtente() {
                       }}
                       onCarregar={() => openSub("carregar")}
                       notificacoes={notificacoes}
+                      ciclos={ciclos}
+                      onCiclosChange={setCiclos}
                     />
                   )}
                   {tab === "dados" && (
