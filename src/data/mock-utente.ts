@@ -204,6 +204,7 @@ export type Utente = {
   id: string;
   nome: string;
   idade: number;
+  sexo: "feminino" | "masculino";
   cidade: string;
   plano: string;
   medicaResponsavel: string;
@@ -223,6 +224,14 @@ export type Utente = {
   uploadsRecentes: UploadAnalise[];
   fichaClinica: FichaClinica;
   notasMedicas: NotaConsultaMedico[];
+  ciclos?: CicloMenstrual[];
+};
+
+export type CicloMenstrual = {
+  id: string;
+  inicio: string; // ISO yyyy-mm-dd
+  fim?: string;   // ISO yyyy-mm-dd (opcional se ainda a decorrer)
+  notas?: string;
 };
 
 // Deterministic pseudo-random
