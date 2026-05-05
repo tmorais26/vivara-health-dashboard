@@ -225,6 +225,7 @@ export type Utente = {
   fichaClinica: FichaClinica;
   notasMedicas: NotaConsultaMedico[];
   ciclos?: CicloMenstrual[];
+  registosCiclo?: RegistoCicloDia[];
 };
 
 export type CicloMenstrual = {
@@ -232,6 +233,49 @@ export type CicloMenstrual = {
   inicio: string; // ISO yyyy-mm-dd
   fim?: string;   // ISO yyyy-mm-dd (opcional se ainda a decorrer)
   notas?: string;
+};
+
+/** Registo diário associado ao ciclo: sintomas, humor, fluxo, estilo de vida. */
+export type FluxoMenstrual = "nenhum" | "leve" | "moderado" | "intenso";
+export type HumorCiclo =
+  | "calma"
+  | "alegre"
+  | "irritada"
+  | "ansiosa"
+  | "triste"
+  | "sensivel"
+  | "motivada";
+export type SintomaCiclo =
+  | "colicas"
+  | "dor-cabeca"
+  | "inchaco"
+  | "acne"
+  | "dor-lombar"
+  | "sensibilidade-mamaria"
+  | "fadiga"
+  | "nausea"
+  | "insonia"
+  | "desejo-doces";
+export type EstiloVidaTag =
+  | "exercicio"
+  | "boa-hidratacao"
+  | "sono-mau"
+  | "alcool"
+  | "cafe-extra"
+  | "acucar"
+  | "stress-alto"
+  | "meditacao"
+  | "ar-livre";
+
+export type RegistoCicloDia = {
+  id: string;
+  data: string; // ISO yyyy-mm-dd
+  fluxo?: FluxoMenstrual;
+  energia?: 1 | 2 | 3 | 4 | 5;
+  humor: HumorCiclo[];
+  sintomas: SintomaCiclo[];
+  estiloVida: EstiloVidaTag[];
+  nota?: string;
 };
 
 // Deterministic pseudo-random
@@ -1144,6 +1188,52 @@ export const utente: Utente = {
     { id: "cic-2026-02", inicio: "2026-02-12", fim: "2026-02-17" },
     { id: "cic-2026-01", inicio: "2026-01-16", fim: "2026-01-21" },
     { id: "cic-2025-12", inicio: "2025-12-19", fim: "2025-12-24" },
+  ],
+  registosCiclo: [
+    {
+      id: "reg-2026-04-28",
+      data: "2026-04-28",
+      energia: 4,
+      humor: ["calma", "motivada"],
+      sintomas: [],
+      estiloVida: ["exercicio", "boa-hidratacao"],
+    },
+    {
+      id: "reg-2026-04-27",
+      data: "2026-04-27",
+      energia: 3,
+      humor: ["sensivel"],
+      sintomas: ["fadiga"],
+      estiloVida: ["sono-mau", "cafe-extra"],
+      nota: "Dormi pouco, café a mais à tarde.",
+    },
+    {
+      id: "reg-2026-04-15",
+      data: "2026-04-15",
+      fluxo: "leve",
+      energia: 3,
+      humor: ["calma"],
+      sintomas: ["dor-lombar"],
+      estiloVida: ["meditacao"],
+    },
+    {
+      id: "reg-2026-04-12",
+      data: "2026-04-12",
+      fluxo: "intenso",
+      energia: 2,
+      humor: ["irritada", "sensivel"],
+      sintomas: ["colicas", "dor-cabeca", "inchaco"],
+      estiloVida: ["acucar", "stress-alto"],
+    },
+    {
+      id: "reg-2026-04-10",
+      data: "2026-04-10",
+      fluxo: "moderado",
+      energia: 2,
+      humor: ["triste"],
+      sintomas: ["colicas", "fadiga"],
+      estiloVida: [],
+    },
   ],
 };
 

@@ -61,6 +61,7 @@ import {
   scoreBreakdown,
   type Categoria,
   type CicloMenstrual,
+  type RegistoCicloDia,
   type Conteudo,
   type Conversa,
   type Consulta,
@@ -137,6 +138,9 @@ function AppUtente() {
   const [diario, setDiario] = useState<EntradaDiario[]>(utente.diario);
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>(utente.notificacoes);
   const [ciclos, setCiclos] = useState<CicloMenstrual[]>(utente.ciclos ?? []);
+  const [registosCiclo, setRegistosCiclo] = useState<RegistoCicloDia[]>(
+    utente.registosCiclo ?? [],
+  );
 
   function marcarNotificacaoLida(id: string) {
     setNotificacoes((prev) => prev.map((n) => (n.id === id ? { ...n, lida: true } : n)));
@@ -210,6 +214,8 @@ function AppUtente() {
                       notificacoes={notificacoes}
                       ciclos={ciclos}
                       onCiclosChange={setCiclos}
+                      registosCiclo={registosCiclo}
+                      onRegistosCicloChange={setRegistosCiclo}
                     />
                   )}
                   {tab === "dados" && (
@@ -475,6 +481,8 @@ function HojeView({
   notificacoes,
   ciclos,
   onCiclosChange,
+  registosCiclo,
+  onRegistosCicloChange,
 }: {
   tarefas: TarefaPlano[];
   onToggle: (id: string) => void;
@@ -485,6 +493,8 @@ function HojeView({
   notificacoes: Notificacao[];
   ciclos: CicloMenstrual[];
   onCiclosChange: (next: CicloMenstrual[]) => void;
+  registosCiclo: RegistoCicloDia[];
+  onRegistosCicloChange: (next: RegistoCicloDia[]) => void;
 }) {
   const score = useMemo(() => calcularScoreLongevidade(), []);
   const breakdown = useMemo(() => scoreBreakdown(), []);
@@ -740,7 +750,12 @@ function HojeView({
 
       {/* Ciclo menstrual — apenas para utentes do sexo feminino */}
       {utente.sexo === "feminino" && (
-        <CicloMenstrualCard ciclos={ciclos} onChange={onCiclosChange} />
+        <CicloMenstrualCard
+          ciclos={ciclos}
+          onChange={onCiclosChange}
+          registos={registosCiclo}
+          onRegistosChange={onRegistosCicloChange}
+        />
       )}
 
       {/* Dados de hoje */}
