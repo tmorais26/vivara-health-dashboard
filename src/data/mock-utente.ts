@@ -234,6 +234,49 @@ export type CicloMenstrual = {
   notas?: string;
 };
 
+/** Registo diário associado ao ciclo: sintomas, humor, fluxo, estilo de vida. */
+export type FluxoMenstrual = "nenhum" | "leve" | "moderado" | "intenso";
+export type HumorCiclo =
+  | "calma"
+  | "alegre"
+  | "irritada"
+  | "ansiosa"
+  | "triste"
+  | "sensivel"
+  | "motivada";
+export type SintomaCiclo =
+  | "colicas"
+  | "dor-cabeca"
+  | "inchaco"
+  | "acne"
+  | "dor-lombar"
+  | "sensibilidade-mamaria"
+  | "fadiga"
+  | "nausea"
+  | "insonia"
+  | "desejo-doces";
+export type EstiloVidaTag =
+  | "exercicio"
+  | "boa-hidratacao"
+  | "sono-mau"
+  | "alcool"
+  | "cafe-extra"
+  | "acucar"
+  | "stress-alto"
+  | "meditacao"
+  | "ar-livre";
+
+export type RegistoCicloDia = {
+  id: string;
+  data: string; // ISO yyyy-mm-dd
+  fluxo?: FluxoMenstrual;
+  energia?: 1 | 2 | 3 | 4 | 5;
+  humor: HumorCiclo[];
+  sintomas: SintomaCiclo[];
+  estiloVida: EstiloVidaTag[];
+  nota?: string;
+};
+
 // Deterministic pseudo-random
 function seeded(seed: number) {
   let s = seed;
