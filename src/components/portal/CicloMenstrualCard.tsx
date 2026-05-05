@@ -547,6 +547,7 @@ function Chip({
   onClick: () => void;
   children: React.ReactNode;
   tone?: "default" | "primary" | "alert";
+  toneOk?: never;
 }) {
   const activeCls =
     tone === "alert"
