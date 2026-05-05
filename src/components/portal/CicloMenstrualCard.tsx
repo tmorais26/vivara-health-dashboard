@@ -276,6 +276,33 @@ function CicloDrawer({
     onChange(ciclos.filter((c) => c.id !== id));
   }
 
+  const registoHoje = useMemo<RegistoCicloDia>(
+    () =>
+      registos.find((r) => r.data === HOJE_ISO) ?? {
+        id: `reg-${HOJE_ISO}`,
+        data: HOJE_ISO,
+        humor: [],
+        sintomas: [],
+        estiloVida: [],
+      },
+    [registos],
+  );
+
+  function atualizarRegisto(patch: Partial<RegistoCicloDia>) {
+    if (!onRegistosChange) return;
+    const existe = registos.some((r) => r.data === HOJE_ISO);
+    const novo: RegistoCicloDia = { ...registoHoje, ...patch };
+    if (existe) {
+      onRegistosChange(registos.map((r) => (r.data === HOJE_ISO ? novo : r)));
+    } else {
+      onRegistosChange([novo, ...registos]);
+    }
+  }
+
+  function toggleArr<T extends string>(arr: T[], v: T): T[] {
+    return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
+  }
+
   return (
     <div className="fixed inset-0 z-[60] flex flex-col" role="dialog" aria-modal="true">
       <button
