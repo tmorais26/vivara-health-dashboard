@@ -1138,6 +1138,13 @@ export const utente: Utente = {
       proximaRevisao: "2026-06-08",
     },
   ],
+  ciclos: [
+    { id: "cic-2026-04", inicio: "2026-04-10", fim: "2026-04-15" },
+    { id: "cic-2026-03", inicio: "2026-03-13", fim: "2026-03-18" },
+    { id: "cic-2026-02", inicio: "2026-02-12", fim: "2026-02-17" },
+    { id: "cic-2026-01", inicio: "2026-01-16", fim: "2026-01-21" },
+    { id: "cic-2025-12", inicio: "2025-12-19", fim: "2025-12-24" },
+  ],
 };
 
 // Helpers
