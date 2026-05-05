@@ -225,6 +225,7 @@ export type Utente = {
   fichaClinica: FichaClinica;
   notasMedicas: NotaConsultaMedico[];
   ciclos?: CicloMenstrual[];
+  registosCiclo?: RegistoCicloDia[];
 };
 
 export type CicloMenstrual = {
