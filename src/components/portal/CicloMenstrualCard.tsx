@@ -710,7 +710,13 @@ function RegistoDiarioSection({
             <Chip
               key={o.value}
               active={registo.relacao === o.value}
-              tone={o.value === "desprotegida" ? "alert" : "ok"}
+              tone={
+                o.value === "desprotegida"
+                  ? "alert"
+                  : o.value === "protegida"
+                    ? "ok"
+                    : "default"
+              }
               onClick={() =>
                 onPatch({
                   relacao: registo.relacao === o.value ? undefined : o.value,
