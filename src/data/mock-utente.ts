@@ -204,6 +204,7 @@ export type Utente = {
   id: string;
   nome: string;
   idade: number;
+  sexo: "feminino" | "masculino";
   cidade: string;
   plano: string;
   medicaResponsavel: string;
@@ -223,6 +224,14 @@ export type Utente = {
   uploadsRecentes: UploadAnalise[];
   fichaClinica: FichaClinica;
   notasMedicas: NotaConsultaMedico[];
+  ciclos?: CicloMenstrual[];
+};
+
+export type CicloMenstrual = {
+  id: string;
+  inicio: string; // ISO yyyy-mm-dd
+  fim?: string;   // ISO yyyy-mm-dd (opcional se ainda a decorrer)
+  notas?: string;
 };
 
 // Deterministic pseudo-random
@@ -753,6 +762,7 @@ export const utente: Utente = {
   id: "maria-antunes",
   nome: "Maria Antunes",
   idade: 47,
+  sexo: "feminino",
   cidade: "Lisboa",
   plano: "Longevidade Premium",
   medicaResponsavel: "Dra. Sofia Cardoso",
@@ -1127,6 +1137,13 @@ export const utente: Utente = {
         "Vitamina D3 5000 UI/dia 12 semanas. Discutir TRH em próxima consulta. Pedido de FSH/LH/Estradiol seriado.",
       proximaRevisao: "2026-06-08",
     },
+  ],
+  ciclos: [
+    { id: "cic-2026-04", inicio: "2026-04-10", fim: "2026-04-15" },
+    { id: "cic-2026-03", inicio: "2026-03-13", fim: "2026-03-18" },
+    { id: "cic-2026-02", inicio: "2026-02-12", fim: "2026-02-17" },
+    { id: "cic-2026-01", inicio: "2026-01-16", fim: "2026-01-21" },
+    { id: "cic-2025-12", inicio: "2025-12-19", fim: "2025-12-24" },
   ],
 };
 
