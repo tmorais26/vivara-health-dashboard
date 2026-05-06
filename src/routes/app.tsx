@@ -1378,7 +1378,7 @@ function SaudeView({
       <button
         type="button"
         onClick={onCarregar}
-        className="fixed-fab absolute bottom-20 right-5 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-state-ok text-background shadow-[0_8px_24px_-6px_color-mix(in_oklab,var(--state-ok)_60%,transparent)] hover:opacity-90"
+        className="fixed bottom-[calc(theme(spacing.20)+1rem)] right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-state-ok text-background shadow-[0_8px_24px_-6px_color-mix(in_oklab,var(--state-ok)_60%,transparent)] hover:opacity-90"
         aria-label="Carregar análise"
       >
         <Plus className="h-5 w-5" />
