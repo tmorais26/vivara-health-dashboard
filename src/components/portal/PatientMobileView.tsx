@@ -567,6 +567,33 @@ export function PatientMobileView({
           {toast}
         </div>
       )}
+
+      {/* Barra fixa de acções rápidas — sempre visível acima da nav inferior */}
+      <div className="fixed inset-x-0 bottom-[calc(theme(spacing.20)+0.5rem)] z-40 mx-auto flex max-w-md items-center gap-2 px-4">
+        <a
+          href="tel:+351910000000"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-foreground px-3 py-2.5 text-[12px] font-medium text-background shadow-lg"
+        >
+          <Phone className="h-3.5 w-3.5" />
+          Ligar
+        </a>
+        <button
+          type="button"
+          onClick={() => flash("Mensagem enviada")}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-surface-raised px-3 py-2.5 text-[12px] font-medium text-foreground shadow-lg"
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          Mensagem
+        </button>
+        <button
+          type="button"
+          onClick={() => flash("Consulta agendada")}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-surface-raised px-3 py-2.5 text-[12px] font-medium text-foreground shadow-lg"
+        >
+          <CalendarPlus className="h-3.5 w-3.5" />
+          Agendar
+        </button>
+      </div>
     </div>
   );
 }
