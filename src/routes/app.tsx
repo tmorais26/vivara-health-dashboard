@@ -915,25 +915,25 @@ function Sinal7d({ marcador, Icon }: { marcador: Marcador; Icon: typeof Activity
   const TrendIcon = isFlat ? null : isUp ? TrendingUp : TrendingDown;
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface-raised px-3.5 py-3">
+    <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface-raised px-3 py-3 sm:gap-3 sm:px-3.5">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent">
         <Icon className="h-4 w-4 text-foreground" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[12.5px] font-medium text-foreground">{marcador.nomeCurto}</div>
+        <div className="truncate text-[12.5px] font-medium text-foreground">{marcador.nomeCurto}</div>
         <div className="text-[10px] text-muted-foreground">Mediana 7 dias</div>
       </div>
-      <div className="flex flex-col items-end">
-        <div className="font-serif tabular text-[15px] leading-none text-foreground">
+      <div className="flex shrink-0 flex-col items-end">
+        <div className="font-serif tabular whitespace-nowrap text-[15px] leading-none text-foreground">
           {formatarValor(marcador)}
           <span className="ml-1 text-[10px] text-muted-foreground">{marcador.unidade}</span>
         </div>
-        <div className={`tabular mt-1 inline-flex items-center gap-0.5 text-[10px] ${tone}`}>
+        <div className={`tabular mt-1 inline-flex items-center gap-0.5 whitespace-nowrap text-[10px] ${tone}`}>
           {TrendIcon && <TrendIcon className="h-2.5 w-2.5" strokeWidth={2.5} />}
-          {isFlat ? "estável" : `${isUp ? "+" : ""}${deltaPct}% vs sem. ant.`}
+          {isFlat ? "estável" : `${isUp ? "+" : ""}${deltaPct}%`}
         </div>
       </div>
-      <div className="w-[60px]">
+      <div className="hidden w-[60px] shrink-0 sm:block">
         <Sparkline marcador={marcador} estado={estado} height={26} />
       </div>
     </div>
