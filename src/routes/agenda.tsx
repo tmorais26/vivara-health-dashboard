@@ -1,5 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Calendar, Video, Sparkles, AlertTriangle, FileText, Activity } from "lucide-react";
+import {
+  Calendar,
+  Video,
+  Sparkles,
+  AlertTriangle,
+  FileText,
+  Activity,
+  HeartPulse,
+  Pill,
+  Scissors,
+  Users,
+  ClipboardList,
+} from "lucide-react";
 import { useState } from "react";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
 import { agendaSemana } from "@/data/mock-portal";
@@ -136,6 +148,7 @@ function PreparoConsulta({
     { titulo: "Berberina 500 mg", taxa: 71, dias: "5 de 7" },
     { titulo: "Magnésio bisglicinato", taxa: 100, dias: "7 de 7" },
   ];
+  const ficha = isMaria ? mariaMock.fichaClinica : null;
 
   return (
     <div className="flex h-full flex-col gap-5">
@@ -174,6 +187,64 @@ function PreparoConsulta({
           )}
         </ul>
       </section>
+
+      {/* Anamnese resumida */}
+      {ficha && (
+        <section className="rounded-2xl border border-border bg-surface-raised p-4">
+          <div className="mb-3 flex items-center gap-1.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
+            <ClipboardList className="h-3 w-3" />
+            Anamnese · resumo
+          </div>
+          <div className="flex flex-col gap-3">
+            <AnamneseBlock
+              icon={<AlertTriangle className="h-3 w-3 text-state-alert" />}
+              title="Alergias a medicamentos"
+              empty="Sem alergias conhecidas"
+              items={ficha.alergiasMedicamentos.map(
+                (a) => `${a.substancia} · ${a.reacao} (${a.gravidade})`,
+              )}
+              accent
+            />
+            <AnamneseBlock
+              icon={<HeartPulse className="h-3 w-3" />}
+              title="Antecedentes pessoais"
+              items={ficha.antecedentesPessoais}
+            />
+            <AnamneseBlock
+              icon={<Pill className="h-3 w-3" />}
+              title="Medicação habitual"
+              items={ficha.medicacaoHabitual.map((m) => `${m.nome} · ${m.posologia}`)}
+            />
+            <AnamneseBlock
+              icon={<Sparkles className="h-3 w-3" />}
+              title="Suplementação"
+              items={ficha.suplementacao.map((s) => `${s.nome} · ${s.posologia}`)}
+            />
+            <AnamneseBlock
+              icon={<Scissors className="h-3 w-3" />}
+              title="Antecedentes cirúrgicos"
+              items={ficha.antecedentesCirurgicos.map(
+                (c) => `${c.intervencao} (${c.ano})`,
+              )}
+            />
+            <AnamneseBlock
+              icon={<Users className="h-3 w-3" />}
+              title="Antecedentes familiares"
+              items={ficha.antecedentesFamiliares.map(
+                (af) =>
+                  `${af.condicao} · ${af.familiar}${af.idadeDiagnostico ? ` (${af.idadeDiagnostico} anos)` : ""}`,
+              )}
+            />
+          </div>
+          <Link
+            to="/utentes/$utenteId"
+            params={{ utenteId: evento.utenteId }}
+            className="mt-3 inline-block text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            Ver ficha clínica completa →
+          </Link>
+        </section>
+      )}
 
       {/* Última nota */}
       <section className="rounded-2xl border border-border bg-surface-raised p-4">
@@ -247,6 +318,53 @@ function PreparoConsulta({
           Abrir perfil completo
         </Link>
       </div>
+    </div>
+  );
+}
+
+function AnamneseBlock({
+  icon,
+  title,
+  items,
+  empty,
+  accent,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  items: string[];
+  empty?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-xl border px-3 py-2.5 ${
+        accent ? "border-state-alert/30 bg-state-alert-soft/30" : "border-border bg-background"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
+          {icon}
+          {title}
+        </div>
+        <span className="tabular text-[10.5px] text-muted-foreground">{items.length}</span>
+      </div>
+      {items.length === 0 ? (
+        <p className="mt-1.5 text-[12px] text-muted-foreground">
+          {empty ?? "Sem registos"}
+        </p>
+      ) : (
+        <ul className="mt-1.5 flex flex-col gap-1">
+          {items.map((it, i) => (
+            <li
+              key={i}
+              className="flex items-start gap-1.5 text-[12px] leading-snug text-foreground"
+            >
+              <span className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full bg-muted-foreground/60" />
+              <span className="min-w-0">{it}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
