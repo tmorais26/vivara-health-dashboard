@@ -3157,5 +3157,21 @@ function CarregarSucessoView({ numValores }: { numValores: number }) {
         </p>
       </div>
     </div>
+
+function LogoutButton() {
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        await supabase.auth.signOut();
+        navigate({ to: "/auth" });
+      }}
+      className="mt-3 w-full rounded-2xl border border-border bg-surface-raised px-4 py-3 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
+    >
+      Terminar sessão
+    </button>
+  );
+}
   );
 }
