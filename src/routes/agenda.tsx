@@ -60,14 +60,14 @@ function AgendaPage() {
                   .sort((a, b) => a.hora.localeCompare(b.hora))
                   .map((e) => (
                     <li key={e.id}>
-                      <div className="flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-accent/40 md:items-center md:gap-4 md:px-5">
-                        <div className="tabular w-12 shrink-0 text-sm font-medium text-foreground sm:w-16">
+                      <div className="flex items-center gap-2.5 px-3 py-3 transition-colors hover:bg-accent/40 sm:gap-3 sm:px-4 lg:gap-4 lg:px-5">
+                        <div className="tabular w-11 shrink-0 text-[13px] font-medium text-foreground sm:w-14 sm:text-sm lg:w-16">
                           {e.hora}
                         </div>
                         <Link
                           to="/utentes/$utenteId"
                           params={{ utenteId: e.utenteId }}
-                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-medium text-foreground hover:bg-accent/70"
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[10.5px] font-medium text-foreground hover:bg-accent/70 sm:h-9 sm:w-9 sm:text-[11px]"
                         >
                           {e.iniciais}
                         </Link>
@@ -76,27 +76,22 @@ function AgendaPage() {
                           params={{ utenteId: e.utenteId }}
                           className="min-w-0 flex-1"
                         >
-                          <div className="truncate text-sm font-medium text-foreground hover:underline">
+                          <div className="truncate text-[13px] font-medium leading-tight text-foreground hover:underline sm:text-sm">
                             {e.utenteNome}
                           </div>
-                          <div className="truncate text-[11px] text-muted-foreground">{e.motivo}</div>
-                          <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground md:hidden">
-                            {e.tipo === "video" ? <Video className="h-3 w-3" /> : null}
-                            {e.duracao} · {e.tipo}
+                          <div className="mt-0.5 flex items-center gap-1.5 truncate text-[10.5px] leading-tight text-muted-foreground sm:text-[11px]">
+                            {e.tipo === "video" ? <Video className="h-3 w-3 shrink-0" /> : null}
+                            <span className="truncate">{e.duracao} · {e.tipo}</span>
                           </div>
                         </Link>
-                        <div className="hidden items-center gap-1.5 text-[11px] text-muted-foreground md:flex">
-                          {e.tipo === "video" ? <Video className="h-3 w-3" /> : null}
-                          {e.duracao} · {e.tipo}
-                        </div>
                         <button
                           type="button"
                           onClick={() => setPrepararId(e.id)}
                           aria-label="Preparar consulta"
-                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-accent md:px-3"
+                          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-2 text-[11px] font-medium text-foreground transition-colors hover:bg-accent lg:h-auto lg:px-3 lg:py-1.5"
                         >
                           <Sparkles className="h-3 w-3" />
-                          <span className="hidden md:inline">Preparar</span>
+                          <span className="hidden lg:inline">Preparar</span>
                         </button>
                       </div>
                     </li>
