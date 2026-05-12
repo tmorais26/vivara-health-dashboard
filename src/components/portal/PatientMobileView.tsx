@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Activity,
+  AlertTriangle,
   ArrowLeft,
   Bell,
   BellPlus,
@@ -17,10 +18,13 @@ import {
   Monitor,
   Moon,
   Phone,
+  Pill,
   Send,
+  Scissors,
   Plus,
   Sparkles,
   Upload,
+  Users,
 } from "lucide-react";
 import type { Alerta, Utente } from "@/data/mock-utente";
 import { calcularEstado, formatarData, formatarValor } from "@/data/mock-utente";
@@ -71,6 +75,7 @@ export function PatientMobileView({
   const consultaProxima = utente.consultas.find(
     (c) => c.estado === "agendada" && c.data === utente.proximaConsulta,
   );
+  const ficha = utente.fichaClinica;
 
   // Adesão (mock determinístico) — pior casos primeiro
   const adesao = [
@@ -149,6 +154,56 @@ export function PatientMobileView({
             {formatarData(utente.proximaConsulta)}
             {consultaProxima?.hora ? ` · ${consultaProxima.hora}` : ""}
           </span>
+        </div>
+      </section>
+
+      {/* Anamnese clínica — visível na app da médica */}
+      <section className="border-b border-border px-4 py-5">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-[10.5px] uppercase tracking-wider text-muted-foreground">
+              Anamnese clínica
+            </div>
+            <div className="mt-0.5 text-[12px] text-muted-foreground">
+              Só equipa médica · ficha resumida
+            </div>
+          </div>
+          <span className="rounded-full border border-border bg-surface-raised px-2.5 py-1 text-[10.5px] text-muted-foreground">
+            {formatarData(ficha.preenchidaEm)}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 gap-2">
+          <AnamneseMobileRow
+            icon={<AlertTriangle className="h-3.5 w-3.5" />}
+            title="Alergias medicamentosas"
+            items={ficha.alergiasMedicamentos.map((a) => `${a.substancia} · ${a.reacao}`)}
+            alert
+          />
+          <AnamneseMobileRow
+            icon={<HeartPulse className="h-3.5 w-3.5" />}
+            title="Antecedentes pessoais"
+            items={ficha.antecedentesPessoais}
+          />
+          <AnamneseMobileRow
+            icon={<Pill className="h-3.5 w-3.5" />}
+            title="Medicação habitual"
+            items={ficha.medicacaoHabitual.map((m) => `${m.nome} · ${m.posologia}`)}
+          />
+          <AnamneseMobileRow
+            icon={<Sparkles className="h-3.5 w-3.5" />}
+            title="Suplementação"
+            items={ficha.suplementacao.map((s) => `${s.nome} · ${s.posologia}`)}
+          />
+          <AnamneseMobileRow
+            icon={<Scissors className="h-3.5 w-3.5" />}
+            title="Antecedentes cirúrgicos"
+            items={ficha.antecedentesCirurgicos.map((c) => `${c.intervencao} · ${c.ano}`)}
+          />
+          <AnamneseMobileRow
+            icon={<Users className="h-3.5 w-3.5" />}
+            title="Antecedentes familiares"
+            items={ficha.antecedentesFamiliares.map((af) => `${af.condicao} · ${af.familiar}`)}
+          />
         </div>
       </section>
 
