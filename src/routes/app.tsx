@@ -3157,6 +3157,8 @@ function CarregarSucessoView({ numValores }: { numValores: number }) {
         </p>
       </div>
     </div>
+  );
+}
 
 function LogoutButton() {
   const navigate = useNavigate();
@@ -3171,7 +3173,5 @@ function LogoutButton() {
     >
       Terminar sessão
     </button>
-  );
-}
   );
 }
