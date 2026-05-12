@@ -1,4 +1,15 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import {
+  Outlet,
+  Link,
+  createRootRoute,
+  HeadContent,
+  Scripts,
+  useRouterState,
+  useNavigate,
+} from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 import appCss from "../styles.css?url";
 
@@ -77,5 +88,52 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  return <Outlet />;
+  return (
+    <AuthGate>
+      <Outlet />
+    </AuthGate>
+  );
+}
+
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const [session, setSession] = useState<Session | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    // Listener primeiro, depois leitura inicial.
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+    });
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setReady(true);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const isAuthRoute = pathname === "/auth";
+
+  useEffect(() => {
+    if (!ready) return;
+    if (!session && !isAuthRoute) {
+      navigate({ to: "/auth" });
+    }
+    if (session && isAuthRoute) {
+      navigate({ to: "/" });
+    }
+  }, [ready, session, isAuthRoute, navigate]);
+
+  if (!ready) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-xs text-muted-foreground">A carregar…</div>
+      </div>
+    );
+  }
+
+  if (!session && !isAuthRoute) return null;
+
+  return <>{children}</>;
 }

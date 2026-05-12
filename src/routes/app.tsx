@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Activity,
   ArrowLeft,
@@ -2686,6 +2687,7 @@ function PerfilTabView({ onOpenSub }: { onOpenSub: (v: SubView, ctx?: string) =>
           <PerfilRow Icon={Activity} label="Wearables" hint="Apple Watch · Withings" />
           <PerfilRow Icon={Settings} label="Definições gerais" />
         </div>
+        <LogoutButton />
       </section>
 
       <p className="px-1 text-center text-[10px] text-muted-foreground">
@@ -3155,5 +3157,21 @@ function CarregarSucessoView({ numValores }: { numValores: number }) {
         </p>
       </div>
     </div>
+  );
+}
+
+function LogoutButton() {
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        await supabase.auth.signOut();
+        navigate({ to: "/auth" });
+      }}
+      className="mt-3 w-full rounded-2xl border border-border bg-surface-raised px-4 py-3 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
+    >
+      Terminar sessão
+    </button>
   );
 }
