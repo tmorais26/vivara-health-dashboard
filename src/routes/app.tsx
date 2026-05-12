@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Activity,
   ArrowLeft,
@@ -2686,6 +2687,7 @@ function PerfilTabView({ onOpenSub }: { onOpenSub: (v: SubView, ctx?: string) =>
           <PerfilRow Icon={Activity} label="Wearables" hint="Apple Watch · Withings" />
           <PerfilRow Icon={Settings} label="Definições gerais" />
         </div>
+        <LogoutButton />
       </section>
 
       <p className="px-1 text-center text-[10px] text-muted-foreground">
