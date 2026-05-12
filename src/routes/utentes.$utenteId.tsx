@@ -122,8 +122,14 @@ function DashboardUtente() {
           onAlertClick={(a) => {
             const m = utente.marcadores.find((mm) => mm.id === a.marcadorId);
             if (m) {
-              setMainTab("clinico");
-              setClinicoSub(m.categoria as ClinicoSub);
+              if (m.categoria === "analises" || m.categoria === "composicao" || m.categoria === "wearable") {
+                setMainTab("clinico");
+                setClinicoSub(m.categoria);
+              } else if (m.categoria === "genomica") {
+                setMainTab("genomica");
+              } else if (m.categoria === "prescricoes") {
+                setMainTab("prescricoes");
+              }
               setSelectedId(m.id);
             }
           }}
@@ -143,8 +149,14 @@ function DashboardUtente() {
         onAlertClick={(a) => {
           const m = utente.marcadores.find((mm) => mm.id === a.marcadorId);
           if (m) {
-            setMainTab("clinico");
-            setClinicoSub(m.categoria as ClinicoSub);
+            if (m.categoria === "analises" || m.categoria === "composicao" || m.categoria === "wearable") {
+              setMainTab("clinico");
+              setClinicoSub(m.categoria);
+            } else if (m.categoria === "genomica") {
+              setMainTab("genomica");
+            } else if (m.categoria === "prescricoes") {
+              setMainTab("prescricoes");
+            }
             setSelectedId(m.id);
           }
         }}
