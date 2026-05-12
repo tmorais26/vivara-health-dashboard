@@ -530,8 +530,14 @@ function HojeView({
   const diasSemana = ["S", "T", "Q", "Q", "S", "S", "D"];
   const hoje = 2; // mock: 4ª feira
 
+  // Avisos activos para preview no Início (excluímos alertas — só info/atenção
+  // para manter linguagem calma)
+  const avisosInline = notificacoes
+    .filter((n) => !n.lida && n.severidade !== "alerta")
+    .slice(0, 2);
+
   return (
-    <div className="space-y-4 px-5 pt-3">
+    <div className="relative space-y-4 px-5 pt-3">
       <header className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Olá</div>
@@ -808,6 +814,52 @@ function HojeView({
         </div>
       </section>
 
+      {/* Avisos activos — preview inline (máx. 2) */}
+      {avisosInline.length > 0 && (
+        <section>
+          <div className="mb-2 flex items-center justify-between px-1">
+            <div className="text-[11px] font-medium text-foreground">Avisos activos</div>
+            <button
+              type="button"
+              onClick={() => onGoTab("avisos")}
+              className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+            >
+              Ver todos
+            </button>
+          </div>
+          <div className="space-y-2">
+            {avisosInline.map((n) => {
+              const atencao = n.severidade === "atencao";
+              const Icon = atencao ? Bell : Info;
+              const tone = atencao
+                ? "bg-state-warn-soft text-state-warn"
+                : "bg-accent text-foreground/75";
+              return (
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => onGoTab("avisos")}
+                  className="flex w-full items-start gap-2.5 rounded-2xl border border-border bg-surface-raised p-3 text-left transition-colors hover:border-foreground/20"
+                >
+                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${tone}`}>
+                    <Icon className="h-3.5 w-3.5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[12px] font-medium leading-tight text-foreground">
+                      {n.titulo}
+                    </div>
+                    <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+                      {n.detalhe}
+                    </p>
+                  </div>
+                  <ChevronRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Próxima consulta — discreta no fim */}
       <button
         type="button"
@@ -822,6 +874,17 @@ function HojeView({
           </div>
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+      </button>
+
+      {/* FAB Carregar — sempre visível no canto inferior direito */}
+      <button
+        type="button"
+        onClick={onCarregar}
+        className="fixed bottom-[calc(theme(spacing.20)+1rem)] right-5 z-40 flex h-12 items-center gap-2 rounded-full bg-state-ok px-4 text-background shadow-[0_8px_24px_-6px_color-mix(in_oklab,var(--state-ok)_60%,transparent)] hover:opacity-90"
+        aria-label="Carregar análise"
+      >
+        <Camera className="h-4 w-4" strokeWidth={2.2} />
+        <span className="text-[12px] font-medium">Carregar</span>
       </button>
     </div>
   );
