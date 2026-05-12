@@ -331,7 +331,7 @@ function AppUtente() {
                 />
                 <NavItem
                   id="dados"
-                  label="Dados"
+                  label="Saúde"
                   Icon={Activity}
                   active={tab === "dados" && sub === null}
                   onClick={(t) => {
@@ -348,14 +348,10 @@ function AppUtente() {
                     setTab(t);
                     setSub(null);
                   }}
-                  badge={notificacoes.filter((n) => !n.lida).length}
-                  badgeTone={
-                    notificacoes.some((n) => !n.lida && n.severidade === "alerta")
-                      ? "alerta"
-                      : notificacoes.some((n) => !n.lida && n.severidade === "atencao")
-                        ? "atencao"
-                        : "info"
+                  badge={
+                    notificacoes.filter((n) => !n.lida && n.severidade === "alerta").length
                   }
+                  badgeTone="alerta"
                 />
                 <NavItem
                   id="perfil"
