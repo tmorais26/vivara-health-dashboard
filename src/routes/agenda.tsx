@@ -34,19 +34,19 @@ function AgendaPage() {
 
   return (
     <PortalShell>
-      <main className="mx-auto max-w-[1100px] px-6 py-10 pb-24 lg:pb-10">
-        <div className="mb-8">
+      <main className="mx-auto max-w-[1100px] px-4 py-6 pb-24 sm:px-6 sm:py-10 lg:pb-10">
+        <div className="mb-6 sm:mb-8">
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Portal</div>
-          <h1 className="font-serif mt-2 text-4xl text-foreground">Agenda</h1>
+          <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">Agenda</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Próximas consultas. Clica num utente para abrir o perfil clínico.
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {dias.map((dia) => (
             <section key={dia} className="rounded-2xl border border-border bg-surface-raised">
-              <div className="flex items-center justify-between border-b border-border px-5 py-3">
+              <div className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-5">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground">{formatarData(dia)}</span>
@@ -60,12 +60,14 @@ function AgendaPage() {
                   .sort((a, b) => a.hora.localeCompare(b.hora))
                   .map((e) => (
                     <li key={e.id}>
-                      <div className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-accent/40">
-                        <div className="tabular w-16 text-sm font-medium text-foreground">{e.hora}</div>
+                      <div className="flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-accent/40 sm:items-center sm:gap-4 sm:px-5">
+                        <div className="tabular w-12 shrink-0 text-sm font-medium text-foreground sm:w-16">
+                          {e.hora}
+                        </div>
                         <Link
                           to="/utentes/$utenteId"
                           params={{ utenteId: e.utenteId }}
-                          className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-[11px] font-medium text-foreground hover:bg-accent/70"
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-medium text-foreground hover:bg-accent/70"
                         >
                           {e.iniciais}
                         </Link>
@@ -74,24 +76,27 @@ function AgendaPage() {
                           params={{ utenteId: e.utenteId }}
                           className="min-w-0 flex-1"
                         >
-                          <div className="text-sm font-medium text-foreground hover:underline">
+                          <div className="truncate text-sm font-medium text-foreground hover:underline">
                             {e.utenteNome}
                           </div>
                           <div className="truncate text-[11px] text-muted-foreground">{e.motivo}</div>
+                          <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground sm:hidden">
+                            {e.tipo === "video" ? <Video className="h-3 w-3" /> : null}
+                            {e.duracao} · {e.tipo}
+                          </div>
                         </Link>
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                          {e.tipo === "video" ? (
-                            <Video className="h-3 w-3" />
-                          ) : null}
+                        <div className="hidden items-center gap-1.5 text-[11px] text-muted-foreground sm:flex">
+                          {e.tipo === "video" ? <Video className="h-3 w-3" /> : null}
                           {e.duracao} · {e.tipo}
                         </div>
                         <button
                           type="button"
                           onClick={() => setPrepararId(e.id)}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-accent"
+                          aria-label="Preparar consulta"
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-accent sm:px-3"
                         >
                           <Sparkles className="h-3 w-3" />
-                          Preparar
+                          <span className="hidden sm:inline">Preparar</span>
                         </button>
                       </div>
                     </li>
@@ -102,7 +107,7 @@ function AgendaPage() {
         </div>
 
         <Sheet open={!!prepararId} onOpenChange={(o) => !o && setPrepararId(null)}>
-          <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+          <SheetContent side="right" className="w-full overflow-y-auto p-4 sm:max-w-md sm:p-6">
             {evento && (
               <PreparoConsulta evento={evento} onClose={() => setPrepararId(null)} />
             )}
