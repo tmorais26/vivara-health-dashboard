@@ -1326,7 +1326,7 @@ function SaudeView({
     <div className="relative">
       <div className="space-y-4 px-5 pt-3 pb-6">
         <header className="flex items-center justify-between gap-3">
-          <h2 className="font-serif text-[20px] leading-tight text-foreground">Dados</h2>
+          <h2 className="font-serif text-[20px] leading-tight text-foreground">Saúde</h2>
           <button
             type="button"
             className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface-raised hover:border-foreground/20"
