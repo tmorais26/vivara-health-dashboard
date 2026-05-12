@@ -921,19 +921,19 @@ function Sinal7d({ marcador, Icon }: { marcador: Marcador; Icon: typeof Activity
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-[12.5px] font-medium leading-tight text-foreground">{marcador.nomeCurto}</div>
-        <div className="truncate text-[10px] leading-tight text-muted-foreground">Mediana 7 dias</div>
+        <div className="truncate text-[10px] leading-tight text-muted-foreground">7 dias</div>
       </div>
-      <div className="flex shrink-0 flex-col items-end">
+      <div className="flex shrink-0 flex-col items-end gap-0.5">
         <div className="font-serif tabular whitespace-nowrap text-[14px] leading-none text-foreground sm:text-[15px]">
           {formatarValor(marcador)}
           <span className="ml-0.5 text-[10px] text-muted-foreground">{marcador.unidade}</span>
         </div>
-        <div className={`tabular mt-1 inline-flex items-center gap-0.5 whitespace-nowrap text-[10px] leading-none ${tone}`}>
+        <div className={`tabular inline-flex items-center gap-0.5 whitespace-nowrap text-[10px] leading-none ${tone}`}>
           {TrendIcon && <TrendIcon className="h-2.5 w-2.5" strokeWidth={2.5} />}
           {isFlat ? "estável" : `${isUp ? "+" : ""}${deltaPct}%`}
         </div>
       </div>
-      <div className="hidden w-[60px] shrink-0 md:block">
+      <div className="hidden w-[60px] shrink-0 lg:block">
         <Sparkline marcador={marcador} estado={estado} height={26} />
       </div>
     </div>
