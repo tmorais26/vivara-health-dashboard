@@ -561,9 +561,24 @@ function HojeView({
             className="inline-flex items-center justify-center text-muted-foreground transition-colors hover:text-foreground dark:text-white/60 dark:hover:text-white"
           >
             <p>
-              Indicador interno (0–100) calculado a partir dos teus marcadores,
-              hábitos do diário e adesão ao plano. Serve para visualizar, semana
-              a semana, a tua evolução geral.
+              Indicador interno (0–100) que resume a tua evolução semanal a
+              partir de três dimensões, com peso equivalente (~33% cada):
+            </p>
+            <ul className="ml-4 list-disc space-y-1 text-foreground/85">
+              <li>
+                <strong>Cardio-metabólica</strong> — análises de sangue
+                (glicose, lípidos, marcadores de inflamação).
+              </li>
+              <li>
+                <strong>Composição</strong> — peso, massa muscular e gorda.
+              </li>
+              <li>
+                <strong>Recuperação</strong> — sono, HRV e actividade do
+                wearable.
+              </li>
+            </ul>
+            <p>
+              É calculado com base nos dados sincronizados nos últimos 7 dias.
             </p>
             <p className="text-muted-foreground">
               Não é um diagnóstico nem substitui a avaliação da equipa clínica.
@@ -576,12 +591,9 @@ function HojeView({
             <span className="text-[18px] text-muted-foreground dark:text-white/50">/100</span>
           </div>
           <span className="inline-flex items-center gap-1 rounded-full border border-state-ok/40 bg-state-ok-soft px-2.5 py-1 text-[10.5px] font-medium text-state-ok dark:border-state-ok/50 dark:bg-state-ok/15">
-            <TrendingUp className="h-3 w-3" /> 2 esta semana
+            <TrendingUp className="h-3 w-3" /> +2 pts esta semana
           </span>
         </div>
-        <p className="mt-2 text-[10.5px] leading-snug text-muted-foreground dark:text-white/55">
-          Calculado para acompanhamento pessoal. Não substitui avaliação clínica.
-        </p>
         <div className="mt-3 grid grid-cols-3 gap-2">
           {breakdown.map((b, i) => {
             const darkBar = ["dark:bg-state-ok", "dark:bg-state-warn", "dark:bg-primary"][i % 3];
