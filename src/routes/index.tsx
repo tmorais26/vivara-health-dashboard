@@ -47,13 +47,13 @@ function Index() {
 
   return (
     <PortalShell>
-      <main className="mx-auto max-w-[1100px] px-6 py-10 pb-24 lg:pb-10">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <main className="mx-auto max-w-[1100px] px-4 py-6 pb-24 sm:px-6 sm:py-10 lg:pb-10">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8">
           <div>
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
               Portal clínico
             </div>
-            <h1 className="font-serif mt-2 text-4xl text-foreground">Os meus utentes</h1>
+            <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">Os meus utentes</h1>
             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
               {resumosUtentes.length} utentes activos. Cada utente é uma série temporal que se lê como um livro.
             </p>
@@ -200,7 +200,7 @@ function UtenteCard({ u }: { u: ResumoUtente }) {
       <Link
         to="/utentes/$utenteId"
         params={{ utenteId: u.id }}
-        className="group block rounded-2xl border border-border bg-surface-raised p-5 transition-colors hover:border-foreground/20"
+        className="group block rounded-2xl border border-border bg-surface-raised p-4 transition-colors hover:border-foreground/20 sm:p-5"
       >
         {conteudo}
       </Link>
@@ -209,7 +209,7 @@ function UtenteCard({ u }: { u: ResumoUtente }) {
   return (
     <div
       title="Demo: apenas o perfil de Maria Antunes está acessível"
-      className="block cursor-not-allowed rounded-2xl border border-border bg-surface-raised p-5 opacity-60"
+      className="block cursor-not-allowed rounded-2xl border border-border bg-surface-raised p-4 opacity-60 sm:p-5"
     >
       {conteudo}
     </div>

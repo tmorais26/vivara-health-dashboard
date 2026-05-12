@@ -17,10 +17,10 @@ export const Route = createFileRoute("/definicoes")({
 function DefinicoesPage() {
   return (
     <PortalShell>
-      <main className="mx-auto max-w-[860px] px-6 py-10 pb-24 lg:pb-10">
-        <div className="mb-8">
+      <main className="mx-auto max-w-[860px] px-4 py-6 pb-24 sm:px-6 sm:py-10 lg:pb-10">
+        <div className="mb-6 sm:mb-8">
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Portal</div>
-          <h1 className="font-serif mt-2 text-4xl text-foreground">Definições</h1>
+          <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">Definições</h1>
         </div>
 
         <div className="space-y-4">
