@@ -200,7 +200,7 @@ function UtenteCard({ u }: { u: ResumoUtente }) {
       <Link
         to="/utentes/$utenteId"
         params={{ utenteId: u.id }}
-        className="group block rounded-2xl border border-border bg-surface-raised p-5 transition-colors hover:border-foreground/20"
+        className="group block rounded-2xl border border-border bg-surface-raised p-4 transition-colors hover:border-foreground/20 sm:p-5"
       >
         {conteudo}
       </Link>
@@ -209,7 +209,7 @@ function UtenteCard({ u }: { u: ResumoUtente }) {
   return (
     <div
       title="Demo: apenas o perfil de Maria Antunes está acessível"
-      className="block cursor-not-allowed rounded-2xl border border-border bg-surface-raised p-5 opacity-60"
+      className="block cursor-not-allowed rounded-2xl border border-border bg-surface-raised p-4 opacity-60 sm:p-5"
     >
       {conteudo}
     </div>
