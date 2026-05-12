@@ -673,6 +673,45 @@ function Row({
   );
 }
 
+function AnamneseMobileRow({
+  icon,
+  title,
+  items,
+  alert = false,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  items: string[];
+  alert?: boolean;
+}) {
+  const tone = alert
+    ? "border-state-alert/30 bg-state-alert-soft text-state-alert"
+    : "border-border bg-surface-raised text-foreground";
+
+  return (
+    <div className={`rounded-xl border p-3 ${tone}`}>
+      <div className="flex items-center gap-2 text-[12px] font-medium">
+        {icon}
+        <span>{title}</span>
+        <span className="ml-auto text-[10.5px] text-muted-foreground">
+          {items.length}
+        </span>
+      </div>
+      <ul className="mt-2 space-y-1.5 text-[11.5px] text-muted-foreground">
+        {items.length === 0 ? (
+          <li>Sem registo</li>
+        ) : (
+          items.slice(0, 3).map((item) => (
+            <li key={item} className="line-clamp-2">
+              {item}
+            </li>
+          ))
+        )}
+      </ul>
+    </div>
+  );
+}
+
 function NotaBlock({ label, value }: { label: string; value: string }) {
   return (
     <div>
