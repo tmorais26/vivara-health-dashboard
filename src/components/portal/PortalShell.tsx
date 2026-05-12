@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
   Calendar,
+  LogOut,
   Pill,
   Settings,
   ShieldCheck,
@@ -10,6 +11,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SessionTimeoutBanner } from "./SessionTimeoutBanner";
+import { supabase } from "@/integrations/supabase/client";
 
 type NavItem = {
   label: string;
@@ -40,6 +42,12 @@ export function PortalShell({
   hideSidebarChrome?: boolean;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    navigate({ to: "/auth" });
+  }
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -83,6 +91,14 @@ export function PortalShell({
             <ShieldCheck className="h-3 w-3 text-state-ok" />
             Dados de saúde · Acesso registado
           </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <LogOut className="h-3 w-3" />
+            Sair
+          </button>
         </div>
       </aside>
 
@@ -100,6 +116,14 @@ export function PortalShell({
               MFA
             </span>
             <ThemeToggle />
+            <button
+              type="button"
+              onClick={handleLogout}
+              aria-label="Sair"
+              className="rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
               SC
             </div>
