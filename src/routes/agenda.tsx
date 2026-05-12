@@ -60,7 +60,7 @@ function AgendaPage() {
                   .sort((a, b) => a.hora.localeCompare(b.hora))
                   .map((e) => (
                     <li key={e.id}>
-                      <div className="flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-accent/40 sm:items-center sm:gap-4 sm:px-5">
+                      <div className="flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-accent/40 md:items-center md:gap-4 md:px-5">
                         <div className="tabular w-12 shrink-0 text-sm font-medium text-foreground sm:w-16">
                           {e.hora}
                         </div>
@@ -80,12 +80,12 @@ function AgendaPage() {
                             {e.utenteNome}
                           </div>
                           <div className="truncate text-[11px] text-muted-foreground">{e.motivo}</div>
-                          <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground sm:hidden">
+                          <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground md:hidden">
                             {e.tipo === "video" ? <Video className="h-3 w-3" /> : null}
                             {e.duracao} · {e.tipo}
                           </div>
                         </Link>
-                        <div className="hidden items-center gap-1.5 text-[11px] text-muted-foreground sm:flex">
+                        <div className="hidden items-center gap-1.5 text-[11px] text-muted-foreground md:flex">
                           {e.tipo === "video" ? <Video className="h-3 w-3" /> : null}
                           {e.duracao} · {e.tipo}
                         </div>
@@ -93,10 +93,10 @@ function AgendaPage() {
                           type="button"
                           onClick={() => setPrepararId(e.id)}
                           aria-label="Preparar consulta"
-                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-accent sm:px-3"
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-accent md:px-3"
                         >
                           <Sparkles className="h-3 w-3" />
-                          <span className="hidden sm:inline">Preparar</span>
+                          <span className="hidden md:inline">Preparar</span>
                         </button>
                       </div>
                     </li>
