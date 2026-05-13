@@ -14,7 +14,6 @@ import {
   Footprints,
   FileText,
   HeartPulse,
-  MessageSquare,
   Monitor,
   Moon,
   Phone,
