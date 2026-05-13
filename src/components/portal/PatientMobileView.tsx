@@ -14,7 +14,6 @@ import {
   Footprints,
   FileText,
   HeartPulse,
-  MessageSquare,
   Monitor,
   Moon,
   Phone,
@@ -487,24 +486,7 @@ export function PatientMobileView({
 
       {/* Acções rápidas */}
       <section className="px-4 py-5">
-        <div className="grid grid-cols-2 gap-2">
-          <a
-            href="tel:+351910000000"
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-raised px-3 py-3 text-[12px] font-medium text-foreground"
-          >
-            <Phone className="h-3.5 w-3.5" />
-            Ligar
-          </a>
-          <button
-            type="button"
-            onClick={() => flash("Mensagem rápida enviada")}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-raised px-3 py-3 text-[12px] font-medium text-foreground"
-          >
-            <MessageSquare className="h-3.5 w-3.5" />
-            Mensagem
-          </button>
-        </div>
-        <div className="mt-2 grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2">
           <button
             type="button"
             onClick={() => flash("Pedido de reanálise criado")}
@@ -512,14 +494,6 @@ export function PatientMobileView({
           >
             <BellPlus className="h-3.5 w-3.5" />
             Pedir reanálise
-          </button>
-          <button
-            type="button"
-            onClick={() => flash("Consulta agendada")}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-raised px-3 py-3 text-[12px] font-medium text-foreground"
-          >
-            <CalendarPlus className="h-3.5 w-3.5" />
-            Agendar
           </button>
         </div>
 
