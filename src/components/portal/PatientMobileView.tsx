@@ -14,7 +14,6 @@ import {
   Footprints,
   FileText,
   HeartPulse,
-  MessageSquare,
   Monitor,
   Moon,
   Phone,
@@ -146,6 +145,56 @@ export function PatientMobileView({
           </div>
         )}
 
+        {/* Anamnese clínica — visível na app da médica, logo no topo do perfil */}
+        <div className="mt-4 rounded-xl border border-border bg-background p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div>
+              <div className="text-[10.5px] uppercase tracking-wider text-muted-foreground">
+                Anamnese clínica
+              </div>
+              <div className="mt-0.5 text-[12px] text-muted-foreground">
+                Só equipa médica · ficha resumida
+              </div>
+            </div>
+            <span className="rounded-full border border-border bg-surface-raised px-2 py-0.5 text-[10px] text-muted-foreground">
+              {formatarData(ficha.preenchidaEm)}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-2">
+            <AnamneseMobileRow
+              icon={<AlertTriangle className="h-3.5 w-3.5" />}
+              title="Alergias medicamentosas"
+              items={ficha.alergiasMedicamentos.map((a) => `${a.substancia} · ${a.reacao}`)}
+              alert
+            />
+            <AnamneseMobileRow
+              icon={<HeartPulse className="h-3.5 w-3.5" />}
+              title="Antecedentes pessoais"
+              items={ficha.antecedentesPessoais}
+            />
+            <AnamneseMobileRow
+              icon={<Pill className="h-3.5 w-3.5" />}
+              title="Medicação habitual"
+              items={ficha.medicacaoHabitual.map((m) => `${m.nome} · ${m.posologia}`)}
+            />
+            <AnamneseMobileRow
+              icon={<Sparkles className="h-3.5 w-3.5" />}
+              title="Suplementação"
+              items={ficha.suplementacao.map((s) => `${s.nome} · ${s.posologia}`)}
+            />
+            <AnamneseMobileRow
+              icon={<Scissors className="h-3.5 w-3.5" />}
+              title="Antecedentes cirúrgicos"
+              items={ficha.antecedentesCirurgicos.map((c) => `${c.intervencao} · ${c.ano}`)}
+            />
+            <AnamneseMobileRow
+              icon={<Users className="h-3.5 w-3.5" />}
+              title="Antecedentes familiares"
+              items={ficha.antecedentesFamiliares.map((af) => `${af.condicao} · ${af.familiar}`)}
+            />
+          </div>
+        </div>
+
         {/* Próxima consulta — destaque */}
         <div className="mt-4 flex items-center gap-2 rounded-xl border border-state-warn/30 bg-state-warn-soft/60 px-3 py-2.5 text-[12px] text-state-warn">
           <Bell className="h-3.5 w-3.5" />
@@ -154,56 +203,6 @@ export function PatientMobileView({
             {formatarData(utente.proximaConsulta)}
             {consultaProxima?.hora ? ` · ${consultaProxima.hora}` : ""}
           </span>
-        </div>
-      </section>
-
-      {/* Anamnese clínica — visível na app da médica */}
-      <section className="border-b border-border px-4 py-5">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div>
-            <div className="text-[10.5px] uppercase tracking-wider text-muted-foreground">
-              Anamnese clínica
-            </div>
-            <div className="mt-0.5 text-[12px] text-muted-foreground">
-              Só equipa médica · ficha resumida
-            </div>
-          </div>
-          <span className="rounded-full border border-border bg-surface-raised px-2.5 py-1 text-[10.5px] text-muted-foreground">
-            {formatarData(ficha.preenchidaEm)}
-          </span>
-        </div>
-        <div className="grid grid-cols-1 gap-2">
-          <AnamneseMobileRow
-            icon={<AlertTriangle className="h-3.5 w-3.5" />}
-            title="Alergias medicamentosas"
-            items={ficha.alergiasMedicamentos.map((a) => `${a.substancia} · ${a.reacao}`)}
-            alert
-          />
-          <AnamneseMobileRow
-            icon={<HeartPulse className="h-3.5 w-3.5" />}
-            title="Antecedentes pessoais"
-            items={ficha.antecedentesPessoais}
-          />
-          <AnamneseMobileRow
-            icon={<Pill className="h-3.5 w-3.5" />}
-            title="Medicação habitual"
-            items={ficha.medicacaoHabitual.map((m) => `${m.nome} · ${m.posologia}`)}
-          />
-          <AnamneseMobileRow
-            icon={<Sparkles className="h-3.5 w-3.5" />}
-            title="Suplementação"
-            items={ficha.suplementacao.map((s) => `${s.nome} · ${s.posologia}`)}
-          />
-          <AnamneseMobileRow
-            icon={<Scissors className="h-3.5 w-3.5" />}
-            title="Antecedentes cirúrgicos"
-            items={ficha.antecedentesCirurgicos.map((c) => `${c.intervencao} · ${c.ano}`)}
-          />
-          <AnamneseMobileRow
-            icon={<Users className="h-3.5 w-3.5" />}
-            title="Antecedentes familiares"
-            items={ficha.antecedentesFamiliares.map((af) => `${af.condicao} · ${af.familiar}`)}
-          />
         </div>
       </section>
 
