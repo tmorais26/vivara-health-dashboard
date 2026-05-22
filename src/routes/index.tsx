@@ -91,12 +91,20 @@ function Index() {
           Versão demonstrativa — apenas o perfil de Maria Antunes está disponível para navegação detalhada.
         </p>
 
-        <Link
-          to="/app"
-          className="mt-4 inline-flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground"
-        >
-          Ver app da utente <ArrowRight className="h-3 w-3" />
-        </Link>
+        <div className="mt-4 flex flex-wrap gap-4">
+          <Link
+            to="/app"
+            className="inline-flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground"
+          >
+            Ver app da utente <ArrowRight className="h-3 w-3" />
+          </Link>
+          <Link
+            to="/app-v2"
+            className="inline-flex items-center gap-2 text-[11px] text-primary hover:opacity-80"
+          >
+            App v2 (novo design) <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
       </main>
       <MobileNavTabs />
     </PortalShell>
