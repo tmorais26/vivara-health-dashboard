@@ -12,11 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as PrescricoesRouteImport } from './routes/prescricoes'
 import { Route as DefinicoesRouteImport } from './routes/definicoes'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AppV2RouteImport } from './routes/app-v2'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UtentesUtenteIdRouteImport } from './routes/utentes.$utenteId'
 
+const AppV2Route = AppV2RouteImport.update({
+  id: '/app-v2',
+  path: '/app-v2',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrescricoesRoute = PrescricoesRouteImport.update({
   id: '/prescricoes',
   path: '/prescricoes',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/app': typeof AppRoute
+  '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
   '/prescricoes': typeof PrescricoesRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/app': typeof AppRoute
+  '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
   '/prescricoes': typeof PrescricoesRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/app': typeof AppRoute
+  '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
   '/prescricoes': typeof PrescricoesRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/agenda'
     | '/app'
+    | '/app-v2'
     | '/auth'
     | '/definicoes'
     | '/prescricoes'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/agenda'
     | '/app'
+    | '/app-v2'
     | '/auth'
     | '/definicoes'
     | '/prescricoes'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/agenda'
     | '/app'
+    | '/app-v2'
     | '/auth'
     | '/definicoes'
     | '/prescricoes'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgendaRoute: typeof AgendaRoute
   AppRoute: typeof AppRoute
+  AppV2Route: typeof AppV2Route
   AuthRoute: typeof AuthRoute
   DefinicoesRoute: typeof DefinicoesRoute
   PrescricoesRoute: typeof PrescricoesRoute
@@ -151,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app-v2': {
+      id: '/app-v2'
+      path: '/app-v2'
+      fullPath: '/app-v2'
+      preLoaderRoute: typeof AppV2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/agenda': {
       id: '/agenda'
       path: '/agenda'
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
   AppRoute: AppRoute,
+  AppV2Route: AppV2Route,
   AuthRoute: AuthRoute,
   DefinicoesRoute: DefinicoesRoute,
   PrescricoesRoute: PrescricoesRoute,
