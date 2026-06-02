@@ -1214,7 +1214,6 @@ function MiniMarker({ marcador }: { marcador: Marcador }) {
 
 function PlanoView({
   tarefas,
-  onToggle,
 }: {
   tarefas: TarefaPlano[];
   onToggle: (id: string) => void;
@@ -1240,6 +1239,10 @@ function PlanoView({
             <span className="tabular">{utente.streakDias}</span> dias
           </span>
         </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+          Só a Dra. Sofia pode alterar o teu plano. Fala com ela em consulta ou por mensagem
+          se precisares de ajustar algo.
+        </p>
       </header>
 
       {ativas.length > 0 && (
@@ -1249,7 +1252,7 @@ function PlanoView({
           </div>
           <div className="space-y-2">
             {ativas.map((t) => (
-              <TarefaCard key={t.id} tarefa={t} onToggle={() => onToggle(t.id)} expanded />
+              <TarefaCard key={t.id} tarefa={t} expanded />
             ))}
           </div>
         </section>
@@ -1262,7 +1265,7 @@ function PlanoView({
           </div>
           <div className="space-y-2">
             {feitas.map((t) => (
-              <TarefaCard key={t.id} tarefa={t} onToggle={() => onToggle(t.id)} expanded muted />
+              <TarefaCard key={t.id} tarefa={t} expanded muted />
             ))}
           </div>
         </section>
