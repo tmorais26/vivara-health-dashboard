@@ -11,7 +11,6 @@ import {
   Sparkles,
   Trash2,
   Video,
-  X,
 } from "lucide-react";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { agendaSemana } from "@/data/mock-portal";
@@ -469,6 +468,3 @@ function ReqButton({ onClick, label }: { onClick: () => void; label: string }) {
     </button>
   );
 }
-
-// Evita unused import warning para X (reservado para futura UI)
-void X;
