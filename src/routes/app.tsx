@@ -1282,12 +1282,10 @@ function PlanoView({
 
 function TarefaCard({
   tarefa,
-  onToggle,
   expanded = false,
   muted = false,
 }: {
   tarefa: TarefaPlano;
-  onToggle: () => void;
   expanded?: boolean;
   muted?: boolean;
 }) {
@@ -1298,10 +1296,8 @@ function TarefaCard({
     : undefined;
 
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className={`flex w-full items-start gap-3 rounded-2xl border border-border bg-surface-raised p-3.5 text-left transition-colors hover:border-foreground/20 ${
+    <div
+      className={`flex w-full items-start gap-3 rounded-2xl border border-border bg-surface-raised p-3.5 text-left ${
         muted ? "opacity-55" : ""
       }`}
     >
@@ -1354,7 +1350,7 @@ function TarefaCard({
           </div>
         )}
       </div>
-    </button>
+    </div>
   );
 }
 
