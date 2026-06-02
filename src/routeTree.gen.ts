@@ -17,6 +17,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UtentesUtenteIdRouteImport } from './routes/utentes.$utenteId'
+import { Route as ConsultaEventoIdRouteImport } from './routes/consulta.$eventoId'
 
 const PrescricoesRoute = PrescricoesRouteImport.update({
   id: '/prescricoes',
@@ -58,6 +59,11 @@ const UtentesUtenteIdRoute = UtentesUtenteIdRouteImport.update({
   path: '/utentes/$utenteId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConsultaEventoIdRoute = ConsultaEventoIdRouteImport.update({
+  id: '/consulta/$eventoId',
+  path: '/consulta/$eventoId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
   '/prescricoes': typeof PrescricoesRoute
+  '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
   '/prescricoes': typeof PrescricoesRoute
+  '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
 export interface FileRoutesById {
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
   '/prescricoes': typeof PrescricoesRoute
+  '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/definicoes'
     | '/prescricoes'
+    | '/consulta/$eventoId'
     | '/utentes/$utenteId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/definicoes'
     | '/prescricoes'
+    | '/consulta/$eventoId'
     | '/utentes/$utenteId'
   id:
     | '__root__'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/definicoes'
     | '/prescricoes'
+    | '/consulta/$eventoId'
     | '/utentes/$utenteId'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DefinicoesRoute: typeof DefinicoesRoute
   PrescricoesRoute: typeof PrescricoesRoute
+  ConsultaEventoIdRoute: typeof ConsultaEventoIdRoute
   UtentesUtenteIdRoute: typeof UtentesUtenteIdRoute
 }
 
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UtentesUtenteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/consulta/$eventoId': {
+      id: '/consulta/$eventoId'
+      path: '/consulta/$eventoId'
+      fullPath: '/consulta/$eventoId'
+      preLoaderRoute: typeof ConsultaEventoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -203,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DefinicoesRoute: DefinicoesRoute,
   PrescricoesRoute: PrescricoesRoute,
+  ConsultaEventoIdRoute: ConsultaEventoIdRoute,
   UtentesUtenteIdRoute: UtentesUtenteIdRoute,
 }
 export const routeTree = rootRouteImport
