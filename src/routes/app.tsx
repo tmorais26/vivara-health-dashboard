@@ -732,18 +732,16 @@ function HojeView({
             <ul className="mt-3 space-y-1.5">
               {tarefasHoje.slice(0, 3).map((t) => (
                 <li key={t.id} className="flex items-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => onToggle(t.id)}
-                    aria-label={t.feita ? "Desmarcar" : "Marcar como feito"}
-                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                  <span
+                    aria-label={t.feita ? "Concluída" : "Pendente"}
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
                       t.feita
                         ? "border-state-ok bg-state-ok text-background"
-                        : "border-border bg-background hover:border-foreground/40"
+                        : "border-border bg-background"
                     }`}
                   >
                     {t.feita && <CheckCircle2 className="h-3 w-3" strokeWidth={2.5} />}
-                  </button>
+                  </span>
                   <div className="min-w-0 flex-1">
                     <div
                       className={`truncate text-[12px] ${
