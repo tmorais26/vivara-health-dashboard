@@ -11,6 +11,7 @@ import {
   Scissors,
   Users,
   ClipboardList,
+  Play,
 } from "lucide-react";
 import { useState } from "react";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
@@ -105,6 +106,15 @@ function AgendaPage() {
                           <Sparkles className="h-3 w-3" />
                           <span className="hidden lg:inline">Preparar</span>
                         </button>
+                        <Link
+                          to="/consulta/$eventoId"
+                          params={{ eventoId: e.id }}
+                          aria-label="Iniciar consulta"
+                          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full bg-foreground px-2.5 text-[11px] font-medium text-background transition-opacity hover:opacity-90 lg:h-auto lg:px-3 lg:py-1.5"
+                        >
+                          <Play className="h-3 w-3" />
+                          <span className="hidden lg:inline">Iniciar</span>
+                        </Link>
                       </div>
                     </li>
                   ))}
