@@ -39,11 +39,6 @@ interface BioMarker {
   tone?: "alert" | "watch";
 }
 
-// ─── Feature flags ───────────────────────────────────
-// Score de acompanhamento: lógica de cálculo e enquadramento regulatório
-// ainda por definir. Mantemos o código pronto a reativar.
-const MOSTRAR_SCORE = false;
-
 // ─── Contexts ────────────────────────────────────────
 const NavCtx = createContext<NavCtxValue>({ go: () => {}, current: "home", showToast: () => {} });
 const useNav = () => useContext(NavCtx);
@@ -93,6 +88,161 @@ function Spark({ pts, color = "currentColor", w = 80, h = 22 }: { pts: number[];
   );
 }
 
+// ─── Count-up ────────────────────────────────────────
+function useCountUp(target: number, duration = 1100, decimals = 0) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const factor = Math.pow(10, decimals);
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setValue(Math.round(eased * target * factor) / factor);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration, decimals]);
+  return value;
+}
+
+// ─── Info drawer ─────────────────────────────────────
+function InfoDrawer({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  useEffect(() => {
+    document.body.classList.add("rv-no-fab");
+    return () => document.body.classList.remove("rv-no-fab");
+  }, []);
+  return (
+    <div className="rv-drawer-wrap">
+      <div className="rv-drawer-backdrop" onClick={onClose} aria-label="Fechar"/>
+      <div className="rv-drawer" role="dialog" aria-modal="true">
+        <div className="rv-drawer-handle"/>
+        <div className="rv-drawer-title">{title}</div>
+        <div className="rv-drawer-body">{children}</div>
+        <button type="button" className="rv-drawer-close" onClick={onClose}>Percebi</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Idade biológica ─────────────────────────────────
+const IDADE_BIOLOGICA = 43;
+const IDADE_REAL = 47;
+
+function BioAgeCard() {
+  const shown = useCountUp(IDADE_BIOLOGICA);
+  const [info, setInfo] = useState(false);
+  const diff = IDADE_REAL - IDADE_BIOLOGICA;
+  const younger = diff > 0;
+  return (
+    <>
+      <div className="rv-bioage-card">
+        <button type="button" className="rv-bioage-eyebrow rv-score-eyebrow-btn" onClick={() => setInfo(true)}>
+          Idade biológica <span className="rv-info">i</span>
+        </button>
+        <div className="rv-bioage-main">
+          <div className="rv-bioage-num">{shown}<span className="rv-bioage-unit">anos</span></div>
+          <span className="rv-bioage-badge" data-good={younger}>
+            {younger ? "↓" : "↑"} {Math.abs(diff)} {Math.abs(diff) === 1 ? "ano" : "anos"} {younger ? "mais nova" : "mais velha"}
+          </span>
+        </div>
+        <div className="rv-bioage-sub">Estimativa a partir dos teus dados · idade real {IDADE_REAL} anos</div>
+        <div className="rv-bioage-compare">
+          <div className="rv-bioage-row">
+            <span className="rv-bioage-row-label">Biológica</span>
+            <div className="rv-bioage-bar"><div className="rv-bioage-fill" data-good="true" style={{width: `${(IDADE_BIOLOGICA / IDADE_REAL) * 100}%`}}/></div>
+            <span className="rv-bioage-row-val">{IDADE_BIOLOGICA}</span>
+          </div>
+          <div className="rv-bioage-row">
+            <span className="rv-bioage-row-label">Real</span>
+            <div className="rv-bioage-bar"><div className="rv-bioage-fill" style={{width: "100%"}}/></div>
+            <span className="rv-bioage-row-val">{IDADE_REAL}</span>
+          </div>
+        </div>
+      </div>
+      {info && (
+        <InfoDrawer title="O que é a idade biológica?" onClose={() => setInfo(false)}>
+          <p>Estima a "idade" do teu corpo a partir dos <strong>teus dados</strong> (análises, composição corporal e recuperação), em vez da idade do bilhete de identidade.</p>
+          <p>Quando é <strong>mais baixa</strong> que a tua idade real, é um bom sinal — o teu corpo está a envelhecer mais devagar do que o esperado.</p>
+          <div className="rv-drawer-note">É uma estimativa de acompanhamento. <strong>Não é um diagnóstico</strong> nem substitui a avaliação da Dra. Sofia.</div>
+        </InfoDrawer>
+      )}
+    </>
+  );
+}
+
+// ─── Score de longevidade ────────────────────────────
+const SCORE_LONGEVIDADE = 77;
+const SCORE_PILARES: { label: string; valor: number; tone?: "watch" }[] = [
+  { label: "Cardio-metab.", valor: 71 },
+  { label: "Composição",    valor: 68, tone: "watch" },
+  { label: "Recuperação",   valor: 82 },
+];
+
+function ScoreLongevidadeCard() {
+  const circumference = 2 * Math.PI * 27;
+  const targetOffset = circumference * (1 - SCORE_LONGEVIDADE / 100);
+  const [offset, setOffset] = useState(circumference);
+  const [info, setInfo] = useState(false);
+  const shown = useCountUp(SCORE_LONGEVIDADE);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setOffset(targetOffset));
+    return () => cancelAnimationFrame(raf);
+  }, [targetOffset]);
+  return (
+    <>
+      <div className="rv-score-card">
+        <button type="button" className="rv-score-card-eyebrow rv-score-eyebrow-btn" onClick={() => setInfo(true)}>
+          Score de longevidade <span className="rv-info">i</span>
+        </button>
+        <div className="rv-score-card-value">
+          <div className="rv-score-ring">
+            <svg viewBox="0 0 64 64" width="64" height="64">
+              <circle cx="32" cy="32" r={27} stroke="rgba(255,255,255,0.08)" strokeWidth="5" fill="none"/>
+              <circle cx="32" cy="32" r={27} stroke="var(--lime)" strokeWidth="5" fill="none"
+                strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
+                transform="rotate(-90 32 32)"
+                style={{transition: "stroke-dashoffset 1.3s cubic-bezier(0.2,0.8,0.2,1)"}}/>
+            </svg>
+          </div>
+          <div className="rv-score-numblock">
+            <div>
+              <span className="rv-score-card-num">{shown}</span>
+              <span className="rv-score-card-max">/100</span>
+            </div>
+            <span className="rv-score-card-delta">↑ 2 esta semana</span>
+          </div>
+        </div>
+        <div className="rv-score-card-disclaim">
+          Indicador de acompanhamento pessoal, calculado a partir dos teus dados pela equipa clínica. Não é um diagnóstico nem substitui a avaliação da Dra. Sofia.
+        </div>
+        <div className="rv-score-breakdown">
+          {SCORE_PILARES.map((p) => (
+            <div key={p.label} className="rv-score-dim" data-tone={p.tone}>
+              <div className="rv-score-dim-label">{p.label}</div>
+              <div className="rv-score-dim-val">{p.valor}</div>
+              <div className="rv-score-dim-bar"><div className="rv-score-dim-fill" style={{width: `${p.valor}%`}}/></div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {info && (
+        <InfoDrawer title="O que é o Score de longevidade?" onClose={() => setInfo(false)}>
+          <p>É um indicador pessoal de <strong>0 a 100</strong> que resume a tua evolução das últimas semanas. Junta três áreas, com peso semelhante:</p>
+          <ul>
+            <li><span className="rv-drawer-pillar-dot" style={{background: "var(--lime)"}}/><span><strong>Cardio-metabólica</strong> — análises de sangue (glicose, lípidos, inflamação).</span></li>
+            <li><span className="rv-drawer-pillar-dot" style={{background: "var(--watch)"}}/><span><strong>Composição</strong> — peso, massa muscular e massa gorda.</span></li>
+            <li><span className="rv-drawer-pillar-dot" style={{background: "var(--accent)"}}/><span><strong>Recuperação</strong> — sono, HRV e atividade do teu wearable.</span></li>
+          </ul>
+          <p>Sobe quando os teus hábitos e resultados melhoram. É calculado a partir dos dados que vais carregando e sincronizando.</p>
+          <div className="rv-drawer-note">Serve para acompanhamento e motivação. <strong>Não é um diagnóstico</strong> nem substitui a avaliação da Dra. Sofia — em caso de dúvida, fala com a tua equipa clínica.</div>
+        </InfoDrawer>
+      )}
+    </>
+  );
+}
+
 // ─── Chrome ──────────────────────────────────────────
 function StatusBar() {
   return <div className="rv-statusbar" />;
@@ -119,9 +269,52 @@ function TabBar({ active }: { active: string }) {
   );
 }
 
+// ─── Plano de hoje ───────────────────────────────────
+const PLANO_HOJE = [
+  { name: "Vitamina D3 4000 UI · Ómega-3", sub: "com pequeno-almoço",           time: "08:00", done: true },
+  { name: "Metformina 500 mg",             sub: "com pequeno-almoço",           time: "08:00", done: true },
+  { name: "Berberina 500 mg",              sub: "antes do jantar",              time: "19:00", done: false },
+  { name: "Magnésio 400 mg",               sub: "ao deitar",                    time: "22:30", done: false },
+  { name: "Treino de força · 35 min",      sub: "recomendado pela Dra. Sofia",  time: "livre", done: false },
+];
+
+function PlanoHoje() {
+  const { showToast } = useNav();
+  const [done, setDone] = useState<boolean[]>(PLANO_HOJE.map((p) => p.done));
+  const toggle = (i: number) => {
+    setDone((prev) => {
+      const next = [...prev];
+      next[i] = !next[i];
+      if (next[i]) showToast(`${PLANO_HOJE[i].name.split(" · ")[0]} · marcado como feito`);
+      return next;
+    });
+  };
+  return (
+    <section className="rv-section">
+      <div className="rv-section-head">
+        <h3>Plano de hoje</h3>
+        <span className="rv-plan-streak"><span className="rv-emoji">🔥</span> 12 dias</span>
+      </div>
+      <div className="rv-plan">
+        {PLANO_HOJE.map((p, i) => (
+          <button key={p.name} type="button" className="rv-plan-row" data-done={done[i] || undefined}
+            onClick={() => toggle(i)} aria-pressed={done[i]}>
+            <div className="rv-plan-check">{done[i] ? "✓" : ""}</div>
+            <div>
+              <div className="rv-plan-name">{p.name}</div>
+              <div className="rv-plan-sub">{p.sub}</div>
+            </div>
+            <div className="rv-plan-time">{p.time}</div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ─── 00 Home ─────────────────────────────────────────
 function HomeScreenV2() {
-  const { go, showToast } = useNav();
+  const { go } = useNav();
   return (
     <div className="rv-screen">
       <StatusBar />
@@ -135,50 +328,8 @@ function HomeScreenV2() {
       </div>
 
       <div className="rv-body">
-        {MOSTRAR_SCORE && (
-          <div className="rv-score-card">
-            <div className="rv-score-card-eyebrow">
-              Score de acompanhamento <span className="rv-info">i</span>
-            </div>
-            <div className="rv-score-card-value">
-              <div className="rv-score-ring">
-                <svg viewBox="0 0 64 64" width="64" height="64">
-                  <circle cx="32" cy="32" r="27" stroke="rgba(255,255,255,0.08)" strokeWidth="5" fill="none"/>
-                  <circle cx="32" cy="32" r="27" stroke="var(--lime)" strokeWidth="5" fill="none"
-                    strokeDasharray="169.6" strokeDashoffset="39" strokeLinecap="round"
-                    transform="rotate(-90 32 32)"/>
-                </svg>
-              </div>
-              <div className="rv-score-numblock">
-                <div>
-                  <span className="rv-score-card-num">77</span>
-                  <span className="rv-score-card-max">/100</span>
-                </div>
-                <span className="rv-score-card-delta">↑ 2 esta semana</span>
-              </div>
-            </div>
-            <div className="rv-score-card-disclaim">
-              Calculado para acompanhamento pessoal pela Dra. Sofia Cardoso. Não substitui avaliação clínica.
-            </div>
-            <div className="rv-score-breakdown">
-              <div className="rv-score-dim">
-                <div className="rv-score-dim-label">Cardio-metab.</div>
-                <div className="rv-score-dim-val">71</div>
-                <div className="rv-score-dim-bar"><div className="rv-score-dim-fill" style={{width: "71%"}}/></div>
-              </div>
-              <div className="rv-score-dim" data-tone="watch">
-                <div className="rv-score-dim-label">Composição</div>
-                <div className="rv-score-dim-val">68</div>
-                <div className="rv-score-dim-bar"><div className="rv-score-dim-fill" style={{width: "68%"}}/></div>
-              </div>
-              <div className="rv-score-dim">
-                <div className="rv-score-dim-label">Recuperação</div>
-                <div className="rv-score-dim-val">82</div>
-                <div className="rv-score-dim-bar"><div className="rv-score-dim-fill" style={{width: "82%"}}/></div>
-              </div>
-            </div>
-          </div>
-        )}
+        <BioAgeCard />
+        <ScoreLongevidadeCard />
 
         <div className="rv-actions">
           <button className="rv-action" data-accent="lime" onClick={() => go("upload")}>
@@ -262,54 +413,7 @@ function HomeScreenV2() {
           </div>
         </section>
 
-        <section className="rv-section">
-          <div className="rv-section-head">
-            <h3>Plano de hoje</h3>
-            <span className="rv-plan-streak">🔥 12 dias</span>
-          </div>
-          <div className="rv-plan">
-            <div className="rv-plan-row" data-done="true">
-              <div className="rv-plan-check">✓</div>
-              <div>
-                <div className="rv-plan-name">Vitamina D3 4000 UI · Ómega-3</div>
-                <div className="rv-plan-sub">com pequeno-almoço</div>
-              </div>
-              <div className="rv-plan-time">08:00</div>
-            </div>
-            <div className="rv-plan-row" data-done="true">
-              <div className="rv-plan-check">✓</div>
-              <div>
-                <div className="rv-plan-name">Metformina 500 mg</div>
-                <div className="rv-plan-sub">com pequeno-almoço</div>
-              </div>
-              <div className="rv-plan-time">08:00</div>
-            </div>
-            <div className="rv-plan-row">
-              <div className="rv-plan-check"/>
-              <div>
-                <div className="rv-plan-name">Berberina 500 mg</div>
-                <div className="rv-plan-sub">antes do jantar</div>
-              </div>
-              <div className="rv-plan-time">19:00</div>
-            </div>
-            <div className="rv-plan-row">
-              <div className="rv-plan-check"/>
-              <div>
-                <div className="rv-plan-name">Magnésio 400 mg</div>
-                <div className="rv-plan-sub">ao deitar</div>
-              </div>
-              <div className="rv-plan-time">22:30</div>
-            </div>
-            <div className="rv-plan-row">
-              <div className="rv-plan-check"/>
-              <div>
-                <div className="rv-plan-name">Treino de força · 35 min</div>
-                <div className="rv-plan-sub">recomendado pela Dra. Sofia</div>
-              </div>
-              <div className="rv-plan-time">livre</div>
-            </div>
-          </div>
-        </section>
+        <PlanoHoje />
 
         <section className="rv-section">
           <div className="rv-next" onClick={() => go("consultas")} style={{cursor: "pointer"}}>

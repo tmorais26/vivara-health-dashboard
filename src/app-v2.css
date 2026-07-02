@@ -1144,3 +1144,110 @@
 .rv-team-name{font-size:14px;color:var(--fg);font-weight:500;}
 .rv-team-role{font-size:12px;color:var(--fg-60);margin-top:1px;}
 .rv-team-access{font-size:11px;color:var(--fg-50);margin-top:3px;}
+
+/* ─── Idade biológica ─────────────────────────────── */
+.rv-bioage-card{
+  border-radius:var(--radius-lg);background:linear-gradient(#10261d,#0b1410);
+  border:1px solid rgba(198,255,61,0.14);margin:0 16px 12px;
+  padding:18px 20px 16px;position:relative;overflow:hidden;
+}
+.rv-bioage-card::before{
+  content:"";position:absolute;top:-80px;right:-70px;width:200px;height:200px;
+  background:radial-gradient(circle,rgba(198,255,61,0.22),transparent 60%);filter:blur(20px);
+}
+.rv-bioage-eyebrow{
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;
+  color:var(--fg-50);display:flex;align-items:center;gap:6px;position:relative;
+}
+.rv-bioage-main{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-top:8px;position:relative;}
+.rv-bioage-num{
+  font-size:52px;font-weight:600;line-height:1;letter-spacing:-0.045em;color:var(--fg);
+  font-variant-numeric:tabular-nums;display:inline-flex;align-items:baseline;gap:6px;
+}
+.rv-bioage-unit{font-size:17px;font-weight:500;color:var(--fg-50);letter-spacing:-0.01em;}
+.rv-bioage-badge{
+  display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;
+  font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;
+  color:var(--ok);background:rgba(37,217,107,0.14);
+}
+.rv-bioage-badge[data-good="false"]{color:var(--watch);background:rgba(255,187,51,0.16);}
+.rv-bioage-sub{font-size:11.5px;color:var(--fg-50);margin-top:8px;letter-spacing:-0.005em;position:relative;}
+.rv-bioage-compare{display:flex;flex-direction:column;gap:8px;margin-top:14px;position:relative;}
+.rv-bioage-row{display:flex;align-items:center;gap:10px;}
+.rv-bioage-row-label{width:64px;font-size:11px;color:var(--fg-50);text-transform:uppercase;letter-spacing:0.04em;}
+.rv-bioage-bar{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;}
+.rv-bioage-fill{height:100%;border-radius:3px;background:var(--fg-30);}
+.rv-bioage-fill[data-good="true"]{background:var(--lime);}
+.rv-bioage-row-val{width:22px;text-align:right;font-size:13px;font-weight:600;color:var(--fg);font-variant-numeric:tabular-nums;}
+
+/* ─── Info drawer ─────────────────────────────────── */
+.rv-score-eyebrow-btn{font:inherit;cursor:pointer;text-align:left;background:transparent;border:none;margin:0;padding:0;}
+.rv-score-eyebrow-btn .rv-info{cursor:pointer;}
+.rv-drawer-wrap{position:absolute;inset:0;z-index:60;}
+.rv-drawer-backdrop{
+  position:absolute;inset:0;background:rgba(0,0,0,0.55);cursor:pointer;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  animation:rv-fade-in 0.2s ease-out;
+}
+.rv-drawer{
+  position:absolute;bottom:0;left:0;right:0;max-height:82%;overflow-y:auto;
+  background:var(--bg-elev-2);border-top:1px solid var(--line);
+  border-top-left-radius:24px;border-top-right-radius:24px;
+  padding:10px 22px 26px;box-shadow:0 -16px 40px rgba(0,0,0,0.45);
+  animation:rv-slide-up 0.32s cubic-bezier(0.2,0.8,0.2,1);
+}
+.rv-drawer-handle{width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,0.2);margin:0 auto 16px;}
+.rv-drawer-title{font-size:18px;font-weight:600;letter-spacing:-0.02em;color:var(--fg);margin-bottom:12px;}
+.rv-drawer-body{font-size:13px;line-height:1.55;color:var(--fg-70);}
+.rv-drawer-body p{margin:0 0 10px;}
+.rv-drawer-body strong{color:var(--fg);font-weight:600;}
+.rv-drawer-body ul{list-style:none;margin:12px 0;padding:0;display:flex;flex-direction:column;gap:10px;}
+.rv-drawer-body li{display:flex;align-items:flex-start;gap:10px;}
+.rv-drawer-pillar-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.rv-drawer-note{border-top:1px solid var(--line);color:var(--fg-50);margin-top:14px;padding-top:12px;font-size:11.5px;line-height:1.5;}
+.rv-drawer-close{
+  cursor:pointer;background:var(--lime);color:#0b0d0f;border:none;border-radius:14px;
+  width:100%;margin-top:18px;padding:13px;font-family:inherit;font-size:14px;font-weight:600;
+  transition:transform 0.14s,opacity 0.14s;
+}
+.rv-drawer-close:active{transform:scale(0.98);}
+body.rv-no-fab .rv-fab-global{display:none;}
+
+/* ─── Plano de hoje (interativo) ──────────────────── */
+button.rv-plan-row{
+  width:100%;font:inherit;color:inherit;text-align:left;
+  background:transparent;border:none;border-top:1px solid var(--line);cursor:pointer;
+}
+button.rv-plan-row:first-child{border-top:none;}
+button.rv-plan-row:active{background:rgba(255,255,255,0.03);}
+
+/* ─── Emojis consistentes entre plataformas ───────── */
+.rv-emoji,.rv-diary-prompt-faces span,.rv-mood-face{
+  font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;
+}
+
+/* ─── Folga para o FAB no fim das listas ──────────── */
+.rv-body::after{content:"";display:block;height:64px;}
+
+/* ─── Animações de entrada ────────────────────────── */
+@keyframes rv-fade-up{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+@keyframes rv-screen-in{from{opacity:0;}to{opacity:1;}}
+@keyframes rv-grow-x{from{transform:scaleX(0);}to{transform:scaleX(1);}}
+.rv-screen{animation:rv-screen-in 0.42s cubic-bezier(0.2,0.8,0.2,1) both;}
+.rv-body>*{animation:rv-fade-up 0.5s cubic-bezier(0.2,0.8,0.2,1) both;}
+.rv-body>*:first-child{animation-delay:40ms;}
+.rv-body>*:nth-child(2){animation-delay:90ms;}
+.rv-body>*:nth-child(3){animation-delay:140ms;}
+.rv-body>*:nth-child(4){animation-delay:190ms;}
+.rv-body>*:nth-child(5){animation-delay:240ms;}
+.rv-body>*:nth-child(6){animation-delay:290ms;}
+.rv-body>*:nth-child(7){animation-delay:340ms;}
+.rv-body>*:nth-child(8){animation-delay:390ms;}
+.rv-body>*:nth-child(n+9){animation-delay:440ms;}
+.rv-score-dim-fill,.rv-goal-fill,.rv-bioage-fill{
+  transform-origin:left;animation:rv-grow-x 0.9s cubic-bezier(0.2,0.8,0.2,1) 0.25s both;
+}
+@media (prefers-reduced-motion: reduce){
+  .rv-screen,.rv-body>*,.rv-score-dim-fill,.rv-goal-fill,.rv-bioage-fill{animation:none !important;}
+  .rv-score-dim-fill,.rv-goal-fill,.rv-bioage-fill{transform:none !important;}
+}
