@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useContext, createContext, type ReactNode } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useState, useContext, createContext, useRef, useCallback, useEffect, type ReactNode } from "react";
+import { askAssistente } from "@/lib/assistente.functions";
 import "../app-v2.css";
 
 export const Route = createFileRoute("/app-v2")({
@@ -15,13 +17,15 @@ export const Route = createFileRoute("/app-v2")({
 // ─── Types ───────────────────────────────────────────
 type RouteId =
   | "home" | "data" | "upload" | "messages" | "alerts"
-  | "diary" | "consultas" | "profile" | "marker" | "summary" | "schedule";
+  | "diary" | "consultas" | "profile" | "marker" | "summary" | "schedule" | "devices" | "assistente"
+  | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar";
 
 type NavRoute = RouteId | { route: "marker"; marker: BioMarker };
 
 interface NavCtxValue {
   go: (r: NavRoute) => void;
   current: NavRoute;
+  showToast: (msg: string) => void;
 }
 
 interface BioMarker {
@@ -29,17 +33,20 @@ interface BioMarker {
   value: string;
   unit: string;
   target: string;
+  targetRange: { min: number | null; max: number | null };
   delta: string;
   spark: number[];
   tone?: "alert" | "watch";
 }
 
-// ─── Contexts ────────────────────────────────────────
-const NavCtx = createContext<NavCtxValue>({ go: () => {}, current: "home" });
-const useNav = () => useContext(NavCtx);
+// ─── Feature flags ───────────────────────────────────
+// Score de acompanhamento: lógica de cálculo e enquadramento regulatório
+// ainda por definir. Mantemos o código pronto a reativar.
+const MOSTRAR_SCORE = false;
 
-const VoiceCtx = createContext<"clinical" | "coach" | "minimal">("clinical");
-const useVoice = () => useContext(VoiceCtx);
+// ─── Contexts ────────────────────────────────────────
+const NavCtx = createContext<NavCtxValue>({ go: () => {}, current: "home", showToast: () => {} });
+const useNav = () => useContext(NavCtx);
 
 // ─── Icons ───────────────────────────────────────────
 const Icon = {
@@ -114,27 +121,24 @@ function TabBar({ active }: { active: string }) {
 
 // ─── 00 Home ─────────────────────────────────────────
 function HomeScreenV2() {
-  const { go } = useNav();
-  const voice = useVoice();
-  const isCoach = voice === "coach";
-  const isMinimal = voice === "minimal";
+  const { go, showToast } = useNav();
   return (
-    <div className="rv-screen" data-voice={voice}>
+    <div className="rv-screen">
       <StatusBar />
 
       <div className="rv-home-greet">
         <div className="rv-home-greet-text">
-          <div className="rv-home-greet-hi">{isCoach ? "Bom dia ☀️" : "Olá"}</div>
-          <div className="rv-home-greet-name">Marta P.</div>
+          <div className="rv-home-greet-hi">Olá</div>
+          <div className="rv-home-greet-name">Maria A.</div>
         </div>
-        <div className="rv-home-avatar">MP</div>
+        <div className="rv-home-avatar">MA</div>
       </div>
 
       <div className="rv-body">
-        {!isMinimal && (
+        {MOSTRAR_SCORE && (
           <div className="rv-score-card">
             <div className="rv-score-card-eyebrow">
-              {isCoach ? "A tua semana" : "Score de acompanhamento"} <span className="rv-info">i</span>
+              Score de acompanhamento <span className="rv-info">i</span>
             </div>
             <div className="rv-score-card-value">
               <div className="rv-score-ring">
@@ -150,13 +154,11 @@ function HomeScreenV2() {
                   <span className="rv-score-card-num">77</span>
                   <span className="rv-score-card-max">/100</span>
                 </div>
-                <span className="rv-score-card-delta">{isCoach ? "↑ a melhorar 🎉" : "↑ 2 esta semana"}</span>
+                <span className="rv-score-card-delta">↑ 2 esta semana</span>
               </div>
             </div>
             <div className="rv-score-card-disclaim">
-              {isCoach
-                ? "Vamos juntas! A Dra. Carolina está a acompanhar de perto."
-                : "Calculado para acompanhamento pessoal pela Dra. Carolina Sá. Não substitui avaliação clínica."}
+              Calculado para acompanhamento pessoal pela Dra. Sofia Cardoso. Não substitui avaliação clínica.
             </div>
             <div className="rv-score-breakdown">
               <div className="rv-score-dim">
@@ -199,17 +201,15 @@ function HomeScreenV2() {
 
         <section className="rv-section">
           <div className="rv-section-head">
-            <h3>{isCoach ? "Sinal de hoje 💡" : "Sinal de hoje"}</h3>
-            <a>Histórico</a>
+            <h3>Sinal de hoje</h3>
+            <a style={{cursor: "pointer"}} onClick={() => go("diary")}>Histórico</a>
           </div>
           <div className="rv-insight">
             <div className="rv-insight-head">
               <span className="rv-insight-head-dot"/>Observação · 27 abr
             </div>
             <div className="rv-insight-text">
-              {isCoach
-                ? <>O HRV está <strong>18% abaixo</strong> da tua média — e dormiste só <strong>5h42</strong>. Tenta deitar-te 30 min mais cedo hoje 💪</>
-                : <>O teu HRV ficou <strong>18% abaixo</strong> da média de 12 meses. Ontem dormiste <strong>5h42</strong>, menos 1h12 que a tua mediana.</>}
+              O teu HRV ficou <strong>18% abaixo</strong> da média de 12 meses. Ontem dormiste <strong>5h42</strong>, menos 1h12 que a tua mediana.
             </div>
             <div className="rv-insight-foot">
               Fonte: Apple Watch · sincronizado há 4 min
@@ -220,7 +220,7 @@ function HomeScreenV2() {
         <section className="rv-section">
           <div className="rv-section-head">
             <h3>Últimos 7 dias</h3>
-            <a>Ver dados</a>
+            <a style={{cursor: "pointer"}} onClick={() => go("data")}>Ver dados</a>
           </div>
           <div className="rv-signals">
             <div className="rv-signal">
@@ -304,7 +304,7 @@ function HomeScreenV2() {
               <div className="rv-plan-check"/>
               <div>
                 <div className="rv-plan-name">Treino de força · 35 min</div>
-                <div className="rv-plan-sub">recomendado pela Dra. Carolina</div>
+                <div className="rv-plan-sub">recomendado pela Dra. Sofia</div>
               </div>
               <div className="rv-plan-time">livre</div>
             </div>
@@ -319,7 +319,7 @@ function HomeScreenV2() {
             </div>
             <div className="rv-next-meta">
               <div className="rv-next-eyebrow">Próxima consulta</div>
-              <div className="rv-next-name">Dra. Carolina Sá</div>
+              <div className="rv-next-name">Dra. Sofia Cardoso</div>
               <div className="rv-next-sub">14:30 · Discussão sobre TRH personalizada</div>
             </div>
           </div>
@@ -328,8 +328,8 @@ function HomeScreenV2() {
         <section className="rv-section">
           <div className="rv-diary-prompt" onClick={() => go("diary")}>
             <div className="rv-diary-prompt-text">
-              <div className="rv-diary-prompt-title">{isCoach ? "Como te sentes hoje? ✨" : "Como te sentes hoje?"}</div>
-              <div className="rv-diary-prompt-sub">{isCoach ? "30 segundos para a Dra. Carolina perceber a tua semana." : "Regista humor, energia e sintomas. Visto pela Dra. Carolina."}</div>
+              <div className="rv-diary-prompt-title">Como te sentes hoje?</div>
+              <div className="rv-diary-prompt-sub">Regista humor, energia e sintomas. Visto pela Dra. Sofia.</div>
             </div>
             <div className="rv-diary-prompt-faces">
               <span>😔</span><span>😐</span><span>🙂</span><span style={{opacity: 1}}>😊</span><span>🤩</span>
@@ -347,22 +347,22 @@ function HomeScreenV2() {
 
 // ─── Data ────────────────────────────────────────────
 const BIOS_ALERT: BioMarker[] = [
-  { name: "Estradiol",  value: "38",  unit: "pg/mL", target: "alvo 60–150", delta: "↓ 36.7%", spark: [78,72,65,58,52,45,38],           tone: "alert" },
-  { name: "ApoB",       value: "102", unit: "mg/dL", target: "alvo ≤ 80",   delta: "↓ 7.3%",  spark: [125,120,115,110,108,105,102],     tone: "watch" },
-  { name: "HbA1c",      value: "5.7", unit: "%",     target: "alvo ≤ 5.4",  delta: "↓ 3.4%",  spark: [6.1,5.9,5.9,5.8,5.8,5.7,5.7],   tone: "watch" },
-  { name: "LDL-C",      value: "118", unit: "mg/dL", target: "alvo ≤ 100",  delta: "↓ 4.0%",  spark: [142,135,130,125,122,120,118],     tone: "watch" },
+  { name: "Estradiol",  value: "38",  unit: "pg/mL", target: "alvo 60–150", targetRange: { min: 60,   max: 150 }, delta: "↓ 36.7%", spark: [78,72,65,58,52,45,38],           tone: "alert" },
+  { name: "ApoB",       value: "102", unit: "mg/dL", target: "alvo ≤ 80",   targetRange: { min: null, max: 80  }, delta: "↓ 7.3%",  spark: [125,120,115,110,108,105,102],     tone: "watch" },
+  { name: "HbA1c",      value: "5.7", unit: "%",     target: "alvo ≤ 5.4",  targetRange: { min: null, max: 5.4 }, delta: "↓ 3.4%",  spark: [6.1,5.9,5.9,5.8,5.8,5.7,5.7],   tone: "watch" },
+  { name: "LDL-C",      value: "118", unit: "mg/dL", target: "alvo ≤ 100",  targetRange: { min: null, max: 100 }, delta: "↓ 4.0%",  spark: [142,135,130,125,122,120,118],     tone: "watch" },
 ];
 
 const BIOS_OK: BioMarker[] = [
-  { name: "Vitamina D",      value: "48",   unit: "ng/mL",  target: "alvo 40–60",  delta: "↑ 14%",  spark: [28,32,35,38,42,45,48] },
-  { name: "HDL-C",           value: "62",   unit: "mg/dL",  target: "alvo ≥ 60",   delta: "↑ 1.6%", spark: [60,61,60,62,61,62,62] },
-  { name: "TSH",             value: "2.1",  unit: "mUI/L",  target: "alvo 0.5–2.5",delta: "→",       spark: [2.2,2.1,2.0,2.1,2.1,2.1,2.1] },
-  { name: "PCR-us",          value: "1.2",  unit: "mg/L",   target: "alvo < 1.0",  delta: "↓ 8%",   spark: [2.1,1.8,1.6,1.5,1.4,1.3,1.2], tone: "watch" },
-  { name: "Glicose",         value: "98",   unit: "mg/dL",  target: "alvo 70–99",  delta: "↓ 2%",   spark: [105,102,100,99,99,98,98] },
-  { name: "Insulina",        value: "12.4", unit: "µU/mL",  target: "alvo < 10",   delta: "↓ 5%",   spark: [14.0,13.6,13.2,13.0,12.8,12.6,12.4], tone: "watch" },
-  { name: "Triglicéridos",   value: "92",   unit: "mg/dL",  target: "alvo < 100",  delta: "↓ 6%",   spark: [110,105,100,98,95,93,92] },
-  { name: "Colesterol total", value: "218", unit: "mg/dL",  target: "alvo < 200",  delta: "↓ 3%",   spark: [232,228,225,222,220,219,218], tone: "watch" },
-  { name: "Homocisteína",    value: "6.4",  unit: "µmol/L", target: "alvo < 8",    delta: "→",       spark: [7.0,6.8,6.5,6.5,6.4,6.4,6.4] },
+  { name: "Vitamina D",      value: "48",   unit: "ng/mL",  target: "alvo 40–60",   targetRange: { min: 40,   max: 60   }, delta: "↑ 14%",  spark: [28,32,35,38,42,45,48] },
+  { name: "HDL-C",           value: "62",   unit: "mg/dL",  target: "alvo ≥ 60",    targetRange: { min: 60,   max: null }, delta: "↑ 1.6%", spark: [60,61,60,62,61,62,62] },
+  { name: "TSH",             value: "2.1",  unit: "mUI/L",  target: "alvo 0.5–2.5", targetRange: { min: 0.5,  max: 2.5  }, delta: "→",       spark: [2.2,2.1,2.0,2.1,2.1,2.1,2.1] },
+  { name: "PCR-us",          value: "1.2",  unit: "mg/L",   target: "alvo < 1.0",   targetRange: { min: null, max: 1.0  }, delta: "↓ 8%",   spark: [2.1,1.8,1.6,1.5,1.4,1.3,1.2], tone: "watch" },
+  { name: "Glicose",         value: "98",   unit: "mg/dL",  target: "alvo 70–99",   targetRange: { min: 70,   max: 99   }, delta: "↓ 2%",   spark: [105,102,100,99,99,98,98] },
+  { name: "Insulina",        value: "12.4", unit: "µU/mL",  target: "alvo < 10",    targetRange: { min: null, max: 10   }, delta: "↓ 5%",   spark: [14.0,13.6,13.2,13.0,12.8,12.6,12.4], tone: "watch" },
+  { name: "Triglicéridos",   value: "92",   unit: "mg/dL",  target: "alvo < 100",   targetRange: { min: null, max: 100  }, delta: "↓ 6%",   spark: [110,105,100,98,95,93,92] },
+  { name: "Colesterol total", value: "218", unit: "mg/dL",  target: "alvo < 200",   targetRange: { min: null, max: 200  }, delta: "↓ 3%",   spark: [232,228,225,222,220,219,218], tone: "watch" },
+  { name: "Homocisteína",    value: "6.4",  unit: "µmol/L", target: "alvo < 8",     targetRange: { min: null, max: 8    }, delta: "→",       spark: [7.0,6.8,6.5,6.5,6.4,6.4,6.4] },
 ];
 
 function BioRow({ b }: { b: BioMarker }) {
@@ -384,26 +384,33 @@ function BioRow({ b }: { b: BioMarker }) {
   );
 }
 
+function PeriodChips({ className = "rv-dados-period" }: { className?: string }) {
+  const [p, setP] = useState("1A");
+  const opts = ["3M", "6M", "1A", "2A", "Tudo"];
+  return (
+    <div className={className}>
+      {opts.map((o) => (
+        <button key={o} className="rv-period-chip" data-active={p === o ? "true" : undefined} onClick={() => setP(o)}>{o}</button>
+      ))}
+    </div>
+  );
+}
+
 // ─── 01 Dados ────────────────────────────────────────
 function DadosScreen() {
-  const { go } = useNav();
+  const { go, showToast } = useNav();
   return (
     <div className="rv-screen">
       <StatusBar />
       <header className="rv-header">
         <div style={{width: 36}}/>
         <div className="rv-header-title">Dados</div>
-        <button className="rv-header-btn">{Icon.search}</button>
+        <button className="rv-header-btn" onClick={() => go("pesquisa")} aria-label="Pesquisar">{Icon.search}</button>
       </header>
 
       <div className="rv-body">
-        <div className="rv-dados-period">
-          <button className="rv-period-chip">3M</button>
-          <button className="rv-period-chip">6M</button>
-          <button className="rv-period-chip" data-active="true">1A</button>
-          <button className="rv-period-chip">2A</button>
-          <button className="rv-period-chip">Tudo</button>
-        </div>
+        <PeriodChips />
+
 
         <div className="rv-bio-section-head" data-tone="alert">
           <span className="rv-dot"/>Fora do alvo · 4
@@ -430,8 +437,8 @@ function DadosScreen() {
 
 // ─── Marker Detail ───────────────────────────────────
 function MarkerDetail({ marker }: { marker?: BioMarker }) {
-  const { go } = useNav();
-  const m: BioMarker = marker ?? { name: "Estradiol", value: "38", unit: "pg/mL", target: "alvo 60–150", delta: "↓ 36.7%", spark: [78,72,65,58,52,45,38], tone: "alert" };
+  const { go, showToast } = useNav();
+  const m: BioMarker = marker ?? { name: "Estradiol", value: "38", unit: "pg/mL", target: "alvo 60–150", targetRange: { min: 60, max: 150 }, delta: "↓ 36.7%", spark: [78,72,65,58,52,45,38], tone: "alert" };
   const tone = m.tone || "ok";
   const col = tone === "alert" ? "var(--alert)" : tone === "watch" ? "var(--watch)" : "var(--lime)";
   const pts = m.spark;
@@ -442,18 +449,9 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
   const ys = pts.map((p) => H - 10 - ((p - min) / (max - min)) * (H - 20));
   const path = pts.map((_, i) => `${i === 0 ? "M" : "L"} ${xs[i].toFixed(1)} ${ys[i].toFixed(1)}`).join(" ");
   const area = `${path} L ${xs[xs.length-1].toFixed(1)} ${H-10} L ${xs[0].toFixed(1)} ${H-10} Z`;
-  const tRange = (() => {
-    const t = m.target || "";
-    const r = t.match(/(\d+(?:\.\d+)?)\s*[–-]\s*(\d+(?:\.\d+)?)/);
-    if (r) return [Number(r[1]), Number(r[2])];
-    const le = t.match(/[≤<]\s*(\d+(?:\.\d+)?)/);
-    if (le) return [min, Number(le[1])];
-    const ge = t.match(/[≥>]\s*(\d+(?:\.\d+)?)/);
-    if (ge) return [Number(ge[1]), max];
-    return null;
-  })();
-  const bandY1 = tRange ? H - 10 - ((tRange[1] - min) / (max - min)) * (H - 20) : null;
-  const bandY2 = tRange ? H - 10 - ((tRange[0] - min) / (max - min)) * (H - 20) : null;
+  const toY = (v: number) => H - 10 - ((v - min) / (max - min)) * (H - 20);
+  const bandY1 = m.targetRange.max != null ? toY(m.targetRange.max) : null; // limite superior
+  const bandY2 = m.targetRange.min != null ? toY(m.targetRange.min) : null; // limite inferior
 
   return (
     <div className="rv-screen">
@@ -461,7 +459,7 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
       <header className="rv-header">
         <button className="rv-header-btn" onClick={() => go("data")}>{Icon.back}</button>
         <div className="rv-header-title">{m.name}</div>
-        <button className="rv-header-btn">{Icon.share}</button>
+        <div style={{width: 36}} />
       </header>
 
       <div className="rv-body">
@@ -473,13 +471,8 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
           <div className="rv-marker-hero-target">{m.target} · última colheita 22 abr 2026</div>
         </div>
 
-        <div className="rv-marker-period">
-          <button className="rv-period-chip">3M</button>
-          <button className="rv-period-chip">6M</button>
-          <button className="rv-period-chip" data-active="true">1A</button>
-          <button className="rv-period-chip">2A</button>
-          <button className="rv-period-chip">Tudo</button>
-        </div>
+        <PeriodChips className="rv-marker-period" />
+
 
         <div className="rv-marker-chart">
           <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" width="100%" height={H}>
@@ -502,7 +495,7 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
 
         <div className="rv-marker-context">
           <div className="rv-marker-context-head">
-            <span className="rv-dot" data-tone={tone}/>Contexto da Dra. Carolina
+            <span className="rv-dot" data-tone={tone}/>Contexto da Dra. Sofia
           </div>
           <div className="rv-marker-context-body">
             {m.name === "Estradiol"
@@ -527,7 +520,10 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
         </div>
 
         {tone === "alert" && (
-          <button className="rv-cta-primary" onClick={() => go("schedule")}>Marcar reanálise</button>
+          <div className="rv-info-note">
+            <strong>Reanálise pedida pela Dra. Sofia</strong>
+            <span>Repetir colheita até 10 mai 2026. A marcação é feita diretamente no laboratório.</span>
+          </div>
         )}
         <div style={{height: 80}}/>
       </div>
@@ -551,14 +547,14 @@ function ShareUploadScreen() {
           </div>
         </div>
         <div className="rv-mail-body">
-          Estimada Marta Pereira,<br/><br/>
+          Estimada Maria Antunes,<br/><br/>
           Os resultados da sua análise de sangue de 22 de abril de 2026 já se encontram disponíveis em anexo no presente email.<br/><br/>
           Em caso de dúvida, contacte o serviço de apoio…
         </div>
         <div className="rv-mail-pdf">
           <div className="rv-mail-pdf-icon">PDF</div>
           <div className="rv-mail-pdf-meta">
-            <div className="rv-mail-pdf-name">Synlab_Marta_Pereira_22Abr.pdf</div>
+            <div className="rv-mail-pdf-name">Synlab_Maria_Antunes_22Abr.pdf</div>
             <div className="rv-mail-pdf-size">432 KB · 14 marcadores</div>
           </div>
           {Icon.share}
@@ -576,7 +572,7 @@ function ShareUploadScreen() {
         <div className="rv-share-doc">
           <div className="rv-share-doc-icon">PDF</div>
           <div className="rv-share-doc-meta">
-            <div className="rv-share-doc-name">Synlab_Marta_Pereira_22Abr.pdf</div>
+            <div className="rv-share-doc-name">Synlab_Maria_Antunes_22Abr.pdf</div>
             <div className="rv-share-doc-info">432 KB · do Mail</div>
           </div>
           <div style={{color: "rgba(255,255,255,0.5)"}}>{Icon.copy}</div>
@@ -640,7 +636,7 @@ function ShareUploadScreen() {
               <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="var(--lime)"/><path d="M9 16 L14 21 L23 11" stroke="#0b0d0f" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <div className="rv-import-title">Análise importada</div>
-            <div className="rv-import-sub">14 marcadores extraídos do PDF Synlab.<br/>A Dra. Carolina foi notificada.</div>
+            <div className="rv-import-sub">14 marcadores extraídos do PDF Synlab.<br/>A Dra. Sofia foi notificada.</div>
             <div className="rv-import-meta">
               <span>Synlab·22abr</span>
               <span>432 KB</span>
@@ -657,7 +653,7 @@ function ShareUploadScreen() {
 
 // ─── Avisos ──────────────────────────────────────────
 function AvisosScreen() {
-  const { go } = useNav();
+  const { go, showToast } = useNav();
   const [tab, setTab] = useState<"medicos" | "lembretes">("medicos");
   const [calAdded, setCalAdded] = useState(false);
   return (
@@ -666,7 +662,7 @@ function AvisosScreen() {
       <header className="rv-header">
         <div style={{width: 36}}/>
         <div className="rv-header-title">Avisos</div>
-        <button className="rv-header-btn">{Icon.settings}</button>
+        <button className="rv-header-btn" onClick={() => go("profile")} aria-label="Perfil">{Icon.settings}</button>
       </header>
 
       <div className="rv-body">
@@ -681,15 +677,15 @@ function AvisosScreen() {
 
         {tab === "medicos" ? (
           <>
-            <article className="rv-aviso" data-tone="alert" onClick={() => go("schedule")} style={{cursor: "pointer"}}>
+            <article className="rv-aviso" data-tone="alert">
               <div className="rv-aviso-icon">
                 <svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 2 V11 M9 14 V14.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.5" fill="none"/></svg>
               </div>
               <div className="rv-aviso-text">
-                <div className="rv-aviso-time">Há 12 min · Dra. Carolina</div>
+                <div className="rv-aviso-time">Há 12 min · Dra. Sofia</div>
                 <div className="rv-aviso-title">Pedido de reanálise · Estradiol</div>
-                <div className="rv-aviso-body">Repetir colheita até <strong>10 mai 2026</strong>. A Dra. Carolina pediu nova medição para confirmar a tendência descendente.</div>
-                <div className="rv-aviso-cta">Marcar análise →</div>
+                <div className="rv-aviso-body">Repetir colheita até <strong>10 mai 2026</strong>. A Dra. Sofia pediu nova medição para confirmar a tendência descendente.</div>
+                <div className="rv-aviso-cta" style={{color: "var(--fg-50)"}}>Faz a colheita no teu laboratório habitual</div>
               </div>
               <div className="rv-aviso-unread"/>
             </article>
@@ -701,7 +697,7 @@ function AvisosScreen() {
               <div className="rv-aviso-text">
                 <div className="rv-aviso-time">Hoje · 09:30 · Plano</div>
                 <div className="rv-aviso-title">Resumo da consulta de 22 abr</div>
-                <div className="rv-aviso-body">Plano metabólico atualizado pela Dra. Carolina: manter Metformina, aumentar Magnésio para 400 mg ao deitar.</div>
+                <div className="rv-aviso-body">Plano metabólico atualizado pela Dra. Sofia: manter Metformina, aumentar Magnésio para 400 mg ao deitar.</div>
                 <div className="rv-aviso-cta">Abrir resumo →</div>
               </div>
             </article>
@@ -713,7 +709,7 @@ function AvisosScreen() {
               <div className="rv-aviso-text">
                 <div className="rv-aviso-time">Ontem · 16:42</div>
                 <div className="rv-aviso-title">Análise importada com sucesso</div>
-                <div className="rv-aviso-body">14 marcadores extraídos do PDF Synlab. A Dra. Carolina foi notificada.</div>
+                <div className="rv-aviso-body">14 marcadores extraídos do PDF Synlab. A Dra. Sofia foi notificada.</div>
                 <div className="rv-aviso-cta" style={{color: "var(--ok)"}}>Ver dados →</div>
               </div>
             </article>
@@ -744,7 +740,7 @@ function AvisosScreen() {
               <div className="rv-aviso-text">
                 <div className="rv-aviso-time">12 mai · 14:30</div>
                 <div className="rv-aviso-title">Próxima consulta</div>
-                <div className="rv-aviso-body">Dra. Carolina Sá · Clínica Lumiar · TRH personalizada.</div>
+                <div className="rv-aviso-body">Dra. Sofia Cardoso · Clínica Lumiar · TRH personalizada.</div>
                 <div className="rv-aviso-cta" style={{color: calAdded ? "var(--lime)" : undefined}}>
                   {calAdded ? "✓ Adicionado ao calendário" : "Adicionar ao calendário →"}
                 </div>
@@ -762,7 +758,7 @@ function AvisosScreen() {
 
 // ─── Mensagens ───────────────────────────────────────
 function MensagensScreen() {
-  const { go } = useNav();
+  const { go, showToast } = useNav();
   const [input, setInput] = useState("");
   return (
     <div className="rv-screen">
@@ -770,13 +766,13 @@ function MensagensScreen() {
       <header className="rv-header rv-msg-header">
         <button className="rv-header-btn" onClick={() => go("home")}>{Icon.back}</button>
         <div className="rv-msg-header-meta">
-          <div className="rv-msg-header-avatar">CS</div>
+          <div className="rv-msg-header-avatar">SC</div>
           <div>
-            <div className="rv-msg-header-name">Dra. Carolina Sá</div>
+            <div className="rv-msg-header-name">Dra. Sofia Cardoso</div>
             <div className="rv-msg-header-status"><span className="rv-msg-dot"/>Online</div>
           </div>
         </div>
-        <button className="rv-header-btn">{Icon.cal}</button>
+        <button className="rv-header-btn" onClick={() => go("consultas")} aria-label="Consultas">{Icon.cal}</button>
       </header>
 
       <div className="rv-body rv-msg-body">
@@ -784,13 +780,13 @@ function MensagensScreen() {
 
         <div className="rv-msg rv-msg--doc">
           <div className="rv-msg-bubble">
-            Bom dia Marta. Vi os resultados do Synlab que carregaste ontem — quero pedir-te para repetir o Estradiol antes da nossa consulta de 12 de maio.
+            Bom dia Maria. Vi os resultados do Synlab que carregaste ontem — quero pedir-te para repetir o Estradiol antes da nossa consulta de 12 de maio.
           </div>
           <div className="rv-msg-time">09:14</div>
         </div>
 
         <div className="rv-msg rv-msg--doc">
-          <div className="rv-msg-action-card" onClick={() => go("schedule")}>
+          <div className="rv-msg-action-card">
             <div className="rv-msg-action-card-icon" data-tone="alert">
               <svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 2 V11 M9 14 V14.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.5" fill="none"/></svg>
             </div>
@@ -799,7 +795,7 @@ function MensagensScreen() {
               <div className="rv-msg-action-card-title">Reanalisar Estradiol</div>
               <div className="rv-msg-action-card-sub">até 10 mai · em jejum</div>
             </div>
-            <span className="rv-msg-action-card-cta">Marcar →</span>
+            <span className="rv-msg-action-card-cta" style={{color: "var(--fg-50)"}}>Lembrete</span>
           </div>
           <div className="rv-msg-time">09:14</div>
         </div>
@@ -864,12 +860,163 @@ function MensagensScreen() {
       </div>
 
       <div className="rv-msg-compose">
-        <button className="rv-msg-compose-attach">
+        <button className="rv-msg-compose-attach" onClick={() => showToast("Anexo · imagem.jpg")} aria-label="Anexar">
           <svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 4 V14 M4 9 H14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
         </button>
-        <input className="rv-msg-compose-input" placeholder="Mensagem para a Dra. Carolina…"
+        <input className="rv-msg-compose-input" placeholder="Mensagem para a Dra. Sofia…"
           value={input} onChange={(e) => setInput(e.target.value)}/>
-        <button className="rv-msg-compose-send" data-active={input.length > 0}>
+        <button
+          className="rv-msg-compose-send"
+          data-active={input.length > 0}
+          aria-label="Enviar"
+          onClick={() => {
+            if (!input.trim()) return;
+            setInput("");
+            showToast("Mensagem enviada");
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18"><path d="M3 9 L15 3 L11 15 L9 10 Z" fill="currentColor"/></svg>
+        </button>
+      </div>
+
+      <TabBar active="messages" />
+    </div>
+  );
+}
+
+// ─── Assistente Vivara (chatbot) ─────────────────────
+function buildAssistantContext(): string {
+  const fmtBio = (b: BioMarker) =>
+    `- ${b.name}: ${b.value} ${b.unit} (${b.target}) · variação ${b.delta} · histórico [${b.spark.join(", ")}]${b.tone ? ` · estado: ${b.tone}` : ""}`;
+
+  const plano = [
+    "Metformina 500 mg — pequeno-almoço, 08:00",
+    "Vitamina D 4000 UI — almoço, 13:00",
+    "Ómega-3 1 g — jantar, 19:00",
+    "Magnésio 400 mg — ao deitar, 22:30",
+    "Treino de força · 35 min — recomendado pela Dra. Sofia, horário livre",
+  ];
+
+  return [
+    `PRÓXIMA CONSULTA: 12 mai 2026, 14:30 · Dra. Sofia Cardoso · Discussão sobre TRH personalizada.`,
+    `MÉDICA RESPONSÁVEL: Dra. Sofia Cardoso · Clínica Lumiar.`,
+    ``,
+    `BIOMARCADORES FORA DE ALVO / EM ATENÇÃO:`,
+    ...BIOS_ALERT.map(fmtBio),
+    ``,
+    `BIOMARCADORES EM ALVO / ACOMPANHAMENTO:`,
+    ...BIOS_OK.map(fmtBio),
+    ``,
+    `PLANO DE HOJE (suplementos / medicação / atividade):`,
+    ...plano.map((p) => `- ${p}`),
+  ].join("\n");
+}
+
+type ChatMsg = { role: "user" | "assistant" | "system"; content: string };
+
+const ASSISTANT_INTRO =
+  "Posso ajudar-te a consultar os teus dados — exames, valores, consultas e plano. Para perguntas sobre o que estes resultados significam para ti, fala com a Dra. Sofia.";
+
+function AssistenteScreen() {
+  const { go } = useNav();
+  const [messages, setMessages] = useState<ChatMsg[]>([
+    { role: "assistant", content: ASSISTANT_INTRO },
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const ask = useServerFn(askAssistente);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages, loading]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+    setError(null);
+    const nextMessages: ChatMsg[] = [...messages, { role: "user", content: text }];
+    setMessages(nextMessages);
+    setInput("");
+    setLoading(true);
+    try {
+      // exclude the fixed intro from history sent to the model
+      const history = nextMessages
+        .filter((m, i) => !(i === 0 && m.role === "assistant" && m.content === ASSISTANT_INTRO))
+        .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+      const safeHistory = history.length === 0 ? [{ role: "user" as const, content: text }] : history;
+      const res = await ask({ data: { messages: safeHistory, context: buildAssistantContext() } });
+      setMessages((prev) => [...prev, { role: "assistant", content: res.text || "Sem resposta." }]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Não consegui responder agora.";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  };
+
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <header className="rv-header rv-msg-header">
+        <button className="rv-header-btn" onClick={() => go("home")}>{Icon.back}</button>
+        <div className="rv-msg-header-meta">
+          <div className="rv-msg-header-avatar" style={{background: "var(--surface-2)"}}>AV</div>
+          <div>
+            <div className="rv-msg-header-name">Assistente Vivara</div>
+            <div className="rv-msg-header-status">Os teus dados, ao alcance</div>
+          </div>
+        </div>
+        <div style={{width: 36}}/>
+      </header>
+
+      <div className="rv-body rv-asst-body" ref={scrollRef}>
+        {messages.map((m, i) => (
+          <div key={i} className={`rv-asst-msg rv-asst-msg--${m.role}`}>
+            <div className="rv-asst-bubble">{m.content}</div>
+          </div>
+        ))}
+        {loading && (
+          <div className="rv-asst-msg rv-asst-msg--assistant">
+            <div className="rv-asst-bubble rv-asst-typing">
+              <span/><span/><span/>
+            </div>
+          </div>
+        )}
+        {error && (
+          <div className="rv-asst-msg rv-asst-msg--system">
+            <div className="rv-asst-bubble rv-asst-error">{error}</div>
+          </div>
+        )}
+        <div style={{height: 8}}/>
+      </div>
+
+      <div className="rv-msg-compose rv-asst-compose">
+        <textarea
+          className="rv-msg-compose-input rv-asst-input"
+          placeholder="Pergunta sobre os teus dados…"
+          rows={1}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={onKey}
+          disabled={loading}
+        />
+        <button
+          className="rv-msg-compose-send"
+          data-active={input.trim().length > 0 && !loading}
+          onClick={send}
+          disabled={loading || input.trim().length === 0}
+          aria-label="Enviar"
+        >
           <svg width="18" height="18" viewBox="0 0 18 18"><path d="M3 9 L15 3 L11 15 L9 10 Z" fill="currentColor"/></svg>
         </button>
       </div>
@@ -881,7 +1028,7 @@ function MensagensScreen() {
 
 // ─── Diário ──────────────────────────────────────────
 function DiarioScreen() {
-  const { go } = useNav();
+  const { go, showToast } = useNav();
   const [mood, setMood] = useState(3);
   const [energy, setEnergy] = useState(2);
   const [sleep, setSleep] = useState("so-so");
@@ -913,7 +1060,7 @@ function DiarioScreen() {
               <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="var(--lime)"/><path d="M9 16 L14 21 L23 11" stroke="#0b0d0f" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <div className="rv-import-title">Registo guardado</div>
-            <div className="rv-import-sub">A Dra. Carolina verá esta entrada antes da próxima consulta.</div>
+            <div className="rv-import-sub">A Dra. Sofia verá esta entrada antes da próxima consulta.</div>
             <div className="rv-schedule-tickets">
               <div className="rv-schedule-ticket"><span>Humor · {moodFaces[mood]}</span><span className="rv-mono" style={{color: "var(--fg-50)"}}>27 abr</span></div>
               <div className="rv-schedule-ticket"><span>Energia</span><span className="rv-mono">{energy + 1}/5</span></div>
@@ -932,7 +1079,7 @@ function DiarioScreen() {
       <header className="rv-header">
         <button className="rv-header-btn" onClick={() => go("home")}>{Icon.back}</button>
         <div className="rv-header-title">Diário</div>
-        <button className="rv-header-btn">{Icon.cal}</button>
+        <button className="rv-header-btn" onClick={() => go("consultas")} aria-label="Consultas">{Icon.cal}</button>
       </header>
 
       <div className="rv-body">
@@ -980,7 +1127,7 @@ function DiarioScreen() {
 
         <div className="rv-diary-section">
           <div className="rv-diary-label">Nota · opcional</div>
-          <textarea className="rv-diary-textarea" placeholder="Algo que queres a Dra. Carolina saber?"
+          <textarea className="rv-diary-textarea" placeholder="Algo que queres a Dra. Sofia saber?"
             value={note} onChange={(e) => setNote(e.target.value)} rows={3}/>
         </div>
 
@@ -993,11 +1140,11 @@ function DiarioScreen() {
 
 // ─── Consultas ───────────────────────────────────────
 function ConsultasScreen() {
-  const { go } = useNav();
+  const { go, showToast } = useNav();
   const past = [
-    { date: "22 abr 2026", label: "Revisão trimestral",  duration: "45 min", who: "Dra. Carolina Sá", changes: 3 },
-    { date: "03 fev 2026", label: "Revisão de resultados", duration: "30 min", who: "Dra. Carolina Sá", changes: 1 },
-    { date: "10 dez 2025", label: "Primeira consulta",    duration: "75 min", who: "Dra. Carolina Sá", changes: 4 },
+    { date: "22 abr 2026", label: "Revisão trimestral",  duration: "45 min", who: "Dra. Sofia Cardoso", changes: 3 },
+    { date: "03 fev 2026", label: "Revisão de resultados", duration: "30 min", who: "Dra. Sofia Cardoso", changes: 1 },
+    { date: "10 dez 2025", label: "Primeira consulta",    duration: "75 min", who: "Dra. Sofia Cardoso", changes: 4 },
   ];
   return (
     <div className="rv-screen">
@@ -1005,7 +1152,7 @@ function ConsultasScreen() {
       <header className="rv-header">
         <button className="rv-header-btn" onClick={() => go("home")}>{Icon.back}</button>
         <div className="rv-header-title">Consultas</div>
-        <button className="rv-header-btn">{Icon.search}</button>
+        <div style={{width: 36}} />
       </header>
 
       <div className="rv-body">
@@ -1019,7 +1166,7 @@ function ConsultasScreen() {
             <div className="rv-upcoming-meta">
               <div className="rv-upcoming-title">Discussão sobre TRH personalizada</div>
               <div className="rv-upcoming-when">14:30 · Clínica Lumiar · 45 min</div>
-              <div className="rv-upcoming-who">Dra. Carolina Sá</div>
+              <div className="rv-upcoming-who">Dra. Sofia Cardoso</div>
             </div>
           </div>
           <div className="rv-upcoming-prep">
@@ -1031,7 +1178,7 @@ function ConsultasScreen() {
             <div className="rv-upcoming-prep-row" data-done="false">
               <span className="rv-upcoming-check"/>
               <span>Reanalisar Estradiol</span>
-              <span className="rv-upcoming-prep-cta" onClick={() => go("schedule")}>Marcar</span>
+              <span className="rv-upcoming-prep-cta" style={{color: "var(--fg-50)", cursor: "default"}}>até 10 mai</span>
             </div>
             <div className="rv-upcoming-prep-row" data-done="false">
               <span className="rv-upcoming-check"/>
@@ -1043,7 +1190,7 @@ function ConsultasScreen() {
 
         <div className="rv-section-head" style={{margin: "16px 20px 8px"}}>
           <h3>Anteriores</h3>
-          <a>Histórico</a>
+          
         </div>
         {past.map((c, i) => (
           <div key={i} className="rv-past-row" onClick={() => i === 0 ? go("summary") : undefined} style={{cursor: "pointer"}}>
@@ -1068,27 +1215,27 @@ function ConsultasScreen() {
 
 // ─── Consultation Summary ────────────────────────────
 function ConsultationSummary() {
-  const { go } = useNav();
+  const { go, showToast } = useNav();
   return (
     <div className="rv-screen">
       <StatusBar />
       <header className="rv-header">
         <button className="rv-header-btn" onClick={() => go("alerts")}>{Icon.back}</button>
         <div className="rv-header-title">Consulta · 22 abr</div>
-        <button className="rv-header-btn">{Icon.share}</button>
+        <button className="rv-header-btn" onClick={() => shareNative({ title: "Consulta · 22 abr", text: "Resumo da consulta com Dra. Sofia Cardoso (Vivara)", toast: showToast })} aria-label="Partilhar">{Icon.share}</button>
       </header>
 
       <div className="rv-body">
         <div className="rv-summary-hero">
           <div className="rv-summary-doctor">
-            <div className="rv-summary-avatar">CS</div>
+            <div className="rv-summary-avatar">SC</div>
             <div>
-              <div className="rv-summary-name">Dra. Carolina Sá</div>
+              <div className="rv-summary-name">Dra. Sofia Cardoso</div>
               <div className="rv-summary-sub">Medicina Interna · Lumiar · 45 min</div>
             </div>
           </div>
           <div className="rv-summary-quote">
-            "Marta, vamos manter o plano metabólico actual mas ajustar magnésio. Quero repetir Estradiol antes de discutir TRH."
+            "Maria, vamos manter o plano metabólico actual mas ajustar magnésio. Quero repetir Estradiol antes de discutir TRH."
           </div>
         </div>
 
@@ -1120,7 +1267,10 @@ function ConsultationSummary() {
           </div>
         </div>
 
-        <button className="rv-cta-primary" onClick={() => go("schedule")}>Marcar reanálise</button>
+        <div className="rv-info-note">
+          <strong>Reanálise pedida</strong>
+          <span>Faz a colheita de Estradiol até 10 mai no teu laboratório habitual. Não precisas de marcar nada na app.</span>
+        </div>
         <button className="rv-cta-ghost" onClick={() => go("alerts")}>Voltar a avisos</button>
         <div style={{height: 24}}/>
       </div>
@@ -1146,7 +1296,7 @@ function ScheduleAnalysis() {
       <div className="rv-body">
         {step === "pick" ? (
           <>
-            <div className="rv-schedule-eyebrow">A pedido da Dra. Carolina</div>
+            <div className="rv-schedule-eyebrow">A pedido da Dra. Sofia</div>
             <div className="rv-schedule-title">Reanálise · Estradiol</div>
             <div className="rv-schedule-sub">Repetir até <strong>10 mai 2026</strong>. Confirma laboratório e hora.</div>
 
@@ -1191,7 +1341,7 @@ function ScheduleAnalysis() {
             <div className="rv-schedule-tickets">
               <div className="rv-schedule-ticket"><span>Adicionado ao calendário</span><span style={{color: "var(--lime)"}}>✓</span></div>
               <div className="rv-schedule-ticket"><span>Lembrete 24h antes</span><span style={{color: "var(--lime)"}}>✓</span></div>
-              <div className="rv-schedule-ticket"><span>Dra. Carolina notificada</span><span style={{color: "var(--lime)"}}>✓</span></div>
+              <div className="rv-schedule-ticket"><span>Dra. Sofia notificada</span><span style={{color: "var(--lime)"}}>✓</span></div>
             </div>
             <button className="rv-cta-primary" onClick={() => go("home")}>Voltar ao início</button>
           </div>
@@ -1203,22 +1353,23 @@ function ScheduleAnalysis() {
 
 // ─── Perfil ──────────────────────────────────────────
 function PerfilScreen() {
+  const { go, showToast } = useNav();
   return (
     <div className="rv-screen">
       <StatusBar />
       <header className="rv-header">
         <div style={{width: 36}}/>
         <div className="rv-header-title">Perfil</div>
-        <button className="rv-header-btn">{Icon.settings}</button>
+        <div style={{width: 36}}/>
       </header>
 
       <div className="rv-body">
         <div className="rv-profile-hero">
-          <div className="rv-profile-avatar">MP</div>
+          <div className="rv-profile-avatar">MA</div>
           <div style={{flex: 1, minWidth: 0}}>
-            <div className="rv-profile-name">Marta Pereira</div>
+            <div className="rv-profile-name">Maria Antunes</div>
             <div className="rv-profile-sub">42 anos · Pré-menopausa</div>
-            <div className="rv-profile-care">Programa metabólico · Dra. Carolina Sá</div>
+            <div className="rv-profile-care">Programa metabólico · Dra. Sofia Cardoso</div>
           </div>
         </div>
 
@@ -1229,7 +1380,7 @@ function PerfilScreen() {
           <div className="rv-stat"><div className="rv-stat-label">Cintura</div><div className="rv-stat-value">82<span style={{fontSize: 10, color: "var(--fg-50)"}}>cm</span></div></div>
         </div>
 
-        <div className="rv-section-head" style={{margin: "0 20px 10px"}}><h3>Objectivos clínicos</h3><a>Editar</a></div>
+        <div className="rv-section-head" style={{margin: "0 20px 10px"}}><h3>Objectivos clínicos</h3><span style={{fontSize: 11, color: "var(--fg-50)"}}>Definidos pela Dra. Sofia</span></div>
         <div className="rv-goals">
           <div className="rv-goal" data-tone="watch"><span className="rv-goal-name">HbA1c &lt; 5.4 %</span><span className="rv-goal-state">5.7 → alvo</span><div className="rv-goal-bar"><div className="rv-goal-fill" style={{width: "55%"}}/></div></div>
           <div className="rv-goal" data-tone="watch"><span className="rv-goal-name">ApoB &lt; 80 mg/dL</span><span className="rv-goal-state">102 → alvo</span><div className="rv-goal-bar"><div className="rv-goal-fill" style={{width: "30%"}}/></div></div>
@@ -1239,51 +1390,40 @@ function PerfilScreen() {
 
         <div className="rv-section-head" style={{margin: "0 20px 10px"}}><h3>Integrações</h3></div>
         <div className="rv-list">
-          <div className="rv-list-row">
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("devices"); }}>
             <div className="rv-list-icon">{Icon.watch}</div>
-            <div className="rv-list-text"><span className="rv-list-name">Apple Watch</span><span className="rv-list-sub">Sono · HRV · passos · FC</span></div>
-            <span className="rv-list-state" data-state="on"><span className="rv-dot"/>Ligado</span>
-          </div>
-          <div className="rv-list-row">
-            <div className="rv-list-icon">{Icon.flask}</div>
-            <div className="rv-list-text"><span className="rv-list-name">Synlab</span><span className="rv-list-sub">Auto-importar análises</span></div>
-            <span className="rv-list-state" data-state="on"><span className="rv-dot"/>Ligado</span>
-          </div>
-          <div className="rv-list-row">
-            <div className="rv-list-icon"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.4" fill="none"/><circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.4" fill="none"/></svg></div>
-            <div className="rv-list-text"><span className="rv-list-name">CGM Abbott Libre</span><span className="rv-list-sub">Glicémia contínua</span></div>
-            <span className="rv-list-state" data-state="off">Ligar {Icon.chev}</span>
-          </div>
-          <div className="rv-list-row">
-            <div className="rv-list-icon"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="3" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill="none"/><path d="M2 6 H12" stroke="currentColor" strokeWidth="1.4"/></svg></div>
-            <div className="rv-list-text"><span className="rv-list-name">Farmácia Holon</span><span className="rv-list-sub">Renovação de receitas</span></div>
-            <span className="rv-list-state" data-state="off">Ligar {Icon.chev}</span>
-          </div>
+            <div className="rv-list-text">
+              <span className="rv-list-name">Dispositivos e wearables</span>
+              <span className="rv-list-sub">Apple Health, Oura, Garmin, Whoop…</span>
+            </div>
+            <span className="rv-chev">{Icon.chev}</span>
+          </a>
         </div>
+
 
         <div className="rv-section-head" style={{margin: "0 20px 10px"}}><h3>Definições</h3></div>
         <div className="rv-list">
-          <a className="rv-list-row">
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("notificacoes"); }}>
             <div className="rv-list-icon">{Icon.bell}</div>
             <div className="rv-list-text"><span className="rv-list-name">Notificações</span></div>
             <span className="rv-chev">{Icon.chev}</span>
           </a>
-          <a className="rv-list-row">
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("privacidade"); }}>
             <div className="rv-list-icon">{Icon.shield}</div>
             <div className="rv-list-text"><span className="rv-list-name">Privacidade e dados</span><span className="rv-list-sub">Consentimento ativo · 4 categorias</span></div>
             <span className="rv-chev">{Icon.chev}</span>
           </a>
-          <a className="rv-list-row">
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("equipa"); }}>
             <div className="rv-list-icon"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="5" r="2" stroke="currentColor" strokeWidth="1.4" fill="none"/><path d="M2 13 a5 5 0 0 1 10 0" stroke="currentColor" strokeWidth="1.4" fill="none"/></svg></div>
             <div className="rv-list-text"><span className="rv-list-name">Acesso da equipa clínica</span></div>
             <span className="rv-chev">{Icon.chev}</span>
           </a>
-          <a className="rv-list-row">
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("exportar"); }}>
             <div className="rv-list-icon">{Icon.upload}</div>
             <div className="rv-list-text"><span className="rv-list-name">Exportar histórico</span></div>
             <span className="rv-chev">{Icon.chev}</span>
           </a>
-          <a className="rv-list-row" style={{color: "var(--alert)"}}>
+          <a className="rv-list-row" style={{color: "var(--alert)", cursor: "pointer"}} onClick={(e) => { e.preventDefault(); showToast("Sessão terminada"); }}>
             <div className="rv-list-icon" style={{color: "var(--alert)"}}>
               <svg width="14" height="14" viewBox="0 0 14 14"><path d="M9 4 V2 H2 V12 H9 V10 M5 7 H13 M11 5 L13 7 L11 9" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
@@ -1302,7 +1442,489 @@ function PerfilScreen() {
   );
 }
 
+// ─── Dispositivos / Wearables ────────────────────────
+type DeviceId = "apple-health" | "oura" | "garmin" | "whoop" | "fitbit" | "google-fit" | "libre-cgm";
+
+interface DeviceDef {
+  id: DeviceId;
+  name: string;
+  vendor: string;
+  metrics: string;
+  initials: string;
+  tint: string;
+}
+
+const DEVICES: DeviceDef[] = [
+  { id: "apple-health", name: "Apple Health",        vendor: "Apple",      metrics: "Sono · HRV · passos · FC repouso · VO₂máx", initials: "",  tint: "#ffffff" },
+  { id: "oura",         name: "Oura Ring",           vendor: "Oura",       metrics: "Sono · HRV · temperatura · prontidão",      initials: "O", tint: "#c6ff3d" },
+  { id: "garmin",       name: "Garmin Connect",      vendor: "Garmin",     metrics: "Treino · VO₂máx · stress · sono",           initials: "G", tint: "#0066ff" },
+  { id: "whoop",        name: "Whoop",               vendor: "Whoop",      metrics: "Strain · recovery · sono · HRV",            initials: "W", tint: "#6a4cff" },
+  { id: "fitbit",       name: "Fitbit",              vendor: "Fitbit",     metrics: "Passos · sono · FC · SpO₂",                 initials: "F", tint: "#25d96b" },
+  { id: "google-fit",   name: "Google Health Connect", vendor: "Google",   metrics: "Agregador Android · vários dispositivos",   initials: "G", tint: "#ffbb33" },
+  { id: "libre-cgm",    name: "Abbott FreeStyle Libre", vendor: "Abbott",  metrics: "Glicémia contínua",                         initials: "L", tint: "#ff4d4d" },
+];
+
+interface DeviceState { connected: boolean; lastSync: number | null }
+type DevicesMap = Record<DeviceId, DeviceState>;
+
+const STORAGE_KEY = "rv-devices-v1";
+const DEFAULT_DEVICES: DevicesMap = {
+  "apple-health": { connected: true,  lastSync: Date.now() - 4 * 60 * 1000 },
+  "oura":         { connected: false, lastSync: null },
+  "garmin":       { connected: false, lastSync: null },
+  "whoop":        { connected: false, lastSync: null },
+  "fitbit":       { connected: false, lastSync: null },
+  "google-fit":   { connected: false, lastSync: null },
+  "libre-cgm":    { connected: false, lastSync: null },
+};
+
+function loadDevices(): DevicesMap {
+  if (typeof window === "undefined") return DEFAULT_DEVICES;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULT_DEVICES;
+    return { ...DEFAULT_DEVICES, ...JSON.parse(raw) } as DevicesMap;
+  } catch {
+    return DEFAULT_DEVICES;
+  }
+}
+
+function saveDevices(d: DevicesMap) {
+  if (typeof window === "undefined") return;
+  try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch { /* ignore */ }
+}
+
+function formatRelative(ts: number | null): string {
+  if (!ts) return "—";
+  const diffMin = Math.max(0, Math.round((Date.now() - ts) / 60000));
+  if (diffMin < 1) return "agora mesmo";
+  if (diffMin < 60) return `há ${diffMin} min`;
+  const h = Math.round(diffMin / 60);
+  if (h < 24) return `há ${h} h`;
+  const d = Math.round(h / 24);
+  return `há ${d} d`;
+}
+
+function DispositivosScreen() {
+  const { go, showToast } = useNav();
+  const [devices, setDevices] = useState<DevicesMap>(() => loadDevices());
+  const [authorizing, setAuthorizing] = useState<DeviceId | null>(null);
+  const [authStep, setAuthStep] = useState<"redirect" | "authorize">("redirect");
+
+  function persist(next: DevicesMap) {
+    setDevices(next);
+    saveDevices(next);
+  }
+
+  function startConnect(id: DeviceId) {
+    setAuthStep("redirect");
+    setAuthorizing(id);
+    setTimeout(() => setAuthStep("authorize"), 900);
+  }
+
+  function confirmAuthorize() {
+    if (!authorizing) return;
+    const id = authorizing;
+    persist({ ...devices, [id]: { connected: true, lastSync: Date.now() } });
+    setAuthorizing(null);
+    showToast("Dispositivo ligado");
+  }
+
+  function disconnect(id: DeviceId) {
+    persist({ ...devices, [id]: { connected: false, lastSync: null } });
+    showToast("Dispositivo desligado");
+  }
+
+  function syncNow(id: DeviceId) {
+    persist({ ...devices, [id]: { ...devices[id], lastSync: Date.now() } });
+    showToast("Sincronizado");
+  }
+
+  const connectedCount = Object.values(devices).filter((d) => d.connected).length;
+  const authorizingDef = authorizing ? DEVICES.find((d) => d.id === authorizing) : null;
+
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <header className="rv-header">
+        <button className="rv-header-btn" onClick={() => go("profile")} aria-label="Voltar">{Icon.back}</button>
+        <div className="rv-header-title">Dispositivos</div>
+        <div style={{width: 36}}/>
+      </header>
+
+      <div className="rv-body">
+        <div className="rv-consent">
+          <div className="rv-consent-title">Os teus dados são teus</div>
+          <p className="rv-consent-text">
+            Os dispositivos que ligas partilham métricas só com a tua equipa clínica Vivara.
+            Podes desligar qualquer um a qualquer momento. <a onClick={() => shareNative({ title: "Privacidade Vivara", text: "Como tratamos dados de dispositivos", toast: showToast })} style={{cursor:"pointer", color:"var(--accent)"}}>Saber mais</a>
+          </p>
+        </div>
+
+        <div className="rv-section-head" style={{margin: "0 20px 10px"}}>
+          <h3>Ligados</h3>
+          <span style={{fontSize: 11, color: "var(--fg-50)"}}>{connectedCount} de {DEVICES.length}</span>
+        </div>
+        <div className="rv-devices">
+          {DEVICES.filter((d) => devices[d.id].connected).map((d) => (
+            <div key={d.id} className="rv-device" data-connected="true">
+              <div className="rv-device-head">
+                <div className="rv-device-logo" style={{background: d.tint, color: "#0b0d0f"}}>{d.initials || Icon.watch}</div>
+                <div className="rv-device-meta">
+                  <div className="rv-device-name">{d.name}</div>
+                  <div className="rv-device-sub">{d.metrics}</div>
+                </div>
+                <span className="rv-list-state" data-state="on"><span className="rv-dot"/>Ligado</span>
+              </div>
+              <div className="rv-device-foot">
+                <span className="rv-device-sync">Última sinc. {formatRelative(devices[d.id].lastSync)}</span>
+                <div className="rv-device-actions">
+                  <button className="rv-device-btn" onClick={() => syncNow(d.id)}>Sincronizar</button>
+                  <button className="rv-device-btn" data-tone="ghost" onClick={() => disconnect(d.id)}>Desligar</button>
+                </div>
+              </div>
+            </div>
+          ))}
+          {connectedCount === 0 && (
+            <div className="rv-device-empty">Nenhum dispositivo ligado ainda.</div>
+          )}
+        </div>
+
+        <div className="rv-section-head" style={{margin: "0 20px 10px"}}>
+          <h3>Disponíveis</h3>
+        </div>
+        <div className="rv-devices">
+          {DEVICES.filter((d) => !devices[d.id].connected).map((d) => (
+            <div key={d.id} className="rv-device">
+              <div className="rv-device-head">
+                <div className="rv-device-logo" style={{background: d.tint, color: "#0b0d0f"}}>{d.initials || Icon.watch}</div>
+                <div className="rv-device-meta">
+                  <div className="rv-device-name">{d.name}</div>
+                  <div className="rv-device-sub">{d.metrics}</div>
+                </div>
+                <button className="rv-device-btn" data-tone="primary" onClick={() => startConnect(d.id)}>Ligar</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{textAlign: "center", fontSize: 10.5, color: "var(--fg-30)", padding: "16px 0 24px"}}>
+          Não encontras o teu dispositivo? <a onClick={() => showToast("Pedido enviado · suporte@vivara.health")} style={{cursor:"pointer", color:"var(--accent)"}}>Pedir suporte</a>
+        </div>
+      </div>
+
+      {authorizing && authorizingDef && (
+        <div className="rv-overlay" role="dialog" aria-modal="true">
+          <div className="rv-modal">
+            {authStep === "redirect" ? (
+              <>
+                <div className="rv-modal-spinner"/>
+                <div className="rv-modal-title">A abrir {authorizingDef.vendor}…</div>
+                <div className="rv-modal-text">A redirecionar para autorizar o acesso.</div>
+              </>
+            ) : (
+              <>
+                <div className="rv-modal-logo" style={{background: authorizingDef.tint, color: "#0b0d0f"}}>
+                  {authorizingDef.initials || "•"}
+                </div>
+                <div className="rv-modal-title">Autorizar Vivara Health</div>
+                <div className="rv-modal-text">
+                  Vivara Health vai ter acesso a:<br/>
+                  <span style={{color: "var(--fg-70)"}}>{authorizingDef.metrics}</span>
+                </div>
+                <div className="rv-modal-actions">
+                  <button className="rv-device-btn" data-tone="ghost" onClick={() => setAuthorizing(null)}>Cancelar</button>
+                  <button className="rv-device-btn" data-tone="primary" onClick={confirmAuthorize}>Autorizar</button>
+                </div>
+                <div className="rv-modal-fineprint">
+                  Estás a entrar com a tua conta {authorizingDef.vendor}. Os dados são partilhados de forma segura.
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      <TabBar active="profile" />
+    </div>
+  );
+}
+
 // ─── Router ──────────────────────────────────────────
+
+// ─── Share helper ────────────────────────────────────
+async function shareNative(opts: { title: string; text: string; toast: (m: string) => void }) {
+  const { title, text, toast } = opts;
+  try {
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      await navigator.share({ title, text });
+      return;
+    }
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(`${title}\n${text}`);
+      toast("Copiado para a área de transferência");
+      return;
+    }
+    toast("Partilha não disponível");
+  } catch {
+    // user cancelled — silent
+  }
+}
+
+// ─── Pesquisa ────────────────────────────────────────
+function PesquisaScreen() {
+  const { go } = useNav();
+  const [q, setQ] = useState("");
+  const all = [...BIOS_ALERT, ...BIOS_OK];
+  const term = q.trim().toLowerCase();
+  const bios = term ? all.filter((b) => b.name.toLowerCase().includes(term)) : all;
+  const consultas = [
+    { label: "Revisão trimestral", date: "22 abr 2026" },
+    { label: "Discussão sobre TRH", date: "12 mai 2026" },
+    { label: "Revisão de resultados", date: "03 fev 2026" },
+  ].filter((c) => !term || c.label.toLowerCase().includes(term));
+
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <header className="rv-header">
+        <button className="rv-header-btn" onClick={() => go("home")} aria-label="Voltar">{Icon.back}</button>
+        <div className="rv-header-title">Pesquisar</div>
+        <div style={{width: 36}}/>
+      </header>
+      <div className="rv-body">
+        <div style={{padding: "8px 20px 12px"}}>
+          <input
+            autoFocus
+            className="rv-msg-compose-input"
+            style={{width: "100%", background: "rgba(255,255,255,0.06)", borderRadius: 12, padding: "12px 14px", color: "var(--fg)", fontSize: 14, border: "1px solid rgba(255,255,255,0.08)"}}
+            placeholder="Marcador, consulta, sintoma…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
+        <div className="rv-bio-section-head"><span className="rv-dot"/>Marcadores · {bios.length}</div>
+        <div className="rv-bio-list">
+          {bios.length === 0 && <div style={{padding: "12px 20px", color: "var(--fg-50)", fontSize: 13}}>Sem resultados.</div>}
+          {bios.map((b, i) => <BioRow key={i} b={b}/>)}
+        </div>
+        <div className="rv-bio-section-head" style={{marginTop: 12}}><span className="rv-dot"/>Consultas · {consultas.length}</div>
+        {consultas.map((c, i) => (
+          <div key={i} className="rv-past-row" onClick={() => go("consultas")} style={{cursor: "pointer"}}>
+            <div className="rv-past-date"><div className="rv-past-day rv-mono">{c.date.split(" ")[0]}</div><div className="rv-past-month">{c.date.split(" ")[1]}</div></div>
+            <div className="rv-past-meta"><div className="rv-past-label">{c.label}</div><div className="rv-past-sub">Dra. Sofia Cardoso</div></div>
+            <div className="rv-chev">{Icon.chev}</div>
+          </div>
+        ))}
+        <div style={{height: 80}}/>
+      </div>
+    </div>
+  );
+}
+
+// ─── Sub-screen shell ────────────────────────────────
+function SubScreen({ title, onBack, children }: { title: string; onBack: () => void; children: ReactNode }) {
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <header className="rv-header">
+        <button className="rv-header-btn" onClick={onBack} aria-label="Voltar">{Icon.back}</button>
+        <div className="rv-header-title">{title}</div>
+        <div style={{width: 36}}/>
+      </header>
+      <div className="rv-body">{children}<div style={{height: 80}}/></div>
+    </div>
+  );
+}
+
+function ToggleRow({ label, sub, defaultOn = false }: { label: string; sub?: string; defaultOn?: boolean }) {
+  const [on, setOn] = useState(defaultOn);
+  return (
+    <div className="rv-toggle-row" onClick={() => setOn(!on)}>
+      <div className="rv-toggle-meta">
+        <div className="rv-toggle-label">{label}</div>
+        {sub && <div className="rv-toggle-sub">{sub}</div>}
+      </div>
+      <div className="rv-toggle-switch" data-on={on}><span/></div>
+    </div>
+  );
+}
+
+// ─── Notificações ────────────────────────────────────
+function NotificacoesScreen() {
+  const { go } = useNav();
+  return (
+    <SubScreen title="Notificações" onBack={() => go("profile")}>
+      <div className="rv-sub-section-head">Clínicas</div>
+      <div className="rv-toggle-list">
+        <ToggleRow label="Pedidos da médica" sub="Reanálises, ajustes ao plano" defaultOn />
+        <ToggleRow label="Resumos de consulta" defaultOn />
+        <ToggleRow label="Resultados importados" defaultOn />
+      </div>
+      <div className="rv-sub-section-head">Lembretes diários</div>
+      <div className="rv-toggle-list">
+        <ToggleRow label="Suplementos · Berberina 19:00" defaultOn />
+        <ToggleRow label="Suplementos · Magnésio 22:30" defaultOn />
+        <ToggleRow label="Diário noturno" sub="22:00" defaultOn />
+      </div>
+      <div className="rv-sub-section-head">Marketing</div>
+      <div className="rv-toggle-list">
+        <ToggleRow label="Novidades e investigação" />
+      </div>
+    </SubScreen>
+  );
+}
+
+// ─── Privacidade ─────────────────────────────────────
+function PrivacidadeScreen() {
+  const { go, showToast } = useNav();
+  return (
+    <SubScreen title="Privacidade e dados" onBack={() => go("profile")}>
+      <div className="rv-sub-section-head">Consentimentos ativos</div>
+      <div className="rv-toggle-list">
+        <ToggleRow label="Partilha com Dra. Sofia Cardoso" sub="Médica responsável" defaultOn />
+        <ToggleRow label="Partilha com nutricionista" sub="Dra. Inês Lopes" defaultOn />
+        <ToggleRow label="Investigação anonimizada" sub="Dados sem identificação" defaultOn />
+        <ToggleRow label="Marketing personalizado" />
+      </div>
+      <div className="rv-sub-section-head">Os teus dados</div>
+      <div className="rv-list">
+        <a className="rv-list-row" style={{cursor: "pointer"}} onClick={() => go("exportar")}>
+          <div className="rv-list-icon">{Icon.upload}</div>
+          <div className="rv-list-text"><span className="rv-list-name">Exportar todos os dados</span><span className="rv-list-sub">JSON · PDF</span></div>
+          <span className="rv-chev">{Icon.chev}</span>
+        </a>
+        <a className="rv-list-row" style={{cursor: "pointer", color: "var(--alert)"}} onClick={() => showToast("Pedido enviado. Receberás confirmação por email.")}>
+          <div className="rv-list-icon" style={{color: "var(--alert)"}}>{Icon.shield}</div>
+          <div className="rv-list-text"><span className="rv-list-name">Apagar conta e dados</span><span className="rv-list-sub">Irreversível · até 30 dias</span></div>
+          <span className="rv-chev">{Icon.chev}</span>
+        </a>
+      </div>
+    </SubScreen>
+  );
+}
+
+// ─── Equipa clínica ──────────────────────────────────
+function EquipaScreen() {
+  const { go, showToast } = useNav();
+  const team = [
+    { initials: "SC", name: "Dra. Sofia Cardoso", role: "Medicina Interna · responsável", access: "Total" },
+    { initials: "IL", name: "Dra. Inês Lopes", role: "Nutricionista", access: "Dieta + biomarcadores metabólicos" },
+    { initials: "RM", name: "Rui Marques", role: "Fisiologista do exercício", access: "Sono + actividade" },
+  ];
+  return (
+    <SubScreen title="Equipa clínica" onBack={() => go("profile")}>
+      <div className="rv-team-list">
+        {team.map((t, i) => (
+          <div key={i} className="rv-team-row">
+            <div className="rv-team-avatar">{t.initials}</div>
+            <div className="rv-team-meta">
+              <div className="rv-team-name">{t.name}</div>
+              <div className="rv-team-role">{t.role}</div>
+              <div className="rv-team-access">Acesso: {t.access}</div>
+            </div>
+            <button className="rv-device-btn" data-tone="ghost" onClick={() => showToast("Acesso revogado")}>Revogar</button>
+          </div>
+        ))}
+      </div>
+      <div style={{padding: "16px 20px"}}>
+        <button className="rv-cta-ghost" onClick={() => showToast("Convite enviado")} style={{width: "100%"}}>Convidar profissional</button>
+      </div>
+    </SubScreen>
+  );
+}
+
+// ─── Laboratórios ────────────────────────────────────
+function LaboratoriosScreen() {
+  const { go, showToast } = useNav();
+  const labs = [
+    { name: "Synlab", status: "Ligado", sub: "12 análises · última a 22 abr 2026", connected: true },
+    { name: "Joaquim Chaves Saúde", status: "Ligado", sub: "3 análises · última a 06 dez 2025", connected: true },
+    { name: "Germano de Sousa", status: "Não ligado", sub: "Importação por PDF disponível", connected: false },
+    { name: "CUF Diagnóstico", status: "Não ligado", sub: "Importação por PDF disponível", connected: false },
+  ];
+  return (
+    <SubScreen title="Laboratórios" onBack={() => go("profile")}>
+      <div className="rv-device-list">
+        {labs.map((l, i) => (
+          <div key={i} className="rv-device-row" data-connected={l.connected}>
+            <div className="rv-device-icon">{Icon.flask}</div>
+            <div className="rv-device-meta">
+              <div className="rv-device-name">{l.name}</div>
+              <div className="rv-device-sub">{l.sub}</div>
+            </div>
+            {l.connected ? (
+              <button className="rv-device-btn" data-tone="ghost" onClick={() => showToast(`${l.name} · desligado`)}>Desligar</button>
+            ) : (
+              <button className="rv-device-btn" data-tone="primary" onClick={() => showToast(`${l.name} · ligado`)}>Ligar</button>
+            )}
+          </div>
+        ))}
+      </div>
+    </SubScreen>
+  );
+}
+
+// ─── Farmácia ────────────────────────────────────────
+function FarmaciaScreen() {
+  const { go, showToast } = useNav();
+  const meds = [
+    { name: "Metformina 500 mg", dose: "1× pequeno-almoço", remaining: "18 dias", auto: true },
+    { name: "Berberina 500 mg", dose: "1× antes do jantar", remaining: "11 dias", auto: true },
+    { name: "Magnésio 400 mg", dose: "1× ao deitar", remaining: "24 dias", auto: false },
+    { name: "Vitamina D 4000 UI", dose: "1× pequeno-almoço", remaining: "48 dias", auto: true },
+  ];
+  return (
+    <SubScreen title="Farmácia" onBack={() => go("profile")}>
+      <div className="rv-info-note" style={{margin: "0 20px 12px"}}>
+        <strong>Farmácia das Avenidas</strong>
+        <span>Entrega ao domicílio · renovação automática quando restam 7 dias.</span>
+      </div>
+      <div className="rv-toggle-list">
+        {meds.map((m, i) => (
+          <div key={i} className="rv-toggle-row">
+            <div className="rv-toggle-meta">
+              <div className="rv-toggle-label">{m.name}</div>
+              <div className="rv-toggle-sub">{m.dose} · restam {m.remaining}</div>
+            </div>
+            <button
+              className="rv-device-btn"
+              data-tone={m.auto ? "ghost" : "primary"}
+              onClick={() => showToast(m.auto ? "Renovação desativada" : "Renovação ativada")}
+            >
+              {m.auto ? "Auto ✓" : "Activar"}
+            </button>
+          </div>
+        ))}
+      </div>
+    </SubScreen>
+  );
+}
+
+// ─── Exportar ────────────────────────────────────────
+function ExportarScreen() {
+  const { go, showToast } = useNav();
+  return (
+    <SubScreen title="Exportar histórico" onBack={() => go("profile")}>
+      <div style={{padding: "0 20px", color: "var(--fg-60)", fontSize: 13, lineHeight: 1.5, marginBottom: 16}}>
+        Recebes um ficheiro com biomarcadores, planos, consultas e sintomas registados. Útil para segunda opinião ou portabilidade.
+      </div>
+      <div className="rv-list">
+        <a className="rv-list-row" style={{cursor: "pointer"}} onClick={() => showToast("Exportação JSON enviada por email")}>
+          <div className="rv-list-icon">{Icon.doc}</div>
+          <div className="rv-list-text"><span className="rv-list-name">JSON completo</span><span className="rv-list-sub">Dados estruturados · ~ 84 KB</span></div>
+          <span className="rv-chev">{Icon.chev}</span>
+        </a>
+        <a className="rv-list-row" style={{cursor: "pointer"}} onClick={() => showToast("Relatório PDF enviado por email")}>
+          <div className="rv-list-icon">{Icon.doc}</div>
+          <div className="rv-list-text"><span className="rv-list-name">Relatório PDF</span><span className="rv-list-sub">Resumo clínico · 12 páginas</span></div>
+          <span className="rv-chev">{Icon.chev}</span>
+        </a>
+      </div>
+    </SubScreen>
+  );
+}
+
 function renderScreen(route: NavRoute): ReactNode {
   const r = typeof route === "string" ? route : route.route;
   const marker = typeof route === "object" && route.route === "marker" ? route.marker : undefined;
@@ -1315,24 +1937,55 @@ function renderScreen(route: NavRoute): ReactNode {
     case "diary":     return <DiarioScreen />;
     case "consultas": return <ConsultasScreen />;
     case "profile":   return <PerfilScreen />;
+    case "devices":   return <DispositivosScreen />;
+    case "assistente": return <AssistenteScreen />;
     case "marker":    return <MarkerDetail marker={marker} />;
     case "summary":   return <ConsultationSummary />;
     case "schedule":  return <ScheduleAnalysis />;
+    case "pesquisa":     return <PesquisaScreen />;
+    case "notificacoes": return <NotificacoesScreen />;
+    case "privacidade":  return <PrivacidadeScreen />;
+    case "equipa":       return <EquipaScreen />;
+    case "laboratorios": return <LaboratoriosScreen />;
+    case "farmacia":     return <FarmaciaScreen />;
+    case "exportar":     return <ExportarScreen />;
     default:          return <HomeScreenV2 />;
   }
 }
 
 // ─── App Wrapper ─────────────────────────────────────
+function AssistantFAB() {
+  const { current, go } = useNav();
+  const currentRoute = typeof current === "string" ? current : current.route;
+  if (currentRoute === "assistente") return null;
+  return (
+    <button className="rv-fab-global" onClick={() => go("assistente")} aria-label="Assistente Vivara">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    </button>
+  );
+}
+
 function AppV2Page() {
   const [route, setRoute] = useState<NavRoute>("home");
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = useCallback((msg: string) => {
+    setToastMsg(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastMsg(null), 1800);
+  }, []);
+
   return (
     <div className="rv-root" data-theme="dark">
-      <NavCtx.Provider value={{ go: setRoute, current: route }}>
-        <VoiceCtx.Provider value="clinical">
-          <div className="rv-phone-shell">
-            {renderScreen(route)}
-          </div>
-        </VoiceCtx.Provider>
+      <NavCtx.Provider value={{ go: setRoute, current: route, showToast }}>
+        <div className="rv-phone-shell">
+          {renderScreen(route)}
+          {toastMsg && <div className="rv-toast" role="status" aria-live="polite">{toastMsg}</div>}
+          <AssistantFAB />
+        </div>
       </NavCtx.Provider>
     </div>
   );
