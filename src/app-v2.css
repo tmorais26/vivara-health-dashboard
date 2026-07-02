@@ -181,7 +181,7 @@
 }
 .rv-home-greet-text{display:flex;flex-direction:column;gap:2px;}
 .rv-home-greet-hi{font-size:13px;color:var(--fg-50);font-weight:500;}
-.rv-home-greet-name{font-family:'Instrument Serif',serif;font-size:30px;font-weight:400;letter-spacing:0;line-height:1.05;}
+.rv-home-greet-name{font-size:26px;font-weight:600;letter-spacing:-0.03em;line-height:1.05;}
 .rv-home-avatar{
   width:40px;height:40px;border-radius:50%;border:1px solid var(--line);
   background:rgba(255,255,255,0.06);cursor:pointer;
@@ -222,9 +222,8 @@
 .rv-score-numblock{display:flex;flex-direction:column;gap:6px;flex:1;}
 .rv-score-numblock>div{display:flex;align-items:baseline;gap:4px;}
 .rv-score-card-num{
-  font-family:'Instrument Serif',serif;
-  font-size:54px;font-weight:400;
-  letter-spacing:0;line-height:1;
+  font-size:56px;font-weight:600;
+  letter-spacing:-0.045em;line-height:1;
   font-variant-numeric:tabular-nums;
 }
 .rv-score-card-max{font-size:18px;color:rgba(255,255,255,0.45);font-weight:500;}
@@ -251,7 +250,7 @@
   background:rgba(255,255,255,0.06);border-radius:12px;
 }
 .rv-score-dim-label{font-size:10.5px;color:rgba(255,255,255,0.55);letter-spacing:-0.005em;white-space:nowrap;}
-.rv-score-dim-val{font-size:20px;font-weight:400;color:#fff;font-family:'Instrument Serif',serif;letter-spacing:0;}
+.rv-score-dim-val{font-size:18px;font-weight:600;color:#fff;font-family:'JetBrains Mono',monospace;letter-spacing:-0.025em;}
 .rv-score-dim-bar{height:5px;border-radius:3px;background:rgba(255,255,255,0.07);overflow:hidden;}
 .rv-score-dim-fill{height:100%;border-radius:3px;background:var(--lime);}
 .rv-score-dim[data-tone="watch"] .rv-score-dim-fill{background:var(--watch);}
@@ -1168,8 +1167,7 @@
 }
 .rv-bioage-main{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-top:8px;position:relative;}
 .rv-bioage-num{
-  font-family:'Instrument Serif',serif;
-  font-size:52px;font-weight:400;line-height:1;letter-spacing:0;color:var(--fg);
+  font-size:52px;font-weight:600;line-height:1;letter-spacing:-0.045em;color:var(--fg);
   font-variant-numeric:tabular-nums;display:inline-flex;align-items:baseline;gap:6px;
 }
 .rv-bioage-unit{font-size:17px;font-weight:500;color:var(--fg-50);letter-spacing:-0.01em;}
