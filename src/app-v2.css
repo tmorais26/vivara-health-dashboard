@@ -119,7 +119,13 @@
 }
 .rv-mono{font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:-0.02em;}
 
-.rv-statusbar{height:44px;flex-shrink:0;}
+.rv-statusbar{
+  height:44px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px 0 28px;color:var(--fg);
+}
+.rv-statusbar-time{font-size:14px;font-weight:600;letter-spacing:-0.01em;font-variant-numeric:tabular-nums;}
+.rv-statusbar-icons{display:inline-flex;align-items:center;gap:6px;}
 
 /* Header */
 .rv-header{
@@ -175,12 +181,12 @@
 }
 .rv-home-greet-text{display:flex;flex-direction:column;gap:2px;}
 .rv-home-greet-hi{font-size:13px;color:var(--fg-50);font-weight:500;}
-.rv-home-greet-name{font-size:26px;font-weight:600;letter-spacing:-0.03em;line-height:1.05;}
+.rv-home-greet-name{font-family:'Instrument Serif',serif;font-size:30px;font-weight:400;letter-spacing:0;line-height:1.05;}
 .rv-home-avatar{
-  width:40px;height:40px;border-radius:50%;
-  background:linear-gradient(135deg,var(--accent),var(--violet));
-  color:#fff;display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:600;
+  width:40px;height:40px;border-radius:50%;border:1px solid var(--line);
+  background:rgba(255,255,255,0.06);cursor:pointer;
+  color:var(--fg-70);display:flex;align-items:center;justify-content:center;
+  padding:0;
 }
 
 /* Score card */
@@ -201,11 +207,11 @@
   color:rgba(255,255,255,0.5);font-weight:500;
   display:flex;align-items:center;gap:6px;position:relative;
 }
-.rv-score-card-eyebrow .rv-info{
-  width:14px;height:14px;border-radius:50%;
-  background:rgba(255,255,255,0.10);
+.rv-info{
+  width:15px;height:15px;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.35);background:transparent;
   display:inline-flex;align-items:center;justify-content:center;
-  font-size:9px;color:rgba(255,255,255,0.6);font-weight:600;
+  font-size:9px;color:rgba(255,255,255,0.6);font-weight:600;font-style:normal;
 }
 .rv-score-card-value{
   margin-top:10px;display:flex;align-items:center;gap:14px;
@@ -216,8 +222,9 @@
 .rv-score-numblock{display:flex;flex-direction:column;gap:6px;flex:1;}
 .rv-score-numblock>div{display:flex;align-items:baseline;gap:4px;}
 .rv-score-card-num{
-  font-size:56px;font-weight:600;
-  letter-spacing:-0.045em;line-height:1;
+  font-family:'Instrument Serif',serif;
+  font-size:54px;font-weight:400;
+  letter-spacing:0;line-height:1;
   font-variant-numeric:tabular-nums;
 }
 .rv-score-card-max{font-size:18px;color:rgba(255,255,255,0.45);font-weight:500;}
@@ -244,7 +251,7 @@
   background:rgba(255,255,255,0.06);border-radius:12px;
 }
 .rv-score-dim-label{font-size:10.5px;color:rgba(255,255,255,0.55);letter-spacing:-0.005em;white-space:nowrap;}
-.rv-score-dim-val{font-size:18px;font-weight:600;color:#fff;font-family:'JetBrains Mono',monospace;letter-spacing:-0.025em;}
+.rv-score-dim-val{font-size:20px;font-weight:400;color:#fff;font-family:'Instrument Serif',serif;letter-spacing:0;}
 .rv-score-dim-bar{height:5px;border-radius:3px;background:rgba(255,255,255,0.07);overflow:hidden;}
 .rv-score-dim-fill{height:100%;border-radius:3px;background:var(--lime);}
 .rv-score-dim[data-tone="watch"] .rv-score-dim-fill{background:var(--watch);}
@@ -253,7 +260,7 @@
 /* Quick actions */
 .rv-actions{
   margin:0 20px 22px;
-  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
 }
 .rv-action{
   display:flex;flex-direction:column;align-items:center;gap:8px;
@@ -1161,14 +1168,15 @@
 }
 .rv-bioage-main{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-top:8px;position:relative;}
 .rv-bioage-num{
-  font-size:52px;font-weight:600;line-height:1;letter-spacing:-0.045em;color:var(--fg);
+  font-family:'Instrument Serif',serif;
+  font-size:52px;font-weight:400;line-height:1;letter-spacing:0;color:var(--fg);
   font-variant-numeric:tabular-nums;display:inline-flex;align-items:baseline;gap:6px;
 }
 .rv-bioage-unit{font-size:17px;font-weight:500;color:var(--fg-50);letter-spacing:-0.01em;}
 .rv-bioage-badge{
   display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;
   font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;
-  color:var(--ok);background:rgba(37,217,107,0.14);
+  color:var(--lime);background:rgba(198,255,61,0.13);
 }
 .rv-bioage-badge[data-good="false"]{color:var(--watch);background:rgba(255,187,51,0.16);}
 .rv-bioage-sub{font-size:11.5px;color:var(--fg-50);margin-top:8px;letter-spacing:-0.005em;position:relative;}
@@ -1230,22 +1238,19 @@ button.rv-plan-row:active{background:rgba(255,255,255,0.03);}
 .rv-body::after{content:"";display:block;height:64px;}
 
 /* ─── Animações de entrada ────────────────────────── */
-@keyframes rv-fade-up{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+@keyframes rv-fade-up{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
 @keyframes rv-screen-in{from{opacity:0;}to{opacity:1;}}
 @keyframes rv-grow-x{from{transform:scaleX(0);}to{transform:scaleX(1);}}
-.rv-screen{animation:rv-screen-in 0.42s cubic-bezier(0.2,0.8,0.2,1) both;}
-.rv-body>*{animation:rv-fade-up 0.5s cubic-bezier(0.2,0.8,0.2,1) both;}
-.rv-body>*:first-child{animation-delay:40ms;}
-.rv-body>*:nth-child(2){animation-delay:90ms;}
-.rv-body>*:nth-child(3){animation-delay:140ms;}
-.rv-body>*:nth-child(4){animation-delay:190ms;}
-.rv-body>*:nth-child(5){animation-delay:240ms;}
-.rv-body>*:nth-child(6){animation-delay:290ms;}
-.rv-body>*:nth-child(7){animation-delay:340ms;}
-.rv-body>*:nth-child(8){animation-delay:390ms;}
-.rv-body>*:nth-child(n+9){animation-delay:440ms;}
+.rv-screen{animation:rv-screen-in 0.28s ease-out both;}
+.rv-body>*{animation:rv-fade-up 0.38s cubic-bezier(0.2,0.8,0.2,1) both;}
+.rv-body>*:first-child{animation-delay:30ms;}
+.rv-body>*:nth-child(2){animation-delay:70ms;}
+.rv-body>*:nth-child(3){animation-delay:110ms;}
+.rv-body>*:nth-child(4){animation-delay:150ms;}
+.rv-body>*:nth-child(5){animation-delay:190ms;}
+.rv-body>*:nth-child(n+6){animation-delay:220ms;}
 .rv-score-dim-fill,.rv-goal-fill,.rv-bioage-fill{
-  transform-origin:left;animation:rv-grow-x 0.9s cubic-bezier(0.2,0.8,0.2,1) 0.25s both;
+  transform-origin:left;animation:rv-grow-x 0.7s cubic-bezier(0.2,0.8,0.2,1) 0.18s both;
 }
 @media (prefers-reduced-motion: reduce){
   .rv-screen,.rv-body>*,.rv-score-dim-fill,.rv-goal-fill,.rv-bioage-fill{animation:none !important;}

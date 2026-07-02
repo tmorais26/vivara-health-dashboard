@@ -65,6 +65,7 @@ const Icon = {
   pill:     <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="5" width="10" height="4" rx="2" stroke="currentColor" strokeWidth="1.4" fill="none" transform="rotate(-30 7 7)"/><path d="M5.5 4.7 L8.3 7.5" stroke="currentColor" strokeWidth="1.4"/></svg>,
   flask:    <svg width="14" height="14" viewBox="0 0 14 14"><path d="M5.5 2 V6 L3 11 a1.5 1.5 0 0 0 1.5 2 H9.5 a1.5 1.5 0 0 0 1.5 -2 L8.5 6 V2 Z M4.5 3 H9.5" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinejoin="round"/></svg>,
   doc:      <svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 1 H8.5 L11 3.5 V13 H3 Z M8.5 1 V3.5 H11" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinejoin="round"/></svg>,
+  bars:     <svg width="18" height="18" viewBox="0 0 18 18"><path d="M4 14.5 V9 M9 14.5 V3.5 M14 14.5 V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>,
   watch:    <svg width="14" height="14" viewBox="0 0 14 14"><rect x="4" y="3" width="6" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill="none"/><path d="M5.5 1 H8.5 M5.5 13 H8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
   chat:     <svg width="22" height="22" viewBox="0 0 22 22"><path d="M3 5 a2 2 0 0 1 2 -2 H17 a2 2 0 0 1 2 2 V13 a2 2 0 0 1 -2 2 H8 L4 19 V15 H5 a2 2 0 0 1 -2 -2 Z" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinejoin="round"/></svg>,
   smile:    <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.6" fill="none"/><circle cx="8" cy="9.5" r="1" fill="currentColor"/><circle cx="14" cy="9.5" r="1" fill="currentColor"/><path d="M7.5 13.5 Q 11 16 14.5 13.5" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round"/></svg>,
@@ -89,7 +90,7 @@ function Spark({ pts, color = "currentColor", w = 80, h = 22 }: { pts: number[];
 }
 
 // ─── Count-up ────────────────────────────────────────
-function useCountUp(target: number, duration = 1100, decimals = 0) {
+function useCountUp(target: number, duration = 900, decimals = 0) {
   const [value, setValue] = useState(0);
   useEffect(() => {
     let raf = 0;
@@ -144,10 +145,10 @@ function BioAgeCard() {
         <div className="rv-bioage-main">
           <div className="rv-bioage-num">{shown}<span className="rv-bioage-unit">anos</span></div>
           <span className="rv-bioage-badge" data-good={younger}>
-            {younger ? "↓" : "↑"} {Math.abs(diff)} {Math.abs(diff) === 1 ? "ano" : "anos"} {younger ? "mais nova" : "mais velha"}
+            {younger ? "−" : "+"}{Math.abs(diff)} {Math.abs(diff) === 1 ? "ano" : "anos"}
           </span>
         </div>
-        <div className="rv-bioage-sub">Estimativa a partir dos teus dados · idade real {IDADE_REAL} anos</div>
+        <div className="rv-bioage-sub">Idade biológica estimada a partir dos seus dados · idade real {IDADE_REAL} anos.</div>
         <div className="rv-bioage-compare">
           <div className="rv-bioage-row">
             <span className="rv-bioage-row-label">Biológica</span>
@@ -163,9 +164,9 @@ function BioAgeCard() {
       </div>
       {info && (
         <InfoDrawer title="O que é a idade biológica?" onClose={() => setInfo(false)}>
-          <p>Estima a "idade" do teu corpo a partir dos <strong>teus dados</strong> (análises, composição corporal e recuperação), em vez da idade do bilhete de identidade.</p>
-          <p>Quando é <strong>mais baixa</strong> que a tua idade real, é um bom sinal — o teu corpo está a envelhecer mais devagar do que o esperado.</p>
-          <div className="rv-drawer-note">É uma estimativa de acompanhamento. <strong>Não é um diagnóstico</strong> nem substitui a avaliação da Dra. Sofia.</div>
+          <p>Estima a "idade" do seu corpo a partir dos <strong>seus dados</strong> (análises, composição corporal e recuperação), em vez da idade do bilhete de identidade.</p>
+          <p>Quando é <strong>mais baixa</strong> que a sua idade real, é um bom sinal — o seu corpo está a envelhecer mais devagar do que o esperado.</p>
+          <div className="rv-drawer-note">É uma estimativa de acompanhamento. <strong>Não é um diagnóstico</strong> nem substitui a avaliação do seu médico.</div>
         </InfoDrawer>
       )}
     </>
@@ -203,7 +204,7 @@ function ScoreLongevidadeCard() {
               <circle cx="32" cy="32" r={27} stroke="var(--lime)" strokeWidth="5" fill="none"
                 strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
                 transform="rotate(-90 32 32)"
-                style={{transition: "stroke-dashoffset 1.3s cubic-bezier(0.2,0.8,0.2,1)"}}/>
+                style={{transition: "stroke-dashoffset 1s cubic-bezier(0.2,0.8,0.2,1)"}}/>
             </svg>
           </div>
           <div className="rv-score-numblock">
@@ -215,7 +216,7 @@ function ScoreLongevidadeCard() {
           </div>
         </div>
         <div className="rv-score-card-disclaim">
-          Indicador de acompanhamento pessoal, calculado a partir dos teus dados pela equipa clínica. Não é um diagnóstico nem substitui a avaliação da Dra. Sofia.
+          Indicador de acompanhamento pessoal — não é diagnóstico nem substitui o seu médico.
         </div>
         <div className="rv-score-breakdown">
           {SCORE_PILARES.map((p) => (
@@ -229,14 +230,14 @@ function ScoreLongevidadeCard() {
       </div>
       {info && (
         <InfoDrawer title="O que é o Score de longevidade?" onClose={() => setInfo(false)}>
-          <p>É um indicador pessoal de <strong>0 a 100</strong> que resume a tua evolução das últimas semanas. Junta três áreas, com peso semelhante:</p>
+          <p>É um indicador pessoal de <strong>0 a 100</strong> que resume a sua evolução das últimas semanas. Junta três áreas, com peso semelhante:</p>
           <ul>
             <li><span className="rv-drawer-pillar-dot" style={{background: "var(--lime)"}}/><span><strong>Cardio-metabólica</strong> — análises de sangue (glicose, lípidos, inflamação).</span></li>
             <li><span className="rv-drawer-pillar-dot" style={{background: "var(--watch)"}}/><span><strong>Composição</strong> — peso, massa muscular e massa gorda.</span></li>
-            <li><span className="rv-drawer-pillar-dot" style={{background: "var(--accent)"}}/><span><strong>Recuperação</strong> — sono, HRV e atividade do teu wearable.</span></li>
+            <li><span className="rv-drawer-pillar-dot" style={{background: "var(--accent)"}}/><span><strong>Recuperação</strong> — sono, HRV e atividade do seu wearable.</span></li>
           </ul>
-          <p>Sobe quando os teus hábitos e resultados melhoram. É calculado a partir dos dados que vais carregando e sincronizando.</p>
-          <div className="rv-drawer-note">Serve para acompanhamento e motivação. <strong>Não é um diagnóstico</strong> nem substitui a avaliação da Dra. Sofia — em caso de dúvida, fala com a tua equipa clínica.</div>
+          <p>Sobe quando os seus hábitos e resultados melhoram. É calculado a partir dos dados que vai carregando e sincronizando.</p>
+          <div className="rv-drawer-note">Serve para acompanhamento e motivação. <strong>Não é um diagnóstico</strong> nem substitui o seu médico — em caso de dúvida, fale com a sua equipa clínica.</div>
         </InfoDrawer>
       )}
     </>
@@ -245,7 +246,15 @@ function ScoreLongevidadeCard() {
 
 // ─── Chrome ──────────────────────────────────────────
 function StatusBar() {
-  return <div className="rv-statusbar" />;
+  return (
+    <div className="rv-statusbar">
+      <span className="rv-statusbar-time">09:41</span>
+      <span className="rv-statusbar-icons">
+        <svg width="16" height="11" viewBox="0 0 16 11"><rect x="0" y="7" width="3" height="4" rx="0.8" fill="currentColor"/><rect x="4.3" y="5" width="3" height="6" rx="0.8" fill="currentColor"/><rect x="8.6" y="2.5" width="3" height="8.5" rx="0.8" fill="currentColor" opacity="0.35"/><rect x="12.9" y="0" width="3" height="11" rx="0.8" fill="currentColor" opacity="0.35"/></svg>
+        <svg width="24" height="11" viewBox="0 0 24 11"><rect x="0.5" y="0.5" width="20" height="10" rx="3" stroke="currentColor" strokeOpacity="0.4" fill="none"/><rect x="2" y="2" width="13" height="7" rx="1.6" fill="currentColor"/><path d="M22 3.5 V7.5 a2 2 0 0 0 0-4z" fill="currentColor" opacity="0.4"/></svg>
+      </span>
+    </div>
+  );
 }
 
 function TabBar({ active }: { active: string }) {
@@ -275,7 +284,7 @@ const PLANO_HOJE = [
   { name: "Metformina 500 mg",             sub: "com pequeno-almoço",           time: "08:00", done: true },
   { name: "Berberina 500 mg",              sub: "antes do jantar",              time: "19:00", done: false },
   { name: "Magnésio 400 mg",               sub: "ao deitar",                    time: "22:30", done: false },
-  { name: "Treino de força · 35 min",      sub: "recomendado pela Dra. Sofia",  time: "livre", done: false },
+  { name: "Treino de força · 35 min",      sub: "recomendado pela equipa clínica",  time: "livre", done: false },
 ];
 
 function PlanoHoje() {
@@ -322,9 +331,11 @@ function HomeScreenV2() {
       <div className="rv-home-greet">
         <div className="rv-home-greet-text">
           <div className="rv-home-greet-hi">Olá</div>
-          <div className="rv-home-greet-name">Maria A.</div>
+          <div className="rv-home-greet-name">A sua saúde</div>
         </div>
-        <div className="rv-home-avatar">MA</div>
+        <button className="rv-home-avatar" onClick={() => go("profile")} aria-label="Perfil">
+          <svg width="18" height="18" viewBox="0 0 22 22"><circle cx="11" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.6" fill="none"/><path d="M3 19 a8 8 0 0 1 16 0" stroke="currentColor" strokeWidth="1.6" fill="none"/></svg>
+        </button>
       </div>
 
       <div className="rv-body">
@@ -337,16 +348,12 @@ function HomeScreenV2() {
             <span>Carregar</span>
           </button>
           <button className="rv-action" data-accent="blue" onClick={() => go("data")}>
-            <span className="rv-action-icon">{Icon.flask}</span>
+            <span className="rv-action-icon">{Icon.bars}</span>
             <span>Análises</span>
           </button>
           <button className="rv-action" data-accent="violet" onClick={() => go("alerts")}>
             <span className="rv-action-icon">{Icon.doc}</span>
             <span>Resumo</span>
-          </button>
-          <button className="rv-action" onClick={() => go("profile")}>
-            <span className="rv-action-icon">{Icon.shield}</span>
-            <span>Privacidade</span>
           </button>
         </div>
 
@@ -423,7 +430,7 @@ function HomeScreenV2() {
             </div>
             <div className="rv-next-meta">
               <div className="rv-next-eyebrow">Próxima consulta</div>
-              <div className="rv-next-name">Dra. Sofia Cardoso</div>
+              <div className="rv-next-name">Consulta de acompanhamento</div>
               <div className="rv-next-sub">14:30 · Discussão sobre TRH personalizada</div>
             </div>
           </div>
@@ -433,7 +440,7 @@ function HomeScreenV2() {
           <div className="rv-diary-prompt" onClick={() => go("diary")}>
             <div className="rv-diary-prompt-text">
               <div className="rv-diary-prompt-title">Como te sentes hoje?</div>
-              <div className="rv-diary-prompt-sub">Regista humor, energia e sintomas. Visto pela Dra. Sofia.</div>
+              <div className="rv-diary-prompt-sub">Regista humor, energia e sintomas. Visto pela tua equipa clínica.</div>
             </div>
             <div className="rv-diary-prompt-faces">
               <span>😔</span><span>😐</span><span>🙂</span><span style={{opacity: 1}}>😊</span><span>🤩</span>
@@ -599,7 +606,7 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
 
         <div className="rv-marker-context">
           <div className="rv-marker-context-head">
-            <span className="rv-dot" data-tone={tone}/>Contexto da Dra. Sofia
+            <span className="rv-dot" data-tone={tone}/>Contexto clínico
           </div>
           <div className="rv-marker-context-body">
             {m.name === "Estradiol"
@@ -625,7 +632,7 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
 
         {tone === "alert" && (
           <div className="rv-info-note">
-            <strong>Reanálise pedida pela Dra. Sofia</strong>
+            <strong>Reanálise pedida pela equipa clínica</strong>
             <span>Repetir colheita até 10 mai 2026. A marcação é feita diretamente no laboratório.</span>
           </div>
         )}
@@ -740,7 +747,7 @@ function ShareUploadScreen() {
               <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="var(--lime)"/><path d="M9 16 L14 21 L23 11" stroke="#0b0d0f" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <div className="rv-import-title">Análise importada</div>
-            <div className="rv-import-sub">14 marcadores extraídos do PDF Synlab.<br/>A Dra. Sofia foi notificada.</div>
+            <div className="rv-import-sub">14 marcadores extraídos do PDF Synlab.<br/>A tua equipa clínica foi notificada.</div>
             <div className="rv-import-meta">
               <span>Synlab·22abr</span>
               <span>432 KB</span>
@@ -786,9 +793,9 @@ function AvisosScreen() {
                 <svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 2 V11 M9 14 V14.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.5" fill="none"/></svg>
               </div>
               <div className="rv-aviso-text">
-                <div className="rv-aviso-time">Há 12 min · Dra. Sofia</div>
+                <div className="rv-aviso-time">Há 12 min · Equipa clínica</div>
                 <div className="rv-aviso-title">Pedido de reanálise · Estradiol</div>
-                <div className="rv-aviso-body">Repetir colheita até <strong>10 mai 2026</strong>. A Dra. Sofia pediu nova medição para confirmar a tendência descendente.</div>
+                <div className="rv-aviso-body">Repetir colheita até <strong>10 mai 2026</strong>. A tua equipa clínica pediu nova medição para confirmar a tendência descendente.</div>
                 <div className="rv-aviso-cta" style={{color: "var(--fg-50)"}}>Faz a colheita no teu laboratório habitual</div>
               </div>
               <div className="rv-aviso-unread"/>
@@ -801,7 +808,7 @@ function AvisosScreen() {
               <div className="rv-aviso-text">
                 <div className="rv-aviso-time">Hoje · 09:30 · Plano</div>
                 <div className="rv-aviso-title">Resumo da consulta de 22 abr</div>
-                <div className="rv-aviso-body">Plano metabólico atualizado pela Dra. Sofia: manter Metformina, aumentar Magnésio para 400 mg ao deitar.</div>
+                <div className="rv-aviso-body">Plano metabólico atualizado pela equipa clínica: manter Metformina, aumentar Magnésio para 400 mg ao deitar.</div>
                 <div className="rv-aviso-cta">Abrir resumo →</div>
               </div>
             </article>
@@ -813,7 +820,7 @@ function AvisosScreen() {
               <div className="rv-aviso-text">
                 <div className="rv-aviso-time">Ontem · 16:42</div>
                 <div className="rv-aviso-title">Análise importada com sucesso</div>
-                <div className="rv-aviso-body">14 marcadores extraídos do PDF Synlab. A Dra. Sofia foi notificada.</div>
+                <div className="rv-aviso-body">14 marcadores extraídos do PDF Synlab. A tua equipa clínica foi notificada.</div>
                 <div className="rv-aviso-cta" style={{color: "var(--ok)"}}>Ver dados →</div>
               </div>
             </article>
@@ -844,7 +851,7 @@ function AvisosScreen() {
               <div className="rv-aviso-text">
                 <div className="rv-aviso-time">12 mai · 14:30</div>
                 <div className="rv-aviso-title">Próxima consulta</div>
-                <div className="rv-aviso-body">Dra. Sofia Cardoso · Clínica Lumiar · TRH personalizada.</div>
+                <div className="rv-aviso-body">Clínica Lumiar · TRH personalizada.</div>
                 <div className="rv-aviso-cta" style={{color: calAdded ? "var(--lime)" : undefined}}>
                   {calAdded ? "✓ Adicionado ao calendário" : "Adicionar ao calendário →"}
                 </div>
@@ -1164,7 +1171,7 @@ function DiarioScreen() {
               <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="var(--lime)"/><path d="M9 16 L14 21 L23 11" stroke="#0b0d0f" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <div className="rv-import-title">Registo guardado</div>
-            <div className="rv-import-sub">A Dra. Sofia verá esta entrada antes da próxima consulta.</div>
+            <div className="rv-import-sub">A tua equipa clínica verá esta entrada antes da próxima consulta.</div>
             <div className="rv-schedule-tickets">
               <div className="rv-schedule-ticket"><span>Humor · {moodFaces[mood]}</span><span className="rv-mono" style={{color: "var(--fg-50)"}}>27 abr</span></div>
               <div className="rv-schedule-ticket"><span>Energia</span><span className="rv-mono">{energy + 1}/5</span></div>
@@ -1231,7 +1238,7 @@ function DiarioScreen() {
 
         <div className="rv-diary-section">
           <div className="rv-diary-label">Nota · opcional</div>
-          <textarea className="rv-diary-textarea" placeholder="Algo que queres a Dra. Sofia saber?"
+          <textarea className="rv-diary-textarea" placeholder="Algo que queres que a equipa clínica saiba?"
             value={note} onChange={(e) => setNote(e.target.value)} rows={3}/>
         </div>
 
@@ -1246,9 +1253,9 @@ function DiarioScreen() {
 function ConsultasScreen() {
   const { go, showToast } = useNav();
   const past = [
-    { date: "22 abr 2026", label: "Revisão trimestral",  duration: "45 min", who: "Dra. Sofia Cardoso", changes: 3 },
-    { date: "03 fev 2026", label: "Revisão de resultados", duration: "30 min", who: "Dra. Sofia Cardoso", changes: 1 },
-    { date: "10 dez 2025", label: "Primeira consulta",    duration: "75 min", who: "Dra. Sofia Cardoso", changes: 4 },
+    { date: "22 abr 2026", label: "Revisão trimestral",  duration: "45 min", who: "Equipa clínica", changes: 3 },
+    { date: "03 fev 2026", label: "Revisão de resultados", duration: "30 min", who: "Equipa clínica", changes: 1 },
+    { date: "10 dez 2025", label: "Primeira consulta",    duration: "75 min", who: "Equipa clínica", changes: 4 },
   ];
   return (
     <div className="rv-screen">
@@ -1270,7 +1277,7 @@ function ConsultasScreen() {
             <div className="rv-upcoming-meta">
               <div className="rv-upcoming-title">Discussão sobre TRH personalizada</div>
               <div className="rv-upcoming-when">14:30 · Clínica Lumiar · 45 min</div>
-              <div className="rv-upcoming-who">Dra. Sofia Cardoso</div>
+              <div className="rv-upcoming-who">Equipa clínica · Clínica Lumiar</div>
             </div>
           </div>
           <div className="rv-upcoming-prep">
@@ -1326,7 +1333,7 @@ function ConsultationSummary() {
       <header className="rv-header">
         <button className="rv-header-btn" onClick={() => go("alerts")}>{Icon.back}</button>
         <div className="rv-header-title">Consulta · 22 abr</div>
-        <button className="rv-header-btn" onClick={() => shareNative({ title: "Consulta · 22 abr", text: "Resumo da consulta com Dra. Sofia Cardoso (Vivara)", toast: showToast })} aria-label="Partilhar">{Icon.share}</button>
+        <button className="rv-header-btn" onClick={() => shareNative({ title: "Consulta · 22 abr", text: "Resumo da consulta de 22 abr (Vivara)", toast: showToast })} aria-label="Partilhar">{Icon.share}</button>
       </header>
 
       <div className="rv-body">
@@ -1334,7 +1341,7 @@ function ConsultationSummary() {
           <div className="rv-summary-doctor">
             <div className="rv-summary-avatar">SC</div>
             <div>
-              <div className="rv-summary-name">Dra. Sofia Cardoso</div>
+              <div className="rv-summary-name">Equipa clínica</div>
               <div className="rv-summary-sub">Medicina Interna · Lumiar · 45 min</div>
             </div>
           </div>
@@ -1400,7 +1407,7 @@ function ScheduleAnalysis() {
       <div className="rv-body">
         {step === "pick" ? (
           <>
-            <div className="rv-schedule-eyebrow">A pedido da Dra. Sofia</div>
+            <div className="rv-schedule-eyebrow">A pedido da equipa clínica</div>
             <div className="rv-schedule-title">Reanálise · Estradiol</div>
             <div className="rv-schedule-sub">Repetir até <strong>10 mai 2026</strong>. Confirma laboratório e hora.</div>
 
@@ -1445,7 +1452,7 @@ function ScheduleAnalysis() {
             <div className="rv-schedule-tickets">
               <div className="rv-schedule-ticket"><span>Adicionado ao calendário</span><span style={{color: "var(--lime)"}}>✓</span></div>
               <div className="rv-schedule-ticket"><span>Lembrete 24h antes</span><span style={{color: "var(--lime)"}}>✓</span></div>
-              <div className="rv-schedule-ticket"><span>Dra. Sofia notificada</span><span style={{color: "var(--lime)"}}>✓</span></div>
+              <div className="rv-schedule-ticket"><span>Equipa clínica notificada</span><span style={{color: "var(--lime)"}}>✓</span></div>
             </div>
             <button className="rv-cta-primary" onClick={() => go("home")}>Voltar ao início</button>
           </div>
@@ -1473,7 +1480,7 @@ function PerfilScreen() {
           <div style={{flex: 1, minWidth: 0}}>
             <div className="rv-profile-name">Maria Antunes</div>
             <div className="rv-profile-sub">42 anos · Pré-menopausa</div>
-            <div className="rv-profile-care">Programa metabólico · Dra. Sofia Cardoso</div>
+            <div className="rv-profile-care">Programa metabólico · Clínica Lumiar</div>
           </div>
         </div>
 
@@ -1484,7 +1491,7 @@ function PerfilScreen() {
           <div className="rv-stat"><div className="rv-stat-label">Cintura</div><div className="rv-stat-value">82<span style={{fontSize: 10, color: "var(--fg-50)"}}>cm</span></div></div>
         </div>
 
-        <div className="rv-section-head" style={{margin: "0 20px 10px"}}><h3>Objectivos clínicos</h3><span style={{fontSize: 11, color: "var(--fg-50)"}}>Definidos pela Dra. Sofia</span></div>
+        <div className="rv-section-head" style={{margin: "0 20px 10px"}}><h3>Objectivos clínicos</h3><span style={{fontSize: 11, color: "var(--fg-50)"}}>Definidos pela equipa clínica</span></div>
         <div className="rv-goals">
           <div className="rv-goal" data-tone="watch"><span className="rv-goal-name">HbA1c &lt; 5.4 %</span><span className="rv-goal-state">5.7 → alvo</span><div className="rv-goal-bar"><div className="rv-goal-fill" style={{width: "55%"}}/></div></div>
           <div className="rv-goal" data-tone="watch"><span className="rv-goal-name">ApoB &lt; 80 mg/dL</span><span className="rv-goal-state">102 → alvo</span><div className="rv-goal-bar"><div className="rv-goal-fill" style={{width: "30%"}}/></div></div>
@@ -1816,7 +1823,7 @@ function PesquisaScreen() {
         {consultas.map((c, i) => (
           <div key={i} className="rv-past-row" onClick={() => go("consultas")} style={{cursor: "pointer"}}>
             <div className="rv-past-date"><div className="rv-past-day rv-mono">{c.date.split(" ")[0]}</div><div className="rv-past-month">{c.date.split(" ")[1]}</div></div>
-            <div className="rv-past-meta"><div className="rv-past-label">{c.label}</div><div className="rv-past-sub">Dra. Sofia Cardoso</div></div>
+            <div className="rv-past-meta"><div className="rv-past-label">{c.label}</div><div className="rv-past-sub">Equipa clínica</div></div>
             <div className="rv-chev">{Icon.chev}</div>
           </div>
         ))}
@@ -1886,8 +1893,8 @@ function PrivacidadeScreen() {
     <SubScreen title="Privacidade e dados" onBack={() => go("profile")}>
       <div className="rv-sub-section-head">Consentimentos ativos</div>
       <div className="rv-toggle-list">
-        <ToggleRow label="Partilha com Dra. Sofia Cardoso" sub="Médica responsável" defaultOn />
-        <ToggleRow label="Partilha com nutricionista" sub="Dra. Inês Lopes" defaultOn />
+        <ToggleRow label="Partilha com o médico responsável" sub="Equipa clínica" defaultOn />
+        <ToggleRow label="Partilha com nutricionista" sub="Equipa alargada" defaultOn />
         <ToggleRow label="Investigação anonimizada" sub="Dados sem identificação" defaultOn />
         <ToggleRow label="Marketing personalizado" />
       </div>
@@ -1912,8 +1919,8 @@ function PrivacidadeScreen() {
 function EquipaScreen() {
   const { go, showToast } = useNav();
   const team = [
-    { initials: "SC", name: "Dra. Sofia Cardoso", role: "Medicina Interna · responsável", access: "Total" },
-    { initials: "IL", name: "Dra. Inês Lopes", role: "Nutricionista", access: "Dieta + biomarcadores metabólicos" },
+    { initials: "MR", name: "Médica responsável", role: "Medicina Interna", access: "Total" },
+    { initials: "NU", name: "Nutricionista", role: "Equipa alargada", access: "Dieta + biomarcadores metabólicos" },
     { initials: "RM", name: "Rui Marques", role: "Fisiologista do exercício", access: "Sono + actividade" },
   ];
   return (
