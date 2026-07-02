@@ -140,7 +140,7 @@ function BioAgeCard() {
     <>
       <div className="rv-bioage-card">
         <button type="button" className="rv-bioage-eyebrow rv-score-eyebrow-btn" onClick={() => setInfo(true)}>
-          Idade biológica <span className="rv-info">i</span>
+          Idade biológica <span className="rv-info"><svg width="9" height="9" viewBox="0 0 10 10"><circle cx="5" cy="1.8" r="1.1" fill="currentColor"/><path d="M5 4.4 V8.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></span>
         </button>
         <div className="rv-bioage-main">
           <div className="rv-bioage-num">{shown}<span className="rv-bioage-unit">anos</span></div>
@@ -148,7 +148,7 @@ function BioAgeCard() {
             {younger ? "−" : "+"}{Math.abs(diff)} {Math.abs(diff) === 1 ? "ano" : "anos"}
           </span>
         </div>
-        <div className="rv-bioage-sub">Idade biológica estimada a partir dos seus dados · idade real {IDADE_REAL} anos.</div>
+        <div className="rv-bioage-sub">Idade biológica estimada a partir dos seus dados</div>
         <div className="rv-bioage-compare">
           <div className="rv-bioage-row">
             <span className="rv-bioage-row-label">Biológica</span>
@@ -195,11 +195,11 @@ function ScoreLongevidadeCard() {
     <>
       <div className="rv-score-card">
         <button type="button" className="rv-score-card-eyebrow rv-score-eyebrow-btn" onClick={() => setInfo(true)}>
-          Score de longevidade <span className="rv-info">i</span>
+          Score de longevidade <span className="rv-info"><svg width="9" height="9" viewBox="0 0 10 10"><circle cx="5" cy="1.8" r="1.1" fill="currentColor"/><path d="M5 4.4 V8.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></span>
         </button>
         <div className="rv-score-card-value">
           <div className="rv-score-ring">
-            <svg viewBox="0 0 64 64" width="64" height="64">
+            <svg viewBox="0 0 64 64" width="52" height="52">
               <circle cx="32" cy="32" r={27} stroke="rgba(255,255,255,0.08)" strokeWidth="5" fill="none"/>
               <circle cx="32" cy="32" r={27} stroke="var(--lime)" strokeWidth="5" fill="none"
                 strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"

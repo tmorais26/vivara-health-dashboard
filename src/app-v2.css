@@ -191,9 +191,9 @@
 
 /* Score card */
 .rv-score-card{
-  margin:0 16px 12px;
+  margin:0 16px 10px;
   background:linear-gradient(180deg,#18223a 0%,#0c1124 100%);
-  border-radius:var(--radius-lg);padding:22px 22px 20px;
+  border-radius:var(--radius-lg);padding:14px 18px 13px;
   position:relative;overflow:hidden;
 }
 .rv-score-card::before{
@@ -214,7 +214,7 @@
   font-size:9px;color:rgba(255,255,255,0.6);font-weight:600;font-style:normal;
 }
 .rv-score-card-value{
-  margin-top:10px;display:flex;align-items:center;gap:14px;
+  margin-top:8px;display:flex;align-items:center;gap:14px;
   position:relative;color:#fff;
 }
 .rv-score-ring{flex-shrink:0;position:relative;}
@@ -222,11 +222,11 @@
 .rv-score-numblock{display:flex;flex-direction:column;gap:6px;flex:1;}
 .rv-score-numblock>div{display:flex;align-items:baseline;gap:4px;}
 .rv-score-card-num{
-  font-size:56px;font-weight:600;
-  letter-spacing:-0.045em;line-height:1;
+  font-size:40px;font-weight:600;
+  letter-spacing:-0.04em;line-height:1;
   font-variant-numeric:tabular-nums;
 }
-.rv-score-card-max{font-size:18px;color:rgba(255,255,255,0.45);font-weight:500;}
+.rv-score-card-max{font-size:15px;color:rgba(255,255,255,0.45);font-weight:500;}
 .rv-score-card-delta{
   align-self:flex-start;
   display:inline-flex;align-items:center;gap:4px;
@@ -236,17 +236,17 @@
   font-family:'JetBrains Mono',monospace;letter-spacing:-0.005em;font-weight:600;
 }
 .rv-score-card-disclaim{
-  margin-top:14px;font-size:10.5px;
+  margin-top:10px;font-size:10.5px;
   color:rgba(255,255,255,0.4);line-height:1.4;
   position:relative;letter-spacing:-0.005em;
 }
 .rv-score-breakdown{
-  margin-top:16px;display:grid;
-  grid-template-columns:repeat(3,1fr);gap:10px;position:relative;
+  margin-top:11px;display:grid;
+  grid-template-columns:repeat(3,1fr);gap:8px;position:relative;
 }
 .rv-score-dim{
-  display:flex;flex-direction:column;gap:6px;
-  padding:10px 12px;
+  display:flex;flex-direction:column;gap:5px;
+  padding:8px 10px;
   background:rgba(255,255,255,0.06);border-radius:12px;
 }
 .rv-score-dim-label{font-size:10.5px;color:rgba(255,255,255,0.55);letter-spacing:-0.005em;white-space:nowrap;}
@@ -1154,8 +1154,8 @@
 /* ─── Idade biológica ─────────────────────────────── */
 .rv-bioage-card{
   border-radius:var(--radius-lg);background:linear-gradient(#10261d,#0b1410);
-  border:1px solid rgba(198,255,61,0.14);margin:0 16px 12px;
-  padding:18px 20px 16px;position:relative;overflow:hidden;
+  border:1px solid rgba(198,255,61,0.14);margin:0 16px 10px;
+  padding:14px 18px 13px;position:relative;overflow:hidden;
 }
 .rv-bioage-card::before{
   content:"";position:absolute;top:-80px;right:-70px;width:200px;height:200px;
@@ -1165,20 +1165,20 @@
   font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;
   color:var(--fg-50);display:flex;align-items:center;gap:6px;position:relative;
 }
-.rv-bioage-main{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-top:8px;position:relative;}
+.rv-bioage-main{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-top:6px;position:relative;}
 .rv-bioage-num{
-  font-size:52px;font-weight:600;line-height:1;letter-spacing:-0.045em;color:var(--fg);
+  font-size:40px;font-weight:600;line-height:1;letter-spacing:-0.04em;color:var(--fg);
   font-variant-numeric:tabular-nums;display:inline-flex;align-items:baseline;gap:6px;
 }
-.rv-bioage-unit{font-size:17px;font-weight:500;color:var(--fg-50);letter-spacing:-0.01em;}
+.rv-bioage-unit{font-size:15px;font-weight:500;color:var(--fg-50);letter-spacing:-0.01em;}
 .rv-bioage-badge{
   display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;
   font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;
   color:var(--lime);background:rgba(198,255,61,0.13);
 }
 .rv-bioage-badge[data-good="false"]{color:var(--watch);background:rgba(255,187,51,0.16);}
-.rv-bioage-sub{font-size:11.5px;color:var(--fg-50);margin-top:8px;letter-spacing:-0.005em;position:relative;}
-.rv-bioage-compare{display:flex;flex-direction:column;gap:8px;margin-top:14px;position:relative;}
+.rv-bioage-sub{font-size:11.5px;color:var(--fg-50);margin-top:6px;letter-spacing:-0.005em;position:relative;}
+.rv-bioage-compare{display:flex;flex-direction:column;gap:7px;margin-top:11px;position:relative;}
 .rv-bioage-row{display:flex;align-items:center;gap:10px;}
 .rv-bioage-row-label{width:64px;font-size:11px;color:var(--fg-50);text-transform:uppercase;letter-spacing:0.04em;}
 .rv-bioage-bar{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;}
