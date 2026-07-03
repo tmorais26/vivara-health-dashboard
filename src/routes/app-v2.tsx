@@ -2096,7 +2096,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
     setError(null);
     setTimeout(() => {
       if (email.trim().toLowerCase() === LOGIN_EMAIL && pass === LOGIN_PASS) {
-        try { localStorage.setItem(LOGIN_STORAGE_KEY, "1"); } catch { /* privado */ }
+        try { sessionStorage.setItem(LOGIN_STORAGE_KEY, "1"); } catch { /* privado */ }
         onLogin();
       } else {
         setError("Email ou palavra-passe incorretos.");
@@ -2140,7 +2140,7 @@ function AppV2Page() {
 
   useEffect(() => {
     try {
-      if (localStorage.getItem(LOGIN_STORAGE_KEY) === "1") setAuthed(true);
+      if (sessionStorage.getItem(LOGIN_STORAGE_KEY) === "1") setAuthed(true);
     } catch { /* modo privado */ }
   }, []);
 
@@ -2151,7 +2151,7 @@ function AppV2Page() {
   }, []);
 
   const logout = useCallback(() => {
-    try { localStorage.removeItem(LOGIN_STORAGE_KEY); } catch { /* modo privado */ }
+    try { sessionStorage.removeItem(LOGIN_STORAGE_KEY); } catch { /* modo privado */ }
     setAuthed(false);
     setRoute("home");
   }, []);
