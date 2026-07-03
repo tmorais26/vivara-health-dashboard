@@ -26,6 +26,7 @@ interface NavCtxValue {
   go: (r: NavRoute) => void;
   current: NavRoute;
   showToast: (msg: string) => void;
+  logout: () => void;
 }
 
 interface BioMarker {
@@ -40,7 +41,7 @@ interface BioMarker {
 }
 
 // ─── Contexts ────────────────────────────────────────
-const NavCtx = createContext<NavCtxValue>({ go: () => {}, current: "home", showToast: () => {} });
+const NavCtx = createContext<NavCtxValue>({ go: () => {}, current: "home", showToast: () => {}, logout: () => {} });
 const useNav = () => useContext(NavCtx);
 
 // ─── Icons ───────────────────────────────────────────
@@ -1464,7 +1465,7 @@ function ScheduleAnalysis() {
 
 // ─── Perfil ──────────────────────────────────────────
 function PerfilScreen() {
-  const { go, showToast } = useNav();
+  const { go, showToast, logout } = useNav();
   return (
     <div className="rv-screen">
       <StatusBar />
@@ -1534,7 +1535,7 @@ function PerfilScreen() {
             <div className="rv-list-text"><span className="rv-list-name">Exportar histórico</span></div>
             <span className="rv-chev">{Icon.chev}</span>
           </a>
-          <a className="rv-list-row" style={{color: "var(--alert)", cursor: "pointer"}} onClick={(e) => { e.preventDefault(); showToast("Sessão terminada"); }}>
+          <a className="rv-list-row" style={{color: "var(--alert)", cursor: "pointer"}} onClick={(e) => { e.preventDefault(); logout(); }}>
             <div className="rv-list-icon" style={{color: "var(--alert)"}}>
               <svg width="14" height="14" viewBox="0 0 14 14"><path d="M9 4 V2 H2 V12 H9 V10 M5 7 H13 M11 5 L13 7 L11 9" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
@@ -2078,10 +2079,70 @@ function AssistantFAB() {
   );
 }
 
+// ─── Login ───────────────────────────────────────────
+const LOGIN_EMAIL = "maria@vivara.health";
+const LOGIN_PASS = "+Vivara2024";
+const LOGIN_STORAGE_KEY = "rv-app-session";
+
+function LoginScreen({ onLogin }: { onLogin: () => void }) {
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    setTimeout(() => {
+      if (email.trim().toLowerCase() === LOGIN_EMAIL && pass === LOGIN_PASS) {
+        try { localStorage.setItem(LOGIN_STORAGE_KEY, "1"); } catch { /* privado */ }
+        onLogin();
+      } else {
+        setError("Email ou palavra-passe incorretos.");
+        setBusy(false);
+      }
+    }, 350);
+  };
+
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <div className="rv-login">
+        <div className="rv-login-mark">V</div>
+        <div className="rv-login-title">Vivara Health</div>
+        <div className="rv-login-sub">A sua saúde, acompanhada.</div>
+
+        <form className="rv-login-form" onSubmit={submit}>
+          <label className="rv-login-label" htmlFor="rv-login-email">Email</label>
+          <input id="rv-login-email" className="rv-login-input" type="email" autoComplete="username"
+            placeholder="o seu email" value={email} onChange={(e) => setEmail(e.target.value)} required/>
+          <label className="rv-login-label" htmlFor="rv-login-pass">Palavra-passe</label>
+          <input id="rv-login-pass" className="rv-login-input" type="password" autoComplete="current-password"
+            placeholder="••••••••••" value={pass} onChange={(e) => setPass(e.target.value)} required/>
+          {error && <div className="rv-login-error" role="alert">{error}</div>}
+          <button className="rv-cta-primary rv-login-btn" type="submit" disabled={busy}>
+            {busy ? "A entrar…" : "Entrar"}
+          </button>
+        </form>
+
+        <div className="rv-login-foot">Acesso reservado · dados encriptados</div>
+      </div>
+    </div>
+  );
+}
+
 function AppV2Page() {
   const [route, setRoute] = useState<NavRoute>("home");
+  const [authed, setAuthed] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(LOGIN_STORAGE_KEY) === "1") setAuthed(true);
+    } catch { /* modo privado */ }
+  }, []);
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
@@ -2089,13 +2150,25 @@ function AppV2Page() {
     toastTimer.current = setTimeout(() => setToastMsg(null), 1800);
   }, []);
 
+  const logout = useCallback(() => {
+    try { localStorage.removeItem(LOGIN_STORAGE_KEY); } catch { /* modo privado */ }
+    setAuthed(false);
+    setRoute("home");
+  }, []);
+
   return (
     <div className="rv-root" data-theme="dark">
-      <NavCtx.Provider value={{ go: setRoute, current: route, showToast }}>
+      <NavCtx.Provider value={{ go: setRoute, current: route, showToast, logout }}>
         <div className="rv-phone-shell">
-          {renderScreen(route)}
-          {toastMsg && <div className="rv-toast" role="status" aria-live="polite">{toastMsg}</div>}
-          <AssistantFAB />
+          {authed ? (
+            <>
+              {renderScreen(route)}
+              {toastMsg && <div className="rv-toast" role="status" aria-live="polite">{toastMsg}</div>}
+              <AssistantFAB />
+            </>
+          ) : (
+            <LoginScreen onLogin={() => setAuthed(true)} />
+          )}
         </div>
       </NavCtx.Provider>
     </div>

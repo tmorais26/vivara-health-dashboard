@@ -1254,3 +1254,40 @@ button.rv-plan-row:active{background:rgba(255,255,255,0.03);}
   .rv-screen,.rv-body>*,.rv-score-dim-fill,.rv-goal-fill,.rv-bioage-fill{animation:none !important;}
   .rv-score-dim-fill,.rv-goal-fill,.rv-bioage-fill{transform:none !important;}
 }
+
+/* ─── Login ───────────────────────────────────────── */
+.rv-login{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 28px 48px;text-align:center;
+}
+.rv-login-mark{
+  width:64px;height:64px;border-radius:20px;
+  background:var(--lime);color:#0b0d0f;
+  display:flex;align-items:center;justify-content:center;
+  font-size:30px;font-weight:700;letter-spacing:-0.02em;
+  box-shadow:0 16px 40px -12px rgba(198,255,61,0.45);
+  margin-bottom:18px;
+}
+.rv-login-title{font-size:24px;font-weight:600;letter-spacing:-0.03em;color:var(--fg);}
+.rv-login-sub{font-size:13px;color:var(--fg-50);margin-top:4px;}
+.rv-login-form{width:100%;max-width:320px;margin-top:30px;display:flex;flex-direction:column;text-align:left;}
+.rv-login-label{
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;
+  color:var(--fg-50);margin:0 0 6px 2px;
+}
+.rv-login-input{
+  width:100%;padding:13px 14px;margin-bottom:14px;
+  background:rgba(255,255,255,0.06);border:1px solid var(--line);border-radius:14px;
+  color:var(--fg);font-family:inherit;font-size:14px;letter-spacing:-0.005em;
+  outline:none;transition:border-color 0.15s,background 0.15s;
+}
+.rv-login-input::placeholder{color:var(--fg-30);}
+.rv-login-input:focus{border-color:rgba(198,255,61,0.5);background:rgba(255,255,255,0.08);}
+.rv-login-error{
+  font-size:12px;color:var(--alert);
+  background:rgba(255,92,92,0.10);border:1px solid rgba(255,92,92,0.25);
+  border-radius:10px;padding:9px 12px;margin-bottom:12px;
+}
+.rv-login-btn{margin:4px 0 0;width:100%;}
+.rv-login-btn:disabled{opacity:0.6;cursor:default;}
+.rv-login-foot{font-size:10.5px;color:var(--fg-30);margin-top:26px;}
