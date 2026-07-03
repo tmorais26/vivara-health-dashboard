@@ -3,12 +3,9 @@ import { CTAButton } from "./ui";
 
 const SITE_USER = "site@vivara.health";
 const SITE_PASS = "+Vivara2024";
-const STORAGE_KEY = "vivara_site_unlocked";
 
 export default function SiteGate({ children }) {
-  const [unlocked, setUnlocked] = useState(
-    () => localStorage.getItem(STORAGE_KEY) === "true",
-  );
+  const [unlocked, setUnlocked] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,7 +13,6 @@ export default function SiteGate({ children }) {
   function handleSubmit(e) {
     e.preventDefault();
     if (email === SITE_USER && password === SITE_PASS) {
-      localStorage.setItem(STORAGE_KEY, "true");
       setUnlocked(true);
       setError("");
     } else {
