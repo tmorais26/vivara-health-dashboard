@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Vivara landing — design tokens (Octo-inspired)
+   ============================================================ */
+@theme {
+  --font-serif: "DM Serif Display", "Instrument Serif", Georgia, "Times New Roman", serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-brand-dark: #1a1814;
+  --color-brand-beige: #f9f6f0;
+  --color-brand-olive: #4a4337;
+  --color-brand-olive-hover: #5e5546;
+  --color-brand-lime: #c7de82;
+  --color-brand-lime-hover: #b8d06a;
+  --color-brand-blue-light: #ebf6fd;
+  --color-brand-text: #1a1d1c;
+  --color-brand-muted: #4a4337;
+  --color-brand-green-dark: #1a4d25;
+  --color-accent-amber: #c17f24;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-brand-beige);
+  color: var(--color-brand-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+  letter-spacing: -0.04em;
+}
+
+/* ===================== Keyframes ===================== */
+@keyframes insights-line-draw {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float-soft 6s ease-in-out infinite;
+}
+.animate-line-draw {
+  stroke-dasharray: 1000;
+  animation: insights-line-draw 2.2s ease-out forwards;
+}
