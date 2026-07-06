@@ -1,10 +1,30 @@
 import { useState } from "react";
 import { CTAButton } from "./ui";
+import { useT } from "../i18n";
 
 const SITE_USER = "site@vivara.health";
 const SITE_PASS = "+Vivara2024";
 
+const T = {
+  pt: {
+    notice: "Este site ainda não está disponível ao público.",
+    email: "Email",
+    password: "Palavra-passe",
+    submit: "Entrar",
+    invalid: "Credenciais inválidas.",
+  },
+  en: {
+    notice: "This site is not yet available to the public.",
+    email: "Email",
+    password: "Password",
+    submit: "Sign in",
+    invalid: "Invalid credentials.",
+  },
+};
+
 export default function SiteGate({ children }) {
+  const t = useT();
+  const L = t(T);
   const [unlocked, setUnlocked] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +36,7 @@ export default function SiteGate({ children }) {
       setUnlocked(true);
       setError("");
     } else {
-      setError("Credenciais inválidas.");
+      setError(L.invalid);
     }
   }
 
@@ -31,14 +51,12 @@ export default function SiteGate({ children }) {
         <h1 className="font-serif font-light tracking-tight text-3xl text-center">
           Vivara Health
         </h1>
-        <p className="mt-2 text-sm text-brand-muted/70 text-center">
-          Este site ainda não está disponível ao público.
-        </p>
+        <p className="mt-2 text-sm text-brand-muted/70 text-center">{L.notice}</p>
 
         <div className="mt-8 space-y-4">
           <div>
             <label className="text-sm font-medium" htmlFor="site-gate-email">
-              Email
+              {L.email}
             </label>
             <input
               id="site-gate-email"
@@ -52,7 +70,7 @@ export default function SiteGate({ children }) {
           </div>
           <div>
             <label className="text-sm font-medium" htmlFor="site-gate-password">
-              Palavra-passe
+              {L.password}
             </label>
             <input
               id="site-gate-password"
@@ -69,7 +87,7 @@ export default function SiteGate({ children }) {
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
         <CTAButton type="submit" className="mt-6 w-full">
-          Entrar
+          {L.submit}
         </CTAButton>
       </form>
     </div>
