@@ -4,6 +4,7 @@ import { ArrowRight, Bell, ChevronDown, Plus, Search, Sparkles } from "lucide-re
 import { resumosUtentes, type ResumoUtente } from "@/data/mock-portal";
 import { formatarData } from "@/data/mock-utente";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
+import { useT } from "@/lib/i18n";
 
 type SortKey = "alertas" | "proxima" | "ultima" | "nome";
 
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("alertas");
 
@@ -51,11 +53,11 @@ function Index() {
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8">
           <div>
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Portal clínico
+              {t.comum.portalClinico}
             </div>
-            <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">Os meus utentes</h1>
+            <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">{t.lista.titulo}</h1>
             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-              {resumosUtentes.length} utentes activos. Cada utente é uma série temporal que se lê como um livro.
+              {t.lista.subtitulo(resumosUtentes.length)}
             </p>
           </div>
           <button
@@ -63,7 +65,7 @@ function Index() {
             className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
             <Plus className="h-3.5 w-3.5" />
-            Novo utente
+            {t.lista.novoUtente}
           </button>
         </div>
 
@@ -74,7 +76,7 @@ function Index() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Pesquisar por nome ou cidade…"
+              placeholder={t.lista.pesquisar}
               className="w-full rounded-full border border-border bg-surface-raised py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
             />
           </div>
@@ -87,22 +89,20 @@ function Index() {
           ))}
         </div>
 
-        <p className="mt-8 text-[11px] text-muted-foreground">
-          Versão demonstrativa — apenas o perfil de Maria Antunes está disponível para navegação detalhada.
-        </p>
+        <p className="mt-8 text-[11px] text-muted-foreground">{t.comum.demoNota}</p>
 
         <div className="mt-4 flex flex-wrap gap-4">
           <Link
             to="/app"
             className="inline-flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground"
           >
-            Ver app da utente <ArrowRight className="h-3 w-3" />
+            {t.lista.verAppUtente} <ArrowRight className="h-3 w-3" />
           </Link>
           <Link
             to="/app-v2"
             className="inline-flex items-center gap-2 text-[11px] text-primary hover:opacity-80"
           >
-            App v2 (novo design) <ArrowRight className="h-3 w-3" />
+            {t.lista.appV2} <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
       </main>
@@ -112,11 +112,12 @@ function Index() {
 }
 
 function SortDropdown({ sort, onChange }: { sort: SortKey; onChange: (s: SortKey) => void }) {
+  const t = useT();
   const labels: Record<SortKey, string> = {
-    alertas: "Alertas (desc)",
-    proxima: "Próxima consulta",
-    ultima: "Última consulta",
-    nome: "Nome (A–Z)",
+    alertas: t.lista.ordAlertas,
+    proxima: t.lista.ordProxima,
+    ultima: t.lista.ordUltima,
+    nome: t.lista.ordNome,
   };
   const [open, setOpen] = useState(false);
   return (
@@ -126,7 +127,7 @@ function SortDropdown({ sort, onChange }: { sort: SortKey; onChange: (s: SortKey
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-raised px-3.5 py-2 text-xs font-medium text-foreground hover:bg-accent"
       >
-        Ordenar: {labels[sort]}
+        {t.lista.ordenar}: {labels[sort]}
         <ChevronDown className="h-3 w-3" />
       </button>
       {open && (
@@ -154,6 +155,7 @@ function SortDropdown({ sort, onChange }: { sort: SortKey; onChange: (s: SortKey
 }
 
 function UtenteCard({ u }: { u: ResumoUtente }) {
+  const t = useT();
   const conteudo = (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
       <div className="flex items-center gap-4">
@@ -172,21 +174,21 @@ function UtenteCard({ u }: { u: ResumoUtente }) {
             {u.novosDados && (
               <span className="inline-flex items-center gap-1 rounded-full bg-state-alert-soft px-2 py-0.5 text-[10px] font-medium text-state-alert">
                 <Sparkles className="h-2.5 w-2.5" />
-                Novos dados
+                {t.lista.novosDados}
               </span>
             )}
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
             <span>{u.cidade}</span>
             <span>·</span>
-            <span>Plano {u.plano}</span>
+            <span>{t.lista.plano} {u.plano}</span>
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-            <span>Última: {formatarData(u.ultimaConsulta)}</span>
+            <span>{t.lista.ultima}: {formatarData(u.ultimaConsulta)}</span>
             {u.proximaConsulta && (
               <span className="inline-flex items-center gap-1 text-foreground">
                 <Bell className="h-3 w-3 text-state-warn" />
-                Próxima: {formatarData(u.proximaConsulta)}
+                {t.lista.proxima}: {formatarData(u.proximaConsulta)}
                 {u.proximaConsultaHora ? ` · ${u.proximaConsultaHora}` : ""}
               </span>
             )}
@@ -195,9 +197,9 @@ function UtenteCard({ u }: { u: ResumoUtente }) {
       </div>
 
       <div className="flex items-center gap-5 sm:gap-6">
-        <Stat label="Alertas" value={String(u.alertasAtivos)} tone={u.alertasAtivos > 0 ? "alert" : "muted"} />
-        <Stat label="Fora do alvo" value={String(u.marcadoresForaAlvo)} tone={u.marcadoresForaAlvo > 5 ? "warn" : "muted"} />
-        <Stat label="Marcadores" value={String(u.totalMarcadores)} tone="muted" />
+        <Stat label={t.lista.alertas} value={String(u.alertasAtivos)} tone={u.alertasAtivos > 0 ? "alert" : "muted"} />
+        <Stat label={t.lista.foraDoAlvo} value={String(u.marcadoresForaAlvo)} tone={u.marcadoresForaAlvo > 5 ? "warn" : "muted"} />
+        <Stat label={t.lista.marcadores} value={String(u.totalMarcadores)} tone="muted" />
         <ArrowRight className="h-4 w-4 text-muted-foreground" />
       </div>
     </div>

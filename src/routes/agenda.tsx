@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
+import { useT } from "@/lib/i18n";
 import { agendaSemana } from "@/data/mock-portal";
 import { formatarData, utente as mariaMock } from "@/data/mock-utente";
 import {
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/agenda")({
 });
 
 function AgendaPage() {
+  const t = useT();
   const [prepararId, setPrepararId] = useState<string | null>(null);
   const evento = agendaSemana.find((e) => e.id === prepararId) ?? null;
   // Agrupa por dia.
@@ -49,11 +51,9 @@ function AgendaPage() {
     <PortalShell>
       <main className="mx-auto max-w-[1100px] px-4 py-6 pb-24 sm:px-6 sm:py-10 lg:pb-10">
         <div className="mb-6 sm:mb-8">
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Portal</div>
-          <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">Agenda</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Próximas consultas. Clica num utente para abrir o perfil clínico.
-          </p>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{t.comum.portal}</div>
+          <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">{t.agenda.titulo}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t.agenda.subtitulo}</p>
         </div>
 
         <div className="space-y-4 sm:space-y-6">
@@ -65,7 +65,7 @@ function AgendaPage() {
                   <span className="text-sm font-medium text-foreground">{formatarData(dia)}</span>
                 </div>
                 <span className="tabular text-[11px] text-muted-foreground">
-                  {porDia[dia].length} consulta{porDia[dia].length === 1 ? "" : "s"}
+                  {porDia[dia].length} {porDia[dia].length === 1 ? t.agenda.consulta : t.agenda.consultas}
                 </span>
               </div>
               <ul className="divide-y divide-border">
@@ -100,20 +100,20 @@ function AgendaPage() {
                         <button
                           type="button"
                           onClick={() => setPrepararId(e.id)}
-                          aria-label="Preparar consulta"
+                          aria-label={t.agenda.prepararConsulta}
                           className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-2 text-[11px] font-medium text-foreground transition-colors hover:bg-accent lg:h-auto lg:px-3 lg:py-1.5"
                         >
                           <Sparkles className="h-3 w-3" />
-                          <span className="hidden lg:inline">Preparar</span>
+                          <span className="hidden lg:inline">{t.agenda.preparar}</span>
                         </button>
                         <Link
                           to="/consulta/$eventoId"
                           params={{ eventoId: e.id }}
-                          aria-label="Iniciar consulta"
+                          aria-label={t.agenda.iniciarConsulta}
                           className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full bg-foreground px-2.5 text-[11px] font-medium text-background transition-opacity hover:opacity-90 lg:h-auto lg:px-3 lg:py-1.5"
                         >
                           <Play className="h-3 w-3" />
-                          <span className="hidden lg:inline">Iniciar</span>
+                          <span className="hidden lg:inline">{t.agenda.iniciar}</span>
                         </Link>
                       </div>
                     </li>
@@ -144,6 +144,7 @@ function PreparoConsulta({
   onClose: () => void;
 }) {
   // Mock: para Maria mostramos dados reais; para os restantes, conteúdo plausível.
+  const t = useT();
   const isMaria = evento.utenteId === mariaMock.id;
   const alertas = isMaria
     ? mariaMock.alertas
@@ -164,7 +165,7 @@ function PreparoConsulta({
     <div className="flex h-full flex-col gap-5">
       <SheetHeader>
         <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-          Preparar consulta
+          {t.agenda.prepararConsulta}
         </div>
         <SheetTitle className="font-serif text-2xl">{evento.utenteNome}</SheetTitle>
         <SheetDescription>
@@ -177,7 +178,7 @@ function PreparoConsulta({
       <section className="rounded-2xl border border-border bg-surface-raised p-4">
         <div className="mb-2 flex items-center gap-1.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
           <AlertTriangle className="h-3 w-3" />
-          Alertas clínicos · {alertas.length}
+          {t.agenda.alertasClinicos} · {alertas.length}
         </div>
         <ul className="space-y-2">
           {alertas.map((a) => {
@@ -193,7 +194,7 @@ function PreparoConsulta({
             );
           })}
           {alertas.length === 0 && (
-            <li className="text-[12px] text-muted-foreground">Sem alertas activos.</li>
+            <li className="text-[12px] text-muted-foreground">{t.agenda.semAlertas}</li>
           )}
         </ul>
       </section>
@@ -203,13 +204,13 @@ function PreparoConsulta({
         <section className="rounded-2xl border border-border bg-surface-raised p-4">
           <div className="mb-3 flex items-center gap-1.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
             <ClipboardList className="h-3 w-3" />
-            Anamnese · resumo
+            {t.agenda.anamneseResumo}
           </div>
           <div className="flex flex-col gap-3">
             <AnamneseBlock
               icon={<AlertTriangle className="h-3 w-3 text-state-alert" />}
-              title="Alergias a medicamentos"
-              empty="Sem alergias conhecidas"
+              title={t.agenda.alergias}
+              empty={t.agenda.semAlergias}
               items={ficha.alergiasMedicamentos.map(
                 (a) => `${a.substancia} · ${a.reacao} (${a.gravidade})`,
               )}
@@ -217,29 +218,29 @@ function PreparoConsulta({
             />
             <AnamneseBlock
               icon={<HeartPulse className="h-3 w-3" />}
-              title="Antecedentes pessoais"
+              title={t.agenda.antPessoais}
               items={ficha.antecedentesPessoais}
             />
             <AnamneseBlock
               icon={<Pill className="h-3 w-3" />}
-              title="Medicação habitual"
+              title={t.agenda.medicacao}
               items={ficha.medicacaoHabitual.map((m) => `${m.nome} · ${m.posologia}`)}
             />
             <AnamneseBlock
               icon={<Sparkles className="h-3 w-3" />}
-              title="Suplementação"
+              title={t.agenda.suplementacao}
               items={ficha.suplementacao.map((s) => `${s.nome} · ${s.posologia}`)}
             />
             <AnamneseBlock
               icon={<Scissors className="h-3 w-3" />}
-              title="Antecedentes cirúrgicos"
+              title={t.agenda.antCirurgicos}
               items={ficha.antecedentesCirurgicos.map(
                 (c) => `${c.intervencao} (${c.ano})`,
               )}
             />
             <AnamneseBlock
               icon={<Users className="h-3 w-3" />}
-              title="Antecedentes familiares"
+              title={t.agenda.antFamiliares}
               items={ficha.antecedentesFamiliares.map(
                 (af) =>
                   `${af.condicao} · ${af.familiar}${af.idadeDiagnostico ? ` (${af.idadeDiagnostico} anos)` : ""}`,
@@ -251,7 +252,7 @@ function PreparoConsulta({
             params={{ utenteId: evento.utenteId }}
             className="mt-3 inline-block text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
           >
-            Ver ficha clínica completa →
+            {t.agenda.verFichaCompleta}
           </Link>
         </section>
       )}
@@ -260,7 +261,7 @@ function PreparoConsulta({
       <section className="rounded-2xl border border-border bg-surface-raised p-4">
         <div className="mb-2 flex items-center gap-1.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
           <FileText className="h-3 w-3" />
-          Última nota de consulta
+          {t.agenda.ultimaNota}
         </div>
         {ultimaNota ? (
           <div className="space-y-2 text-[12.5px] text-foreground">
@@ -282,7 +283,7 @@ function PreparoConsulta({
           </div>
         ) : (
           <p className="text-[12px] text-muted-foreground">
-            Sem notas registadas. Esta poderá ser a primeira consulta.
+            {t.agenda.semNotas}
           </p>
         )}
       </section>
@@ -291,7 +292,7 @@ function PreparoConsulta({
       <section className="rounded-2xl border border-border bg-surface-raised p-4">
         <div className="mb-2 flex items-center gap-1.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
           <Activity className="h-3 w-3" />
-          Adesão · últimos 7 dias
+          {t.agenda.adesao}
         </div>
         <ul className="space-y-2">
           {adesao.map((a) => {
@@ -318,14 +319,14 @@ function PreparoConsulta({
           onClick={onClose}
           className="rounded-full border border-border bg-background px-4 py-2 text-xs font-medium text-foreground hover:bg-accent"
         >
-          Fechar
+          {t.comum.fechar}
         </button>
         <Link
           to="/utentes/$utenteId"
           params={{ utenteId: evento.utenteId }}
           className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-xs font-medium text-background hover:opacity-90"
         >
-          Abrir perfil completo
+          {t.agenda.abrirPerfil}
         </Link>
       </div>
     </div>
@@ -360,7 +361,7 @@ function AnamneseBlock({
       </div>
       {items.length === 0 ? (
         <p className="mt-1.5 text-[12px] text-muted-foreground">
-          {empty ?? "Sem registos"}
+          {empty ?? "—"}
         </p>
       ) : (
         <ul className="mt-1.5 flex flex-col gap-1">

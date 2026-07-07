@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Clock, Fingerprint, X } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 /**
  * Aviso visual de sessão a expirar — mock de compliance (RGPD/Art. 9).
@@ -7,6 +8,7 @@ import { Clock, Fingerprint, X } from "lucide-react";
  * Apenas ilustrativo: não há lógica real de sessão.
  */
 export function SessionTimeoutBanner() {
+  const t = useT();
   const [visible, setVisible] = useState(false);
   const [secs, setSecs] = useState(180);
 
@@ -32,11 +34,11 @@ export function SessionTimeoutBanner() {
       <div className="flex items-center gap-2">
         <Clock className="h-3.5 w-3.5" />
         <span>
-          A sua sessão expira em{" "}
+          {t.sessao.expiraEm}{" "}
           <span className="tabular font-medium">
             {String(m).padStart(2, "0")}:{String(s).padStart(2, "0")}
           </span>
-          . Pressione qualquer botão para renovar.
+          . {t.sessao.renovar}
         </span>
       </div>
       <div className="flex items-center gap-1.5">
@@ -62,7 +64,7 @@ export function SessionTimeoutBanner() {
           }}
           className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium hover:bg-state-warn/10"
         >
-          Renovar agora
+          {t.sessao.renovarAgora}
           <X className="h-3 w-3" />
         </button>
       </div>

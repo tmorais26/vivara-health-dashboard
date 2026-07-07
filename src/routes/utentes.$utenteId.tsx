@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { utente, type Categoria, type Marcador, type TipoTarefa } from "@/data/mock-utente";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
+import { useT } from "@/lib/i18n";
 import { PatientHeader } from "@/components/dashboard/PatientHeader";
 import { PatientMobileView } from "@/components/portal/PatientMobileView";
 import { MarkerList } from "@/components/dashboard/MarkerList";
@@ -27,43 +28,56 @@ export const Route = createFileRoute("/utentes/$utenteId")({
     ],
   }),
   component: DashboardUtente,
-  notFoundComponent: () => (
+  notFoundComponent: NaoEncontrado,
+});
+
+function NaoEncontrado() {
+  const t = useT();
+  return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
-        <h1 className="font-serif text-3xl text-foreground">Utente não encontrado</h1>
+        <h1 className="font-serif text-3xl text-foreground">{t.utente.naoEncontrado}</h1>
         <Link to="/" className="mt-4 inline-block text-sm text-muted-foreground hover:text-foreground">
-          ← Voltar à lista
+          {t.utente.voltarLista}
         </Link>
       </div>
     </div>
-  ),
-});
+  );
+}
 
 type MainTab = "clinico" | "genomica" | "plano" | "prescricoes" | "consultas-docs";
 type ClinicoSub = "analises" | "composicao" | "wearable" | "comparar";
 type CDSub = "consultas" | "documentos";
 
-const mainTabs: { id: MainTab; label: string }[] = [
-  { id: "clinico", label: "Clínico" },
-  { id: "genomica", label: "Genómica" },
-  { id: "plano", label: "Plano" },
-  { id: "prescricoes", label: "Prescrições" },
-  { id: "consultas-docs", label: "Consultas & Docs" },
-];
+const mainTabIds: MainTab[] = ["clinico", "genomica", "plano", "prescricoes", "consultas-docs"];
+const clinicoSubIds: ClinicoSub[] = ["analises", "composicao", "wearable", "comparar"];
+const cdSubIds: CDSub[] = ["consultas", "documentos"];
 
-const clinicoSubs: { id: ClinicoSub; label: string }[] = [
-  { id: "analises", label: "Análises" },
-  { id: "composicao", label: "Composição" },
-  { id: "wearable", label: "Wearable" },
-  { id: "comparar", label: "Comparar" },
-];
-
-const cdSubs: { id: CDSub; label: string }[] = [
-  { id: "consultas", label: "Consultas" },
-  { id: "documentos", label: "Documentos" },
-];
+function useTabLabels() {
+  const t = useT();
+  const main: Record<MainTab, string> = {
+    clinico: t.utente.tabClinico,
+    genomica: t.utente.tabGenomica,
+    plano: t.utente.tabPlano,
+    prescricoes: t.utente.tabPrescricoes,
+    "consultas-docs": t.utente.tabConsultasDocs,
+  };
+  const clinico: Record<ClinicoSub, string> = {
+    analises: t.utente.subAnalises,
+    composicao: t.utente.subComposicao,
+    wearable: t.utente.subWearable,
+    comparar: t.utente.subComparar,
+  };
+  const cd: Record<CDSub, string> = {
+    consultas: t.utente.subConsultas,
+    documentos: t.utente.subDocumentos,
+  };
+  return { main, clinico, cd };
+}
 
 function DashboardUtente() {
+  const t = useT();
+  const labels = useTabLabels();
   const [mainTab, setMainTab] = useState<MainTab>("clinico");
   const [clinicoSub, setClinicoSub] = useState<ClinicoSub>("analises");
   const [cdSub, setCdSub] = useState<CDSub>("consultas");
@@ -172,10 +186,10 @@ function DashboardUtente() {
         >
           <div className="flex items-center gap-3">
             <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Anamnese
+              {t.utente.anamnese}
             </span>
             <span className="text-sm text-foreground">
-              Ficha clínica · alergias, antecedentes, medicação, hábitos
+              {t.utente.anamneseDesc}
             </span>
           </div>
           <ChevronDown
@@ -192,20 +206,20 @@ function DashboardUtente() {
       {/* Tabs */}
       <nav className="sticky top-0 z-10 border-b border-border bg-surface/90 backdrop-blur">
         <div className="flex items-center gap-1 px-8">
-          {mainTabs.map((t) => {
-            const isActive = mainTab === t.id;
+          {mainTabIds.map((id) => {
+            const isActive = mainTab === id;
             return (
               <button
-                key={t.id}
+                key={id}
                 type="button"
-                onClick={() => setMainTab(t.id)}
+                onClick={() => setMainTab(id)}
                 className={`relative px-4 py-3.5 text-sm transition-colors ${
                   isActive
                     ? "font-medium text-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {t.label}
+                {labels.main[id]}
                 {isActive && (
                   <span className="absolute inset-x-3 -bottom-px h-px bg-foreground" />
                 )}
@@ -215,17 +229,17 @@ function DashboardUtente() {
         </div>
         {(mainTab === "clinico" || mainTab === "consultas-docs") && (
           <div className="flex items-center gap-1 border-t border-border bg-background/60 px-8 py-2">
-            {(mainTab === "clinico" ? clinicoSubs : cdSubs).map((s) => {
+            {(mainTab === "clinico" ? clinicoSubIds : cdSubIds).map((id) => {
               const isActive =
-                mainTab === "clinico" ? clinicoSub === s.id : cdSub === s.id;
+                mainTab === "clinico" ? clinicoSub === id : cdSub === id;
               return (
                 <button
-                  key={s.id}
+                  key={id}
                   type="button"
                   onClick={() =>
                     mainTab === "clinico"
-                      ? handleClinicoSub(s.id as ClinicoSub)
-                      : setCdSub(s.id as CDSub)
+                      ? handleClinicoSub(id as ClinicoSub)
+                      : setCdSub(id as CDSub)
                   }
                   className={`rounded-full px-3 py-1 text-[11.5px] transition-colors ${
                     isActive
@@ -233,7 +247,7 @@ function DashboardUtente() {
                       : "text-muted-foreground hover:bg-accent hover:text-foreground"
                   }`}
                 >
-                  {s.label}
+                  {mainTab === "clinico" ? labels.clinico[id as ClinicoSub] : labels.cd[id as CDSub]}
                 </button>
               );
             })}
@@ -267,9 +281,9 @@ function DashboardUtente() {
             <aside className="rounded-2xl border border-border bg-surface-raised">
               <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
                 <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                  {marcadoresFiltrados.length} marcadores
+                  {marcadoresFiltrados.length} {t.utente.marcadores}
                 </div>
-                <div className="text-[11px] text-muted-foreground">18 meses</div>
+                <div className="text-[11px] text-muted-foreground">{t.utente.meses18}</div>
               </div>
               <MarkerList
                 marcadores={marcadoresFiltrados}
