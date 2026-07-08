@@ -1291,3 +1291,32 @@ button.rv-plan-row:active{background:rgba(255,255,255,0.03);}
 .rv-login-btn{margin:4px 0 0;width:100%;}
 .rv-login-btn:disabled{opacity:0.6;cursor:default;}
 .rv-login-foot{font-size:10.5px;color:var(--fg-30);margin-top:26px;}
+
+/* ─── Sino de avisos na home ──────────────────────── */
+.rv-home-greet-actions{display:flex;align-items:center;gap:10px;}
+.rv-home-bell{
+  width:40px;height:40px;border-radius:50%;border:1px solid var(--line);
+  background:rgba(255,255,255,0.06);cursor:pointer;position:relative;
+  color:var(--fg-70);display:flex;align-items:center;justify-content:center;padding:0;
+}
+.rv-home-bell-dot{
+  position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;
+  background:var(--alert);border:1.5px solid var(--bg);
+}
+
+/* ─── Toggle de idioma ────────────────────────────── */
+.rv-lang-toggle{display:inline-flex;background:rgba(255,255,255,0.06);border:1px solid var(--line);border-radius:999px;padding:2px;}
+.rv-lang-opt{
+  font:inherit;font-size:12px;font-weight:600;cursor:pointer;
+  padding:5px 12px;border:none;border-radius:999px;background:transparent;
+  color:var(--fg-50);transition:background 0.15s,color 0.15s;
+}
+.rv-lang-opt[data-active="true"]{background:var(--lime);color:#0b0d0f;}
+.rv-login-top{display:flex;justify-content:flex-end;padding:4px 20px 0;}
+.rv-login-passwrap{position:relative;display:flex;align-items:center;margin-bottom:14px;}
+.rv-login-passwrap .rv-login-input{flex:1;padding-right:44px;margin-bottom:0;}
+.rv-login-eye{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  background:transparent;border:none;cursor:pointer;color:var(--fg-50);padding:0;
+}
