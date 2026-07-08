@@ -19,6 +19,7 @@ import type { Alerta, Utente } from "@/data/mock-utente";
 import { formatarData } from "@/data/mock-utente";
 import { Link } from "@tanstack/react-router";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "@/components/portal/LanguageToggle";
 import { ALERTA_VS_ALVO_EXPLICACAO } from "@/data/mock-portal";
 import { InfoHint } from "@/components/portal/InfoHint";
 import {
@@ -95,6 +96,7 @@ export function PatientHeader({
             <Lock className="h-3 w-3" />
             Sessão · {sessaoFmt}
           </span>
+          <LanguageToggle />
           <ThemeToggle />
           <span>{utente.medicaResponsavel}</span>
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">

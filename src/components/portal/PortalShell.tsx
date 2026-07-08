@@ -10,6 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "./LanguageToggle";
 import { SessionTimeoutBanner } from "./SessionTimeoutBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
@@ -121,6 +122,7 @@ export function PortalShell({
               <ShieldCheck className="h-2.5 w-2.5" />
               MFA
             </span>
+            <LanguageToggle />
             <ThemeToggle />
             <button
               type="button"
@@ -147,6 +149,7 @@ export function PortalShell({
                   <ShieldCheck className="h-3 w-3" />
                   {t.nav.mfaActivo}
                 </span>
+                <LanguageToggle />
                 <ThemeToggle />
                 <span>Dra. Sofia Cardoso</span>
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
