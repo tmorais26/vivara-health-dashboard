@@ -190,20 +190,38 @@ function BioAgeCard() {
 }
 
 // ─── Score de longevidade ────────────────────────────
-const SCORE_LONGEVIDADE = 77;
-const SCORE_PILARES: { key: string; valor: number; tone?: "watch" }[] = [
-  { key: "score.cardio",      valor: 71 },
-  { key: "score.composition", valor: 68, tone: "watch" },
-  { key: "score.recovery",    valor: 82 },
-];
+// Cardio-metabólica e Composição ainda não têm fonte de dados real ligada
+// (dependem de análises e peso/composição corporal) — ficam como estimativa
+// de demonstração até isso existir. Recuperação usa o recovery score da
+// Whoop em tempo real assim que há um dispositivo ligado.
+const SCORE_MOCK = { cardio: 71, composicao: 68, recuperacao: 82 };
+const SCORE_LONGEVIDADE_MOCK = 77;
 
 function ScoreLongevidadeCard() {
-  const { t } = useLang();
+  const { t, L } = useLang();
+  const getStatus = useServerFn(whoopStatus);
+  const [whoop, setWhoop] = useState<WhoopStatus | null>(null);
+  useEffect(() => {
+    getStatus().then(setWhoop).catch(() => {});
+  }, [getStatus]);
+
+  const liveRecovery = whoop?.connected ? whoop.metrics?.recovery ?? null : null;
+  const recuperacaoValor = liveRecovery ?? SCORE_MOCK.recuperacao;
+  const scoreTotal = liveRecovery != null
+    ? Math.round((SCORE_MOCK.cardio + SCORE_MOCK.composicao + liveRecovery) / 3)
+    : SCORE_LONGEVIDADE_MOCK;
+
+  const pilares: { key: string; valor: number; tone?: "watch"; live?: boolean }[] = [
+    { key: "score.cardio",      valor: SCORE_MOCK.cardio,      tone: "watch" },
+    { key: "score.composition", valor: SCORE_MOCK.composicao,  tone: "watch" },
+    { key: "score.recovery",    valor: recuperacaoValor,       live: liveRecovery != null },
+  ];
+
   const circumference = 2 * Math.PI * 27;
-  const targetOffset = circumference * (1 - SCORE_LONGEVIDADE / 100);
+  const targetOffset = circumference * (1 - scoreTotal / 100);
   const [offset, setOffset] = useState(circumference);
   const [info, setInfo] = useState(false);
-  const shown = useCountUp(SCORE_LONGEVIDADE);
+  const shown = useCountUp(scoreTotal);
   useEffect(() => {
     const raf = requestAnimationFrame(() => setOffset(targetOffset));
     return () => cancelAnimationFrame(raf);
@@ -236,9 +254,14 @@ function ScoreLongevidadeCard() {
           {t("score.disclaim")}
         </div>
         <div className="rv-score-breakdown">
-          {SCORE_PILARES.map((p) => (
+          {pilares.map((p) => (
             <div key={p.key} className="rv-score-dim" data-tone={p.tone}>
-              <div className="rv-score-dim-label">{t(p.key)}</div>
+              <div className="rv-score-dim-label">
+                {t(p.key)}
+                {p.live
+                  ? <span className="rv-score-dim-tag" data-live="true">Whoop</span>
+                  : <span className="rv-score-dim-tag">{L("estimativa","estimate")}</span>}
+              </div>
               <div className="rv-score-dim-val">{p.valor}</div>
               <div className="rv-score-dim-bar"><div className="rv-score-dim-fill" style={{width: `${p.valor}%`}}/></div>
             </div>
