@@ -1669,7 +1669,6 @@ function WhoopCard() {
   const { L } = useLang();
   const getStatus = useServerFn(whoopStatus);
   const getAuthUrl = useServerFn(whoopAuthUrl);
-  const doExchange = useServerFn(whoopExchange);
   const doDisconnect = useServerFn(whoopDisconnect);
   const [status, setStatus] = useState<WhoopStatus | null>(null);
   const [busy, setBusy] = useState(false);
@@ -1683,27 +1682,8 @@ function WhoopCard() {
   }, [getStatus]);
 
   useEffect(() => {
-    // Trata o retorno do OAuth do Whoop (?code=…&state=…) e depois atualiza.
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    const state = params.get("state");
-    if (code) {
-      setBusy(true);
-      doExchange({ data: { code, state: state ?? "" } })
-        .then((r) => { if (!r.ok && r.error && r.error !== "not_configured") showToast(L("Falha ao ligar o Whoop","Failed to connect Whoop")); })
-        .catch(() => {})
-        .finally(() => {
-          const url = new URL(window.location.href);
-          url.searchParams.delete("code");
-          url.searchParams.delete("state");
-          window.history.replaceState({}, "", url.toString());
-          setBusy(false);
-          refresh();
-        });
-    } else {
-      refresh();
-    }
-  }, [doExchange, refresh, showToast, L]);
+    refresh();
+  }, [refresh]);
 
   const connect = async () => {
     setBusy(true);
@@ -2362,6 +2342,7 @@ function AppV2Page() {
   const [lang, setLangState] = useState<Lang>("pt");
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const doExchange = useServerFn(whoopExchange);
 
   useEffect(() => {
     try {
@@ -2370,6 +2351,35 @@ function AppV2Page() {
       if (savedLang === "pt" || savedLang === "en") setLangState(savedLang);
     } catch { /* modo privado */ }
   }, []);
+
+  // Trata o retorno do OAuth do Whoop (?code=…) em qualquer arranque da app,
+  // troca o código por token e leva o utilizador ao ecrã de Dispositivos.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const oauthErr = params.get("error");
+    if (!code && !oauthErr) return;
+
+    const clean = () => {
+      const url = new URL(window.location.href);
+      ["code", "state", "error", "error_description"].forEach((k) => url.searchParams.delete(k));
+      window.history.replaceState({}, "", url.toString());
+    };
+
+    if (oauthErr) {
+      const desc = params.get("error_description");
+      setToastMsg(`Whoop: ${desc || oauthErr}`);
+      clean();
+      setRoute("devices");
+      return;
+    }
+
+    doExchange({ data: { code: code as string, state: params.get("state") ?? "" } })
+      .then((r) => { if (!r.ok && r.error && r.error !== "not_configured") setToastMsg(lang === "en" ? "Failed to connect Whoop" : "Falha ao ligar o Whoop"); })
+      .catch(() => {})
+      .finally(() => { clean(); setRoute("devices"); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doExchange]);
 
   const t = useCallback((key: string) => translate(lang, key), [lang]);
   const L = useCallback((pt: string, en: string) => (lang === "en" ? en : pt), [lang]);
