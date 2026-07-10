@@ -95,6 +95,8 @@ function RootComponent() {
   );
 }
 
+const PUBLIC_PREFIXES = ["/auth", "/app-v2"];
+
 function AuthGate({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
@@ -113,17 +115,21 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const isAuthRoute = pathname === "/auth";
+  const isPublic = PUBLIC_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(p + "/"),
+  );
 
   useEffect(() => {
     if (!ready) return;
-    if (!session && !isAuthRoute) {
+    if (!session && !isPublic) {
       navigate({ to: "/auth" });
     }
-    if (session && isAuthRoute) {
+    if (session && pathname === "/auth") {
       navigate({ to: "/" });
     }
-  }, [ready, session, isAuthRoute, navigate]);
+  }, [ready, session, isPublic, pathname, navigate]);
+
+  if (isPublic) return <>{children}</>;
 
   if (!ready) {
     return (
@@ -133,7 +139,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!session && !isAuthRoute) return null;
+  if (!session) return null;
 
   return <>{children}</>;
 }
