@@ -1723,7 +1723,7 @@ function WhoopCard() {
           <div className="rv-whoop-name">Whoop</div>
           <div className="rv-whoop-sub">
             {connected
-              ? (m?.firstName ? `${m.firstName} · ${L("ligado","connected")}` : L("Ligado","Connected"))
+              ? L("Ligado","Connected")
               : L("Recovery · strain · sono · HRV","Recovery · strain · sleep · HRV")}
           </div>
         </div>

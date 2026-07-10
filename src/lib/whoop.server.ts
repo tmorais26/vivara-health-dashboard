@@ -15,7 +15,11 @@ import {
 const AUTH_URL = "https://api.prod.whoop.com/oauth/oauth2/auth";
 const TOKEN_URL = "https://api.prod.whoop.com/oauth/oauth2/token";
 const API_BASE = "https://api.prod.whoop.com/developer/v2";
-const SCOPES = "read:recovery read:sleep read:cycles read:profile offline";
+// "read:profile" foi propositadamente omitido: não está habilitado para esta
+// app na dashboard da Whoop (developer.whoop.com → a tua app → Scopes) e
+// pedi-lo causa "invalid_scope" logo no ecrã de autorização. Se o ativares
+// lá, podes voltar a acrescentar "read:profile" aqui para mostrar o nome.
+const SCOPES = "read:recovery read:sleep read:cycles offline";
 
 const C_ACCESS = "whoop_at";
 const C_REFRESH = "whoop_rt";
@@ -28,7 +32,6 @@ interface WhoopMetrics {
   restingHr: number | null;  // bpm
   sleepHours: number | null; // h
   strain: number | null;     // 0–21
-  firstName: string | null;
   lastSyncISO: string;
 }
 
@@ -138,11 +141,10 @@ function firstRecord(data: unknown): Record<string, unknown> | null {
 }
 
 async function fetchMetrics(token: string): Promise<WhoopMetrics> {
-  const [recovery, sleep, cycle, profile] = await Promise.all([
+  const [recovery, sleep, cycle] = await Promise.all([
     apiGet("/recovery?limit=1", token),
     apiGet("/activity/sleep?limit=1", token),
     apiGet("/cycle?limit=1", token),
-    apiGet("/user/profile/basic", token),
   ]);
 
   const recScore = (firstRecord(recovery)?.score ?? {}) as Record<string, number>;
@@ -156,15 +158,12 @@ async function fetchMetrics(token: string): Promise<WhoopMetrics> {
     (stages.total_rem_sleep_time_milli ?? 0);
   const sleepHours = asleepMilli > 0 ? Math.round((asleepMilli / 3_600_000) * 10) / 10 : null;
 
-  const p = (profile ?? {}) as Record<string, unknown>;
-
   return {
     recovery: typeof recScore.recovery_score === "number" ? Math.round(recScore.recovery_score) : null,
     hrv: typeof recScore.hrv_rmssd_milli === "number" ? Math.round(recScore.hrv_rmssd_milli) : null,
     restingHr: typeof recScore.resting_heart_rate === "number" ? Math.round(recScore.resting_heart_rate) : null,
     sleepHours,
     strain: typeof cycleScore.strain === "number" ? Math.round(cycleScore.strain * 10) / 10 : null,
-    firstName: typeof p.first_name === "string" ? (p.first_name as string) : null,
     lastSyncISO: new Date().toISOString(),
   };
 }
