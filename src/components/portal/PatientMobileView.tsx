@@ -6,7 +6,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   Bell,
-  BellPlus,
   CalendarPlus,
   Camera,
   ChevronDown,
@@ -29,6 +28,7 @@ import type { Alerta, Utente } from "@/data/mock-utente";
 import { calcularEstado, formatarData, formatarValor } from "@/data/mock-utente";
 import { ALERTA_VS_ALVO_EXPLICACAO } from "@/data/mock-portal";
 import { InfoHint } from "@/components/portal/InfoHint";
+import { ChatModal } from "@/components/portal/ChatModal";
 import { useT } from "@/lib/i18n";
 
 /**
@@ -53,6 +53,7 @@ export function PatientMobileView({
   const fileRef = useRef<HTMLInputElement | null>(null);
   const camRef = useRef<HTMLInputElement | null>(null);
   const [docsCarregados, setDocsCarregados] = useState<{ id: string; nome: string }[]>([]);
+  const [chatOpen, setChatOpen] = useState(false);
 
   function flash(msg: string) {
     setToast(msg);
@@ -131,7 +132,7 @@ export function PatientMobileView({
           onClick={() => setDetalhesOpen((v) => !v)}
           className="mt-4 flex w-full items-center justify-between rounded-xl border border-border bg-background px-3 py-2 text-[12px] text-foreground"
         >
-          <span>{t.mobile.detalhesSeguranca}</span>
+          <span>{t.mobile.detalhes}</span>
           <ChevronDown
             className={`h-3.5 w-3.5 transition-transform ${detalhesOpen ? "rotate-180" : ""}`}
           />
@@ -141,9 +142,6 @@ export function PatientMobileView({
             <Row label={t.mobile.demografia} value="F · 67 kg · 1.65 m" />
             <Row label={t.mobile.medica} value={utente.medicaResponsavel} />
             <Row label={t.mobile.contacto} value="+351 91 000 0000" icon={<Phone className="h-3 w-3" />} />
-            <Row label={t.mobile.mfa} value={t.mobile.mfaValor} />
-            <Row label={t.mobile.sessao} value={t.mobile.sessaoValor} />
-            <Row label={t.mobile.acessos} value="Dra. Sofia Cardoso" />
           </div>
         )}
 
@@ -322,7 +320,7 @@ export function PatientMobileView({
                   {a.tom === "alert" && (
                     <button
                       type="button"
-                      onClick={() => flash(t.mobile.toastMensagem)}
+                      onClick={() => setChatOpen(true)}
                       className="inline-flex items-center gap-1 text-state-alert"
                     >
                       <Send className="h-3 w-3" />
@@ -484,19 +482,8 @@ export function PatientMobileView({
 
       {/* Acções rápidas */}
       <section className="px-4 py-5">
-        <div className="grid grid-cols-1 gap-2">
-          <button
-            type="button"
-            onClick={() => flash(t.mobile.toastPedidoReanalise)}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-raised px-3 py-3 text-[12px] font-medium text-foreground"
-          >
-            <BellPlus className="h-3.5 w-3.5" />
-            {t.mobile.pedirReanalise}
-          </button>
-        </div>
-
         {/* Carregar documento — usa input nativo, abre câmara/galeria/ficheiros do SO */}
-        <div className="mt-4 rounded-xl border border-border bg-surface-raised p-3">
+        <div className="rounded-xl border border-border bg-surface-raised p-3">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
               {t.mobile.carregarDocumento}
@@ -595,6 +582,7 @@ export function PatientMobileView({
         </div>
       )}
 
+      <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} utente={utente} />
     </div>
   );
 }

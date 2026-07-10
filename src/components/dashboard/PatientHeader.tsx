@@ -22,6 +22,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageToggle } from "@/components/portal/LanguageToggle";
 import { ALERTA_VS_ALVO_EXPLICACAO } from "@/data/mock-portal";
 import { InfoHint } from "@/components/portal/InfoHint";
+import { ChatModal } from "@/components/portal/ChatModal";
 import {
   Field,
   ModalActions,
@@ -290,7 +291,7 @@ export function PatientHeader({
       {/* Modais */}
       <NovaNotaModal open={novaNotaOpen} onClose={() => setNovaNotaOpen(false)} utente={utente} />
       <NovoAlertaModal open={novoAlertaOpen} onClose={() => setNovoAlertaOpen(false)} />
-      <MensagemModal open={msgOpen} onClose={() => setMsgOpen(false)} utente={utente} />
+      <ChatModal open={msgOpen} onClose={() => setMsgOpen(false)} utente={utente} />
       <PreviewAppModal open={previewOpen} onClose={() => setPreviewOpen(false)} utente={utente} />
     </header>
   );
@@ -440,40 +441,6 @@ function NovoAlertaModal({ open, onClose }: { open: boolean; onClose: () => void
       <ModalActions>
         <SecondaryButton onClick={onClose}>Cancelar</SecondaryButton>
         <PrimaryButton onClick={onClose}>Criar alerta</PrimaryButton>
-      </ModalActions>
-    </SimpleModal>
-  );
-}
-
-function MensagemModal({
-  open,
-  onClose,
-  utente,
-}: {
-  open: boolean;
-  onClose: () => void;
-  utente: Utente;
-}) {
-  return (
-    <SimpleModal
-      open={open}
-      onClose={onClose}
-      title={`Mensagem para ${utente.nome}`}
-      description="Aparece imediatamente na app. Curta e específica."
-      width="md"
-    >
-      <div className="space-y-3">
-        <textarea
-          className={textareaClass}
-          placeholder="Maria, os teus resultados chegaram. Falta repetir Vitamina D…"
-        />
-        <div className="text-[11px] text-muted-foreground">
-          A utente vê a mensagem na inbox da app e pode responder. Tudo fica registado em RGPD/Art. 30.
-        </div>
-      </div>
-      <ModalActions>
-        <SecondaryButton onClick={onClose}>Cancelar</SecondaryButton>
-        <PrimaryButton onClick={onClose}>Enviar mensagem</PrimaryButton>
       </ModalActions>
     </SimpleModal>
   );

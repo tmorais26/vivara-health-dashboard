@@ -1,10 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowRight, Bell, ChevronDown, Plus, Search, Sparkles } from "lucide-react";
-import { resumosUtentes, type ResumoUtente } from "@/data/mock-portal";
+import { resumosUtentes as resumosUtentesIniciais, type ResumoUtente } from "@/data/mock-portal";
 import { formatarData } from "@/data/mock-utente";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
 import { useT } from "@/lib/i18n";
+import {
+  Field,
+  ModalActions,
+  PrimaryButton,
+  SecondaryButton,
+  SimpleModal,
+  inputClass,
+} from "@/components/portal/SimpleModal";
 
 type SortKey = "alertas" | "proxima" | "ultima" | "nome";
 
@@ -26,6 +34,8 @@ function Index() {
   const t = useT();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("alertas");
+  const [resumosUtentes, setResumosUtentes] = useState<ResumoUtente[]>(resumosUtentesIniciais);
+  const [novoUtenteOpen, setNovoUtenteOpen] = useState(false);
 
   const filtrados = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -45,7 +55,7 @@ function Index() {
       }
     });
     return lista;
-  }, [query, sort]);
+  }, [query, sort, resumosUtentes]);
 
   return (
     <PortalShell>
@@ -62,6 +72,7 @@ function Index() {
           </div>
           <button
             type="button"
+            onClick={() => setNovoUtenteOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -107,7 +118,150 @@ function Index() {
         </div>
       </main>
       <MobileNavTabs />
+      <NovoUtenteModal
+        open={novoUtenteOpen}
+        onClose={() => setNovoUtenteOpen(false)}
+        onCreate={(u) => setResumosUtentes((prev) => [u, ...prev])}
+      />
     </PortalShell>
+  );
+}
+
+function NovoUtenteModal({
+  open,
+  onClose,
+  onCreate,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCreate: (u: ResumoUtente) => void;
+}) {
+  const t = useT();
+  const [nome, setNome] = useState("");
+  const [idade, setIdade] = useState("");
+  const [sexo, setSexo] = useState<"F" | "M">("F");
+  const [cidade, setCidade] = useState("");
+  const [plano, setPlano] = useState("Essencial");
+
+  function reset() {
+    setNome("");
+    setIdade("");
+    setSexo("F");
+    setCidade("");
+    setPlano("Essencial");
+  }
+
+  function criar() {
+    if (!nome.trim()) return;
+    const iniciais = nome
+      .trim()
+      .split(/\s+/)
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+    const id = `${nome
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`;
+    onCreate({
+      id,
+      nome: nome.trim(),
+      iniciais,
+      idade: Number(idade) || 0,
+      sexo,
+      cidade: cidade.trim() || "—",
+      plano,
+      alertasAtivos: 0,
+      marcadoresForaAlvo: 0,
+      totalMarcadores: 0,
+      ultimaConsulta: new Date().toISOString().slice(0, 10),
+      acessivel: false,
+    });
+    reset();
+    onClose();
+  }
+
+  return (
+    <SimpleModal
+      open={open}
+      onClose={() => {
+        reset();
+        onClose();
+      }}
+      title={t.lista.novoUtente}
+      description="Cria a ficha do utente. Dados clínicos completos são preenchidos na primeira consulta."
+      width="md"
+    >
+      <div className="space-y-4">
+        <Field label="Nome">
+          <input
+            className={inputClass}
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="Nome completo"
+          />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Idade">
+            <input
+              className={inputClass}
+              type="number"
+              min={0}
+              value={idade}
+              onChange={(e) => setIdade(e.target.value)}
+              placeholder="42"
+            />
+          </Field>
+          <Field label="Sexo">
+            <div className="grid grid-cols-2 gap-2">
+              {(["F", "M"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSexo(s)}
+                  className={`rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${
+                    sexo === s
+                      ? "border-foreground/40 bg-accent text-foreground"
+                      : "border-border bg-background text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </Field>
+        </div>
+        <Field label="Cidade">
+          <input
+            className={inputClass}
+            value={cidade}
+            onChange={(e) => setCidade(e.target.value)}
+            placeholder="Lisboa"
+          />
+        </Field>
+        <Field label="Plano">
+          <select className={inputClass} value={plano} onChange={(e) => setPlano(e.target.value)}>
+            <option>Essencial</option>
+            <option>Performance</option>
+            <option>Longevidade+</option>
+          </select>
+        </Field>
+      </div>
+      <ModalActions>
+        <SecondaryButton
+          onClick={() => {
+            reset();
+            onClose();
+          }}
+        >
+          Cancelar
+        </SecondaryButton>
+        <PrimaryButton onClick={criar}>Criar utente</PrimaryButton>
+      </ModalActions>
+    </SimpleModal>
   );
 }
 

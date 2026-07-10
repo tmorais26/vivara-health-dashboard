@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ShieldCheck, Bell, KeyRound, Globe, BellRing, Languages } from "lucide-react";
 import { useState } from "react";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
-import { resumosUtentes } from "@/data/mock-portal";
 import { setIdioma, useIdioma, useT, type Idioma } from "@/lib/i18n";
 
 export const Route = createFileRoute("/definicoes")({
@@ -28,7 +27,6 @@ function DefinicoesPage() {
         <div className="space-y-4">
           <IdiomaCard />
           <NotificacoesGlobais />
-          <NotificacoesPorUtente />
 
           <Card icon={<ShieldCheck className="h-4 w-4" />} title={t.definicoes.seguranca} sub={t.definicoes.segurancaSub}>
             <Row label={t.definicoes.mfa} value="TOTP · Authenticator" status="ok" />
@@ -147,65 +145,6 @@ function NotificacoesGlobais() {
             checked={state[t.id]}
             onChange={(v) => setState((s) => ({ ...s, [t.id]: v }))}
           />
-        </div>
-      ))}
-    </Card>
-  );
-}
-
-function NotificacoesPorUtente() {
-  const t = useT();
-  const NOTIF_TIPOS = useNotifTipos();
-  const [state, setState] = useState<Record<string, Record<NotifId, boolean>>>(() => {
-    const init: Record<string, Record<NotifId, boolean>> = {};
-    for (const u of resumosUtentes) {
-      init[u.id] = {
-        "fora-alvo": true,
-        lembrete: true,
-        "novo-doc": true,
-        "falha-adesao": true,
-      };
-    }
-    return init;
-  });
-
-  function toggle(uid: string, k: NotifId, v: boolean) {
-    setState((s) => ({ ...s, [uid]: { ...s[uid], [k]: v } }));
-  }
-
-  return (
-    <Card
-      icon={<Bell className="h-4 w-4" />}
-      title={t.definicoes.notifPorUtente}
-      sub={t.definicoes.notifPorUtenteSub}
-    >
-      {resumosUtentes.map((u) => (
-        <div key={u.id} className="px-5 py-4">
-          <div className="mb-3 flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[11px] font-medium text-foreground">
-              {u.iniciais}
-            </div>
-            <div className="min-w-0">
-              <div className="text-sm font-medium text-foreground">{u.nome}</div>
-              <div className="text-[11px] text-muted-foreground">
-                {u.plano} · {u.cidade}
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {NOTIF_TIPOS.map((t) => (
-              <label
-                key={t.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background px-3 py-2"
-              >
-                <span className="text-[12px] text-foreground">{t.label}</span>
-                <Toggle
-                  checked={state[u.id][t.id]}
-                  onChange={(v) => toggle(u.id, t.id, v)}
-                />
-              </label>
-            ))}
-          </div>
         </div>
       ))}
     </Card>
