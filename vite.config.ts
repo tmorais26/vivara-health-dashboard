@@ -6,4 +6,8 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig();
+// Fora do sandbox da Lovable (ex.: build da Vercel a partir do GitHub), o
+// plugin nitro fica desligado por omissão e o output deixa de ter o
+// roteamento correto para SSR — daqui resultam 404 da Vercel em produção.
+// Dentro do sandbox da Lovable este preset é ignorado (força sempre Cloudflare).
+export default defineConfig({ nitro: { preset: "vercel" } });
