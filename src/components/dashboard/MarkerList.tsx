@@ -8,6 +8,7 @@ import {
 } from "@/data/mock-utente";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { Sparkline } from "./Sparkline";
+import { useT } from "@/lib/i18n";
 import { StateDot } from "./StateTag";
 
 function DirecaoIcon({ dir }: { dir: "up" | "down" | "flat" }) {
@@ -25,6 +26,7 @@ export function MarkerList({
   selectedId: string;
   onSelect: (id: string) => void;
 }) {
+  const t = useT();
   // Priorização: alerta → atenção → ok. Fora do alvo no topo.
   const ordemEstado: Record<Estado, number> = { alerta: 0, atencao: 1, ok: 2 };
   const ordenados = [...marcadores].sort(
@@ -112,13 +114,13 @@ export function MarkerList({
     <ul className="divide-y divide-border">
       {foraDoAlvo.length > 0 && (
         <>
-          <SectionHeader label="Fora do alvo" count={foraDoAlvo.length} />
+          <SectionHeader label={t.utente.foraDoAlvo} count={foraDoAlvo.length} />
           {foraDoAlvo.map(renderItem)}
         </>
       )}
       {noAlvo.length > 0 && (
         <>
-          <SectionHeader label="No alvo" count={noAlvo.length} />
+          <SectionHeader label={t.utente.noAlvo} count={noAlvo.length} />
           {noAlvo.map(renderItem)}
         </>
       )}

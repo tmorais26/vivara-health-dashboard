@@ -1,9 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowRight, Bell, ChevronDown, Plus, Search, Sparkles } from "lucide-react";
-import { resumosUtentes, type ResumoUtente } from "@/data/mock-portal";
+import { resumosUtentes as resumosUtentesIniciais, type ResumoUtente } from "@/data/mock-portal";
 import { formatarData } from "@/data/mock-utente";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
+import { useT } from "@/lib/i18n";
+import {
+  Field,
+  ModalActions,
+  PrimaryButton,
+  SecondaryButton,
+  SimpleModal,
+  inputClass,
+} from "@/components/portal/SimpleModal";
 
 type SortKey = "alertas" | "proxima" | "ultima" | "nome";
 
@@ -22,8 +31,11 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("alertas");
+  const [resumosUtentes, setResumosUtentes] = useState<ResumoUtente[]>(resumosUtentesIniciais);
+  const [novoUtenteOpen, setNovoUtenteOpen] = useState(false);
 
   const filtrados = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -43,7 +55,7 @@ function Index() {
       }
     });
     return lista;
-  }, [query, sort]);
+  }, [query, sort, resumosUtentes]);
 
   return (
     <PortalShell>
@@ -51,19 +63,20 @@ function Index() {
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8">
           <div>
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Portal clínico
+              {t.comum.portalClinico}
             </div>
-            <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">Os meus utentes</h1>
+            <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">{t.lista.titulo}</h1>
             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-              {resumosUtentes.length} utentes activos. Cada utente é uma série temporal que se lê como um livro.
+              {t.lista.subtitulo(resumosUtentes.length)}
             </p>
           </div>
           <button
             type="button"
+            onClick={() => setNovoUtenteOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
             <Plus className="h-3.5 w-3.5" />
-            Novo utente
+            {t.lista.novoUtente}
           </button>
         </div>
 
@@ -74,7 +87,7 @@ function Index() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Pesquisar por nome ou cidade…"
+              placeholder={t.lista.pesquisar}
               className="w-full rounded-full border border-border bg-surface-raised py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
             />
           </div>
@@ -87,36 +100,178 @@ function Index() {
           ))}
         </div>
 
-        <p className="mt-8 text-[11px] text-muted-foreground">
-          Versão demonstrativa — apenas o perfil de Maria Antunes está disponível para navegação detalhada.
-        </p>
+        <p className="mt-8 text-[11px] text-muted-foreground">{t.comum.demoNota}</p>
 
         <div className="mt-4 flex flex-wrap gap-4">
           <Link
             to="/app"
             className="inline-flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground"
           >
-            Ver app da utente <ArrowRight className="h-3 w-3" />
+            {t.lista.verAppUtente} <ArrowRight className="h-3 w-3" />
           </Link>
           <Link
             to="/app-v2"
             className="inline-flex items-center gap-2 text-[11px] text-primary hover:opacity-80"
           >
-            App v2 (novo design) <ArrowRight className="h-3 w-3" />
+            {t.lista.appV2} <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
       </main>
       <MobileNavTabs />
+      <NovoUtenteModal
+        open={novoUtenteOpen}
+        onClose={() => setNovoUtenteOpen(false)}
+        onCreate={(u) => setResumosUtentes((prev) => [u, ...prev])}
+      />
     </PortalShell>
   );
 }
 
+function NovoUtenteModal({
+  open,
+  onClose,
+  onCreate,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCreate: (u: ResumoUtente) => void;
+}) {
+  const t = useT();
+  const [nome, setNome] = useState("");
+  const [idade, setIdade] = useState("");
+  const [sexo, setSexo] = useState<"F" | "M">("F");
+  const [cidade, setCidade] = useState("");
+  const [plano, setPlano] = useState("Essencial");
+
+  function reset() {
+    setNome("");
+    setIdade("");
+    setSexo("F");
+    setCidade("");
+    setPlano("Essencial");
+  }
+
+  function criar() {
+    if (!nome.trim()) return;
+    const iniciais = nome
+      .trim()
+      .split(/\s+/)
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+    const id = `${nome
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`;
+    onCreate({
+      id,
+      nome: nome.trim(),
+      iniciais,
+      idade: Number(idade) || 0,
+      sexo,
+      cidade: cidade.trim() || "—",
+      plano,
+      alertasAtivos: 0,
+      marcadoresForaAlvo: 0,
+      totalMarcadores: 0,
+      ultimaConsulta: new Date().toISOString().slice(0, 10),
+      acessivel: false,
+    });
+    reset();
+    onClose();
+  }
+
+  return (
+    <SimpleModal
+      open={open}
+      onClose={() => {
+        reset();
+        onClose();
+      }}
+      title={t.lista.novoUtente}
+      description="Cria a ficha do utente. Dados clínicos completos são preenchidos na primeira consulta."
+      width="md"
+    >
+      <div className="space-y-4">
+        <Field label="Nome">
+          <input
+            className={inputClass}
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="Nome completo"
+          />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Idade">
+            <input
+              className={inputClass}
+              type="number"
+              min={0}
+              value={idade}
+              onChange={(e) => setIdade(e.target.value)}
+              placeholder="42"
+            />
+          </Field>
+          <Field label="Sexo">
+            <div className="grid grid-cols-2 gap-2">
+              {(["F", "M"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSexo(s)}
+                  className={`rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${
+                    sexo === s
+                      ? "border-foreground/40 bg-accent text-foreground"
+                      : "border-border bg-background text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </Field>
+        </div>
+        <Field label="Cidade">
+          <input
+            className={inputClass}
+            value={cidade}
+            onChange={(e) => setCidade(e.target.value)}
+            placeholder="Lisboa"
+          />
+        </Field>
+        <Field label="Plano">
+          <select className={inputClass} value={plano} onChange={(e) => setPlano(e.target.value)}>
+            <option>Essencial</option>
+            <option>Performance</option>
+            <option>Longevidade+</option>
+          </select>
+        </Field>
+      </div>
+      <ModalActions>
+        <SecondaryButton
+          onClick={() => {
+            reset();
+            onClose();
+          }}
+        >
+          Cancelar
+        </SecondaryButton>
+        <PrimaryButton onClick={criar}>Criar utente</PrimaryButton>
+      </ModalActions>
+    </SimpleModal>
+  );
+}
+
 function SortDropdown({ sort, onChange }: { sort: SortKey; onChange: (s: SortKey) => void }) {
+  const t = useT();
   const labels: Record<SortKey, string> = {
-    alertas: "Alertas (desc)",
-    proxima: "Próxima consulta",
-    ultima: "Última consulta",
-    nome: "Nome (A–Z)",
+    alertas: t.lista.ordAlertas,
+    proxima: t.lista.ordProxima,
+    ultima: t.lista.ordUltima,
+    nome: t.lista.ordNome,
   };
   const [open, setOpen] = useState(false);
   return (
@@ -126,7 +281,7 @@ function SortDropdown({ sort, onChange }: { sort: SortKey; onChange: (s: SortKey
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-raised px-3.5 py-2 text-xs font-medium text-foreground hover:bg-accent"
       >
-        Ordenar: {labels[sort]}
+        {t.lista.ordenar}: {labels[sort]}
         <ChevronDown className="h-3 w-3" />
       </button>
       {open && (
@@ -154,6 +309,7 @@ function SortDropdown({ sort, onChange }: { sort: SortKey; onChange: (s: SortKey
 }
 
 function UtenteCard({ u }: { u: ResumoUtente }) {
+  const t = useT();
   const conteudo = (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
       <div className="flex items-center gap-4">
@@ -172,21 +328,21 @@ function UtenteCard({ u }: { u: ResumoUtente }) {
             {u.novosDados && (
               <span className="inline-flex items-center gap-1 rounded-full bg-state-alert-soft px-2 py-0.5 text-[10px] font-medium text-state-alert">
                 <Sparkles className="h-2.5 w-2.5" />
-                Novos dados
+                {t.lista.novosDados}
               </span>
             )}
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
             <span>{u.cidade}</span>
             <span>·</span>
-            <span>Plano {u.plano}</span>
+            <span>{t.lista.plano} {u.plano}</span>
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-            <span>Última: {formatarData(u.ultimaConsulta)}</span>
+            <span>{t.lista.ultima}: {formatarData(u.ultimaConsulta)}</span>
             {u.proximaConsulta && (
               <span className="inline-flex items-center gap-1 text-foreground">
                 <Bell className="h-3 w-3 text-state-warn" />
-                Próxima: {formatarData(u.proximaConsulta)}
+                {t.lista.proxima}: {formatarData(u.proximaConsulta)}
                 {u.proximaConsultaHora ? ` · ${u.proximaConsultaHora}` : ""}
               </span>
             )}
@@ -195,9 +351,9 @@ function UtenteCard({ u }: { u: ResumoUtente }) {
       </div>
 
       <div className="flex items-center gap-5 sm:gap-6">
-        <Stat label="Alertas" value={String(u.alertasAtivos)} tone={u.alertasAtivos > 0 ? "alert" : "muted"} />
-        <Stat label="Fora do alvo" value={String(u.marcadoresForaAlvo)} tone={u.marcadoresForaAlvo > 5 ? "warn" : "muted"} />
-        <Stat label="Marcadores" value={String(u.totalMarcadores)} tone="muted" />
+        <Stat label={t.lista.alertas} value={String(u.alertasAtivos)} tone={u.alertasAtivos > 0 ? "alert" : "muted"} />
+        <Stat label={t.lista.foraDoAlvo} value={String(u.marcadoresForaAlvo)} tone={u.marcadoresForaAlvo > 5 ? "warn" : "muted"} />
+        <Stat label={t.lista.marcadores} value={String(u.totalMarcadores)} tone="muted" />
         <ArrowRight className="h-4 w-4 text-muted-foreground" />
       </div>
     </div>

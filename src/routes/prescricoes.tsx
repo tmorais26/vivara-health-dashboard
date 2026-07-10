@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Pill } from "lucide-react";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
+import { useT } from "@/lib/i18n";
 import { prescricoesPendentes } from "@/data/mock-portal";
 import { formatarData } from "@/data/mock-utente";
 
@@ -15,17 +16,16 @@ export const Route = createFileRoute("/prescricoes")({
 });
 
 function PrescricoesPage() {
+  const t = useT();
   const sorted = [...prescricoesPendentes].sort((a, b) => a.diasRestantes - b.diasRestantes);
 
   return (
     <PortalShell>
       <main className="mx-auto max-w-[1100px] px-4 py-6 pb-24 sm:px-6 sm:py-10 lg:pb-10">
         <div className="mb-6 sm:mb-8">
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Portal</div>
-          <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">Prescrições pendentes</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Receitas e manipulados perto do fim. Renovar antecipadamente evita falhas de adesão.
-          </p>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{t.comum.portal}</div>
+          <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">{t.prescricoes.titulo}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t.prescricoes.subtitulo}</p>
         </div>
 
         <div className="rounded-2xl border border-border bg-surface-raised">
@@ -63,7 +63,7 @@ function PrescricoesPage() {
                       <span
                         className={`tabular inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-medium ${tone}`}
                       >
-                        Expira em {p.diasRestantes} d
+                        {t.prescricoes.expiraEm(p.diasRestantes)}
                       </span>
                       <span className="text-[10.5px] text-muted-foreground">{formatarData(p.expira)}</span>
                     </div>
@@ -72,7 +72,7 @@ function PrescricoesPage() {
                     <span
                       className={`tabular inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium ${tone}`}
                     >
-                      Expira em {p.diasRestantes} d
+                      {t.prescricoes.expiraEm(p.diasRestantes)}
                     </span>
                     <div className="mt-1 text-[10.5px] text-muted-foreground">
                       {formatarData(p.expira)}
@@ -82,7 +82,7 @@ function PrescricoesPage() {
                     type="button"
                     className="ml-auto shrink-0 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-medium text-foreground hover:bg-accent sm:ml-0"
                   >
-                    Renovar
+                    {t.prescricoes.renovar}
                   </button>
                 </li>
               );

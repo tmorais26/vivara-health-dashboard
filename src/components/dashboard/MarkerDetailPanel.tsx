@@ -148,15 +148,6 @@ export function MarkerDetailPanel({
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => onPrescrever("analise")}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
-                title="Cria uma tarefa no plano e lembrete na app da utente"
-              >
-                <FlaskConical className="h-3.5 w-3.5" />
-                Pedir reanálise
-              </button>
             </div>
           )}
         </div>

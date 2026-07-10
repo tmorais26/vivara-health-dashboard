@@ -10,8 +10,10 @@ import {
   Users,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "./LanguageToggle";
 import { SessionTimeoutBanner } from "./SessionTimeoutBanner";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/lib/i18n";
 
 type NavItem = {
   label: string;
@@ -21,17 +23,20 @@ type NavItem = {
   badge?: number;
 };
 
-const items: NavItem[] = [
-  {
-    label: "Utentes",
-    to: "/",
-    icon: Users,
-    match: (p) => p === "/" || p.startsWith("/utentes"),
-  },
-  { label: "Agenda", to: "/agenda", icon: Calendar, badge: 5 },
-  { label: "Prescrições", to: "/prescricoes", icon: Pill, badge: 4 },
-  { label: "Definições", to: "/definicoes", icon: Settings },
-];
+function useNavItems(): NavItem[] {
+  const t = useT();
+  return [
+    {
+      label: t.nav.utentes,
+      to: "/",
+      icon: Users,
+      match: (p) => p === "/" || p.startsWith("/utentes"),
+    },
+    { label: t.nav.agenda, to: "/agenda", icon: Calendar, badge: 5 },
+    { label: t.nav.prescricoes, to: "/prescricoes", icon: Pill, badge: 4 },
+    { label: t.nav.definicoes, to: "/definicoes", icon: Settings },
+  ];
+}
 
 export function PortalShell({
   children,
@@ -43,6 +48,8 @@ export function PortalShell({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
+  const t = useT();
+  const items = useNavItems();
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -89,7 +96,7 @@ export function PortalShell({
         <div className="border-t border-border px-3 py-3 text-[10.5px] text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="h-3 w-3 text-state-ok" />
-            Dados de saúde · Acesso registado
+            {t.nav.dadosSaude}
           </div>
           <button
             type="button"
@@ -97,7 +104,7 @@ export function PortalShell({
             className="mt-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <LogOut className="h-3 w-3" />
-            Sair
+            {t.nav.sair}
           </button>
         </div>
       </aside>
@@ -115,11 +122,12 @@ export function PortalShell({
               <ShieldCheck className="h-2.5 w-2.5" />
               MFA
             </span>
+            <LanguageToggle />
             <ThemeToggle />
             <button
               type="button"
               onClick={handleLogout}
-              aria-label="Sair"
+              aria-label={t.nav.sair}
               className="rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <LogOut className="h-3.5 w-3.5" />
@@ -139,8 +147,9 @@ export function PortalShell({
               <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="hidden items-center gap-1.5 rounded-full border border-state-ok/30 bg-state-ok-soft/60 px-2.5 py-1 text-[10.5px] font-medium text-state-ok sm:inline-flex">
                   <ShieldCheck className="h-3 w-3" />
-                  MFA activo
+                  {t.nav.mfaActivo}
                 </span>
+                <LanguageToggle />
                 <ThemeToggle />
                 <span>Dra. Sofia Cardoso</span>
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
@@ -159,6 +168,7 @@ export function PortalShell({
 export function MobileNavTabs() {
   // Bottom tabs para viewports estreitos (<lg). Manter visível abaixo da sidebar fixa.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const items = useNavItems();
   return (
     <div className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-surface-raised lg:hidden">
       {items.map((it) => {
