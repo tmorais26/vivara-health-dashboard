@@ -1320,3 +1320,36 @@ button.rv-plan-row:active{background:rgba(255,255,255,0.03);}
   width:34px;height:34px;display:flex;align-items:center;justify-content:center;
   background:transparent;border:none;cursor:pointer;color:var(--fg-50);padding:0;
 }
+
+/* ─── Whoop card (integração real) ────────────────── */
+.rv-whoop-card{
+  margin:0 16px 14px;padding:14px 16px;border-radius:var(--radius-lg);
+  background:linear-gradient(180deg,rgba(106,76,255,0.14),rgba(106,76,255,0.05));
+  border:1px solid rgba(106,76,255,0.28);
+}
+.rv-whoop-card[data-connected]{
+  background:linear-gradient(180deg,rgba(106,76,255,0.18),rgba(255,255,255,0.03));
+}
+.rv-whoop-head{display:flex;align-items:center;gap:12px;}
+.rv-whoop-logo{
+  width:38px;height:38px;border-radius:11px;flex-shrink:0;
+  background:#6a4cff;color:#fff;font-weight:700;font-size:17px;
+  display:flex;align-items:center;justify-content:center;
+}
+.rv-whoop-meta{flex:1;min-width:0;}
+.rv-whoop-name{font-size:15px;font-weight:600;color:var(--fg);letter-spacing:-0.01em;}
+.rv-whoop-sub{font-size:11.5px;color:var(--fg-50);margin-top:1px;}
+.rv-whoop-metrics{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;
+}
+.rv-whoop-metric{
+  background:rgba(255,255,255,0.05);border-radius:12px;padding:9px 6px;text-align:center;
+}
+.rv-whoop-metric-val{
+  font-size:19px;font-weight:600;color:var(--fg);font-variant-numeric:tabular-nums;letter-spacing:-0.02em;
+}
+.rv-whoop-metric-unit{font-size:10px;color:var(--fg-50);font-weight:500;margin-left:1px;}
+.rv-whoop-metric-label{font-size:9.5px;color:var(--fg-50);text-transform:uppercase;letter-spacing:0.04em;margin-top:3px;}
+.rv-whoop-note{font-size:11px;color:var(--watch);margin-top:10px;}
+.rv-whoop-actions{display:flex;gap:8px;margin-top:12px;}
+.rv-whoop-actions .rv-device-btn{flex:1;}

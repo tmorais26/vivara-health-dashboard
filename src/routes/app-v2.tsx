@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState, useContext, createContext, useRef, useCallback, useEffect, type ReactNode } from "react";
 import { askAssistente } from "@/lib/assistente.functions";
+import { whoopAuthUrl, whoopExchange, whoopStatus, whoopDisconnect, type WhoopStatus } from "@/lib/whoop.server";
 import { translate, LANG_STORAGE_KEY, type Lang } from "@/lib/app-v2-i18n";
 import "../app-v2.css";
 
@@ -1631,7 +1632,7 @@ function PerfilScreen() {
 }
 
 // ─── Dispositivos / Wearables ────────────────────────
-type DeviceId = "apple-health" | "oura" | "garmin" | "whoop" | "fitbit" | "google-fit" | "libre-cgm";
+type DeviceId = "apple-health" | "oura" | "garmin" | "fitbit" | "google-fit" | "libre-cgm";
 
 interface DeviceDef {
   id: DeviceId;
@@ -1646,11 +1647,129 @@ const DEVICES: DeviceDef[] = [
   { id: "apple-health", name: "Apple Health",        vendor: "Apple",      metrics: "Sono · HRV · passos · FC repouso · VO₂máx", initials: "",  tint: "#ffffff" },
   { id: "oura",         name: "Oura Ring",           vendor: "Oura",       metrics: "Sono · HRV · temperatura · prontidão",      initials: "O", tint: "#c6ff3d" },
   { id: "garmin",       name: "Garmin Connect",      vendor: "Garmin",     metrics: "Treino · VO₂máx · stress · sono",           initials: "G", tint: "#0066ff" },
-  { id: "whoop",        name: "Whoop",               vendor: "Whoop",      metrics: "Strain · recovery · sono · HRV",            initials: "W", tint: "#6a4cff" },
   { id: "fitbit",       name: "Fitbit",              vendor: "Fitbit",     metrics: "Passos · sono · FC · SpO₂",                 initials: "F", tint: "#25d96b" },
   { id: "google-fit",   name: "Google Health Connect", vendor: "Google",   metrics: "Agregador Android · vários dispositivos",   initials: "G", tint: "#ffbb33" },
   { id: "libre-cgm",    name: "Abbott FreeStyle Libre", vendor: "Abbott",  metrics: "Glicémia contínua",                         initials: "L", tint: "#ff4d4d" },
 ];
+
+// ─── Whoop (integração real) ─────────────────────────
+function WhoopMetric({ label, value, unit }: { label: string; value: number | null; unit?: string }) {
+  return (
+    <div className="rv-whoop-metric">
+      <div className="rv-whoop-metric-val">
+        {value == null ? "—" : value}{value != null && unit ? <span className="rv-whoop-metric-unit">{unit}</span> : null}
+      </div>
+      <div className="rv-whoop-metric-label">{label}</div>
+    </div>
+  );
+}
+
+function WhoopCard() {
+  const { showToast } = useNav();
+  const { L } = useLang();
+  const getStatus = useServerFn(whoopStatus);
+  const getAuthUrl = useServerFn(whoopAuthUrl);
+  const doExchange = useServerFn(whoopExchange);
+  const doDisconnect = useServerFn(whoopDisconnect);
+  const [status, setStatus] = useState<WhoopStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const refresh = useCallback(async () => {
+    try {
+      setStatus(await getStatus());
+    } catch {
+      setStatus({ configured: false, connected: false, metrics: null });
+    }
+  }, [getStatus]);
+
+  useEffect(() => {
+    // Trata o retorno do OAuth do Whoop (?code=…&state=…) e depois atualiza.
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const state = params.get("state");
+    if (code) {
+      setBusy(true);
+      doExchange({ data: { code, state: state ?? "" } })
+        .then((r) => { if (!r.ok && r.error && r.error !== "not_configured") showToast(L("Falha ao ligar o Whoop","Failed to connect Whoop")); })
+        .catch(() => {})
+        .finally(() => {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("code");
+          url.searchParams.delete("state");
+          window.history.replaceState({}, "", url.toString());
+          setBusy(false);
+          refresh();
+        });
+    } else {
+      refresh();
+    }
+  }, [doExchange, refresh, showToast, L]);
+
+  const connect = async () => {
+    setBusy(true);
+    try {
+      const r = await getAuthUrl();
+      if (r.configured && r.url) {
+        window.location.href = r.url;
+        return;
+      }
+      showToast(L("Integração Whoop por configurar","Whoop integration not configured"));
+    } catch {
+      showToast(L("Não foi possível ligar agora","Couldn't connect right now"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const disconnect = async () => {
+    setBusy(true);
+    try {
+      await doDisconnect();
+      showToast(L("Whoop desligado","Whoop disconnected"));
+    } finally {
+      setBusy(false);
+      refresh();
+    }
+  };
+
+  const connected = status?.connected;
+  const m = status?.metrics ?? null;
+
+  return (
+    <div className="rv-whoop-card" data-connected={connected || undefined}>
+      <div className="rv-whoop-head">
+        <div className="rv-whoop-logo">W</div>
+        <div className="rv-whoop-meta">
+          <div className="rv-whoop-name">Whoop</div>
+          <div className="rv-whoop-sub">
+            {connected
+              ? (m?.firstName ? `${m.firstName} · ${L("ligado","connected")}` : L("Ligado","Connected"))
+              : L("Recovery · strain · sono · HRV","Recovery · strain · sleep · HRV")}
+          </div>
+        </div>
+        {connected
+          ? <span className="rv-list-state" data-state="on"><span className="rv-dot"/>{L("Ligado","Connected")}</span>
+          : <button className="rv-device-btn" data-tone="primary" disabled={busy} onClick={connect}>{busy ? "…" : L("Ligar","Connect")}</button>}
+      </div>
+
+      {connected && (
+        <>
+          <div className="rv-whoop-metrics">
+            <WhoopMetric label={L("Recuperação","Recovery")} value={m?.recovery ?? null} unit="%" />
+            <WhoopMetric label="HRV" value={m?.hrv ?? null} unit="ms" />
+            <WhoopMetric label={L("FC repouso","Resting HR")} value={m?.restingHr ?? null} unit="bpm" />
+            <WhoopMetric label={L("Sono","Sleep")} value={m?.sleepHours ?? null} unit="h" />
+          </div>
+          {status?.error && <div className="rv-whoop-note">{L("Sem dados recentes do Whoop.","No recent Whoop data.")}</div>}
+          <div className="rv-whoop-actions">
+            <button className="rv-device-btn" disabled={busy} onClick={refresh}>{L("Sincronizar","Sync")}</button>
+            <button className="rv-device-btn" data-tone="ghost" disabled={busy} onClick={disconnect}>{L("Desligar","Disconnect")}</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 interface DeviceState { connected: boolean; lastSync: number | null }
 type DevicesMap = Record<DeviceId, DeviceState>;
@@ -1660,7 +1779,6 @@ const DEFAULT_DEVICES: DevicesMap = {
   "apple-health": { connected: true,  lastSync: Date.now() - 4 * 60 * 1000 },
   "oura":         { connected: false, lastSync: null },
   "garmin":       { connected: false, lastSync: null },
-  "whoop":        { connected: false, lastSync: null },
   "fitbit":       { connected: false, lastSync: null },
   "google-fit":   { connected: false, lastSync: null },
   "libre-cgm":    { connected: false, lastSync: null },
@@ -1748,6 +1866,8 @@ function DispositivosScreen() {
             {L("Os dispositivos que liga partilham métricas só com a sua equipa clínica Vivara. Pode desligar qualquer um a qualquer momento. ","The devices you connect share metrics only with your Vivara clinical team. You can disconnect any of them at any time. ")}<a onClick={() => shareNative({ title: L("Privacidade Vivara","Vivara Privacy"), text: L("Como tratamos dados de dispositivos","How we handle device data"), toast: showToast })} style={{cursor:"pointer", color:"var(--accent)"}}>{L("Saber mais","Learn more")}</a>
           </p>
         </div>
+
+        <WhoopCard />
 
         <div className="rv-section-head" style={{margin: "0 20px 10px"}}>
           <h3>{L("Ligados","Connected")}</h3>
