@@ -261,6 +261,42 @@ function ScoreLongevidadeCard() {
   );
 }
 
+// ─── Whoop na home ────────────────────────────────────
+function WhoopHomeCard() {
+  const { go } = useNav();
+  const { L } = useLang();
+  const getStatus = useServerFn(whoopStatus);
+  const [status, setStatus] = useState<WhoopStatus | null>(null);
+
+  useEffect(() => {
+    getStatus()
+      .then(setStatus)
+      .catch(() => setStatus({ configured: false, connected: false, metrics: null }));
+  }, [getStatus]);
+
+  if (!status?.connected || !status.metrics) return null;
+  const m = status.metrics;
+
+  return (
+    <button type="button" className="rv-whoop-card rv-whoop-home" data-connected="true" onClick={() => go("devices")}>
+      <div className="rv-whoop-head">
+        <div className="rv-whoop-logo">W</div>
+        <div className="rv-whoop-meta">
+          <div className="rv-whoop-name">{L("Whoop hoje","Whoop today")}</div>
+          <div className="rv-whoop-sub">{L("Sincronizado","Synced")} {formatRelative(new Date(m.lastSyncISO).getTime())}</div>
+        </div>
+        <span className="rv-chev">{Icon.chev}</span>
+      </div>
+      <div className="rv-whoop-metrics">
+        <WhoopMetric label={L("Recuperação","Recovery")} value={m.recovery} unit="%" />
+        <WhoopMetric label="HRV" value={m.hrv} unit="ms" />
+        <WhoopMetric label={L("FC repouso","Resting HR")} value={m.restingHr} unit="bpm" />
+        <WhoopMetric label={L("Sono","Sleep")} value={m.sleepHours} unit="h" />
+      </div>
+    </button>
+  );
+}
+
 // ─── Chrome ──────────────────────────────────────────
 function StatusBar() {
   return (
@@ -367,6 +403,7 @@ function HomeScreenV2() {
       <div className="rv-body">
         <BioAgeCard />
         <ScoreLongevidadeCard />
+        <WhoopHomeCard />
 
         <div className="rv-actions">
           <button className="rv-action" data-accent="lime" onClick={() => go("upload")}>

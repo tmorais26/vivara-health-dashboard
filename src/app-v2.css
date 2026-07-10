@@ -1330,6 +1330,13 @@ button.rv-plan-row:active{background:rgba(255,255,255,0.03);}
 .rv-whoop-card[data-connected]{
   background:linear-gradient(180deg,rgba(106,76,255,0.18),rgba(255,255,255,0.03));
 }
+button.rv-whoop-home{
+  display:block;box-sizing:border-box;text-align:left;
+  font:inherit;color:inherit;cursor:pointer;
+  -webkit-appearance:none;appearance:none;
+}
+.rv-whoop-home .rv-whoop-head{cursor:pointer;}
+.rv-whoop-home .rv-chev{flex-shrink:0;}
 .rv-whoop-head{display:flex;align-items:center;gap:12px;}
 .rv-whoop-logo{
   width:38px;height:38px;border-radius:11px;flex-shrink:0;
