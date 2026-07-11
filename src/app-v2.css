@@ -1356,7 +1356,7 @@ button.rv-whoop-home{
 .rv-whoop-name{font-size:15px;font-weight:600;color:var(--fg);letter-spacing:-0.01em;}
 .rv-whoop-sub{font-size:11.5px;color:var(--fg-50);margin-top:1px;}
 .rv-whoop-metrics{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;
 }
 .rv-whoop-metric{
   background:rgba(255,255,255,0.05);border-radius:12px;padding:9px 6px;text-align:center;

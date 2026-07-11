@@ -285,17 +285,34 @@ function ScoreLongevidadeCard() {
 }
 
 // ─── Whoop na home ────────────────────────────────────
-function WhoopHomeCard() {
-  const { go } = useNav();
-  const { L } = useLang();
+// Hook partilhado: um único pedido de estado da Whoop, reutilizável em
+// qualquer ecrã (home, dispositivos, perfil) sem duplicar a lógica de fetch.
+function useWhoopStatus() {
   const getStatus = useServerFn(whoopStatus);
   const [status, setStatus] = useState<WhoopStatus | null>(null);
-
-  useEffect(() => {
-    getStatus()
-      .then(setStatus)
-      .catch(() => setStatus({ configured: false, connected: false, metrics: null }));
+  const refresh = useCallback(async () => {
+    try {
+      setStatus(await getStatus());
+    } catch {
+      setStatus({ configured: false, connected: false, metrics: null });
+    }
   }, [getStatus]);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+  return { status, refresh };
+}
+
+function median(values: number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? Math.round(((sorted[mid - 1] + sorted[mid]) / 2) * 10) / 10 : sorted[mid];
+}
+
+function WhoopHomeCard({ status }: { status: WhoopStatus | null }) {
+  const { go } = useNav();
+  const { L } = useLang();
 
   if (!status?.connected || !status.metrics) return null;
   const m = status.metrics;
@@ -312,6 +329,7 @@ function WhoopHomeCard() {
       </div>
       <div className="rv-whoop-metrics">
         <WhoopMetric label={L("Recuperação","Recovery")} value={m.recovery} unit="%" />
+        <WhoopMetric label="Strain" value={m.strain} />
         <WhoopMetric label="HRV" value={m.hrv} unit="ms" />
         <WhoopMetric label={L("FC repouso","Resting HR")} value={m.restingHr} unit="bpm" />
         <WhoopMetric label={L("Sono","Sleep")} value={m.sleepHours} unit="h" />
@@ -403,6 +421,17 @@ function PlanoHoje() {
 function HomeScreenV2() {
   const { go } = useNav();
   const { t } = useLang();
+  const { status: whoop } = useWhoopStatus();
+  const wm = whoop?.connected ? whoop.metrics : null;
+
+  const deepSleepHist = wm?.history.deepSleepMin ?? [];
+  const hrvHist = wm?.history.hrv ?? [];
+  const restHrHist = wm?.history.restingHr ?? [];
+
+  const deepSleepLive = deepSleepHist.length >= 2 ? median(deepSleepHist) : null;
+  const hrvLive = hrvHist.length >= 2 ? wm?.hrv ?? null : null;
+  const restHrLive = restHrHist.length >= 2 ? median(restHrHist) : null;
+
   return (
     <div className="rv-screen">
       <StatusBar />
@@ -426,7 +455,7 @@ function HomeScreenV2() {
       <div className="rv-body">
         <BioAgeCard />
         <ScoreLongevidadeCard />
-        <WhoopHomeCard />
+        <WhoopHomeCard status={whoop} />
 
         <div className="rv-actions">
           <button className="rv-action" data-accent="lime" onClick={() => go("upload")}>
@@ -471,10 +500,10 @@ function HomeScreenV2() {
               <div className="rv-signal-icon">{Icon.moon}</div>
               <div className="rv-signal-meta">
                 <span className="rv-signal-name">{t("signal.deepSleep")}</span>
-                <span className="rv-signal-sub">{t("signal.deepSleepSub")}</span>
+                <span className="rv-signal-sub">{deepSleepLive != null ? "via Whoop" : t("signal.deepSleepSub")}</span>
               </div>
-              <span className="rv-signal-val">68 <span style={{color: "var(--fg-50)", fontSize: 11}}>min</span></span>
-              <Spark pts={[60,72,54,68,80,52,68]} color="var(--lime)"/>
+              <span className="rv-signal-val">{deepSleepLive ?? 68} <span style={{color: "var(--fg-50)", fontSize: 11}}>min</span></span>
+              <Spark pts={deepSleepHist.length >= 2 ? deepSleepHist : [60,72,54,68,80,52,68]} color="var(--lime)"/>
             </div>
             <div className="rv-signal">
               <div className="rv-signal-icon">{Icon.heart}</div>
@@ -482,8 +511,8 @@ function HomeScreenV2() {
                 <span className="rv-signal-name">{t("signal.hrv")}</span>
                 <span className="rv-signal-sub">{t("signal.hrvSub")}</span>
               </div>
-              <span className="rv-signal-val">42 <span style={{color: "var(--fg-50)", fontSize: 11}}>ms</span></span>
-              <Spark pts={[48,52,46,40,38,44,42]} color="var(--watch)"/>
+              <span className="rv-signal-val">{hrvLive ?? 42} <span style={{color: "var(--fg-50)", fontSize: 11}}>ms</span></span>
+              <Spark pts={hrvHist.length >= 2 ? hrvHist : [48,52,46,40,38,44,42]} color="var(--watch)"/>
             </div>
             <div className="rv-signal">
               <div className="rv-signal-icon">{Icon.steps}</div>
@@ -500,8 +529,8 @@ function HomeScreenV2() {
                 <span className="rv-signal-name">{t("signal.restHr")}</span>
                 <span className="rv-signal-sub">{t("signal.restHrSub")}</span>
               </div>
-              <span className="rv-signal-val">58 <span style={{color: "var(--fg-50)", fontSize: 11}}>bpm</span></span>
-              <Spark pts={[62,60,58,57,59,56,58]} color="var(--lime)"/>
+              <span className="rv-signal-val">{restHrLive ?? 58} <span style={{color: "var(--fg-50)", fontSize: 11}}>bpm</span></span>
+              <Spark pts={restHrHist.length >= 2 ? restHrHist : [62,60,58,57,59,56,58]} color="var(--lime)"/>
             </div>
           </div>
         </section>
@@ -1595,6 +1624,11 @@ function ScheduleAnalysis() {
 function PerfilScreen() {
   const { go, logout } = useNav();
   const { t, lang, setLang, L } = useLang();
+  const { status: whoop } = useWhoopStatus();
+  const body = whoop?.connected ? whoop.metrics?.body : null;
+  const liveHeight = body?.heightCm ?? null;
+  const liveWeight = body?.weightKg ?? null;
+  const liveImc = body?.imc ?? null;
   return (
     <div className="rv-screen">
       <StatusBar />
@@ -1615,11 +1649,16 @@ function PerfilScreen() {
         </div>
 
         <div className="rv-stats">
-          <div className="rv-stat"><div className="rv-stat-label">{t("profile.height")}</div><div className="rv-stat-value">168<span style={{fontSize: 10, color: "var(--fg-50)"}}>cm</span></div></div>
-          <div className="rv-stat"><div className="rv-stat-label">{t("profile.weight")}</div><div className="rv-stat-value">71.2<span style={{fontSize: 10, color: "var(--fg-50)"}}>kg</span></div></div>
-          <div className="rv-stat"><div className="rv-stat-label">{t("profile.imc")}</div><div className="rv-stat-value">25.2</div></div>
+          <div className="rv-stat"><div className="rv-stat-label">{t("profile.height")}</div><div className="rv-stat-value">{liveHeight ?? 168}<span style={{fontSize: 10, color: "var(--fg-50)"}}>cm</span></div></div>
+          <div className="rv-stat"><div className="rv-stat-label">{t("profile.weight")}</div><div className="rv-stat-value">{liveWeight ?? 71.2}<span style={{fontSize: 10, color: "var(--fg-50)"}}>kg</span></div></div>
+          <div className="rv-stat"><div className="rv-stat-label">{t("profile.imc")}</div><div className="rv-stat-value">{liveImc ?? 25.2}</div></div>
           <div className="rv-stat"><div className="rv-stat-label">{t("profile.waist")}</div><div className="rv-stat-value">82<span style={{fontSize: 10, color: "var(--fg-50)"}}>cm</span></div></div>
         </div>
+        {liveHeight != null && (
+          <div style={{margin: "-6px 20px 14px", fontSize: 10.5, color: "var(--fg-50)"}}>
+            {L("Altura e peso via Whoop · cintura continua estimada","Height and weight via Whoop · waist is still an estimate")}
+          </div>
+        )}
 
         <div className="rv-section-head" style={{margin: "0 20px 10px"}}><h3>{t("profile.goals")}</h3><span style={{fontSize: 11, color: "var(--fg-50)"}}>{t("profile.goalsBy")}</span></div>
         <div className="rv-goals">
@@ -1727,23 +1766,10 @@ function WhoopMetric({ label, value, unit }: { label: string; value: number | nu
 function WhoopCard() {
   const { showToast } = useNav();
   const { L } = useLang();
-  const getStatus = useServerFn(whoopStatus);
   const getAuthUrl = useServerFn(whoopAuthUrl);
   const doDisconnect = useServerFn(whoopDisconnect);
-  const [status, setStatus] = useState<WhoopStatus | null>(null);
+  const { status, refresh } = useWhoopStatus();
   const [busy, setBusy] = useState(false);
-
-  const refresh = useCallback(async () => {
-    try {
-      setStatus(await getStatus());
-    } catch {
-      setStatus({ configured: false, connected: false, metrics: null });
-    }
-  }, [getStatus]);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
 
   const connect = async () => {
     setBusy(true);
@@ -1796,6 +1822,7 @@ function WhoopCard() {
         <>
           <div className="rv-whoop-metrics">
             <WhoopMetric label={L("Recuperação","Recovery")} value={m?.recovery ?? null} unit="%" />
+            <WhoopMetric label="Strain" value={m?.strain ?? null} />
             <WhoopMetric label="HRV" value={m?.hrv ?? null} unit="ms" />
             <WhoopMetric label={L("FC repouso","Resting HR")} value={m?.restingHr ?? null} unit="bpm" />
             <WhoopMetric label={L("Sono","Sleep")} value={m?.sleepHours ?? null} unit="h" />

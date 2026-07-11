@@ -15,24 +15,38 @@ import {
 const AUTH_URL = "https://api.prod.whoop.com/oauth/oauth2/auth";
 const TOKEN_URL = "https://api.prod.whoop.com/oauth/oauth2/token";
 const API_BASE = "https://api.prod.whoop.com/developer/v2";
-// "read:profile" foi propositadamente omitido: não está habilitado para esta
-// app na dashboard da Whoop (developer.whoop.com → a tua app → Scopes) e
-// pedi-lo causa "invalid_scope" logo no ecrã de autorização. Se o ativares
-// lá, podes voltar a acrescentar "read:profile" aqui para mostrar o nome.
-const SCOPES = "read:recovery read:sleep read:cycles offline";
+// "read:profile" é propositadamente omitido: a app usa uma identidade
+// fictícia ("Maria Antunes") para demonstração, e trazer o nome/perfil real
+// da tua conta Whoop misturaria dados reais dentro dessa persona — decisão
+// de produto, não limitação técnica (o scope já está habilitado na tua app).
+const SCOPES = "read:recovery read:sleep read:cycles read:body_measurement offline";
 
 const C_ACCESS = "whoop_at";
 const C_REFRESH = "whoop_rt";
 const C_EXPIRES = "whoop_exp";
 const C_STATE = "whoop_state";
 
+interface WhoopHistory {
+  hrv: number[];          // ms, cronológico (mais antigo → mais recente), até 7 pontos
+  restingHr: number[];    // bpm
+  deepSleepMin: number[]; // min de sono profundo (slow-wave)
+}
+
+interface WhoopBody {
+  heightCm: number | null;
+  weightKg: number | null;
+  imc: number | null;
+}
+
 interface WhoopMetrics {
   recovery: number | null;   // %
   hrv: number | null;        // ms
   restingHr: number | null;  // bpm
-  sleepHours: number | null; // h
+  sleepHours: number | null; // h, sono total da última noite
   strain: number | null;     // 0–21
   lastSyncISO: string;
+  history: WhoopHistory;
+  body: WhoopBody;
 }
 
 export interface WhoopStatus {
@@ -131,40 +145,89 @@ async function apiGet(path: string, token: string) {
 }
 
 function firstRecord(data: unknown): Record<string, unknown> | null {
-  if (data && typeof data === "object") {
-    const recs = (data as { records?: unknown[] }).records;
-    if (Array.isArray(recs) && recs.length > 0 && typeof recs[0] === "object") {
-      return recs[0] as Record<string, unknown>;
-    }
-  }
-  return null;
+  return recordsList(data)[0] ?? null;
 }
 
-async function fetchMetrics(token: string): Promise<WhoopMetrics> {
-  const [recovery, sleep, cycle] = await Promise.all([
-    apiGet("/recovery?limit=1", token),
-    apiGet("/activity/sleep?limit=1", token),
-    apiGet("/cycle?limit=1", token),
-  ]);
+function recordsList(data: unknown): Array<Record<string, unknown>> {
+  if (data && typeof data === "object") {
+    const recs = (data as { records?: unknown[] }).records;
+    if (Array.isArray(recs)) {
+      return recs.filter((r): r is Record<string, unknown> => !!r && typeof r === "object");
+    }
+  }
+  return [];
+}
 
-  const recScore = (firstRecord(recovery)?.score ?? {}) as Record<string, number>;
-  const sleepScore = (firstRecord(sleep)?.score ?? {}) as Record<string, unknown>;
-  const stages = (sleepScore.stage_summary ?? {}) as Record<string, number>;
-  const cycleScore = (firstRecord(cycle)?.score ?? {}) as Record<string, number>;
+function deepSleepMinutes(sleepRecord: Record<string, unknown> | undefined): number | null {
+  const score = (sleepRecord?.score ?? {}) as Record<string, unknown>;
+  const stages = (score.stage_summary ?? {}) as Record<string, number>;
+  const milli = stages.total_slow_wave_sleep_time_milli;
+  return typeof milli === "number" && milli > 0 ? Math.round(milli / 60000) : null;
+}
 
+function totalSleepHours(sleepRecord: Record<string, unknown> | undefined): number | null {
+  const score = (sleepRecord?.score ?? {}) as Record<string, unknown>;
+  const stages = (score.stage_summary ?? {}) as Record<string, number>;
   const asleepMilli =
     (stages.total_light_sleep_time_milli ?? 0) +
     (stages.total_slow_wave_sleep_time_milli ?? 0) +
     (stages.total_rem_sleep_time_milli ?? 0);
-  const sleepHours = asleepMilli > 0 ? Math.round((asleepMilli / 3_600_000) * 10) / 10 : null;
+  return asleepMilli > 0 ? Math.round((asleepMilli / 3_600_000) * 10) / 10 : null;
+}
+
+// Extrai um campo numérico de cada registo, em ordem cronológica (a API
+// devolve do mais recente para o mais antigo), até `limit` pontos.
+function historyOf(records: Array<Record<string, unknown>>, pick: (r: Record<string, unknown>) => number | null, limit = 7): number[] {
+  return records
+    .slice(0, limit)
+    .reverse()
+    .map(pick)
+    .filter((v): v is number => typeof v === "number");
+}
+
+async function fetchMetrics(token: string): Promise<WhoopMetrics> {
+  const [recovery, sleep, cycle, body] = await Promise.all([
+    apiGet("/recovery?limit=7", token),
+    apiGet("/activity/sleep?limit=7", token),
+    apiGet("/cycle?limit=1", token),
+    apiGet("/user/measurement/body", token),
+  ]);
+
+  const recRecords = recordsList(recovery);
+  const sleepRecords = recordsList(sleep);
+  const recScore = (recRecords[0]?.score ?? {}) as Record<string, number>;
+  const cycleScore = (firstRecord(cycle)?.score ?? {}) as Record<string, number>;
+
+  const history: WhoopHistory = {
+    hrv: historyOf(recRecords, (r) => {
+      const s = (r.score ?? {}) as Record<string, number>;
+      return typeof s.hrv_rmssd_milli === "number" ? Math.round(s.hrv_rmssd_milli) : null;
+    }),
+    restingHr: historyOf(recRecords, (r) => {
+      const s = (r.score ?? {}) as Record<string, number>;
+      return typeof s.resting_heart_rate === "number" ? Math.round(s.resting_heart_rate) : null;
+    }),
+    deepSleepMin: historyOf(sleepRecords, deepSleepMinutes),
+  };
+
+  const b = (body ?? {}) as Record<string, unknown>;
+  const heightM = typeof b.height_meter === "number" ? b.height_meter : null;
+  const weightKg = typeof b.weight_kilogram === "number" ? b.weight_kilogram : null;
+  const bodyInfo: WhoopBody = {
+    heightCm: heightM != null ? Math.round(heightM * 100) : null,
+    weightKg: weightKg != null ? Math.round(weightKg * 10) / 10 : null,
+    imc: heightM && weightKg ? Math.round((weightKg / (heightM * heightM)) * 10) / 10 : null,
+  };
 
   return {
     recovery: typeof recScore.recovery_score === "number" ? Math.round(recScore.recovery_score) : null,
     hrv: typeof recScore.hrv_rmssd_milli === "number" ? Math.round(recScore.hrv_rmssd_milli) : null,
     restingHr: typeof recScore.resting_heart_rate === "number" ? Math.round(recScore.resting_heart_rate) : null,
-    sleepHours,
+    sleepHours: totalSleepHours(sleepRecords[0]),
     strain: typeof cycleScore.strain === "number" ? Math.round(cycleScore.strain * 10) / 10 : null,
     lastSyncISO: new Date().toISOString(),
+    history,
+    body: bodyInfo,
   };
 }
 
