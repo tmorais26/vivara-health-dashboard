@@ -33,6 +33,34 @@ const T = {
     ],
     dataTitle: "Os seus dados, sempre seus.",
     dataDesc: "Pode exportar tudo a qualquer momento. Os seus dados só são vistos por si e pela equipa clínica que escolheu — nunca por mais ninguém.",
+    featuresBadge: "Incluído",
+    featuresTitle: "Tudo o que precisa na app.",
+    features: [
+      {
+        title: "Resumo e histórico unificado",
+        desc: "Exames, análises e consultas numa linha do tempo pesquisável.",
+      },
+      {
+        title: "Wearables ligados",
+        desc: "Apple Health, Oura e Whoop, com sono e atividade ao lado dos dados clínicos.",
+      },
+      {
+        title: "Lembretes e planos diários",
+        desc: "O plano do dia e os lembretes de consulta sempre à mão.",
+      },
+      {
+        title: "Mensagens com a equipa",
+        desc: "Conversa direta e privada com quem o acompanha, com histórico permanente.",
+      },
+      {
+        title: "Resumos de cada consulta",
+        desc: "O que foi decidido e o que fazer a seguir, por escrito, depois de sair.",
+      },
+      {
+        title: "Exportação completa",
+        desc: "Os seus dados saem consigo a qualquer momento, num formato aberto.",
+      },
+    ],
   },
   en: {
     header: {
@@ -63,6 +91,34 @@ const T = {
     ],
     dataTitle: "Your data, always yours.",
     dataDesc: "You can export everything at any time. Your data is seen only by you and the care team you chose — never by anyone else.",
+    featuresBadge: "Included",
+    featuresTitle: "Everything you need in the app.",
+    features: [
+      {
+        title: "Unified summary and record",
+        desc: "Exams, lab results and appointments on a searchable timeline.",
+      },
+      {
+        title: "Connected wearables",
+        desc: "Apple Health, Oura and Whoop, with sleep and activity next to the clinical data.",
+      },
+      {
+        title: "Daily plans and reminders",
+        desc: "Your plan for the day and appointment reminders, always at hand.",
+      },
+      {
+        title: "Messages with your team",
+        desc: "A direct, private conversation with your care team, with a permanent record.",
+      },
+      {
+        title: "Summaries after every appointment",
+        desc: "What was decided and what to do next, in writing, after you leave.",
+      },
+      {
+        title: "Full export",
+        desc: "Your data leaves with you at any time, in an open format.",
+      },
+    ],
   },
 };
 
@@ -103,18 +159,44 @@ export default function Utentes() {
             <Link to="/precos"><CTAButton className="mt-8">{L.planCta}</CTAButton></Link>
           </Reveal>
           <Reveal delay={0.1}>
-            <div className="rounded-3xl bg-brand-dark text-white p-8">
+            <div className="rounded-3xl border border-black/10 bg-brand-beige p-8">
               <h3 className="font-serif text-2xl mb-5">{L.includedTitle}</h3>
               <ul className="space-y-3 text-sm">
                 {L.plan.map((f, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <Check className="size-4 mt-0.5 shrink-0 text-brand-lime" />
-                    <span className="text-white/90">{f}</span>
+                    <Check className="size-4 mt-0.5 shrink-0 text-brand-green-dark" />
+                    <span className="text-brand-muted/85">{f}</span>
                   </li>
                 ))}
               </ul>
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      <section className="py-16 md:py-24 bg-brand-dark">
+        <div className="mx-auto max-w-6xl px-6 text-white">
+          <Reveal>
+            <span className="inline-flex items-center rounded-full border border-white/30 px-4 py-1.5 text-sm text-white/90">
+              {L.featuresBadge}
+            </span>
+            <h2 className="font-serif font-light text-4xl md:text-5xl mt-5 max-w-2xl">
+              {L.featuresTitle}
+            </h2>
+          </Reveal>
+          <div className="mt-10 grid md:grid-cols-2 gap-x-12 gap-y-6">
+            {L.features.map((it, i) => (
+              <Reveal key={it.title} delay={i * 0.05}>
+                <div className="flex items-start gap-3">
+                  <Check className="size-5 mt-0.5 shrink-0 text-brand-lime" />
+                  <div>
+                    <p className="text-white/90 font-medium">{it.title}</p>
+                    <p className="text-sm text-white/50 mt-0.5">{it.desc}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 

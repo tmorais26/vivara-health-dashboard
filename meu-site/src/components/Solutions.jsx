@@ -25,6 +25,7 @@ const T = {
         </>
       ),
       desc: "Resumo da saúde e histórico unificado. Carrega análises, liga wearables e recebe resumos de cada consulta.",
+      note: "Ainda não tem médico na Vivara? Pode começar sozinho — o seu médico junta-se depois.",
     },
     insights: {
       badge: "Insights claros",
@@ -65,6 +66,7 @@ const T = {
         </>
       ),
       desc: "A health summary and unified record. Upload lab results, connect wearables and get a summary after every appointment.",
+      note: "No doctor on Vivara yet? You can start on your own — your doctor joins later.",
     },
     insights: {
       badge: "Clear insights",
@@ -89,7 +91,7 @@ const T = {
   },
 };
 
-function Layout({ id, bg, badge, title, desc, visual, reverse }) {
+function Layout({ id, bg, badge, title, desc, note, visual, reverse }) {
   return (
     <section id={id} className="py-24 md:py-32" style={{ background: bg }}>
       <div
@@ -101,6 +103,11 @@ function Layout({ id, bg, badge, title, desc, visual, reverse }) {
           <SectionBadge>{badge}</SectionBadge>
           <h2 className="font-serif font-light tracking-tight text-4xl md:text-5xl mt-5">{title}</h2>
           <p className="mt-5 text-lg text-brand-muted/80 leading-relaxed max-w-md">{desc}</p>
+          {note && (
+            <p className="mt-5 max-w-md border-l-2 border-black/10 pl-4 text-sm text-brand-muted/60 leading-relaxed">
+              {note}
+            </p>
+          )}
         </Reveal>
         <Reveal delay={0.15}>{visual}</Reveal>
       </div>
@@ -162,6 +169,7 @@ export function Vault() {
       badge={L.badge}
       title={L.title}
       desc={L.desc}
+      note={L.note}
       visual={<AppMock />}
     />
   );
