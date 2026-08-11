@@ -34,7 +34,6 @@ const categoriaLabel: Record<string, string> = {
   composicao: "Composição corporal",
   wearable: "Wearable",
   genomica: "Genómica",
-  prescricoes: "Prescrições",
 };
 
 export function MarkerDetailPanel({
@@ -99,7 +98,7 @@ export function MarkerDetailPanel({
                   className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
                 >
                   <Pill className="h-3.5 w-3.5" />
-                  Nova prescrição
+                  Adicionar ao plano
                   <ChevronDown className="h-3 w-3" />
                 </button>
                 {novaPrescAberta && (

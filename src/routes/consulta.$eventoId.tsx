@@ -5,7 +5,6 @@ import {
   Check,
   FileText,
   FlaskConical,
-  Pill,
   Plus,
   Save,
   Sparkles,
@@ -43,14 +42,6 @@ export const Route = createFileRoute("/consulta/$eventoId")({
   component: ConsultaPage,
 });
 
-type Prescricao = {
-  id: string;
-  farmaco: string;
-  posologia: string;
-  duracao: string;
-  notas: string;
-};
-
 type Requisicao = {
   id: string;
   tipo: "analise" | "imagiologia" | "outro";
@@ -74,7 +65,6 @@ function ConsultaPage() {
   const [avaliacao, setAvaliacao] = useState("");
   const [plano, setPlano] = useState("");
 
-  const [prescricoes, setPrescricoes] = useState<Prescricao[]>([]);
   const [requisicoes, setRequisicoes] = useState<Requisicao[]>([]);
 
   const [toast, setToast] = useState<string | null>(null);
@@ -84,13 +74,6 @@ function ConsultaPage() {
     setTimeout(() => setToast(null), 1800);
   }
 
-  function addPrescricao() {
-    setPrescricoes((p) => [
-      ...p,
-      { id: `p-${Date.now()}`, farmaco: "", posologia: "", duracao: "", notas: "" },
-    ]);
-  }
-
   function addRequisicao(tipo: Requisicao["tipo"]) {
     setRequisicoes((r) => [
       ...r,
@@ -98,16 +81,8 @@ function ConsultaPage() {
     ]);
   }
 
-  function updatePrescricao(id: string, patch: Partial<Prescricao>) {
-    setPrescricoes((p) => p.map((x) => (x.id === id ? { ...x, ...patch } : x)));
-  }
-
   function updateRequisicao(id: string, patch: Partial<Requisicao>) {
     setRequisicoes((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
-  }
-
-  function removePrescricao(id: string) {
-    setPrescricoes((p) => p.filter((x) => x.id !== id));
   }
 
   function removeRequisicao(id: string) {
@@ -217,70 +192,6 @@ function ConsultaPage() {
                   value={plano}
                   onChange={setPlano}
                 />
-              </div>
-            </section>
-
-            {/* Prescrições */}
-            <section className="rounded-2xl border border-border bg-surface-raised">
-              <header className="flex items-center justify-between border-b border-border px-5 py-3">
-                <div className="flex items-center gap-1.5">
-                  <Pill className="h-3.5 w-3.5 text-muted-foreground" />
-                  <h2 className="text-sm font-medium text-foreground">
-                    Prescrições <span className="text-muted-foreground">· {prescricoes.length}</span>
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={addPrescricao}
-                  className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-medium text-foreground hover:bg-accent"
-                >
-                  <Plus className="h-3 w-3" />
-                  Adicionar
-                </button>
-              </header>
-              <div className="divide-y divide-border">
-                {prescricoes.length === 0 && (
-                  <div className="px-5 py-8 text-center text-xs text-muted-foreground">
-                    Sem prescrições. Adiciona um fármaco para começar.
-                  </div>
-                )}
-                {prescricoes.map((p) => (
-                  <div key={p.id} className="grid grid-cols-1 gap-2 px-5 py-4 md:grid-cols-12">
-                    <input
-                      value={p.farmaco}
-                      onChange={(e) => updatePrescricao(p.id, { farmaco: e.target.value })}
-                      placeholder="Fármaco e dose (ex: Atorvastatina 20 mg)"
-                      className="font-serif rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-foreground/30 focus:outline-none md:col-span-5"
-                    />
-                    <input
-                      value={p.posologia}
-                      onChange={(e) => updatePrescricao(p.id, { posologia: e.target.value })}
-                      placeholder="Posologia (ex: 1 cp ao deitar)"
-                      className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-foreground/30 focus:outline-none md:col-span-3"
-                    />
-                    <input
-                      value={p.duracao}
-                      onChange={(e) => updatePrescricao(p.id, { duracao: e.target.value })}
-                      placeholder="Duração (ex: 3 meses)"
-                      className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-foreground/30 focus:outline-none md:col-span-3"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removePrescricao(p.id)}
-                      aria-label="Remover"
-                      className="inline-flex items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:text-state-alert md:col-span-1"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                    <textarea
-                      value={p.notas}
-                      onChange={(e) => updatePrescricao(p.id, { notas: e.target.value })}
-                      placeholder="Notas / instruções adicionais"
-                      rows={1}
-                      className="resize-none rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-foreground/30 focus:outline-none md:col-span-12"
-                    />
-                  </div>
-                ))}
               </div>
             </section>
 
