@@ -1,5 +1,5 @@
-// Resumos de utentes + agenda + prescrições pendentes para o portal clínico.
-// Mock estático: serve a listagem, agenda e prescrições da médica.
+// Resumos de utentes + agenda para o portal clínico.
+// Mock estático: serve a listagem e a agenda da médica.
 
 import { utente as maria } from "./mock-utente";
 
@@ -208,65 +208,6 @@ export const agendaSemana: EventoAgenda[] = [
     duracao: "60 min",
     tipo: "presencial",
     motivo: "Reavaliação lipídica e Vitamina D",
-  },
-];
-
-export type PrescricaoPortal = {
-  id: string;
-  utenteId: string;
-  utenteNome: string;
-  iniciais: string;
-  nome: string;
-  posologia: string;
-  tipo: "receita" | "manipulado" | "suplemento";
-  expira: string; // ISO
-  diasRestantes: number;
-};
-
-export const prescricoesPendentes: PrescricaoPortal[] = [
-  {
-    id: "pp-1",
-    utenteId: "maria-antunes",
-    utenteNome: "Maria Antunes",
-    iniciais: "MA",
-    nome: "Progesterona micronizada 100 mg",
-    posologia: "1 cp ao deitar (cíclica, dias 1–25)",
-    tipo: "manipulado",
-    expira: "2026-05-20",
-    diasRestantes: 16,
-  },
-  {
-    id: "pp-2",
-    utenteId: "rui-pereira",
-    utenteNome: "Rui Pereira",
-    iniciais: "RP",
-    nome: "Atorvastatina 20 mg",
-    posologia: "1 cp ao deitar",
-    tipo: "receita",
-    expira: "2026-05-09",
-    diasRestantes: 5,
-  },
-  {
-    id: "pp-3",
-    utenteId: "joao-marques",
-    utenteNome: "João Marques",
-    iniciais: "JM",
-    nome: "Metformina 500 mg",
-    posologia: "2×/dia ao pequeno-almoço e jantar",
-    tipo: "receita",
-    expira: "2026-05-15",
-    diasRestantes: 11,
-  },
-  {
-    id: "pp-4",
-    utenteId: "marta-vieira",
-    utenteNome: "Marta Vieira",
-    iniciais: "MV",
-    nome: "Estradiol transdérmico 50 µg",
-    posologia: "1 adesivo a cada 3,5 dias",
-    tipo: "receita",
-    expira: "2026-05-26",
-    diasRestantes: 22,
   },
 ];
 

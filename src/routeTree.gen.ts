@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PrescricoesRouteImport } from './routes/prescricoes'
 import { Route as DefinicoesRouteImport } from './routes/definicoes'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppV2RouteImport } from './routes/app-v2'
@@ -19,11 +18,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as UtentesUtenteIdRouteImport } from './routes/utentes.$utenteId'
 import { Route as ConsultaEventoIdRouteImport } from './routes/consulta.$eventoId'
 
-const PrescricoesRoute = PrescricoesRouteImport.update({
-  id: '/prescricoes',
-  path: '/prescricoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DefinicoesRoute = DefinicoesRouteImport.update({
   id: '/definicoes',
   path: '/definicoes',
@@ -72,7 +66,6 @@ export interface FileRoutesByFullPath {
   '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
-  '/prescricoes': typeof PrescricoesRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
@@ -83,7 +76,6 @@ export interface FileRoutesByTo {
   '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
-  '/prescricoes': typeof PrescricoesRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
@@ -95,7 +87,6 @@ export interface FileRoutesById {
   '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
-  '/prescricoes': typeof PrescricoesRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
@@ -108,7 +99,6 @@ export interface FileRouteTypes {
     | '/app-v2'
     | '/auth'
     | '/definicoes'
-    | '/prescricoes'
     | '/consulta/$eventoId'
     | '/utentes/$utenteId'
   fileRoutesByTo: FileRoutesByTo
@@ -119,7 +109,6 @@ export interface FileRouteTypes {
     | '/app-v2'
     | '/auth'
     | '/definicoes'
-    | '/prescricoes'
     | '/consulta/$eventoId'
     | '/utentes/$utenteId'
   id:
@@ -130,7 +119,6 @@ export interface FileRouteTypes {
     | '/app-v2'
     | '/auth'
     | '/definicoes'
-    | '/prescricoes'
     | '/consulta/$eventoId'
     | '/utentes/$utenteId'
   fileRoutesById: FileRoutesById
@@ -142,20 +130,12 @@ export interface RootRouteChildren {
   AppV2Route: typeof AppV2Route
   AuthRoute: typeof AuthRoute
   DefinicoesRoute: typeof DefinicoesRoute
-  PrescricoesRoute: typeof PrescricoesRoute
   ConsultaEventoIdRoute: typeof ConsultaEventoIdRoute
   UtentesUtenteIdRoute: typeof UtentesUtenteIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/prescricoes': {
-      id: '/prescricoes'
-      path: '/prescricoes'
-      fullPath: '/prescricoes'
-      preLoaderRoute: typeof PrescricoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/definicoes': {
       id: '/definicoes'
       path: '/definicoes'
@@ -222,7 +202,6 @@ const rootRouteChildren: RootRouteChildren = {
   AppV2Route: AppV2Route,
   AuthRoute: AuthRoute,
   DefinicoesRoute: DefinicoesRoute,
-  PrescricoesRoute: PrescricoesRoute,
   ConsultaEventoIdRoute: ConsultaEventoIdRoute,
   UtentesUtenteIdRoute: UtentesUtenteIdRoute,
 }

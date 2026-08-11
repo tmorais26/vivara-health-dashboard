@@ -41,7 +41,6 @@ function DefinicoesPage() {
 
           <Card icon={<Bell className="h-4 w-4" />} title={t.definicoes.notificacoes} sub={t.definicoes.notificacoesSub}>
             <Row label={t.definicoes.notifNovosDados} value="Email + portal" />
-            <Row label={t.definicoes.notifPrescricoes} value="Portal" />
             <Row label={t.definicoes.notifCriticos} value="Email + SMS" />
           </Card>
 

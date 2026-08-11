@@ -9,7 +9,6 @@ import { PatientMobileView } from "@/components/portal/PatientMobileView";
 import { MarkerList } from "@/components/dashboard/MarkerList";
 import { MarkerDetailPanel } from "@/components/dashboard/MarkerDetailPanel";
 import { GenomicaPanel } from "@/components/dashboard/GenomicaPanel";
-import { PrescricoesPanel } from "@/components/dashboard/PrescricoesPanel";
 import { PlanoPanel } from "@/components/dashboard/PlanoPanel";
 import { AnamnesePanel } from "@/components/dashboard/AnamnesePanel";
 import { ConsultasPanel } from "@/components/dashboard/ConsultasPanel";
@@ -45,11 +44,11 @@ function NaoEncontrado() {
   );
 }
 
-type MainTab = "clinico" | "genomica" | "plano" | "prescricoes" | "consultas-docs";
+type MainTab = "clinico" | "genomica" | "plano" | "consultas-docs";
 type ClinicoSub = "analises" | "composicao" | "wearable" | "comparar";
 type CDSub = "consultas" | "documentos";
 
-const mainTabIds: MainTab[] = ["clinico", "genomica", "plano", "prescricoes", "consultas-docs"];
+const mainTabIds: MainTab[] = ["clinico", "genomica", "plano", "consultas-docs"];
 const clinicoSubIds: ClinicoSub[] = ["analises", "composicao", "wearable", "comparar"];
 const cdSubIds: CDSub[] = ["consultas", "documentos"];
 
@@ -59,7 +58,6 @@ function useTabLabels() {
     clinico: t.utente.tabClinico,
     genomica: t.utente.tabGenomica,
     plano: t.utente.tabPlano,
-    prescricoes: t.utente.tabPrescricoes,
     "consultas-docs": t.utente.tabConsultasDocs,
   };
   const clinico: Record<ClinicoSub, string> = {
@@ -141,8 +139,6 @@ function DashboardUtente() {
                 setClinicoSub(m.categoria);
               } else if (m.categoria === "genomica") {
                 setMainTab("genomica");
-              } else if (m.categoria === "prescricoes") {
-                setMainTab("prescricoes");
               }
               setSelectedId(m.id);
             }
@@ -168,8 +164,6 @@ function DashboardUtente() {
               setClinicoSub(m.categoria);
             } else if (m.categoria === "genomica") {
               setMainTab("genomica");
-            } else if (m.categoria === "prescricoes") {
-              setMainTab("prescricoes");
             }
             setSelectedId(m.id);
           }
@@ -273,8 +267,6 @@ function DashboardUtente() {
           />
         ) : mainTab === "genomica" ? (
           <GenomicaPanel utente={utente} />
-        ) : mainTab === "prescricoes" ? (
-          <PrescricoesPanel utente={utente} />
         ) : (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[420px_1fr]">
             {/* Marker list */}

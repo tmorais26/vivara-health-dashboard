@@ -1,12 +1,7 @@
 // Mock data for Maria Antunes — 18 months of longevity history
 // Generated deterministically so the dashboard is stable across renders.
 
-export type Categoria =
-  | "analises"
-  | "composicao"
-  | "wearable"
-  | "genomica"
-  | "prescricoes";
+export type Categoria = "analises" | "composicao" | "wearable" | "genomica";
 
 export type Estado = "ok" | "atencao" | "alerta";
 
@@ -46,15 +41,6 @@ export type Alerta = {
   titulo: string;
   detalhe: string;
   estado: Estado;
-};
-
-export type Prescricao = {
-  id: string;
-  nome: string;
-  tipo: "receita" | "manipulado" | "suplemento";
-  posologia: string;
-  desde: string;
-  proximaRenovacao?: string;
 };
 
 export type VarianteGenomica = {
@@ -212,7 +198,6 @@ export type Utente = {
   proximaConsulta: string;
   marcadores: Marcador[];
   alertas: Alerta[];
-  prescricoes: Prescricao[];
   genomica: VarianteGenomica[];
   plano_tarefas: TarefaPlano[];
   conversas: Conversa[];
@@ -697,46 +682,6 @@ const alertas: Alerta[] = [
   },
 ];
 
-const prescricoes: Prescricao[] = [
-  {
-    id: "p1",
-    nome: "Estradiol transdérmico 50 µg",
-    tipo: "receita",
-    posologia: "1 adesivo a cada 3,5 dias",
-    desde: "2024-09-12",
-    proximaRenovacao: "2026-06-15",
-  },
-  {
-    id: "p2",
-    nome: "Progesterona micronizada 100 mg",
-    tipo: "manipulado",
-    posologia: "1 cápsula ao deitar (cíclica, dias 1–25)",
-    desde: "2024-09-12",
-    proximaRenovacao: "2026-05-20",
-  },
-  {
-    id: "p3",
-    nome: "Vitamina D3 4000 UI + K2 100 µg",
-    tipo: "suplemento",
-    posologia: "1 cápsula ao pequeno-almoço",
-    desde: "2024-03-04",
-  },
-  {
-    id: "p4",
-    nome: "Magnésio bisglicinato 300 mg",
-    tipo: "suplemento",
-    posologia: "1 cápsula ao deitar",
-    desde: "2024-11-02",
-  },
-  {
-    id: "p5",
-    nome: "Ómega-3 EPA/DHA 2 g",
-    tipo: "suplemento",
-    posologia: "2 cápsulas ao almoço",
-    desde: "2024-05-18",
-  },
-];
-
 const genomica: VarianteGenomica[] = [
   { gene: "APOE", variante: "ε3/ε4", impacto: "Risco aumentado cardiovascular e neurodegenerativo", relevancia: "alta" },
   { gene: "MTHFR", variante: "C677T heterozigótica", impacto: "Metabolismo do folato reduzido", relevancia: "media" },
@@ -817,7 +762,6 @@ export const utente: Utente = {
   proximaConsulta: "2026-06-08",
   marcadores,
   alertas,
-  prescricoes,
   genomica,
   plano_tarefas,
   conversas: [

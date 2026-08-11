@@ -34,7 +34,7 @@ import { useT } from "@/lib/i18n";
 /**
  * Vista mobile focada para a médica — consulta rápida entre consultas.
  * Mostra resumo, alertas, próxima/última consulta e últimas notas internas.
- * Edição completa (marcadores, plano, prescrições) fica relegada para desktop.
+ * Edição completa (marcadores, plano) fica relegada para desktop.
  */
 export function PatientMobileView({
   utente,

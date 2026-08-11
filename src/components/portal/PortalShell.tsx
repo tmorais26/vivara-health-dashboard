@@ -4,7 +4,6 @@ import {
   Activity,
   Calendar,
   LogOut,
-  Pill,
   Settings,
   ShieldCheck,
   Users,
@@ -17,7 +16,7 @@ import { useT } from "@/lib/i18n";
 
 type NavItem = {
   label: string;
-  to: "/" | "/agenda" | "/prescricoes" | "/definicoes";
+  to: "/" | "/agenda" | "/definicoes";
   icon: typeof Users;
   match?: (pathname: string) => boolean;
   badge?: number;
@@ -33,7 +32,6 @@ function useNavItems(): NavItem[] {
       match: (p) => p === "/" || p.startsWith("/utentes"),
     },
     { label: t.nav.agenda, to: "/agenda", icon: Calendar, badge: 5 },
-    { label: t.nav.prescricoes, to: "/prescricoes", icon: Pill, badge: 4 },
     { label: t.nav.definicoes, to: "/definicoes", icon: Settings },
   ];
 }

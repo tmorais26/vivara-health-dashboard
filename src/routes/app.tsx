@@ -1361,7 +1361,6 @@ const categoriaLabels: Record<Categoria, string> = {
   composicao: "Composição",
   wearable: "Wearable",
   genomica: "Genómica",
-  prescricoes: "Prescrições",
 };
 
 function SaudeView({
