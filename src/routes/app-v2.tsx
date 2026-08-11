@@ -20,7 +20,8 @@ export const Route = createFileRoute("/app-v2")({
 type RouteId =
   | "home" | "data" | "upload" | "messages" | "alerts"
   | "diary" | "consultas" | "profile" | "marker" | "summary" | "schedule" | "devices" | "assistente"
-  | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar";
+  | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar"
+  | "sintomas" | "nutricao";
 
 type NavRoute = RouteId | { route: "marker"; marker: BioMarker };
 
@@ -83,18 +84,33 @@ const Icon = {
   smile:    <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.6" fill="none"/><circle cx="8" cy="9.5" r="1" fill="currentColor"/><circle cx="14" cy="9.5" r="1" fill="currentColor"/><path d="M7.5 13.5 Q 11 16 14.5 13.5" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round"/></svg>,
   cal:      <svg width="22" height="22" viewBox="0 0 22 22"><rect x="3" y="5" width="16" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" fill="none"/><path d="M3 9 H19 M7 3 V7 M15 3 V7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
   shield:   <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1 L12 3.5 V7 C12 10 9.5 12.5 7 13 C4.5 12.5 2 10 2 7 V3.5 Z" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinejoin="round"/><path d="M5 7 L6.5 8.5 L9 5.5" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  pulse:    <svg width="14" height="14" viewBox="0 0 14 14"><path d="M1 7 H4 L5.5 2.5 L8 11 L9.5 7 H13" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>,
 } as const;
 
 // ─── Spark ───────────────────────────────────────────
-function Spark({ pts, color = "currentColor", w = 80, h = 22 }: { pts: number[]; color?: string; w?: number; h?: number }) {
+// bandMin/bandMax (opcional): desenha faixas subtis de zona de referência atrás
+// da linha — verde dentro do intervalo, vermelho fora — usando o mesmo domínio
+// vertical dos dados, sem alterar o traçado nem o comportamento dos outros usos.
+function Spark({ pts, color = "currentColor", w = 80, h = 22, bandMin, bandMax }: { pts: number[]; color?: string; w?: number; h?: number; bandMin?: number | null; bandMax?: number | null }) {
   const min = Math.min(...pts);
   const max = Math.max(...pts);
   const range = max - min || 1;
   const xs = pts.map((_, i) => (i / (pts.length - 1)) * w);
   const ys = pts.map((p) => h - 2 - ((p - min) / range) * (h - 4));
   const d = pts.map((_, i) => `${i === 0 ? "M" : "L"} ${xs[i]} ${ys[i]}`).join(" ");
+  const hasBands = bandMin !== undefined || bandMax !== undefined;
+  const toY = (v: number) => Math.min(h, Math.max(0, h - 2 - ((v - min) / range) * (h - 4)));
+  const yTop = hasBands && bandMax != null ? toY(bandMax) : 0;
+  const yBot = hasBands && bandMin != null ? toY(bandMin) : h;
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+      {hasBands && (
+        <>
+          <rect x="0" y={yTop} width={w} height={Math.max(0, yBot - yTop)} fill="var(--lime)" opacity="0.18"/>
+          {bandMax != null && yTop > 0 && <rect x="0" y="0" width={w} height={yTop} fill="var(--alert)" opacity="0.18"/>}
+          {bandMin != null && yBot < h && <rect x="0" y={yBot} width={w} height={h - yBot} fill="var(--alert)" opacity="0.18"/>}
+        </>
+      )}
       <path d={d} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       <circle cx={xs[xs.length - 1]} cy={ys[ys.length - 1]} r="2" fill={color}/>
     </svg>
@@ -374,17 +390,18 @@ function TabBar({ active }: { active: string }) {
 }
 
 // ─── Plano de hoje ───────────────────────────────────
-const PLANO_HOJE = [
-  { key: "plan.item1", subKey: "plan.item1sub", time: "08:00", free: false, done: true },
-  { key: "plan.item2", subKey: "plan.item2sub", time: "08:00", free: false, done: true },
-  { key: "plan.item3", subKey: "plan.item3sub", time: "19:00", free: false, done: false },
-  { key: "plan.item4", subKey: "plan.item4sub", time: "22:30", free: false, done: false },
-  { key: "plan.item5", subKey: "plan.item5sub", time: "",      free: true,  done: false },
+type PlanItemType = "medication" | "supplement" | "activity";
+const PLANO_HOJE: { key: string; subKey: string; time: string; free: boolean; done: boolean; type: PlanItemType }[] = [
+  { key: "plan.item2", subKey: "plan.item2sub", time: "08:00", free: false, done: true,  type: "medication" },
+  { key: "plan.item1", subKey: "plan.item1sub", time: "08:00", free: false, done: true,  type: "supplement" },
+  { key: "plan.item3", subKey: "plan.item3sub", time: "19:00", free: false, done: false, type: "supplement" },
+  { key: "plan.item4", subKey: "plan.item4sub", time: "22:30", free: false, done: false, type: "supplement" },
+  { key: "plan.item5", subKey: "plan.item5sub", time: "",      free: true,  done: false, type: "activity" },
 ];
 
 function PlanoHoje() {
-  const { showToast } = useNav();
-  const { t } = useLang();
+  const { showToast, go } = useNav();
+  const { t, L } = useLang();
   const [done, setDone] = useState<boolean[]>(PLANO_HOJE.map((p) => p.done));
   const toggle = (i: number) => {
     setDone((prev) => {
@@ -394,6 +411,11 @@ function PlanoHoje() {
       return next;
     });
   };
+  const groups: { type: PlanItemType; label: string }[] = [
+    { type: "medication", label: L("Medicação","Medication") },
+    { type: "supplement", label: L("Suplementos","Supplements") },
+    { type: "activity",   label: L("Atividade","Activity") },
+  ];
   return (
     <section className="rv-section">
       <div className="rv-section-head">
@@ -401,18 +423,31 @@ function PlanoHoje() {
         <span className="rv-plan-streak"><span className="rv-emoji">🔥</span> {t("plan.streak")}</span>
       </div>
       <div className="rv-plan">
-        {PLANO_HOJE.map((p, i) => (
-          <button key={p.key} type="button" className="rv-plan-row" data-done={done[i] || undefined}
-            onClick={() => toggle(i)} aria-pressed={done[i]}>
-            <div className="rv-plan-check">{done[i] ? "✓" : ""}</div>
-            <div>
-              <div className="rv-plan-name">{t(p.key)}</div>
-              <div className="rv-plan-sub">{t(p.subKey)}</div>
+        {groups.map((g) => {
+          const rows = PLANO_HOJE.map((p, i) => ({ p, i })).filter(({ p }) => p.type === g.type);
+          if (rows.length === 0) return null;
+          return (
+            <div key={g.type}>
+              <div className="rv-plan-group-head">{g.label}</div>
+              {rows.map(({ p, i }, gi) => (
+                <button key={p.key} type="button" className="rv-plan-row" data-done={done[i] || undefined}
+                  style={gi === 0 ? {borderTop: "none"} : undefined}
+                  onClick={() => toggle(i)} aria-pressed={done[i]}>
+                  <div className="rv-plan-check">{done[i] ? "✓" : ""}</div>
+                  <div>
+                    <div className="rv-plan-name">{t(p.key)}</div>
+                    <div className="rv-plan-sub">{t(p.subKey)}</div>
+                  </div>
+                  <div className="rv-plan-time">{p.free ? t("plan.free") : p.time}</div>
+                </button>
+              ))}
             </div>
-            <div className="rv-plan-time">{p.free ? t("plan.free") : p.time}</div>
-          </button>
-        ))}
+          );
+        })}
       </div>
+      <a style={{display: "block", textAlign: "center", marginTop: 10, fontSize: 12, color: "var(--fg-50)", cursor: "pointer", fontWeight: 500}} onClick={() => go("nutricao")}>
+        {L("Nutrição & Suplementos — dose, objetivo e histórico","Nutrition & Supplements — dose, goal and history")}
+      </a>
     </section>
   );
 }
@@ -591,6 +626,18 @@ const BIOS_OK: BioMarker[] = [
   { name: "Homocisteína",    value: "6.4",  unit: "µmol/L", target: "< 8",     targetRange: { min: null, max: 8    }, delta: "→",       spark: [7.0,6.8,6.5,6.5,6.4,6.4,6.4] },
 ];
 
+// Painéis temáticos: agrupamento de biomarcadores definido pela equipa clínica
+// no portal do médico e refletido aqui. Cobrem os 13 biomarcadores disponíveis
+// sem sobreposição — "Painel de Recuperação" não entra aqui porque HRV, sono e
+// FC repouso são sinais do wearable (cartão Whoop), não análises de sangue com
+// alvo laboratorial como os desta lista.
+interface BioPanel { id: string; namePt: string; nameEn: string; icon: ReactNode; markers: string[] }
+const BIO_PANELS: BioPanel[] = [
+  { id: "hormonal", namePt: "Painel Hormonal", nameEn: "Hormonal Panel", icon: Icon.flask, markers: ["Estradiol", "TSH"] },
+  { id: "cardio", namePt: "Painel Cardiometabólico", nameEn: "Cardiometabolic Panel", icon: Icon.heart, markers: ["ApoB", "LDL-C", "HbA1c", "HDL-C", "Glicose", "Insulina", "Triglicéridos", "Colesterol total"] },
+  { id: "inflam", namePt: "Painel Metabólico & Inflamatório", nameEn: "Metabolic & Inflammatory Panel", icon: Icon.zap, markers: ["PCR-us", "Homocisteína", "Vitamina D"] },
+];
+
 function BioRow({ b }: { b: BioMarker }) {
   const { go } = useNav();
   const { L } = useLang();
@@ -602,7 +649,7 @@ function BioRow({ b }: { b: BioMarker }) {
         <div className="rv-bio-row-name">{b.name}</div>
         <div className="rv-bio-row-target">{L("alvo","target")} {b.target}</div>
       </div>
-      <Spark pts={b.spark} color={sparkCol} w={90} h={26}/>
+      <Spark pts={b.spark} color={sparkCol} w={90} h={26} bandMin={b.targetRange.min} bandMax={b.targetRange.max}/>
       <div className="rv-bio-row-vals">
         <div className="rv-bio-row-val" data-tone={valTone}>{b.value}</div>
         <div className="rv-bio-row-delta">{b.delta}</div>
@@ -627,7 +674,12 @@ function PeriodChips({ className = "rv-dados-period" }: { className?: string }) 
 // ─── 01 Dados ────────────────────────────────────────
 function DadosScreen() {
   const { go } = useNav();
-  const { t } = useLang();
+  const { t, L } = useLang();
+  const [panelId, setPanelId] = useState<string | null>(null);
+  const panel = BIO_PANELS.find((p) => p.id === panelId) ?? null;
+  const alertList = panel ? BIOS_ALERT.filter((b) => panel.markers.includes(b.name)) : BIOS_ALERT;
+  const okList = panel ? BIOS_OK.filter((b) => panel.markers.includes(b.name)) : BIOS_OK;
+
   return (
     <div className="rv-screen">
       <StatusBar />
@@ -640,20 +692,47 @@ function DadosScreen() {
       <div className="rv-body">
         <PeriodChips />
 
+        <div className="rv-panel-chips">
+          <button className="rv-period-chip" data-active={panelId === null || undefined} onClick={() => setPanelId(null)}>{L("Ver tudo","View all")}</button>
+          {BIO_PANELS.map((p) => (
+            <button key={p.id} className="rv-period-chip" data-active={panelId === p.id || undefined} onClick={() => setPanelId(p.id)}>
+              <span style={{display: "inline-flex", verticalAlign: "-3px", marginRight: 4}}>{p.icon}</span>{L(p.namePt, p.nameEn)}
+            </button>
+          ))}
+        </div>
 
-        <div className="rv-bio-section-head" data-tone="alert">
-          <span className="rv-dot"/>{t("data.offTarget")}
-        </div>
-        <div className="rv-bio-list">
-          {BIOS_ALERT.map((b, i) => <BioRow key={i} b={b}/>)}
+        <div className="rv-list">
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={() => go("sintomas")}>
+            <div className="rv-list-icon">{Icon.pulse}</div>
+            <div className="rv-list-text">
+              <span className="rv-list-name">{L("Sintomas","Symptoms")}</span>
+              <span className="rv-list-sub">{L("Registo, histórico e tendências","Log, history and trends")}</span>
+            </div>
+            <span className="rv-chev">{Icon.chev}</span>
+          </a>
         </div>
 
-        <div className="rv-bio-section-head">
-          <span className="rv-dot"/>{t("data.onTarget")}
-        </div>
-        <div className="rv-bio-list">
-          {BIOS_OK.map((b, i) => <BioRow key={i} b={b}/>)}
-        </div>
+        {alertList.length > 0 && (
+          <>
+            <div className="rv-bio-section-head" data-tone="alert">
+              <span className="rv-dot"/>{L("Fora do alvo","Off target")} · {alertList.length}
+            </div>
+            <div className="rv-bio-list">
+              {alertList.map((b, i) => <BioRow key={i} b={b}/>)}
+            </div>
+          </>
+        )}
+
+        {okList.length > 0 && (
+          <>
+            <div className="rv-bio-section-head">
+              <span className="rv-dot"/>{L("Dentro do alvo","On target")} · {okList.length}
+            </div>
+            <div className="rv-bio-list">
+              {okList.map((b, i) => <BioRow key={i} b={b}/>)}
+            </div>
+          </>
+        )}
 
         <div style={{height: 100}}/>
       </div>
@@ -760,6 +839,223 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
         )}
         <div style={{height: 80}}/>
       </div>
+    </div>
+  );
+}
+
+// ─── Sintomas ────────────────────────────────────────
+interface SymptomEntry { id: string; namePt: string; nameEn: string; intensity: number; at: string; notePt?: string; noteEn?: string }
+
+const SYMPTOM_PRESETS: { id: string; namePt: string; nameEn: string }[] = [
+  { id: "afrontamentos",    namePt: "Afrontamentos",   nameEn: "Hot flushes" },
+  { id: "insonia",          namePt: "Insónia",         nameEn: "Insomnia" },
+  { id: "cefaleia",         namePt: "Cefaleia",        nameEn: "Headache" },
+  { id: "ansiedade",        namePt: "Ansiedade",       nameEn: "Anxiety" },
+  { id: "dor-articular",    namePt: "Dor articular",   nameEn: "Joint pain" },
+  { id: "dor-abdominal",    namePt: "Dor abdominal",   nameEn: "Abdominal pain" },
+  { id: "cansaco",          namePt: "Cansaço",         nameEn: "Fatigue" },
+  { id: "nevoa-mental",     namePt: "Névoa mental",    nameEn: "Brain fog" },
+  { id: "palpitacoes",      namePt: "Palpitações",     nameEn: "Palpitations" },
+  { id: "suores-noturnos",  namePt: "Suores noturnos", nameEn: "Night sweats" },
+];
+
+const SYMPTOM_LOG: SymptomEntry[] = [
+  { id: "cefaleia",        namePt: "Cefaleia",        nameEn: "Headache",     intensity: 4, at: "2026-01-22T09:30:00" },
+  { id: "afrontamentos",   namePt: "Afrontamentos",   nameEn: "Hot flushes",  intensity: 3, at: "2026-01-25T14:00:00" },
+  { id: "cefaleia",        namePt: "Cefaleia",        nameEn: "Headache",     intensity: 3, at: "2026-02-05T08:15:00" },
+  { id: "insonia",         namePt: "Insónia",         nameEn: "Insomnia",     intensity: 3, at: "2026-02-09T23:00:00" },
+  { id: "cefaleia",        namePt: "Cefaleia",        nameEn: "Headache",     intensity: 4, at: "2026-02-19T18:40:00" },
+  { id: "afrontamentos",   namePt: "Afrontamentos",   nameEn: "Hot flushes",  intensity: 2, at: "2026-02-22T11:00:00" },
+  { id: "dor-articular",   namePt: "Dor articular",   nameEn: "Joint pain",   intensity: 2, at: "2026-03-02T07:50:00" },
+  { id: "cefaleia",        namePt: "Cefaleia",        nameEn: "Headache",     intensity: 2, at: "2026-03-11T09:00:00" },
+  { id: "afrontamentos",   namePt: "Afrontamentos",   nameEn: "Hot flushes",  intensity: 3, at: "2026-03-14T16:20:00" },
+  { id: "cansaco",         namePt: "Cansaço",         nameEn: "Fatigue",      intensity: 3, at: "2026-03-20T20:00:00" },
+  { id: "cefaleia",        namePt: "Cefaleia",        nameEn: "Headache",     intensity: 2, at: "2026-03-29T08:00:00" },
+  { id: "insonia",         namePt: "Insónia",         nameEn: "Insomnia",     intensity: 2, at: "2026-04-03T23:30:00" },
+  { id: "afrontamentos",   namePt: "Afrontamentos",   nameEn: "Hot flushes",  intensity: 2, at: "2026-04-10T13:10:00" },
+  { id: "cefaleia",        namePt: "Cefaleia",        nameEn: "Headache",     intensity: 1, at: "2026-04-15T09:00:00",
+    notePt: "Melhorou depois do ajuste de magnésio", noteEn: "Improved after the magnesium adjustment" },
+  { id: "afrontamentos",   namePt: "Afrontamentos",   nameEn: "Hot flushes",  intensity: 2, at: "2026-04-20T15:45:00" },
+  { id: "cefaleia",        namePt: "Cefaleia",        nameEn: "Headache",     intensity: 1, at: "2026-04-25T08:30:00" },
+];
+
+// Data de referência usada em todo o /app-v2 para "hoje" (ver home.observation, diary.eyebrow).
+const SINTOMAS_TODAY = new Date("2026-04-27T09:00:00");
+
+function startOfWeek(d: Date): Date {
+  const x = new Date(d);
+  const day = (x.getDay() + 6) % 7; // 0 = segunda
+  x.setDate(x.getDate() - day);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function SymptomTrendCard({ entries }: { entries: SymptomEntry[] }) {
+  const { L, lang } = useLang();
+  const W = 320, H = 90, PAD = 10;
+  const sorted = [...entries].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+  const toY = (v: number) => H - PAD - ((v - 1) / 4) * (H - PAD * 2);
+  const xs = sorted.map((_, i) => PAD + (sorted.length === 1 ? (W - PAD * 2) / 2 : (i / (sorted.length - 1)) * (W - PAD * 2)));
+  const ys = sorted.map((e) => toY(e.intensity));
+  const path = sorted.map((_, i) => `${i === 0 ? "M" : "L"} ${xs[i].toFixed(1)} ${ys[i].toFixed(1)}`).join(" ");
+  const yRedBot = toY(3.5);
+  const yGreenTop = toY(2.5);
+  const locale = lang === "pt" ? "pt-PT" : "en-GB";
+  const fmt = (iso: string) => new Date(iso).toLocaleDateString(locale, { day: "2-digit", month: "short" });
+
+  return (
+    <div className="rv-marker-chart" style={{margin: "0 20px 16px"}}>
+      <div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8}}>
+        <span style={{fontSize: 13.5, fontWeight: 600, letterSpacing: "-0.005em"}}>{L(sorted[0].namePt, sorted[0].nameEn)}</span>
+        <span style={{fontSize: 11, color: "var(--fg-50)"}}>{sorted.length} {L("registos", "entries")}</span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" width="100%" height={H}>
+        <rect x="0" y="0" width={W} height={yRedBot} fill="var(--alert)" opacity="0.10"/>
+        <rect x="0" y={yRedBot} width={W} height={Math.max(0, yGreenTop - yRedBot)} fill="var(--watch)" opacity="0.10"/>
+        <rect x="0" y={yGreenTop} width={W} height={Math.max(0, H - yGreenTop)} fill="var(--lime)" opacity="0.10"/>
+        <path d={path} fill="none" stroke="var(--watch)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        {sorted.map((_, i) => (
+          <circle key={i} cx={xs[i]} cy={ys[i]} r={i === sorted.length - 1 ? 4 : 2.5}
+            fill={i === sorted.length - 1 ? "var(--watch)" : "var(--bg-elev)"} stroke="var(--watch)" strokeWidth="1.5"/>
+        ))}
+      </svg>
+      <div className="rv-marker-chart-axis"><span>{fmt(sorted[0].at)}</span><span>{fmt(sorted[sorted.length - 1].at)}</span></div>
+    </div>
+  );
+}
+
+function SintomasScreen() {
+  const { go } = useNav();
+  const { L, lang } = useLang();
+  const [entries, setEntries] = useState<SymptomEntry[]>(SYMPTOM_LOG);
+  const [showForm, setShowForm] = useState(false);
+  const [formSymptom, setFormSymptom] = useState(SYMPTOM_PRESETS[2].id);
+  const [formIntensity, setFormIntensity] = useState(3);
+  const [formNote, setFormNote] = useState("");
+
+  const sorted = [...entries].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+
+  const weekMap = new Map<number, SymptomEntry[]>();
+  for (const e of sorted) {
+    const wk = startOfWeek(new Date(e.at)).getTime();
+    if (!weekMap.has(wk)) weekMap.set(wk, []);
+    weekMap.get(wk)!.push(e);
+  }
+  const todayWeek = startOfWeek(SINTOMAS_TODAY).getTime();
+  const weekEntries = [...weekMap.entries()].sort((a, b) => b[0] - a[0]);
+  const thisWeekCount = weekMap.get(todayWeek)?.length ?? 0;
+
+  const weekLabel = (wkTime: number) => {
+    const diffWeeks = Math.round((todayWeek - wkTime) / (7 * 86400000));
+    if (diffWeeks === 0) return L("Esta semana", "This week");
+    if (diffWeeks === 1) return L("Semana passada", "Last week");
+    const monday = new Date(wkTime);
+    const sunday = new Date(wkTime);
+    sunday.setDate(sunday.getDate() + 6);
+    const locale = lang === "pt" ? "pt-PT" : "en-GB";
+    const fmt = (d: Date) => d.toLocaleDateString(locale, { day: "2-digit", month: "short" });
+    return `${fmt(monday)} – ${fmt(sunday)}`;
+  };
+
+  const byName = new Map<string, SymptomEntry[]>();
+  for (const e of entries) {
+    if (!byName.has(e.id)) byName.set(e.id, []);
+    byName.get(e.id)!.push(e);
+  }
+  const recurring = [...byName.values()]
+    .filter((g) => g.length >= 2)
+    .sort((a, b) => b.length - a.length);
+
+  const saveEntry = () => {
+    const preset = SYMPTOM_PRESETS.find((s) => s.id === formSymptom)!;
+    const next: SymptomEntry = {
+      id: preset.id, namePt: preset.namePt, nameEn: preset.nameEn,
+      intensity: formIntensity, at: SINTOMAS_TODAY.toISOString(),
+      notePt: formNote || undefined, noteEn: formNote || undefined,
+    };
+    setEntries((prev) => [next, ...prev]);
+    setShowForm(false);
+    setFormNote("");
+    setFormIntensity(3);
+  };
+
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <header className="rv-header">
+        <button className="rv-header-btn" onClick={() => go("data")}>{Icon.back}</button>
+        <div className="rv-header-title">{L("Sintomas", "Symptoms")}</div>
+        <div style={{width: 36}}/>
+      </header>
+
+      <div className="rv-body">
+        <div className="rv-consent">
+          <div className="rv-consent-title">{L("Visível à sua equipa clínica", "Visible to your clinical team")}</div>
+          <p className="rv-consent-text">
+            {L(`${thisWeekCount} registo(s) esta semana. `, `${thisWeekCount} entr${thisWeekCount === 1 ? "y" : "ies"} this week. `)}
+            {L("Os seus registos aparecem no processo clínico antes da próxima consulta.", "Your entries appear in your clinical record before your next appointment.")}
+          </p>
+        </div>
+
+        {showForm && (
+          <div className="rv-diary-section" style={{background: "var(--bg-elev-2)", padding: 16, borderRadius: "var(--radius)", margin: "0 20px 20px"}}>
+            <div className="rv-diary-label">{L("Sintoma", "Symptom")}</div>
+            <div className="rv-diary-chips" style={{marginBottom: 16}}>
+              {SYMPTOM_PRESETS.map((s) => (
+                <button key={s.id} type="button" className="rv-diary-chip" data-active={formSymptom === s.id} onClick={() => setFormSymptom(s.id)}>
+                  {L(s.namePt, s.nameEn)}
+                </button>
+              ))}
+            </div>
+            <div className="rv-diary-label">{L("Intensidade", "Intensity")}</div>
+            <div className="rv-energy-row" style={{marginBottom: 16}}>
+              {Array.from({length: 5}).map((_, i) => (
+                <button key={i} type="button" className="rv-energy-dot" data-active={i <= formIntensity - 1} onClick={() => setFormIntensity(i + 1)}/>
+              ))}
+              <span className="rv-energy-label">{formIntensity}/5</span>
+            </div>
+            <div className="rv-diary-label">{L("Nota · opcional", "Note · optional")}</div>
+            <textarea className="rv-diary-textarea" rows={2} value={formNote} onChange={(e) => setFormNote(e.target.value)}
+              placeholder={L("ex: depois do treino", "e.g. after training")}/>
+            <div style={{display: "flex", gap: 8, marginTop: 14}}>
+              <button className="rv-cta-ghost" style={{flex: 1}} onClick={() => setShowForm(false)}>{L("Cancelar", "Cancel")}</button>
+              <button className="rv-cta-primary" style={{flex: 1}} onClick={saveEntry}>{L("Guardar", "Save")}</button>
+            </div>
+          </div>
+        )}
+
+        <div className="rv-section-head" style={{margin: "0 20px 10px"}}><h3>{L("Tendências", "Trends")}</h3></div>
+        {recurring.length === 0 ? (
+          <div style={{margin: "0 20px 20px", fontSize: 12.5, color: "var(--fg-50)"}}>
+            {L("Ainda sem sintomas recorrentes (2+ registos) para mostrar tendência.", "No recurring symptoms yet (2+ entries) to show a trend.")}
+          </div>
+        ) : (
+          recurring.map((g) => <SymptomTrendCard key={g[0].id} entries={g}/>)
+        )}
+
+        <div className="rv-section-head" style={{margin: "0 20px 10px"}}><h3>{L("Histórico", "History")}</h3></div>
+        {weekEntries.map(([wk, list]) => (
+          <div key={wk}>
+            <div className="rv-sub-section-head">{weekLabel(wk)}</div>
+            <div className="rv-marker-rows" style={{margin: "0 20px 16px"}}>
+              {list.map((e, i) => (
+                <div key={i} className="rv-marker-row">
+                  <span className="rv-marker-row-date">
+                    {L(e.namePt, e.nameEn)}
+                    {e.notePt ? <span style={{color: "var(--fg-50)"}}> · {L(e.notePt, e.noteEn ?? e.notePt)}</span> : null}
+                  </span>
+                  <span className="rv-marker-row-lab">{new Date(e.at).toLocaleDateString(lang === "pt" ? "pt-PT" : "en-GB", {day: "2-digit", month: "short"})}</span>
+                  <span className="rv-marker-row-val">{e.intensity}/5</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        <div style={{height: 90}}/>
+      </div>
+
+      <button className="rv-fab" aria-label={L("Registar sintoma", "Log symptom")} onClick={() => setShowForm(true)}>{Icon.plus}</button>
     </div>
   );
 }
@@ -1380,7 +1676,10 @@ function DiarioScreen() {
         </div>
 
         <div className="rv-diary-section">
-          <div className="rv-diary-label">{L("Sintomas", "Symptoms")} <span className="rv-diary-label-sub">{L("o que sentiu hoje", "what you felt today")}</span></div>
+          <div className="rv-diary-label" style={{justifyContent: "space-between", display: "flex"}}>
+            <span>{L("Sintomas", "Symptoms")} <span className="rv-diary-label-sub">{L("o que sentiu hoje", "what you felt today")}</span></span>
+            <a style={{textTransform: "none", letterSpacing: 0, fontWeight: 500, color: "var(--accent)", cursor: "pointer"}} onClick={() => go("sintomas")}>{L("Histórico →","History →")}</a>
+          </div>
           <div className="rv-diary-chips">
             {symptomList.map(([id, label]) => (
               <button key={id} className="rv-diary-chip" data-active={symptoms.has(id)} onClick={() => toggle(id)}>
@@ -1678,6 +1977,14 @@ function PerfilScreen() {
             </div>
             <span className="rv-chev">{Icon.chev}</span>
           </a>
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("nutricao"); }}>
+            <div className="rv-list-icon">{Icon.pill}</div>
+            <div className="rv-list-text">
+              <span className="rv-list-name">{L("Nutrição & Suplementos","Nutrition & Supplements")}</span>
+              <span className="rv-list-sub">{L("Dose, objetivo e histórico","Dose, goal and history")}</span>
+            </div>
+            <span className="rv-chev">{Icon.chev}</span>
+          </a>
         </div>
 
 
@@ -1727,6 +2034,97 @@ function PerfilScreen() {
 
       <TabBar active="profile" />
     </div>
+  );
+}
+
+// ─── Nutrição & Suplementos ──────────────────────────
+interface SupplementChange { datePt: string; dateEn: string; byPt: string; byEn: string; eventPt: string; eventEn: string }
+interface Supplement {
+  id: string;
+  namePt: string; nameEn: string;
+  time: string;
+  goalPt: string; goalEn: string;
+  notePt: string; noteEn: string;
+  history: SupplementChange[];
+}
+
+const SUPPLEMENTS: Supplement[] = [
+  {
+    id: "d3-omega3",
+    namePt: "Vitamina D3 4000 UI · Ómega-3", nameEn: "Vitamin D3 4000 IU · Omega-3",
+    time: "08:00",
+    goalPt: "Suporte ósseo e perfil lipídico", goalEn: "Bone support and lipid profile",
+    notePt: "Vitamina D estava em 28 ng/mL em set 25 — subiu para 48 com a dose atual. Manter.",
+    noteEn: "Vitamin D was at 28 ng/mL in Sep 25 — rose to 48 with the current dose. Keep as is.",
+    history: [
+      { datePt: "22 abr 2026", dateEn: "22 Apr 2026", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Dose mantida após reavaliação", eventEn: "Dose kept after review" },
+      { datePt: "06 dez 2025", dateEn: "06 Dec 2025", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Dose aumentada para 4000 UI", eventEn: "Dose increased to 4000 IU" },
+      { datePt: "14 set 2025", dateEn: "14 Sep 2025", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Prescrito · 2000 UI", eventEn: "Prescribed · 2000 IU" },
+    ],
+  },
+  {
+    id: "berberina",
+    namePt: "Berberina 500 mg", nameEn: "Berberine 500 mg",
+    time: "19:00",
+    goalPt: "Suporte à sensibilidade à insulina", goalEn: "Insulin sensitivity support",
+    notePt: "ApoB em descida progressiva desde o início (jan 26). Manter o plano atual e reavaliar em 8 semanas.",
+    noteEn: "ApoB progressively decreasing since it started (Jan 26). Keep the current plan and reassess in 8 weeks.",
+    history: [
+      { datePt: "18 fev 2026", dateEn: "18 Feb 2026", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Mantida após 1º controlo de ApoB", eventEn: "Kept after 1st ApoB check" },
+      { datePt: "20 jan 2026", dateEn: "20 Jan 2026", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Prescrita · 500 mg antes do jantar", eventEn: "Prescribed · 500 mg before dinner" },
+    ],
+  },
+  {
+    id: "magnesio",
+    namePt: "Magnésio 400 mg", nameEn: "Magnesium 400 mg",
+    time: "22:30",
+    goalPt: "Sono e relaxamento muscular", goalEn: "Sleep and muscle relaxation",
+    notePt: "Introduzido após queixas de sono fragmentado. Sono profundo tem melhorado de forma consistente desde então.",
+    noteEn: "Introduced after fragmented sleep complaints. Deep sleep has improved consistently since.",
+    history: [
+      { datePt: "11 mar 2026", dateEn: "11 Mar 2026", byPt: "Nutricionista", byEn: "Nutritionist", eventPt: "Prescrito · 400 mg ao deitar", eventEn: "Prescribed · 400 mg at bedtime" },
+    ],
+  },
+];
+
+function NutricaoScreen() {
+  const { go } = useNav();
+  const { L } = useLang();
+  return (
+    <SubScreen title={L("Nutrição & Suplementos", "Nutrition & Supplements")} onBack={() => go("profile")}>
+      <div className="rv-consent">
+        <div className="rv-consent-title">{L("Contexto e histórico", "Context and history")}</div>
+        <p className="rv-consent-text">
+          {L("Definidos pela sua equipa clínica. Para marcar como tomado hoje, use o Plano de hoje na página inicial.", "Set by your clinical team. To mark as taken today, use Today's plan on the home screen.")}
+        </p>
+      </div>
+
+      {SUPPLEMENTS.map((s) => (
+        <div key={s.id} className="rv-supp-card">
+          <div className="rv-supp-head">
+            <div>
+              <div className="rv-supp-name">{L(s.namePt, s.nameEn)}</div>
+              <div className="rv-supp-goal">{L(s.goalPt, s.goalEn)}</div>
+            </div>
+            <div className="rv-plan-time">{s.time}</div>
+          </div>
+
+          <div className="rv-supp-note-head">{L("Contexto clínico", "Clinical context")}</div>
+          <div className="rv-supp-note-body">{L(s.notePt, s.noteEn)}</div>
+
+          <div className="rv-supp-history">
+            <div className="rv-supp-history-head">{L("Histórico de alterações", "Change history")}</div>
+            {s.history.map((h, i) => (
+              <div key={i} className="rv-supp-history-row">
+                <span className="rv-supp-history-date">{L(h.datePt, h.dateEn)}</span>
+                <span className="rv-supp-history-event">{L(h.eventPt, h.eventEn)}</span>
+                <span className="rv-supp-history-by">{L(h.byPt, h.byEn)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </SubScreen>
   );
 }
 
@@ -2331,6 +2729,8 @@ function renderScreen(route: NavRoute): ReactNode {
     case "laboratorios": return <LaboratoriosScreen />;
     case "farmacia":     return <FarmaciaScreen />;
     case "exportar":     return <ExportarScreen />;
+    case "sintomas":     return <SintomasScreen />;
+    case "nutricao":     return <NutricaoScreen />;
     default:          return <HomeScreenV2 />;
   }
 }
@@ -2339,7 +2739,9 @@ function renderScreen(route: NavRoute): ReactNode {
 function AssistantFAB() {
   const { current, go } = useNav();
   const currentRoute = typeof current === "string" ? current : current.route;
-  if (currentRoute === "assistente") return null;
+  // Ecrãs com o seu próprio FAB local (mesma posição) escondem o FAB global,
+  // caso contrário o assistente fica por cima e bloqueia o botão do ecrã.
+  if (currentRoute === "assistente" || currentRoute === "data" || currentRoute === "sintomas") return null;
   return (
     <button className="rv-fab-global" onClick={() => go("assistente")} aria-label="Assistente Vivara">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
