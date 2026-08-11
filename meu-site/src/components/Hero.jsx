@@ -16,6 +16,8 @@ const T = {
     ),
     desc: "Um lugar seguro para exames, resultados, sintomas e registos médicos. Para que cada consulta médica valha a pena.",
     cta: "Ver como funciona",
+    // PLACEHOLDER — substituir pelo nome/especialidade do médico parceiro.
+    validation: "Em validação com [NOME / ESPECIALIDADE] · Portugal",
   },
   en: {
     badge: "Health platform",
@@ -28,6 +30,8 @@ const T = {
     ),
     desc: "A safe place for exams, results, symptoms and medical records. So that every doctor's appointment counts.",
     cta: "See how it works",
+    // PLACEHOLDER — replace with the partner doctor's name/speciality.
+    validation: "In validation with [NAME / SPECIALITY] · Portugal",
   },
 };
 
@@ -87,6 +91,15 @@ export default function Hero() {
             <CTAButton>{L.cta}</CTAButton>
           </Link>
         </motion.div>
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.55 }}
+          className="mt-5 text-xs text-white/50"
+        >
+          {L.validation}
+        </motion.p>
       </div>
     </section>
   );

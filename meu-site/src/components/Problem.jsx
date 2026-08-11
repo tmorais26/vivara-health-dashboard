@@ -10,6 +10,15 @@ const T = {
       </>
     ),
     desc: "E cada consulta acaba por começar do zero.",
+    // PLACEHOLDER — substituir pelo dado real depois de validada a fonte.
+    stat: {
+      value: "00%",
+      support: "[Frase de suporte ao dado — a confirmar com a fonte]",
+      sourceLabel: "Fonte",
+      sourceName: "[CONFIRMAR FONTE]",
+      sourceYear: "[ANO]",
+      sourceUrl: "#",
+    },
     points: [
       {
         title: "Análises perdidas em emails.",
@@ -33,6 +42,15 @@ const T = {
       </>
     ),
     desc: "And every appointment ends up starting from scratch.",
+    // PLACEHOLDER — replace with the real figure once the source is validated.
+    stat: {
+      value: "00%",
+      support: "[Supporting sentence for the figure — to confirm with the source]",
+      sourceLabel: "Source",
+      sourceName: "[CONFIRM SOURCE]",
+      sourceYear: "[YEAR]",
+      sourceUrl: "#",
+    },
     points: [
       {
         title: "Lab results lost in emails.",
@@ -68,7 +86,29 @@ export default function Problem() {
       <div className="mx-auto max-w-6xl px-6">
         <Reveal>
           <SectionBadge>{L.badge}</SectionBadge>
-          <h2 className="font-serif font-light tracking-tight text-4xl md:text-6xl mt-5 max-w-2xl">
+        </Reveal>
+
+        <Reveal delay={0.08}>
+          <div className="mt-8 max-w-2xl border-l-2 border-brand-lime pl-6 md:pl-8">
+            <p className="font-serif font-light leading-none tracking-tight text-6xl md:text-7xl">
+              {L.stat.value}
+            </p>
+            <p className="mt-4 text-lg text-brand-muted/85 leading-relaxed">{L.stat.support}</p>
+            <p className="mt-2 text-xs text-brand-muted/50">
+              {L.stat.sourceLabel}:{" "}
+              <a
+                href={L.stat.sourceUrl}
+                className="underline underline-offset-2 hover:text-brand-muted/80"
+              >
+                {L.stat.sourceName}
+              </a>
+              , {L.stat.sourceYear}
+            </p>
+          </div>
+        </Reveal>
+
+        <Reveal delay={0.12}>
+          <h2 className="font-serif font-light tracking-tight text-4xl md:text-6xl mt-12 max-w-2xl">
             {L.title}
           </h2>
           <p className="mt-5 text-lg text-brand-muted/80 max-w-2xl leading-relaxed">{L.desc}</p>

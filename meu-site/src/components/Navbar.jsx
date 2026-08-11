@@ -91,31 +91,35 @@ export default function Navbar() {
           ))}
         </div>
 
-        <div className="hidden lg:flex items-center gap-3 shrink-0">
-          <LangToggle />
+        <div className="flex items-center gap-1.5 shrink-0 lg:gap-3">
+          <div className="hidden lg:block">
+            <LangToggle />
+          </div>
+
+          {/* Ação principal: sempre visível, também em mobile (antes do hamburger) */}
           <Link
             to="/contacto"
-            className="inline-flex rounded-full bg-brand-olive hover:bg-brand-olive-hover text-white px-5 py-2.5 text-sm font-medium transition-colors"
+            className="inline-flex shrink-0 rounded-full bg-brand-olive hover:bg-brand-olive-hover text-white px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors lg:px-5 lg:py-2.5 lg:text-sm"
           >
             {labels.cta}
           </Link>
-        </div>
 
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          aria-expanded={open}
-          aria-label={open ? labels.closeMenu : labels.openMenu}
-          className="lg:hidden grid place-items-center size-10 rounded-full text-brand-text"
-        >
-          <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2">
-            {open ? (
-              <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" />
-            ) : (
-              <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-            )}
-          </svg>
-        </button>
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-expanded={open}
+            aria-label={open ? labels.closeMenu : labels.openMenu}
+            className="lg:hidden grid place-items-center size-10 shrink-0 rounded-full text-brand-text"
+          >
+            <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2">
+              {open ? (
+                <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" />
+              ) : (
+                <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
+              )}
+            </svg>
+          </button>
+        </div>
       </nav>
 
       <AnimatePresence>
