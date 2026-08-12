@@ -398,6 +398,107 @@
 .rv-panel-chips{display:flex;gap:6px;padding:0 20px 14px;overflow-x:auto;}
 .rv-panel-chips .rv-period-chip{flex:none;}
 
+/* Registos — origem e fonte */
+.rv-rec-origin{
+  display:flex;align-items:center;justify-content:center;flex:none;
+  width:26px;height:26px;border-radius:8px;margin-top:2px;
+  background:rgba(255,255,255,0.06);color:var(--fg-50);
+}
+.rv-rec-origin[data-origin="upload"]{background:rgba(198,255,61,0.12);color:var(--lime);}
+.rv-rec-origin[data-origin="manual"]{background:rgba(255,187,51,0.12);color:var(--watch);}
+.rv-rec-origin[data-origin="clinic"]{background:rgba(77,155,255,0.12);color:var(--bio-good);}
+.rv-rec-source{font-size:10.5px;color:var(--fg-30);margin-top:2px;}
+
+/* Documento carregado + valores extraídos */
+.rv-doc-meta{margin:0 20px 14px;}
+.rv-doc-file{display:flex;align-items:center;gap:8px;}
+.rv-doc-file-icon{display:inline-flex;color:var(--lime);flex:none;}
+.rv-doc-file-name{
+  font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--fg-90);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.rv-doc-file-sub{font-size:11px;color:var(--fg-50);margin-top:4px;}
+.rv-doc-page{
+  margin:0 20px 16px;background:#f4f4f2;color:#1a1a1a;border-radius:10px;
+  padding:14px;box-shadow:0 8px 20px -10px rgba(0,0,0,0.6);
+}
+.rv-doc-page-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5px solid #1a1a1a;padding-bottom:6px;}
+.rv-doc-lab{font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
+.rv-doc-page-n{font-size:9.5px;color:#666;font-family:'JetBrains Mono',monospace;}
+.rv-doc-page-meta{display:flex;justify-content:space-between;font-size:9px;color:#444;margin:8px 0 10px;font-family:'JetBrains Mono',monospace;}
+.rv-doc-lines{display:flex;flex-direction:column;gap:2px;}
+.rv-doc-line{
+  font-family:'JetBrains Mono',monospace;font-size:8.5px;line-height:1.6;color:#2a2a2a;
+  white-space:pre;overflow:hidden;text-overflow:ellipsis;border-radius:3px;
+  padding:1px 3px;margin:0 -3px;transition:background .15s ease;
+}
+.rv-doc-line[data-hit="true"]{background:#ffe95c;color:#000;font-weight:700;}
+.rv-doc-line-more{color:#888;font-style:italic;white-space:normal;}
+.rv-doc-note{margin:0 20px 10px;font-size:11.5px;color:var(--fg-50);line-height:1.45;}
+.rv-doc-rows{margin:0 20px 14px;background:var(--bg-elev-2);border-radius:var(--radius);overflow:hidden;}
+.rv-doc-row{border-top:1px solid var(--line);}
+.rv-doc-row:first-child{border-top:none;}
+.rv-doc-row[data-sel="true"]{background:var(--bg-elev-3);}
+.rv-doc-row-main{
+  display:grid;grid-template-columns:1fr auto;gap:2px 10px;width:100%;text-align:left;
+  background:none;border:none;padding:11px 14px;font:inherit;color:inherit;cursor:pointer;
+}
+.rv-doc-row-name{font-size:13px;font-weight:500;}
+.rv-doc-row-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;text-align:right;}
+.rv-doc-row-unit{font-size:9.5px;color:var(--fg-50);margin-left:2px;font-weight:500;}
+.rv-doc-row-ref{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--fg-30);}
+.rv-doc-row-detail{padding:0 14px 12px;display:flex;flex-direction:column;gap:8px;}
+.rv-doc-row-raw{
+  font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--fg-70);
+  background:rgba(255,233,92,0.10);border-left:2px solid #ffe95c;
+  padding:7px 9px;border-radius:0 6px 6px 0;white-space:pre-wrap;word-break:break-all;
+}
+.rv-doc-row-link{
+  align-self:flex-start;background:none;border:none;padding:0;font:inherit;
+  font-size:12px;color:var(--lime);cursor:pointer;font-weight:500;
+}
+.rv-doc-row-unmatched{font-size:11px;color:var(--fg-30);}
+.rv-doc-foot{margin:0 20px;font-size:10.5px;color:var(--fg-30);line-height:1.45;text-align:center;}
+
+/* Pesquisa nos próprios dados */
+.rv-q-examples{display:flex;flex-direction:column;gap:6px;padding:0 20px 4px;}
+.rv-q-example{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  background:var(--bg-elev-2);border:none;border-radius:12px;padding:12px 14px;
+  color:var(--fg-70);font:inherit;font-size:13px;cursor:pointer;
+}
+.rv-q-example:active{background:var(--bg-elev-3);}
+.rv-q-example-icon{display:inline-flex;color:var(--fg-30);flex:none;}
+.rv-q-card{margin:0 20px 14px;background:var(--bg-elev-2);border-radius:var(--radius);padding:16px;}
+.rv-q-card-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+.rv-q-card-label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--fg-50);}
+.rv-q-state{font-size:10.5px;font-weight:600;}
+.rv-q-card-name{font-size:15px;font-weight:600;letter-spacing:-0.01em;margin-top:8px;}
+.rv-q-card-val{
+  font-family:'JetBrains Mono',monospace;font-size:34px;font-weight:600;
+  letter-spacing:-0.025em;line-height:1.1;margin-top:2px;display:flex;align-items:baseline;gap:8px;
+}
+.rv-q-card-unit{font-size:13px;color:var(--fg-50);font-weight:500;}
+.rv-q-card-delta{font-size:12px;color:var(--fg-50);margin-left:auto;}
+.rv-q-card-target{font-size:11.5px;color:var(--fg-50);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+.rv-q-card-spark{margin-top:12px;background:rgba(255,255,255,0.04);border-radius:12px;padding:8px 10px;}
+.rv-q-card-spark svg{display:block;width:100%;height:auto;}
+.rv-q-supp{display:flex;flex-direction:column;gap:1px;padding:9px 0;border-top:1px solid var(--fg-10);}
+.rv-q-supp:first-of-type{border-top:none;}
+.rv-q-supp-name{font-size:13.5px;font-weight:500;}
+.rv-q-supp-when{font-size:11.5px;color:var(--fg-50);}
+.rv-q-note{font-size:13.5px;line-height:1.5;color:var(--fg-90);margin-top:8px;}
+.rv-q-note-by{font-size:11px;color:var(--fg-50);margin-top:8px;}
+.rv-q-disclaim{
+  font-size:11px;color:var(--fg-50);line-height:1.45;margin-top:12px;
+  padding-top:10px;border-top:1px solid var(--line);
+}
+.rv-q-actions{display:flex;gap:8px;margin-top:14px;}
+.rv-q-actions>button{flex:1;margin:0;}
+.rv-q-foot{
+  margin:4px 20px 0;font-size:10.5px;color:var(--fg-30);line-height:1.45;text-align:center;
+}
+
 /* Fonte principal por métrica */
 .rv-src-note{
   margin:0 20px 10px;font-size:11.5px;color:var(--fg-50);line-height:1.45;

@@ -21,9 +21,12 @@ type RouteId =
   | "home" | "data" | "upload" | "messages" | "alerts"
   | "diary" | "consultas" | "profile" | "marker" | "summary" | "schedule" | "devices" | "assistente"
   | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar"
-  | "sintomas" | "nutricao" | "registos";
+  | "sintomas" | "nutricao" | "registos" | "documento";
 
-type NavRoute = RouteId | { route: "marker"; marker: BioMarker };
+type NavRoute =
+  | RouteId
+  | { route: "marker"; marker: BioMarker }
+  | { route: "documento"; docId: string };
 
 interface NavCtxValue {
   go: (r: NavRoute) => void;
@@ -786,6 +789,54 @@ const BIO_PANELS: BioPanel[] = [
   { id: "hemato",    namePt: "Hematologia",        nameEn: "Haematology",       icon: Icon.heart },
 ];
 
+// Notas de contexto clínico escritas pela equipa médica. Ficam aqui em vez de
+// embutidas no ecrã de detalhe porque a ferramenta de pesquisa também as
+// mostra — e tem de mostrar exactamente o mesmo texto, nunca uma paráfrase.
+interface ClinicalNote { pt: string; en: string; byPt: string; byEn: string; iso: string }
+
+const CLINICAL_NOTES: Record<string, ClinicalNote> = {
+  "Estradiol": {
+    pt: "Tendência descendente consistente nos últimos 6 meses, compatível com transição peri-menopáusica. Pedida nova colheita até 10 mai para confirmar valor antes de iniciar plano de reposição.",
+    en: "Consistent downward trend over the last 6 months, compatible with peri-menopausal transition. New sample requested by 10 May to confirm the value before starting a replacement plan.",
+    byPt: "Médica responsável", byEn: "Responsible doctor", iso: "2026-04-22",
+  },
+  "ApoB": {
+    pt: "Em descida progressiva desde o início da Berberina (jan 26). Manter plano actual e reavaliar em 8 semanas.",
+    en: "Progressively decreasing since Berberine started (Jan 26). Keep the current plan and reassess in 8 weeks.",
+    byPt: "Médica responsável", byEn: "Responsible doctor", iso: "2026-04-22",
+  },
+  "HbA1c": {
+    pt: "Descida lenta mas sustentada desde o ajuste da Metformina. Objectivo mantém-se em ≤ 5.4. Reavaliar na próxima colheita.",
+    en: "Slow but sustained decrease since the Metformin adjustment. Target remains ≤ 5.4. Reassess at the next sample.",
+    byPt: "Médica responsável", byEn: "Responsible doctor", iso: "2026-04-22",
+  },
+  "LDL-C": {
+    pt: "Acompanha a descida do ApoB. Sem alteração à medicação nesta fase — a prioridade é o ApoB como marcador principal.",
+    en: "Tracking the ApoB decrease. No medication change at this stage — ApoB remains the primary marker.",
+    byPt: "Médica responsável", byEn: "Responsible doctor", iso: "2026-04-22",
+  },
+  "Insulina": {
+    pt: "Em melhoria gradual. Associada ao HOMA-IR — os dois são reavaliados em conjunto na próxima consulta.",
+    en: "Gradually improving. Linked to HOMA-IR — both are reassessed together at the next appointment.",
+    byPt: "Médica responsável", byEn: "Responsible doctor", iso: "2026-04-22",
+  },
+  "PCR-us": {
+    pt: "Ligeiramente acima do alvo, sem sinais de infecção activa. A vigiar em conjunto com o perfil lipídico.",
+    en: "Slightly above target, with no signs of active infection. Monitored alongside the lipid profile.",
+    byPt: "Médica responsável", byEn: "Responsible doctor", iso: "2026-04-22",
+  },
+  "Vitamina D": {
+    pt: "Subiu de 28 para 48 ng/mL com a dose actual de 4000 UI. Manter dose e reavaliar no inverno.",
+    en: "Rose from 28 to 48 ng/mL on the current 4000 IU dose. Keep the dose and reassess in winter.",
+    byPt: "Médica responsável", byEn: "Responsible doctor", iso: "2026-04-22",
+  },
+  "AMH": {
+    pt: "Valor esperado para a fase de transição. Não requer acção isolada — interpretado em conjunto com Estradiol e FSH.",
+    en: "Expected for this transition stage. No isolated action needed — interpreted together with Estradiol and FSH.",
+    byPt: "Médica responsável", byEn: "Responsible doctor", iso: "2026-04-22",
+  },
+};
+
 const BIO_STATE_META: { state: BioState; color: string; pt: string; en: string }[] = [
   { state: "optimal",   color: "var(--lime)",     pt: "Optimizado",      en: "Optimised" },
   { state: "good",      color: "var(--bio-good)", pt: "Bom",             en: "Good" },
@@ -972,6 +1023,7 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
   const { go } = useNav();
   const { t, L } = useLang();
   const m: BioMarker = marker ?? BIOMARKERS[0];
+  const note = CLINICAL_NOTES[m.name];
   const tone = m.tone || "ok";
   const col = tone === "alert" ? "var(--alert)" : tone === "watch" ? "var(--watch)" : "var(--lime)";
   const pts = m.spark;
@@ -1042,12 +1094,8 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
             <span className="rv-dot" data-tone={tone}/>{t("marker.contextHead")}
           </div>
           <div className="rv-marker-context-body">
-            {m.name === "Estradiol"
-              ? L("Tendência descendente consistente nos últimos 6 meses, compatível com transição peri-menopáusica. Pedido nova colheita até 10 mai para confirmar valor antes de iniciar plano de reposição.",
-                  "Consistent downward trend over the last 6 months, compatible with peri-menopausal transition. New sample requested by 10 May to confirm the value before starting a replacement plan.")
-              : m.name === "ApoB"
-              ? L("Em descida progressiva desde o início da Berberina (jan 26). Manter plano actual e reavaliar em 8 semanas.",
-                  "Progressively decreasing since Berberine started (Jan 26). Keep the current plan and reassess in 8 weeks.")
+            {note
+              ? L(note.pt, note.en)
               : L("Valor em monitorização. Sem alteração ao plano nesta consulta.",
                   "Value under monitoring. No change to the plan at this appointment.")}
           </div>
@@ -1297,13 +1345,18 @@ function SintomasScreen() {
 
 // ─── Registos (timeline unificada) ───────────────────
 type RecordType = "sintoma" | "consulta" | "medicacao" | "analise";
+// De onde veio o registo: um PDF carregado e lido por OCR, algo que a utente
+// escreveu na app, ou algo lançado pela equipa clínica. Muda o ícone e a tag.
+type RecordOrigin = "upload" | "manual" | "clinic";
 
 interface RecordEntry {
   id: string;
   type: RecordType;
+  origin: RecordOrigin;
   iso: string;
   titlePt: string; titleEn: string;
   subPt: string; subEn: string;
+  sourcePt?: string; sourceEn?: string;
   go?: NavRoute;
 }
 
@@ -1314,35 +1367,112 @@ const RECORD_META: Record<RecordType, { color: string; pt: string; en: string }>
   analise:   { color: "var(--lime)",     pt: "Análise",   en: "Lab" },
 };
 
+const ORIGIN_ICON: Record<RecordOrigin, ReactNode> = {
+  upload: <svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 1 H8.5 L11 3.5 V13 H3 Z M8.5 1 V3.5 H11" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinejoin="round"/><path d="M5 7.5 H9 M5 10 H8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>,
+  manual: <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="5" r="2.3" stroke="currentColor" strokeWidth="1.3" fill="none"/><path d="M2.5 12.5 a4.5 4.5 0 0 1 9 0" stroke="currentColor" strokeWidth="1.3" fill="none"/></svg>,
+  clinic: <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1.5 L11.5 3.5 V7 C11.5 9.8 9.4 12 7 12.5 C4.6 12 2.5 9.8 2.5 7 V3.5 Z" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinejoin="round"/><path d="M7 5 V9 M5 7 H9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+};
+
+// ─── Documentos carregados + extracção automática ────
+// Simula o percurso real: a utente carrega um PDF do laboratório, o sistema
+// lê-o e propõe os valores. O ecrã de documento mostra as duas coisas — a
+// linha original tal como saiu do OCR e o campo que dela foi extraído — para
+// que dê para conferir sem sair da app.
+interface LabDocRow { raw: string; name: string; value: string; unit: string; ref: string; marker?: string }
+interface LabDoc {
+  id: string; lab: string; iso: string; filename: string; sizeKb: number; pages: number;
+  titlePt: string; titleEn: string; totalExtracted: number; rows: LabDocRow[];
+}
+
+const LAB_DOCS: LabDoc[] = [
+  {
+    id: "a-2026-04-22", lab: "Synlab", iso: "2026-04-22", filename: "synlab_22042026_painel_completo.pdf",
+    sizeKb: 412, pages: 4, totalExtracted: 82,
+    titlePt: "Painel completo", titleEn: "Full panel",
+    rows: [
+      { raw: "ESTRADIOL (E2) ............ 38 pg/mL   [60 - 150]",   name: "Estradiol",        value: "38",   unit: "pg/mL", ref: "60 – 150",  marker: "Estradiol" },
+      { raw: "FSH ....................... 18.4 mUI/mL [3 - 20]",     name: "FSH",              value: "18.4", unit: "mUI/mL", ref: "3 – 20",   marker: "FSH" },
+      { raw: "APOLIPOPROTEINA B ......... 102 mg/dL  [< 80]",        name: "ApoB",             value: "102",  unit: "mg/dL", ref: "≤ 80",     marker: "ApoB" },
+      { raw: "COLESTEROL LDL ............ 118 mg/dL  [< 100]",       name: "LDL-C",            value: "118",  unit: "mg/dL", ref: "≤ 100",    marker: "LDL-C" },
+      { raw: "COLESTEROL HDL ............ 62 mg/dL   [> 60]",        name: "HDL-C",            value: "62",   unit: "mg/dL", ref: "≥ 60",     marker: "HDL-C" },
+      { raw: "HEMOGLOBINA A1c ........... 5.7 %      [< 5.4]",       name: "HbA1c",            value: "5.7",  unit: "%",     ref: "≤ 5.4",    marker: "HbA1c" },
+      { raw: "GLICOSE JEJUM ............. 98 mg/dL   [70 - 99]",     name: "Glicose",          value: "98",   unit: "mg/dL", ref: "70 – 99",  marker: "Glicose" },
+      { raw: "INSULINA .................. 12.4 uU/mL [< 10]",        name: "Insulina",         value: "12.4", unit: "µU/mL", ref: "< 10",     marker: "Insulina" },
+      { raw: "PCR ULTRASSENSIVEL ........ 1.2 mg/L   [< 1.0]",       name: "PCR-us",           value: "1.2",  unit: "mg/L",  ref: "< 1.0",    marker: "PCR-us" },
+      { raw: "25-OH VITAMINA D .......... 48 ng/mL   [40 - 60]",     name: "Vitamina D",       value: "48",   unit: "ng/mL", ref: "40 – 60",  marker: "Vitamina D" },
+      { raw: "FERRITINA ................. 68 ng/mL   [30 - 200]",    name: "Ferritina",        value: "68",   unit: "ng/mL", ref: "30 – 200", marker: "Ferritina" },
+      { raw: "TSH ....................... 2.1 mUI/L  [0.5 - 2.5]",   name: "TSH",              value: "2.1",  unit: "mUI/L", ref: "0.5 – 2.5", marker: "TSH" },
+    ],
+  },
+  {
+    id: "a-2026-02-18", lab: "Synlab", iso: "2026-02-18", filename: "synlab_18022026_cardiometabolico.pdf",
+    sizeKb: 188, pages: 2, totalExtracted: 17,
+    titlePt: "Painel cardiometabólico", titleEn: "Cardiometabolic panel",
+    rows: [
+      { raw: "APOLIPOPROTEINA B ......... 110 mg/dL  [< 80]",        name: "ApoB",             value: "110",  unit: "mg/dL", ref: "≤ 80",     marker: "ApoB" },
+      { raw: "COLESTEROL LDL ............ 125 mg/dL  [< 100]",       name: "LDL-C",            value: "125",  unit: "mg/dL", ref: "≤ 100",    marker: "LDL-C" },
+      { raw: "HEMOGLOBINA A1c ........... 5.8 %      [< 5.4]",       name: "HbA1c",            value: "5.8",  unit: "%",     ref: "≤ 5.4",    marker: "HbA1c" },
+      { raw: "TRIGLICERIDOS ............. 98 mg/dL   [< 100]",       name: "Triglicéridos",    value: "98",   unit: "mg/dL", ref: "< 100",    marker: "Triglicéridos" },
+      { raw: "INSULINA .................. 13.0 uU/mL [< 10]",        name: "Insulina",         value: "13.0", unit: "µU/mL", ref: "< 10",     marker: "Insulina" },
+    ],
+  },
+  {
+    id: "a-2025-12-06", lab: "CUF", iso: "2025-12-06", filename: "cuf_06122025_painel_completo.pdf",
+    sizeKb: 356, pages: 3, totalExtracted: 76,
+    titlePt: "Painel completo", titleEn: "Full panel",
+    rows: [
+      { raw: "ESTRADIOL (E2) ............ 58 pg/mL   [60 - 150]",   name: "Estradiol",        value: "58",   unit: "pg/mL", ref: "60 – 150", marker: "Estradiol" },
+      { raw: "APOLIPOPROTEINA B ......... 115 mg/dL  [< 80]",        name: "ApoB",             value: "115",  unit: "mg/dL", ref: "≤ 80",     marker: "ApoB" },
+      { raw: "25-OH VITAMINA D .......... 35 ng/mL   [40 - 60]",     name: "Vitamina D",       value: "35",   unit: "ng/mL", ref: "40 – 60",  marker: "Vitamina D" },
+      { raw: "HEMOGLOBINA ............... 13.2 g/dL  [12 - 16]",     name: "Hemoglobina",      value: "13.2", unit: "g/dL",  ref: "12 – 16",  marker: "Hemoglobina" },
+      { raw: "CREATININA ................ 0.80 mg/dL [0.5 - 1.0]",   name: "Creatinina",       value: "0.80", unit: "mg/dL", ref: "0.5 – 1.0", marker: "Creatinina" },
+    ],
+  },
+  {
+    id: "a-2025-09-14", lab: "CUF", iso: "2025-09-14", filename: "cuf_14092025_painel_inicial.pdf",
+    sizeKb: 298, pages: 3, totalExtracted: 68,
+    titlePt: "Painel inicial", titleEn: "Baseline panel",
+    rows: [
+      { raw: "ESTRADIOL (E2) ............ 78 pg/mL   [60 - 150]",   name: "Estradiol",        value: "78",   unit: "pg/mL", ref: "60 – 150", marker: "Estradiol" },
+      { raw: "APOLIPOPROTEINA B ......... 125 mg/dL  [< 80]",        name: "ApoB",             value: "125",  unit: "mg/dL", ref: "≤ 80",     marker: "ApoB" },
+      { raw: "25-OH VITAMINA D .......... 28 ng/mL   [40 - 60]",     name: "Vitamina D",       value: "28",   unit: "ng/mL", ref: "40 – 60",  marker: "Vitamina D" },
+      { raw: "HEMOGLOBINA A1c ........... 6.1 %      [< 5.4]",       name: "HbA1c",            value: "6.1",  unit: "%",     ref: "≤ 5.4",    marker: "HbA1c" },
+    ],
+  },
+];
+
 const CONSULTA_ENTRIES: RecordEntry[] = [
-  { id: "c-2026-05-12", type: "consulta", iso: "2026-05-12T14:30:00", go: "consultas",
+  { id: "c-2026-05-12", type: "consulta", origin: "clinic", iso: "2026-05-12T14:30:00", go: "consultas",
+    sourcePt: "Clínica Lumiar", sourceEn: "Lumiar Clinic",
     titlePt: "Discussão sobre TRH personalizada", titleEn: "Personalised HRT discussion",
-    subPt: "Agendada · 14:30 · Clínica Lumiar",    subEn: "Scheduled · 14:30 · Lumiar Clinic" },
-  { id: "c-2026-04-22", type: "consulta", iso: "2026-04-22T10:00:00", go: "summary",
+    subPt: "Agendada · 14:30",                     subEn: "Scheduled · 14:30" },
+  { id: "c-2026-04-22", type: "consulta", origin: "clinic", iso: "2026-04-22T10:00:00", go: "summary",
+    sourcePt: "Clínica Lumiar", sourceEn: "Lumiar Clinic",
     titlePt: "Revisão trimestral",                 titleEn: "Quarterly review",
     subPt: "45 min · 3 alterações ao plano",       subEn: "45 min · 3 plan changes" },
-  { id: "c-2026-02-03", type: "consulta", iso: "2026-02-03T10:00:00", go: "consultas",
+  { id: "c-2026-02-03", type: "consulta", origin: "clinic", iso: "2026-02-03T10:00:00", go: "consultas",
+    sourcePt: "Clínica Lumiar", sourceEn: "Lumiar Clinic",
     titlePt: "Revisão de resultados",              titleEn: "Results review",
     subPt: "30 min · 1 alteração ao plano",        subEn: "30 min · 1 plan change" },
-  { id: "c-2025-12-10", type: "consulta", iso: "2025-12-10T10:00:00", go: "consultas",
+  { id: "c-2025-12-10", type: "consulta", origin: "clinic", iso: "2025-12-10T10:00:00", go: "consultas",
+    sourcePt: "Clínica Lumiar", sourceEn: "Lumiar Clinic",
     titlePt: "Primeira consulta",                  titleEn: "First appointment",
     subPt: "75 min · 4 alterações ao plano",       subEn: "75 min · 4 plan changes" },
 ];
 
-const ANALISE_ENTRIES: RecordEntry[] = [
-  { id: "a-2026-04-22", type: "analise", iso: "2026-04-22T08:00:00", go: "data",
-    titlePt: "Painel completo · Synlab", titleEn: "Full panel · Synlab",
-    subPt: "82 marcadores · 9 fora do alvo", subEn: "82 markers · 9 off target" },
-  { id: "a-2026-02-18", type: "analise", iso: "2026-02-18T08:00:00", go: "data",
-    titlePt: "Painel cardiometabólico · Synlab", titleEn: "Cardiometabolic panel · Synlab",
-    subPt: "17 marcadores", subEn: "17 markers" },
-  { id: "a-2025-12-06", type: "analise", iso: "2025-12-06T08:00:00", go: "data",
-    titlePt: "Painel completo · CUF", titleEn: "Full panel · CUF",
-    subPt: "76 marcadores", subEn: "76 markers" },
-  { id: "a-2025-09-14", type: "analise", iso: "2025-09-14T08:00:00", go: "data",
-    titlePt: "Painel inicial · CUF", titleEn: "Baseline panel · CUF",
-    subPt: "68 marcadores", subEn: "68 markers" },
-];
+// As análises vêm dos documentos carregados — mesma lista, para o título, a
+// data e o laboratório não poderem divergir do que o documento diz.
+const ANALISE_ENTRIES: RecordEntry[] = LAB_DOCS.map((doc) => ({
+  id: doc.id,
+  type: "analise" as const,
+  origin: "upload" as const,
+  iso: `${doc.iso}T08:00:00`,
+  go: { route: "documento" as const, docId: doc.id },
+  sourcePt: doc.lab, sourceEn: doc.lab,
+  titlePt: doc.titlePt, titleEn: doc.titleEn,
+  subPt: `${doc.totalExtracted} valores extraídos · PDF ${doc.pages} pág.`,
+  subEn: `${doc.totalExtracted} values extracted · ${doc.pages}-page PDF`,
+}));
 
 // A timeline é montada a partir das mesmas fontes que alimentam os outros
 // ecrãs — não há aqui uma segunda cópia dos dados a divergir com o tempo.
@@ -1350,8 +1480,10 @@ function buildTimeline(): RecordEntry[] {
   const sintomas: RecordEntry[] = SYMPTOM_LOG.map((s, i) => ({
     id: `s-${i}`,
     type: "sintoma",
+    origin: "manual",
     iso: s.at,
     go: "sintomas",
+    sourcePt: "Registo manual", sourceEn: "Manual entry",
     titlePt: s.namePt, titleEn: s.nameEn,
     subPt: `Intensidade ${s.intensity}/5${s.notePt ? ` · ${s.notePt}` : ""}`,
     subEn: `Intensity ${s.intensity}/5${s.noteEn ? ` · ${s.noteEn}` : ""}`,
@@ -1361,11 +1493,13 @@ function buildTimeline(): RecordEntry[] {
     sup.history.map((h, i) => ({
       id: `m-${sup.id}-${i}`,
       type: "medicacao" as const,
+      origin: "clinic" as const,
       iso: `${h.iso}T09:00:00`,
       go: "nutricao" as NavRoute,
+      sourcePt: h.byPt, sourceEn: h.byEn,
       titlePt: sup.namePt, titleEn: sup.nameEn,
-      subPt: `${h.eventPt} · ${h.byPt}`,
-      subEn: `${h.eventEn} · ${h.byEn}`,
+      subPt: h.eventPt,
+      subEn: h.eventEn,
     })),
   );
 
@@ -1384,16 +1518,16 @@ function RegistosScreen() {
   const entries = all.filter((e) => {
     if (filter !== "all" && e.type !== filter) return false;
     if (!term) return true;
-    const hay = `${e.titlePt} ${e.titleEn} ${e.subPt} ${e.subEn} ${RECORD_META[e.type].pt} ${RECORD_META[e.type].en}`.toLowerCase();
-    return hay.includes(term);
+    const hay = norm(`${e.titlePt} ${e.titleEn} ${e.subPt} ${e.subEn} ${e.sourcePt ?? ""} ${e.sourceEn ?? ""} ${RECORD_META[e.type].pt} ${RECORD_META[e.type].en}`);
+    return hay.includes(norm(term));
   });
 
   const filters: { id: RecordType | "all"; label: string }[] = [
     { id: "all",       label: L("Tudo","All") },
-    { id: "sintoma",   label: L("Sintoma","Symptom") },
-    { id: "consulta",  label: L("Consulta","Appointment") },
+    { id: "analise",   label: L("Análises","Labs") },
+    { id: "consulta",  label: L("Consultas","Appointments") },
+    { id: "sintoma",   label: L("Sintomas","Symptoms") },
     { id: "medicacao", label: L("Medicação","Medication") },
-    { id: "analise",   label: L("Análise","Lab") },
   ];
 
   const fmtDate = (iso: string) => fmtDay(iso, lang, true);
@@ -1441,6 +1575,10 @@ function RegistosScreen() {
               return (
                 <button key={e.id} type="button" className="rv-rec-row" onClick={() => e.go && go(e.go)}>
                   <span className="rv-rec-bar" style={{background: meta.color}}/>
+                  <span className="rv-rec-origin" data-origin={e.origin}
+                    aria-label={e.origin === "upload" ? L("Documento carregado","Uploaded document") : e.origin === "manual" ? L("Registo manual","Manual entry") : L("Equipa clínica","Clinical team")}>
+                    {ORIGIN_ICON[e.origin]}
+                  </span>
                   <span className="rv-rec-body">
                     <span className="rv-rec-top">
                       <span className="rv-rec-tag" style={{color: meta.color, borderColor: meta.color}}>{L(meta.pt, meta.en)}</span>
@@ -1448,6 +1586,9 @@ function RegistosScreen() {
                     </span>
                     <span className="rv-rec-title">{L(e.titlePt, e.titleEn)}</span>
                     <span className="rv-rec-sub">{L(e.subPt, e.subEn)}</span>
+                    {(e.sourcePt || e.sourceEn) && (
+                      <span className="rv-rec-source">{L(e.sourcePt ?? "", e.sourceEn ?? "")}</span>
+                    )}
                   </span>
                   <span className="rv-chev">{Icon.chev}</span>
                 </button>
@@ -1456,6 +1597,105 @@ function RegistosScreen() {
           </div>
         )}
 
+        <div style={{height: 90}}/>
+      </div>
+    </div>
+  );
+}
+
+// ─── Documento carregado + valores extraídos ─────────
+// O pedido era mostrar o documento e os valores "lado a lado". A 430 px de
+// largura, duas colunas dariam ~195 px cada e o documento ficaria ilegível —
+// o mesmo erro do strain a mostrar "0.1". Aqui a emparelhação é feita por
+// linha: tocar num valor realça a linha do documento de onde saiu, que é a
+// verificação que o lado a lado serve para fazer.
+function DocumentoScreen({ docId }: { docId?: string }) {
+  const { go } = useNav();
+  const { L, lang } = useLang();
+  const doc = LAB_DOCS.find((d) => d.id === docId) ?? LAB_DOCS[0];
+  const [selected, setSelected] = useState<number | null>(null);
+
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <header className="rv-header">
+        <button className="rv-header-btn" onClick={() => go("registos")} aria-label={L("Voltar","Back")}>{Icon.back}</button>
+        <div className="rv-header-title">{L(doc.titlePt, doc.titleEn)}</div>
+        <div style={{width: 36}}/>
+      </header>
+
+      <div className="rv-body">
+        <div className="rv-doc-meta">
+          <div className="rv-doc-file">
+            <span className="rv-doc-file-icon">{ORIGIN_ICON.upload}</span>
+            <span className="rv-doc-file-name">{doc.filename}</span>
+          </div>
+          <div className="rv-doc-file-sub">
+            {doc.lab} · {fmtDay(doc.iso, lang, true)} · {doc.pages} {L("pág.","pages")} · {doc.sizeKb} KB
+          </div>
+        </div>
+
+        <div className="rv-sub-section-head">{L("Documento original","Original document")}</div>
+        <div className="rv-doc-page">
+          <div className="rv-doc-page-head">
+            <span className="rv-doc-lab">{doc.lab}</span>
+            <span className="rv-doc-page-n">1 / {doc.pages}</span>
+          </div>
+          <div className="rv-doc-page-meta">
+            <div>Maria Antunes · 42A</div>
+            <div>{L("Colheita","Sample")}: {fmtDay(doc.iso, lang, true)}</div>
+          </div>
+          <div className="rv-doc-lines">
+            {doc.rows.map((r, i) => (
+              <div key={i} className="rv-doc-line" data-hit={selected === i || undefined}>{r.raw}</div>
+            ))}
+            <div className="rv-doc-line rv-doc-line-more">
+              {doc.totalExtracted > doc.rows.length
+                ? L(`… mais ${doc.totalExtracted - doc.rows.length} parâmetros nas páginas seguintes`,
+                    `… ${doc.totalExtracted - doc.rows.length} more parameters on the following pages`)
+                : ""}
+            </div>
+          </div>
+        </div>
+
+        <div className="rv-sub-section-head">
+          {L("Valores extraídos","Extracted values")} · {doc.rows.length} {L("de","of")} {doc.totalExtracted}
+        </div>
+        <div className="rv-doc-note">
+          {L("Lidos automaticamente do PDF. Toque num valor para ver a linha original de onde foi extraído.",
+             "Read automatically from the PDF. Tap a value to see the original line it came from.")}
+        </div>
+        <div className="rv-doc-rows">
+          {doc.rows.map((r, i) => {
+            const marker = r.marker ? BIOMARKERS.find((b) => b.name === r.marker) : undefined;
+            return (
+              <div key={i} className="rv-doc-row" data-sel={selected === i || undefined}>
+                <button type="button" className="rv-doc-row-main" onClick={() => setSelected(selected === i ? null : i)}>
+                  <span className="rv-doc-row-name">{r.name}</span>
+                  <span className="rv-doc-row-val">{r.value}<span className="rv-doc-row-unit">{r.unit}</span></span>
+                  <span className="rv-doc-row-ref">{L("ref","ref")} {r.ref}</span>
+                </button>
+                {selected === i && (
+                  <div className="rv-doc-row-detail">
+                    <div className="rv-doc-row-raw">{r.raw}</div>
+                    {marker ? (
+                      <button className="rv-doc-row-link" onClick={() => go({ route: "marker", marker })}>
+                        {L("Abrir","Open")} {marker.name} →
+                      </button>
+                    ) : (
+                      <span className="rv-doc-row-unmatched">{L("Sem marcador associado","No linked marker")}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="rv-doc-foot">
+          {L("Os valores foram conferidos pela sua equipa clínica antes de entrarem no seu historial.",
+             "These values were checked by your clinical team before entering your record.")}
+        </div>
         <div style={{height: 90}}/>
       </div>
     </div>
@@ -2999,51 +3239,187 @@ async function shareNative(opts: { title: string; text: string; toast: (m: strin
 }
 
 // ─── Pesquisa ────────────────────────────────────────
+// ─── Pesquisa nos próprios dados ─────────────────────
+// Ferramenta de consulta pontual, não um assistente: a resposta é sempre
+// montada a partir dos dados que já estão na app por regras determinísticas.
+// Não há modelo de linguagem por trás, por isso não existe caminho pelo qual
+// possa inventar um valor ou produzir uma interpretação clínica nova. Quando
+// a pergunta é de interpretação, devolve a nota que o médico deixou — tal e
+// qual — ou encaminha para a conversa com a equipa clínica.
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+const INTERPRET_WORDS = [
+  "porque", "porque", "porq", "significa", "significado", "quer dizer", "grave", "preocup",
+  "devo", "posso", "tenho de", "tratar", "tratamento", "medicar", "risco", "perigo", "mau",
+  "normal", "bom sinal", "mau sinal", "o que faco", "que faco", "aconselha", "recomenda",
+  "why", "what does", "mean", "should i", "serious", "dangerous", "worry", "worried",
+  "treat", "treatment", "risk", "bad", "normal?", "advice", "recommend",
+];
+const TREND_WORDS = ["tendencia", "evolucao", "evolui", "grafico", "historico", "ultimos", "ao longo", "trend", "evolution", "chart", "history", "over time", "last"];
+const SUPP_WORDS = ["suplement", "supplement", "tomo", "tomar", "toma ", "medicacao", "medication", "plano de hoje", "todays plan", "taking"];
+
+type QueryResult =
+  | { kind: "marker"; marker: BioMarker; trend: boolean }
+  | { kind: "supplements" }
+  | { kind: "note"; marker: BioMarker; note: ClinicalNote }
+  | { kind: "refer"; marker?: BioMarker }
+  | { kind: "none" };
+
+function runQuery(raw: string): QueryResult {
+  const q = norm(raw.trim());
+  if (!q) return { kind: "none" };
+
+  const hits = (words: string[]) => words.some((w) => q.includes(norm(w)));
+
+  // Marcador mencionado: ganha o nome mais longo que aparece na frase, para
+  // "colesterol total" não ser capturado por "colesterol".
+  const marker = BIOMARKERS
+    .filter((b) => q.includes(norm(b.name)))
+    .sort((a, b) => b.name.length - a.name.length)[0];
+
+  if (hits(INTERPRET_WORDS)) {
+    const note = marker ? CLINICAL_NOTES[marker.name] : undefined;
+    if (marker && note) return { kind: "note", marker, note };
+    return { kind: "refer", marker };
+  }
+  if (hits(SUPP_WORDS)) return { kind: "supplements" };
+  if (marker) return { kind: "marker", marker, trend: hits(TREND_WORDS) };
+  return { kind: "none" };
+}
+
 function PesquisaScreen() {
   const { go } = useNav();
-  const { L } = useLang();
+  const { L, lang } = useLang();
   const [q, setQ] = useState("");
-  const all = [...BIOS_ALERT, ...BIOS_OK];
-  const term = q.trim().toLowerCase();
-  const bios = term ? all.filter((b) => b.name.toLowerCase().includes(term)) : all;
-  const consultas = [
-    { label: "Revisão trimestral", date: "22 abr 2026" },
-    { label: "Discussão sobre TRH", date: "12 mai 2026" },
-    { label: "Revisão de resultados", date: "03 fev 2026" },
-  ].filter((c) => !term || c.label.toLowerCase().includes(term));
+  const result = runQuery(q);
+
+  const examples = [
+    L("Última análise de Estradiol", "Latest Estradiol result"),
+    L("Tendência de ApoB", "ApoB trend"),
+    L("Suplementos activos", "Active supplements"),
+  ];
+
+  const supplements = PLANO_HOJE.filter((p) => p.type === "supplement");
 
   return (
     <div className="rv-screen">
       <StatusBar />
       <header className="rv-header">
-        <button className="rv-header-btn" onClick={() => go("home")} aria-label={L("Voltar","Back")}>{Icon.back}</button>
-        <div className="rv-header-title">{L("Pesquisar","Search")}</div>
+        <button className="rv-header-btn" onClick={() => go("data")} aria-label={L("Voltar","Back")}>{Icon.back}</button>
+        <div className="rv-header-title">{L("Pesquisar nos seus dados","Search your data")}</div>
         <div style={{width: 36}}/>
       </header>
+
       <div className="rv-body">
-        <div style={{padding: "8px 20px 12px"}}>
+        <div style={{padding: "4px 20px 14px"}}>
           <input
             autoFocus
-            className="rv-msg-compose-input"
-            style={{width: "100%", background: "rgba(255,255,255,0.06)", borderRadius: 12, padding: "12px 14px", color: "var(--fg)", fontSize: 14, border: "1px solid rgba(255,255,255,0.08)"}}
-            placeholder={L("Marcador, consulta, sintoma…","Marker, appointment, symptom…")}
+            className="rv-rec-search"
+            placeholder={L("Marcador, tendência, suplementos…","Marker, trend, supplements…")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
-        <div className="rv-bio-section-head"><span className="rv-dot"/>{L("Marcadores","Markers")} · {bios.length}</div>
-        <div className="rv-bio-list">
-          {bios.length === 0 && <div style={{padding: "12px 20px", color: "var(--fg-50)", fontSize: 13}}>{L("Sem resultados.","No results.")}</div>}
-          {bios.map((b, i) => <BioRow key={i} b={b}/>)}
-        </div>
-        <div className="rv-bio-section-head" style={{marginTop: 12}}><span className="rv-dot"/>{L("Consultas","Appointments")} · {consultas.length}</div>
-        {consultas.map((c, i) => (
-          <div key={i} className="rv-past-row" onClick={() => go("consultas")} style={{cursor: "pointer"}}>
-            <div className="rv-past-date"><div className="rv-past-day rv-mono">{c.date.split(" ")[0]}</div><div className="rv-past-month">{c.date.split(" ")[1]}</div></div>
-            <div className="rv-past-meta"><div className="rv-past-label">{c.label}</div><div className="rv-past-sub">{L("Equipa clínica","Clinical team")}</div></div>
-            <div className="rv-chev">{Icon.chev}</div>
+
+        {q.trim() === "" ? (
+          <>
+            <div className="rv-sub-section-head">{L("Experimente","Try")}</div>
+            <div className="rv-q-examples">
+              {examples.map((ex) => (
+                <button key={ex} type="button" className="rv-q-example" onClick={() => setQ(ex)}>
+                  <span className="rv-q-example-icon">{Icon.search}</span>{ex}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : result.kind === "marker" ? (
+          <div className="rv-q-card">
+            <div className="rv-q-card-head">
+              <span className="rv-q-card-label">{L("Última colheita","Latest sample")} · 22 {L("abr","Apr")} 2026</span>
+              <span className="rv-q-state" style={{color: BIO_STATE_META.find((s) => s.state === result.marker.state)!.color}}>
+                {L(BIO_STATE_META.find((s) => s.state === result.marker.state)!.pt,
+                   BIO_STATE_META.find((s) => s.state === result.marker.state)!.en)}
+              </span>
+            </div>
+            <div className="rv-q-card-name">{result.marker.name}</div>
+            <div className="rv-q-card-val">
+              {result.marker.value}<span className="rv-q-card-unit">{result.marker.unit}</span>
+              <span className="rv-q-card-delta">{result.marker.delta}</span>
+            </div>
+            <div className="rv-q-card-target">{L("alvo","target")} {result.marker.target}</div>
+            {result.marker.spark.length >= 2 && (
+              <div className="rv-q-card-spark">
+                <Spark pts={result.marker.spark} w={280} h={54}
+                  color={result.marker.tone === "alert" ? "var(--alert)" : result.marker.tone === "watch" ? "var(--watch)" : "var(--lime)"}
+                  bandMin={result.marker.targetRange.min} bandMax={result.marker.targetRange.max}/>
+              </div>
+            )}
+            <button className="rv-cta-primary" style={{margin: "14px 0 0"}} onClick={() => go({ route: "marker", marker: result.marker })}>
+              {result.trend ? L("Ver evolução completa","See full trend") : L("Abrir marcador","Open marker")}
+            </button>
           </div>
-        ))}
+        ) : result.kind === "supplements" ? (
+          <div className="rv-q-card">
+            <div className="rv-q-card-label" style={{marginBottom: 10}}>
+              {L("Suplementos activos","Active supplements")} · {supplements.length}
+            </div>
+            {supplements.map((s) => (
+              <div key={s.key} className="rv-q-supp">
+                <span className="rv-q-supp-name">{translate(lang, s.key)}</span>
+                <span className="rv-q-supp-when">{translate(lang, s.subKey)} · {s.time}</span>
+              </div>
+            ))}
+            <button className="rv-cta-ghost" style={{margin: "12px 0 0", width: "100%"}} onClick={() => go("nutricao")}>
+              {L("Ver dose, objectivo e histórico","See dose, goal and history")}
+            </button>
+          </div>
+        ) : result.kind === "note" ? (
+          <div className="rv-q-card">
+            <div className="rv-q-card-label">{result.marker.name} · {L("nota da sua equipa clínica","note from your clinical team")}</div>
+            <div className="rv-q-note">{L(result.note.pt, result.note.en)}</div>
+            <div className="rv-q-note-by">
+              {L(result.note.byPt, result.note.byEn)} · {fmtDay(result.note.iso, lang, true)}
+            </div>
+            <div className="rv-q-disclaim">
+              {L("Esta é a nota escrita pela sua equipa clínica. A app não interpreta resultados.",
+                 "This is the note written by your clinical team. The app does not interpret results.")}
+            </div>
+            <div className="rv-q-actions">
+              <button className="rv-cta-ghost" onClick={() => go({ route: "marker", marker: result.marker })}>{L("Abrir marcador","Open marker")}</button>
+              <button className="rv-cta-primary" onClick={() => go("messages")}>{L("Falar com a equipa","Message the team")}</button>
+            </div>
+          </div>
+        ) : result.kind === "refer" ? (
+          <div className="rv-q-card">
+            <div className="rv-q-card-label">{L("Pergunta para a sua equipa clínica","A question for your clinical team")}</div>
+            <div className="rv-q-note">
+              {L("A app mostra os seus dados e as notas que a equipa clínica deixou, mas não interpreta resultados nem dá indicações de tratamento. Esta pergunta é para quem o acompanha.",
+                 "The app shows your data and the notes your clinical team left, but it does not interpret results or give treatment guidance. This question is for the people caring for you.")}
+            </div>
+            <div className="rv-q-actions">
+              {result.marker && (
+                <button className="rv-cta-ghost" onClick={() => go({ route: "marker", marker: result.marker! })}>{L("Ver marcador","See marker")}</button>
+              )}
+              <button className="rv-cta-primary" onClick={() => go("messages")}>{L("Falar com a equipa","Message the team")}</button>
+            </div>
+          </div>
+        ) : (
+          <div className="rv-q-card">
+            <div className="rv-q-card-label">{L("Sem resultados","No results")}</div>
+            <div className="rv-q-note">
+              {L("Não encontrei nada nos seus dados para essa pesquisa. Pode procurar por um marcador (ex: Ferritina), pela tendência de um marcador, ou pelos seus suplementos.",
+                 "I couldn't find anything in your data for that search. Try a marker name (e.g. Ferritin), a marker's trend, or your supplements.")}
+            </div>
+            <div className="rv-q-actions">
+              <button className="rv-cta-primary" onClick={() => go("messages")}>{L("Falar com a equipa","Message the team")}</button>
+            </div>
+          </div>
+        )}
+
+        <div className="rv-q-foot">
+          {L("Esta pesquisa lê apenas os seus dados nesta app. Não substitui a sua equipa clínica.",
+             "This search only reads your data in this app. It does not replace your clinical team.")}
+        </div>
         <div style={{height: 80}}/>
       </div>
     </div>
@@ -3262,6 +3638,7 @@ function ExportarScreen() {
 function renderScreen(route: NavRoute): ReactNode {
   const r = typeof route === "string" ? route : route.route;
   const marker = typeof route === "object" && route.route === "marker" ? route.marker : undefined;
+  const docId = typeof route === "object" && route.route === "documento" ? route.docId : undefined;
   switch (r) {
     case "home":      return <HomeScreenV2 />;
     case "data":      return <DadosScreen />;
@@ -3286,6 +3663,7 @@ function renderScreen(route: NavRoute): ReactNode {
     case "sintomas":     return <SintomasScreen />;
     case "nutricao":     return <NutricaoScreen />;
     case "registos":     return <RegistosScreen />;
+    case "documento":    return <DocumentoScreen docId={docId} />;
     default:          return <HomeScreenV2 />;
   }
 }
