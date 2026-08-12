@@ -1,33 +1,78 @@
 import { Link } from "react-router-dom";
+import { useT } from "../i18n";
 
-const COLUMNS = [
-  {
-    title: "Empresa",
-    links: [
-      ["Sobre nós", "/sobre"],
-      ["Como funciona", "/como-funciona"],
-      ["Preços", "/precos"],
+const T = {
+  pt: {
+    tagline: "A sua saúde, sempre acompanhada.",
+    taglineEm: "A mesma história, para médicos e utentes.",
+    soonApp: "Em breve na",
+    soonPlay: "Em breve no",
+    rights: "Todos os direitos reservados.",
+    columns: [
+      {
+        title: "Empresa",
+        links: [
+          ["Sobre nós", "/sobre"],
+          ["Como funciona", "/como-funciona"],
+          ["Preços", "/precos"],
+        ],
+      },
+      {
+        title: "Ajuda",
+        links: [
+          ["Para médicos", "/medicos"],
+          ["Para utentes", "/utentes"],
+          ["FAQ", "/faq"],
+          ["Contacto", "/contacto"],
+        ],
+      },
+      {
+        title: "Legal",
+        links: [
+          ["Privacidade", "/privacidade"],
+          ["Termos e condições", "/termos"],
+        ],
+      },
     ],
   },
-  {
-    title: "Ajuda",
-    links: [
-      ["Para médicos", "/medicos"],
-      ["Para utentes", "/utentes"],
-      ["FAQ", "/faq"],
-      ["Contacto", "/contacto"],
+  en: {
+    tagline: "Your health, always looked after.",
+    taglineEm: "The same story, for doctors and patients.",
+    soonApp: "Coming soon to the",
+    soonPlay: "Coming soon to",
+    rights: "All rights reserved.",
+    columns: [
+      {
+        title: "Company",
+        links: [
+          ["About us", "/sobre"],
+          ["How it works", "/como-funciona"],
+          ["Pricing", "/precos"],
+        ],
+      },
+      {
+        title: "Help",
+        links: [
+          ["For doctors", "/medicos"],
+          ["For patients", "/utentes"],
+          ["FAQ", "/faq"],
+          ["Contact", "/contacto"],
+        ],
+      },
+      {
+        title: "Legal",
+        links: [
+          ["Privacy", "/privacidade"],
+          ["Terms and conditions", "/termos"],
+        ],
+      },
     ],
   },
-  {
-    title: "Legal",
-    links: [
-      ["Privacidade", "/privacidade"],
-      ["Termos e condições", "/termos"],
-    ],
-  },
-];
+};
 
 export default function Footer() {
+  const t = useT();
+  const L = t(T);
   return (
     <footer className="bg-brand-beige px-4 pb-8 pt-4">
       <div className="mx-auto max-w-6xl rounded-3xl bg-white border border-black/10 p-8 md:p-12">
@@ -40,8 +85,7 @@ export default function Footer() {
               <span className="font-serif text-xl">Vivara Health</span>
             </div>
             <p className="text-sm text-brand-muted/70 leading-relaxed max-w-xs">
-              A sua saúde, sempre acompanhada.{" "}
-              <em className="font-serif">A mesma história, para médicos e utentes.</em>
+              {L.tagline} <em className="font-serif">{L.taglineEm}</em>
             </p>
             <div className="mt-5 flex flex-col gap-2 max-w-[220px]">
               <span className="flex items-center gap-2.5 rounded-xl border border-black/10 px-3.5 py-2 text-brand-muted">
@@ -49,7 +93,7 @@ export default function Footer() {
                   <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.24-.02-.32-.03-.014-.11-.04-.226-.04-.343 0-1.1.572-2.24 1.192-2.94.744-.85 2.036-1.53 3.107-1.57.014.08.03.15.03.23zm2.457 15.164c-.44.98-.65 1.42-1.22 2.29-.795 1.21-1.917 2.72-3.31 2.73-1.234.014-1.552-.803-3.226-.79-1.674.013-2.024.807-3.26.792-1.393-.014-2.457-1.373-3.253-2.583-2.23-3.397-2.466-7.386-1.088-9.508.978-1.508 2.522-2.39 3.977-2.39 1.48 0 2.41.812 3.634.812 1.187 0 1.912-.813 3.63-.813 1.297 0 2.67.706 3.65 1.926-3.21 1.76-2.69 6.343.466 8.534z" />
                 </svg>
                 <span className="text-left">
-                  <span className="block text-[9px] uppercase tracking-wide text-brand-muted/60">Em breve na</span>
+                  <span className="block text-[9px] uppercase tracking-wide text-brand-muted/60">{L.soonApp}</span>
                   <span className="block text-xs font-medium">App Store</span>
                 </span>
               </span>
@@ -61,14 +105,14 @@ export default function Footer() {
                   <path fill="#ffcf00" d="M99.5 483c1.1 8 6.1 15.1 14.4 18.3.7.3 1.5.5 2.2.7l223.8-224.6-61.1-61.1L99.5 483z" />
                 </svg>
                 <span className="text-left">
-                  <span className="block text-[9px] uppercase tracking-wide text-brand-muted/60">Em breve no</span>
+                  <span className="block text-[9px] uppercase tracking-wide text-brand-muted/60">{L.soonPlay}</span>
                   <span className="block text-xs font-medium">Google Play</span>
                 </span>
               </span>
             </div>
           </div>
 
-          {COLUMNS.map((col) => (
+          {L.columns.map((col) => (
             <div key={col.title}>
               <p className="text-xs uppercase tracking-[0.18em] text-brand-muted/50 mb-4">{col.title}</p>
               <ul className="space-y-2 text-sm text-brand-muted">
@@ -83,7 +127,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 pt-6 border-t border-black/10 text-xs text-brand-muted/60">
-          © {new Date().getFullYear()} Vivara Health. Todos os direitos reservados.
+          © {new Date().getFullYear()} Vivara Health. {L.rights}
         </div>
       </div>
     </footer>

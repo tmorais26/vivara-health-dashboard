@@ -1,9 +1,43 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { CTAButton } from "./ui";
+import { useT } from "../i18n";
 import heroPhoto from "../assets/hero-photo.jpg";
 
+const T = {
+  pt: {
+    badge: "Plataforma de saúde",
+    title: (
+      <>
+        A sua saúde,
+        <br />
+        <em>sempre acompanhada.</em>
+      </>
+    ),
+    desc: "Um lugar seguro para exames, resultados, sintomas e registos médicos. Para que cada consulta médica valha a pena.",
+    cta: "Ver como funciona",
+    // PLACEHOLDER — substituir pelo nome/especialidade do médico parceiro.
+    validation: "Em validação com [NOME / ESPECIALIDADE] · Portugal",
+  },
+  en: {
+    badge: "Health platform",
+    title: (
+      <>
+        Your health,
+        <br />
+        <em>always looked after.</em>
+      </>
+    ),
+    desc: "A safe place for exams, results, symptoms and medical records. So that every doctor's appointment counts.",
+    cta: "See how it works",
+    // PLACEHOLDER — replace with the partner doctor's name/speciality.
+    validation: "In validation with [NAME / SPECIALITY] · Portugal",
+  },
+};
+
 export default function Hero() {
+  const t = useT();
+  const L = t(T);
   return (
     <section id="top" className="relative min-h-screen flex items-end overflow-hidden bg-brand-dark">
       <img
@@ -26,7 +60,7 @@ export default function Hero() {
           transition={{ duration: 0.6 }}
           className="inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-white/80"
         >
-          Plataforma de saúde
+          {L.badge}
         </motion.span>
 
         <motion.h1
@@ -35,9 +69,7 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.1 }}
           className="font-serif font-light text-white mt-8 leading-[0.98] tracking-tight text-5xl sm:text-7xl lg:text-8xl"
         >
-          A sua saúde,
-          <br />
-          <em>sempre acompanhada.</em>
+          {L.title}
         </motion.h1>
 
         <motion.p
@@ -46,8 +78,7 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.25 }}
           className="mt-6 max-w-xl text-base md:text-lg text-white/85 leading-relaxed"
         >
-          Um lugar seguro para exames, resultados, sintomas e registos médicos. Para que cada
-          consulta médica valha a pena.
+          {L.desc}
         </motion.p>
 
         <motion.div
@@ -57,9 +88,18 @@ export default function Hero() {
           className="mt-10"
         >
           <Link to="/como-funciona">
-            <CTAButton>Ver como funciona</CTAButton>
+            <CTAButton>{L.cta}</CTAButton>
           </Link>
         </motion.div>
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.55 }}
+          className="mt-5 text-xs text-white/50"
+        >
+          {L.validation}
+        </motion.p>
       </div>
     </section>
   );

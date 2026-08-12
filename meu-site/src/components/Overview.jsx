@@ -1,45 +1,103 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SectionBadge, Reveal } from "./ui";
+import { useT } from "../i18n";
 
-const TABS = [
-  {
-    key: "Linha do tempo",
-    title: "Cada marcador, ao longo do tempo",
-    desc: "Análises e exames organizados cronologicamente. Vê a evolução, não só o último valor.",
+const T = {
+  pt: {
+    badge: "Visão geral",
+    title: (
+      <>
+        A sua linha do tempo de saúde <em>começa aqui.</em>
+      </>
+    ),
+    tabs: [
+      {
+        key: "Linha do tempo",
+        title: "Cada marcador, ao longo do tempo",
+        desc: "Análises e exames organizados cronologicamente. Vê a evolução, não só o último valor.",
+      },
+      {
+        key: "Insights",
+        title: "Padrões, não apenas números",
+        desc: "A Vivara transforma os seus registos em tendências claras e avisa quando algo muda.",
+      },
+      {
+        key: "Análises",
+        title: "Resultados que falam consigo",
+        desc: "Cada análise interpretada no contexto do seu histórico e dos seus intervalos funcionais.",
+      },
+    ],
+    alerts: [
+      ["LDL-C acima do alvo", "142 mg/dL"],
+      ["Vitamina D em queda", "24 ng/mL"],
+    ],
+    labels: [
+      ["HbA1c", "5.4%"],
+      ["Vitamina D", "42 ng/mL"],
+      ["LDL", "98 mg/dL"],
+    ],
+    months: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul"],
   },
-  {
-    key: "Insights",
-    title: "Padrões, não apenas números",
-    desc: "A Vivara transforma os seus registos em tendências claras e avisa quando algo muda.",
+  en: {
+    badge: "Overview",
+    title: (
+      <>
+        Your health timeline <em>starts here.</em>
+      </>
+    ),
+    tabs: [
+      {
+        key: "Timeline",
+        title: "Every marker, over time",
+        desc: "Lab results and exams organised chronologically. See the trend, not just the latest value.",
+      },
+      {
+        key: "Insights",
+        title: "Patterns, not just numbers",
+        desc: "Vivara turns your records into clear trends and alerts you when something changes.",
+      },
+      {
+        key: "Lab results",
+        title: "Results that speak to you",
+        desc: "Every result interpreted in the context of your history and your functional ranges.",
+      },
+    ],
+    alerts: [
+      ["LDL-C above target", "142 mg/dL"],
+      ["Vitamin D declining", "24 ng/mL"],
+    ],
+    labels: [
+      ["HbA1c", "5.4%"],
+      ["Vitamin D", "42 ng/mL"],
+      ["LDL", "98 mg/dL"],
+    ],
+    months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
   },
-  {
-    key: "Análises",
-    title: "Resultados que falam consigo",
-    desc: "Cada análise interpretada no contexto do seu histórico e dos seus intervalos funcionais.",
-  },
-];
+};
 
 const DURATION = 5000;
 
 export default function Overview() {
+  const t = useT();
+  const L = t(T);
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (paused || reduceMotion) return;
-    const id = setTimeout(() => setActive((a) => (a + 1) % TABS.length), DURATION);
+    const id = setTimeout(() => setActive((a) => (a + 1) % L.tabs.length), DURATION);
     return () => clearTimeout(id);
-  }, [active, paused]);
+  }, [active, paused, L.tabs.length]);
 
   return (
     <section id="como" className="bg-brand-beige py-24 md:py-32">
       <div className="mx-auto max-w-6xl px-6">
         <Reveal>
-          <SectionBadge>Visão geral</SectionBadge>
+          <SectionBadge>{L.badge}</SectionBadge>
           <h2 className="font-serif font-light tracking-tight text-4xl md:text-6xl mt-5 max-w-2xl">
-            A sua linha do tempo de saúde <em>começa aqui.</em>
+            {L.title}
           </h2>
         </Reveal>
 
@@ -51,16 +109,16 @@ export default function Overview() {
           onFocus={() => setPaused(true)}
           onBlur={() => setPaused(false)}
         >
-          {TABS.map((t, i) => (
+          {L.tabs.map((tb, i) => (
             <button
-              key={t.key}
+              key={tb.key}
               onClick={() => setActive(i)}
               aria-pressed={active === i}
               className={`relative overflow-hidden rounded-full px-5 py-2.5 text-sm transition-colors ${
                 active === i ? "bg-brand-dark text-white" : "bg-transparent text-brand-muted border border-black/10"
               }`}
             >
-              {t.key}
+              {tb.key}
               {active === i && !paused && (
                 <motion.span
                   key={active}
@@ -84,8 +142,8 @@ export default function Overview() {
               exit={{ opacity: 0, x: 16 }}
               transition={{ duration: 0.4 }}
             >
-              <h3 className="font-serif text-3xl md:text-4xl mb-3">{TABS[active].title}</h3>
-              <p className="text-brand-muted/80 text-lg leading-relaxed">{TABS[active].desc}</p>
+              <h3 className="font-serif text-3xl md:text-4xl mb-3">{L.tabs[active].title}</h3>
+              <p className="text-brand-muted/80 text-lg leading-relaxed">{L.tabs[active].desc}</p>
             </motion.div>
           </AnimatePresence>
 
@@ -98,7 +156,7 @@ export default function Overview() {
               transition={{ duration: 0.45 }}
               className="aspect-[4/3] rounded-3xl border border-black/10 bg-white shadow-sm grid place-items-center"
             >
-              <MockPanel index={active} />
+              <MockPanel index={active} L={L} />
             </motion.div>
           </AnimatePresence>
         </div>
@@ -107,10 +165,9 @@ export default function Overview() {
   );
 }
 
-const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul"];
 const POINTS_Y = [150, 120, 130, 80, 95, 50, 34];
 
-function MockPanel({ index }) {
+function MockPanel({ index, L }) {
   if (index === 0) {
     const xFor = (i) => 20 + i * 46;
     const linePoints = POINTS_Y.map((y, i) => `${xFor(i)},${y}`).join(" ");
@@ -149,7 +206,7 @@ function MockPanel({ index }) {
           ))}
           <circle cx={lastX} cy={lastY} r="9" fill="var(--color-brand-green-dark)" fillOpacity="0.18" className="animate-pulse" />
 
-          {MONTHS.map((m, i) => (
+          {L.months.map((m, i) => (
             <text key={m} x={xFor(i)} y="200" textAnchor="middle" fontSize="10" fill="var(--color-brand-muted)" opacity="0.5">
               {m}
             </text>
@@ -161,10 +218,7 @@ function MockPanel({ index }) {
   if (index === 1) {
     return (
       <div className="w-3/4 space-y-3">
-        {[
-          ["LDL-C acima do alvo", "142 mg/dL"],
-          ["Vitamina D em queda", "24 ng/mL"],
-        ].map(([k, v]) => (
+        {L.alerts.map(([k, v]) => (
           <div key={k} className="rounded-xl bg-red-50 border border-red-100 px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-red-700">{k}</span>
@@ -177,11 +231,7 @@ function MockPanel({ index }) {
   }
   return (
     <div className="w-3/4 space-y-3">
-      {[
-        ["HbA1c", "5.4%"],
-        ["Vitamina D", "42 ng/mL"],
-        ["LDL", "98 mg/dL"],
-      ].map(([k, v]) => (
+      {L.labels.map(([k, v]) => (
         <div key={k} className="flex items-center justify-between rounded-xl bg-brand-beige px-4 py-3">
           <span className="text-sm text-brand-muted">{k}</span>
           <span className="font-serif text-lg">{v}</span>
