@@ -4,6 +4,8 @@ import { useState, useContext, createContext, useRef, useCallback, useEffect, ty
 import { askAssistente } from "@/lib/assistente.functions";
 import { whoopAuthUrl, whoopExchange, whoopStatus, whoopDisconnect, type WhoopStatus } from "@/lib/whoop.server";
 import { translate, LANG_STORAGE_KEY, type Lang } from "@/lib/app-v2-i18n";
+import type { ExtractedDoc, ParsedValue } from "@/lib/lab-parse";
+import type { StoredUpload } from "@/lib/uploads.store";
 import "../app-v2.css";
 
 export const Route = createFileRoute("/app-v2")({
@@ -844,44 +846,29 @@ const BIO_STATE_META: { state: BioState; color: string; pt: string; en: string }
   { state: "nodata",    color: "var(--fg-15)",    pt: "Sem dados",       en: "No data" },
 ];
 
-// Resumo visual do painel: um ponto por marcador, ordenado por estado para
-// que a contagem de cada cor se leia sem contar os pontos um a um.
-const BIO_STATE_ORDER: BioState[] = ["optimal", "good", "attention", "nodata"];
-
-function BioStateGrid({ markers }: { markers: BioMarker[] }) {
-  const { go } = useNav();
+// Resumo do painel numa faixa: uma barra de proporção e as contagens. A
+// grelha de pontos que estava aqui foi retirada — 82 pontos abstractos
+// ocupavam meio ecrã acima da lista sem dizer nada que a contagem não diga,
+// e empurravam para baixo os valores, que são o que interessa ler.
+function BioStateSummary({ markers }: { markers: BioMarker[] }) {
   const { L } = useLang();
-  const colorOf = (s: BioState) => BIO_STATE_META.find((m) => m.state === s)!.color;
-  const sorted = [...markers].sort(
-    (a, b) => BIO_STATE_ORDER.indexOf(a.state) - BIO_STATE_ORDER.indexOf(b.state),
-  );
   const counts = BIO_STATE_META.map((meta) => ({
     ...meta,
     n: markers.filter((m) => m.state === meta.state).length,
   })).filter((c) => c.n > 0);
+  const total = markers.length || 1;
 
   return (
-    <div className="rv-dotgrid-card">
-      <div className="rv-dotgrid-head">
-        <span className="rv-dotgrid-title">{L("Biomarcadores","Biomarkers")}</span>
-        <span className="rv-dotgrid-total">{markers.length}</span>
-      </div>
-      <div className="rv-dotgrid">
-        {sorted.map((m) => (
-          <button
-            key={m.name}
-            type="button"
-            className="rv-dot-cell"
-            style={{ background: colorOf(m.state) }}
-            onClick={() => go({ route: "marker", marker: m })}
-            aria-label={`${m.name} · ${m.state === "nodata" ? L("sem dados","no data") : `${m.value} ${m.unit}`}`}
-          />
+    <div className="rv-biosum">
+      <div className="rv-biosum-bar">
+        {counts.map((c) => (
+          <span key={c.state} style={{ background: c.color, width: `${(c.n / total) * 100}%` }}/>
         ))}
       </div>
-      <div className="rv-dotgrid-legend">
+      <div className="rv-biosum-counts">
         {counts.map((c) => (
-          <span key={c.state} className="rv-dotgrid-legend-item">
-            <span className="rv-dotgrid-legend-dot" style={{ background: c.color }}/>
+          <span key={c.state} className="rv-biosum-item">
+            <span className="rv-biosum-dot" style={{ background: c.color }}/>
             <strong>{c.n}</strong> {L(c.pt, c.en)}
           </span>
         ))}
@@ -955,7 +942,7 @@ function DadosScreen() {
           ))}
         </div>
 
-        <BioStateGrid markers={gridList} />
+        <BioStateSummary markers={gridList} />
 
         <div className="rv-list">
           <a className="rv-list-row" style={{cursor: "pointer"}} onClick={() => go("registos")}>
@@ -1502,9 +1489,44 @@ const ANALISE_ENTRIES: RecordEntry[] = LAB_DOCS.map((doc) => ({
   subEn: `${doc.totalExtracted} values extracted · ${doc.pages}-page PDF`,
 }));
 
+// Análises carregadas pela utente, lidas do armazenamento do dispositivo.
+// Começa vazio e só lê depois de montar: no servidor não há localStorage, e
+// devolver conteúdo diferente dos dois lados partiria a hidratação.
+function useUploads(): StoredUpload[] {
+  const [uploads, setUploads] = useState<StoredUpload[]>([]);
+  useEffect(() => {
+    let alive = true;
+    import("@/lib/uploads.store").then((m) => { if (alive) setUploads(m.loadUploads()); });
+    return () => { alive = false; };
+  }, []);
+  return uploads;
+}
+
+function uploadTitle(u: StoredUpload, lang: Lang): string {
+  const base = lang === "pt" ? "Análise" : "Lab result";
+  return u.lab ? `${base} · ${u.lab}` : base;
+}
+
 // A timeline é montada a partir das mesmas fontes que alimentam os outros
 // ecrãs — não há aqui uma segunda cópia dos dados a divergir com o tempo.
-function buildTimeline(): RecordEntry[] {
+function buildTimeline(uploads: StoredUpload[] = []): RecordEntry[] {
+  const carregadas: RecordEntry[] = uploads.map((u) => ({
+    id: u.id,
+    type: "analise" as const,
+    origin: "upload" as const,
+    iso: `${u.collectedISO}T08:00:00`,
+    go: { route: "documento" as const, docId: u.id },
+    sourcePt: u.lab ?? "Carregado por si", sourceEn: u.lab ?? "Uploaded by you",
+    titlePt: uploadTitle(u, "pt"), titleEn: uploadTitle(u, "en"),
+    subPt: `${u.values.length} valores lidos · PDF ${u.pages} pág.`,
+    subEn: `${u.values.length} values read · ${u.pages}-page PDF`,
+  }));
+  return [...carregadas, ...buildMockTimeline()].sort(
+    (a, b) => new Date(b.iso).getTime() - new Date(a.iso).getTime(),
+  );
+}
+
+function buildMockTimeline(): RecordEntry[] {
   const sintomas: RecordEntry[] = SYMPTOM_LOG.map((s, i) => ({
     id: `s-${i}`,
     type: "sintoma",
@@ -1553,8 +1575,9 @@ function RegistosScreen() {
   const [filter, setFilter] = useState<RecordType | "all">("all");
   const [range, setRange] = useState("all");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const uploads = useUploads();
 
-  const all = buildTimeline();
+  const all = buildTimeline(uploads);
   const term = q.trim().toLowerCase();
 
   // O intervalo conta para trás a partir da data de referência da app, não do
@@ -1706,18 +1729,103 @@ function RegistosScreen() {
 // o mesmo erro do strain a mostrar "0.1". Aqui a emparelhação é feita por
 // linha: tocar num valor realça a linha do documento de onde saiu, que é a
 // verificação que o lado a lado serve para fazer.
+// Vista única para os dois casos: os documentos de demonstração e as análises
+// que a utente carregou. Ambos se reduzem à mesma forma antes de desenhar, para
+// não haver dois ecrãs quase iguais a divergir.
+interface DocView {
+  id: string;
+  lab: string;
+  iso: string;
+  filename: string;
+  sizeKb: number;
+  pages: number;
+  title: string;
+  lines: string[];
+  totalExtracted: number;
+  rows: { raw: string; name: string; value: string; unit: string; ref: string; marker?: string }[];
+  fromUpload: boolean;
+  hasFile: boolean;
+}
+
+function docViewFromMock(d: LabDoc, lang: Lang): DocView {
+  return {
+    id: d.id, lab: d.lab, iso: d.iso, filename: d.filename, sizeKb: d.sizeKb, pages: d.pages,
+    title: lang === "pt" ? d.titlePt : d.titleEn,
+    lines: d.rows.map((r) => r.raw),
+    totalExtracted: d.totalExtracted,
+    rows: d.rows,
+    fromUpload: false, hasFile: false,
+  };
+}
+
+function docViewFromUpload(u: StoredUpload, lang: Lang): DocView {
+  return {
+    id: u.id,
+    lab: u.lab ?? (lang === "pt" ? "Laboratório não identificado" : "Lab not identified"),
+    iso: u.collectedISO,
+    filename: u.filename, sizeKb: u.sizeKb, pages: u.pages,
+    title: uploadTitle(u, lang),
+    lines: u.lines,
+    totalExtracted: u.values.length,
+    rows: u.values.map((v) => ({
+      raw: v.raw, name: v.marker ?? v.label, value: v.value, unit: v.unit, ref: v.ref,
+      marker: v.marker ?? undefined,
+    })),
+    fromUpload: true, hasFile: u.hasFile,
+  };
+}
+
 function DocumentoScreen({ docId }: { docId?: string }) {
-  const { go } = useNav();
+  const { go, showToast } = useNav();
   const { L, lang } = useLang();
-  const doc = LAB_DOCS.find((d) => d.id === docId) ?? LAB_DOCS[0];
+  const uploads = useUploads();
   const [selected, setSelected] = useState<number | null>(null);
+
+  const mock = LAB_DOCS.find((d) => d.id === docId);
+  const uploaded = uploads.find((u) => u.id === docId);
+  const doc: DocView | null = mock
+    ? docViewFromMock(mock, lang)
+    : uploaded
+    ? docViewFromUpload(uploaded, lang)
+    : uploads.length === 0 && docId?.startsWith("u-")
+    ? null // ainda a carregar do armazenamento
+    : docViewFromMock(LAB_DOCS[0], lang);
+
+  async function openOriginal() {
+    if (!doc) return;
+    const { getFile } = await import("@/lib/uploads.store");
+    const f = await getFile(doc.id);
+    if (!f) {
+      showToast(L("Original já não está guardado", "Original is no longer stored"));
+      return;
+    }
+    const url = URL.createObjectURL(f);
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
+  if (!doc) {
+    return (
+      <div className="rv-screen">
+        <StatusBar />
+        <header className="rv-header">
+          <button className="rv-header-btn" onClick={() => go("registos")} aria-label={L("Voltar","Back")}>{Icon.back}</button>
+          <div className="rv-header-title">{L("Documento","Document")}</div>
+          <div style={{width: 36}}/>
+        </header>
+        <div className="rv-body"><div className="rv-up-center"><div className="rv-up-spinner"/></div></div>
+      </div>
+    );
+  }
+
+  const hitLine = selected != null ? doc.rows[selected]?.raw : null;
 
   return (
     <div className="rv-screen">
       <StatusBar />
       <header className="rv-header">
         <button className="rv-header-btn" onClick={() => go("registos")} aria-label={L("Voltar","Back")}>{Icon.back}</button>
-        <div className="rv-header-title">{L(doc.titlePt, doc.titleEn)}</div>
+        <div className="rv-header-title">{doc.title}</div>
         <div style={{width: 36}}/>
       </header>
 
@@ -1730,33 +1838,38 @@ function DocumentoScreen({ docId }: { docId?: string }) {
           <div className="rv-doc-file-sub">
             {doc.lab} · {fmtDay(doc.iso, lang, true)} · {doc.pages} {L("pág.","pages")} · {doc.sizeKb} KB
           </div>
+          {doc.fromUpload && (
+            <div className="rv-doc-local">
+              {L("Guardado neste telemóvel","Stored on this phone")}
+              {doc.hasFile && (
+                <button className="rv-doc-open" onClick={openOriginal}>{L("Abrir PDF","Open PDF")}</button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="rv-sub-section-head">{L("Documento original","Original document")}</div>
         <div className="rv-doc-page">
           <div className="rv-doc-page-head">
             <span className="rv-doc-lab">{doc.lab}</span>
-            <span className="rv-doc-page-n">1 / {doc.pages}</span>
+            <span className="rv-doc-page-n">{doc.pages > 1 ? `1–${doc.pages}` : "1"} / {doc.pages}</span>
           </div>
-          <div className="rv-doc-page-meta">
-            <div>Maria Antunes · 42A</div>
-            <div>{L("Colheita","Sample")}: {fmtDay(doc.iso, lang, true)}</div>
-          </div>
-          <div className="rv-doc-lines">
-            {doc.rows.map((r, i) => (
-              <div key={i} className="rv-doc-line" data-hit={selected === i || undefined}>{r.raw}</div>
+          <div className="rv-doc-lines" data-scroll={doc.lines.length > 18 || undefined}>
+            {doc.lines.map((line, i) => (
+              <div key={i} className="rv-doc-line" data-hit={hitLine != null && line === hitLine ? "true" : undefined}>{line}</div>
             ))}
-            <div className="rv-doc-line rv-doc-line-more">
-              {doc.totalExtracted > doc.rows.length
-                ? L(`… mais ${doc.totalExtracted - doc.rows.length} parâmetros nas páginas seguintes`,
-                    `… ${doc.totalExtracted - doc.rows.length} more parameters on the following pages`)
-                : ""}
-            </div>
+            {!doc.fromUpload && doc.totalExtracted > doc.rows.length && (
+              <div className="rv-doc-line rv-doc-line-more">
+                {L(`… mais ${doc.totalExtracted - doc.rows.length} parâmetros nas páginas seguintes`,
+                   `… ${doc.totalExtracted - doc.rows.length} more parameters on the following pages`)}
+              </div>
+            )}
           </div>
         </div>
 
         <div className="rv-sub-section-head">
-          {L("Valores extraídos","Extracted values")} · {doc.rows.length} {L("de","of")} {doc.totalExtracted}
+          {L("Valores extraídos","Extracted values")} · {doc.rows.length}
+          {!doc.fromUpload && ` ${L("de","of")} ${doc.totalExtracted}`}
         </div>
         <div className="rv-doc-note">
           {L("Lidos automaticamente do PDF. Toque num valor para ver a linha original de onde foi extraído.",
@@ -1770,7 +1883,7 @@ function DocumentoScreen({ docId }: { docId?: string }) {
                 <button type="button" className="rv-doc-row-main" onClick={() => setSelected(selected === i ? null : i)}>
                   <span className="rv-doc-row-name">{r.name}</span>
                   <span className="rv-doc-row-val">{r.value}<span className="rv-doc-row-unit">{r.unit}</span></span>
-                  <span className="rv-doc-row-ref">{L("ref","ref")} {r.ref}</span>
+                  {r.ref && <span className="rv-doc-row-ref">{L("ref","ref")} {r.ref}</span>}
                 </button>
                 {selected === i && (
                   <div className="rv-doc-row-detail">
@@ -1790,8 +1903,11 @@ function DocumentoScreen({ docId }: { docId?: string }) {
         </div>
 
         <div className="rv-doc-foot">
-          {L("Os valores foram conferidos pela sua equipa clínica antes de entrarem no seu historial.",
-             "These values were checked by your clinical team before entering your record.")}
+          {doc.fromUpload
+            ? L("Estes valores estão guardados apenas neste telemóvel. A equipa clínica ainda não os vê.",
+                "These values are stored on this phone only. Your clinical team can't see them yet.")
+            : L("Os valores foram conferidos pela sua equipa clínica antes de entrarem no seu historial.",
+                "These values were checked by your clinical team before entering your record.")}
         </div>
         <div style={{height: 90}}/>
       </div>
@@ -1800,121 +1916,215 @@ function DocumentoScreen({ docId }: { docId?: string }) {
 }
 
 // ─── Upload / Share Sheet ────────────────────────────
+// ─── Carregar análise (leitura no dispositivo) ───────
+// O ficheiro é lido aqui no browser: pdf.js extrai o texto, o parser reconhece
+// os parâmetros e o resultado fica no localStorage/IndexedDB deste telemóvel.
+// Não há upload — nenhum byte do PDF sai do dispositivo.
+type UploadStep = "pick" | "reading" | "review" | "saved" | "error";
+
 function ShareUploadScreen() {
-  const { go } = useNav();
-  const [imported, setImported] = useState(false);
+  const { go, showToast } = useNav();
+  const { L, lang } = useLang();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [step, setStep] = useState<UploadStep>("pick");
+  const [errorKind, setErrorKind] = useState<"notext" | "novalues" | "failed">("failed");
+  const [file, setFile] = useState<File | null>(null);
+  const [doc, setDoc] = useState<ExtractedDoc | null>(null);
+  const [values, setValues] = useState<ParsedValue[]>([]);
+  const [savedId, setSavedId] = useState<string | null>(null);
+
+  async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    e.target.value = ""; // permite escolher o mesmo ficheiro outra vez
+    if (!f) return;
+    setFile(f);
+    setStep("reading");
+    try {
+      const { extractFromPdf, parseValues } = await import("@/lib/lab-parse");
+      const extracted = await extractFromPdf(f);
+      if (extracted.lines.length === 0) {
+        setErrorKind("notext");
+        setStep("error");
+        return;
+      }
+      const parsed = parseValues(extracted.lines);
+      if (parsed.length === 0) {
+        setErrorKind("novalues");
+        setDoc(extracted);
+        setStep("error");
+        return;
+      }
+      setDoc(extracted);
+      setValues(parsed);
+      setStep("review");
+    } catch {
+      setErrorKind("failed");
+      setStep("error");
+    }
+  }
+
+  async function save() {
+    if (!file || !doc) return;
+    const { makeUpload, saveUpload, putFile } = await import("@/lib/uploads.store");
+    const kept = values.filter((v) => v.keep);
+    const upload = makeUpload(file, doc, kept);
+    upload.hasFile = await putFile(upload.id, file);
+    saveUpload(upload);
+    setSavedId(upload.id);
+    setStep("saved");
+    showToast(L(`${kept.length} valores guardados`, `${kept.length} values saved`));
+  }
+
+  const toggle = (i: number) =>
+    setValues((prev) => prev.map((v, idx) => (idx === i ? { ...v, keep: !v.keep } : v)));
+
+  const keptCount = values.filter((v) => v.keep).length;
+
   return (
-    <div className="rv-screen" style={{position: "relative"}}>
-      <div className="rv-share-bg-mock">
-        <div className="rv-mail-header">
-          <button className="rv-header-btn" style={{background: "transparent"}} onClick={() => go("home")}>{Icon.back}</button>
-          <div className="rv-mail-avatar">SL</div>
-          <div className="rv-mail-meta">
-            <div className="rv-mail-from">Synlab Portugal</div>
-            <div className="rv-mail-subj">Resultados disponíveis · 22 abr 2026</div>
-          </div>
-        </div>
-        <div className="rv-mail-body">
-          Estimada Maria Antunes,<br/><br/>
-          Os resultados da sua análise de sangue de 22 de abril de 2026 já se encontram disponíveis em anexo no presente email.<br/><br/>
-          Em caso de dúvida, contacte o serviço de apoio…
-        </div>
-        <div className="rv-mail-pdf">
-          <div className="rv-mail-pdf-icon">PDF</div>
-          <div className="rv-mail-pdf-meta">
-            <div className="rv-mail-pdf-name">Synlab_Maria_Antunes_22Abr.pdf</div>
-            <div className="rv-mail-pdf-size">432 KB · 14 marcadores</div>
-          </div>
-          {Icon.share}
-        </div>
-      </div>
-      <div className="rv-share-bg"/>
+    <div className="rv-screen">
+      <StatusBar />
+      <header className="rv-header">
+        <button className="rv-header-btn" onClick={() => go("data")} aria-label={L("Voltar","Back")}>{Icon.back}</button>
+        <div className="rv-header-title">{L("Carregar análise","Upload lab result")}</div>
+        <div style={{width: 36}}/>
+      </header>
 
-      <div className="rv-share-toast">
-        <span className="rv-share-toast-mark">V</span>
-        Vivara sugerida · análise reconhecida
-      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/pdf,.pdf"
+        style={{display: "none"}}
+        onChange={onPick}
+      />
 
-      <div className="rv-share-sheet">
-        <div className="rv-share-handle"/>
-        <div className="rv-share-doc">
-          <div className="rv-share-doc-icon">PDF</div>
-          <div className="rv-share-doc-meta">
-            <div className="rv-share-doc-name">Synlab_Maria_Antunes_22Abr.pdf</div>
-            <div className="rv-share-doc-info">432 KB · do Mail</div>
-          </div>
-          <div style={{color: "rgba(255,255,255,0.5)"}}>{Icon.copy}</div>
-        </div>
+      <div className="rv-body">
+        {step === "pick" && (
+          <>
+            <button type="button" className="rv-up-drop" onClick={() => fileRef.current?.click()}>
+              <span className="rv-up-drop-icon">{Icon.upload}</span>
+              <span className="rv-up-drop-title">{L("Escolher PDF da análise","Choose lab result PDF")}</span>
+              <span className="rv-up-drop-sub">{L("dos Ficheiros, Mail ou Drive","from Files, Mail or Drive")}</span>
+            </button>
 
-        <div className="rv-share-apps">
-          <div className="rv-share-app" data-suggested="true" onClick={() => setImported(true)} style={{cursor: "pointer"}}>
-            <div className="rv-share-app-tile" data-app="vivara">V</div>
-            <div className="rv-share-app-name">Vivara</div>
-          </div>
-          <div className="rv-share-app">
-            <div className="rv-share-app-tile" data-app="files">📁</div>
-            <div className="rv-share-app-name">Ficheiros</div>
-          </div>
-          <div className="rv-share-app">
-            <div className="rv-share-app-tile" data-app="drive">D</div>
-            <div className="rv-share-app-name">Drive</div>
-          </div>
-          <div className="rv-share-app">
-            <div className="rv-share-app-tile" data-app="notes">📝</div>
-            <div className="rv-share-app-name">Notas</div>
-          </div>
-          <div className="rv-share-app">
-            <div className="rv-share-app-tile" data-app="airdrop">
-              <svg width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="11" stroke="#fff" strokeWidth="1.4" fill="none"/><path d="M14 8 L14 18 M9 13 L14 8 L19 13" stroke="#fff" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <div className="rv-up-privacy">
+              <div className="rv-up-privacy-head">
+                <span className="rv-up-privacy-icon">{Icon.shield}</span>
+                {L("O ficheiro não sai do seu telemóvel","The file never leaves your phone")}
+              </div>
+              <p>
+                {L("O PDF é lido aqui, dentro da app. Os valores ficam guardados neste telemóvel e não são enviados para nenhum servidor. Se apagar a app ou os dados do navegador, desaparecem.",
+                   "The PDF is read here, inside the app. The values are stored on this phone and are not sent to any server. If you delete the app or your browser data, they are gone.")}
+              </p>
             </div>
-            <div className="rv-share-app-name">AirDrop</div>
-          </div>
-          <div className="rv-share-app">
-            <div className="rv-share-app-tile" data-app="msg">💬</div>
-            <div className="rv-share-app-name">Mensagens</div>
-          </div>
-          <div className="rv-share-app">
-            <div className="rv-share-app-tile" data-app="mail">✉</div>
-            <div className="rv-share-app-name">Mail</div>
-          </div>
-          <div className="rv-share-app">
-            <div className="rv-share-app-tile" data-app="more">···</div>
-            <div className="rv-share-app-name">Mais</div>
-          </div>
-        </div>
 
-        <div className="rv-share-actions">
-          <div className="rv-share-action"><span>Copiar</span><span className="rv-share-action-icon">{Icon.copy}</span></div>
-          <div className="rv-share-action"><span>Guardar em Ficheiros</span><span className="rv-share-action-icon">📁</span></div>
-          <div className="rv-share-action" style={{color: "var(--lime)", cursor: "pointer"}} onClick={() => setImported(true)}>
-            <span style={{fontWeight: 600}}>Guardar em Vivara</span>
-            <span style={{color: "var(--lime)"}}>V</span>
-          </div>
-          <div className="rv-share-action" style={{color: "var(--fg-70)", cursor: "pointer"}} onClick={() => go("home")}>
-            <span>Cancelar</span>
-            <span/>
-          </div>
-        </div>
-      </div>
+            <div className="rv-up-note">
+              {L("Funciona com os PDFs que os laboratórios enviam por email. Fotografias de folhas em papel não são lidas.",
+                 "Works with the PDFs labs send by email. Photos of printed sheets can't be read.")}
+            </div>
+          </>
+        )}
 
-      {imported && (
-        <div className="rv-import-overlay">
-          <div className="rv-import-card">
+        {step === "reading" && (
+          <div className="rv-up-center">
+            <div className="rv-up-spinner"/>
+            <div className="rv-up-center-title">{L("A ler o documento…","Reading the document…")}</div>
+            <div className="rv-up-center-sub">{file?.name}</div>
+          </div>
+        )}
+
+        {step === "error" && (
+          <div className="rv-up-center">
+            <div className="rv-up-center-title">
+              {errorKind === "notext"
+                ? L("Este PDF não tem texto","This PDF has no text")
+                : errorKind === "novalues"
+                ? L("Não reconheci parâmetros","No parameters recognised")
+                : L("Não consegui ler o ficheiro","Couldn't read the file")}
+            </div>
+            <div className="rv-up-center-sub">
+              {errorKind === "notext"
+                ? L("Parece ser uma imagem digitalizada. Peça ao laboratório o PDF original, que costuma vir por email.",
+                    "It looks like a scan. Ask the lab for the original PDF, usually sent by email.")
+                : errorKind === "novalues"
+                ? L("O documento foi lido mas não encontrei parâmetros que reconheça. Pode ser um relatório de outro tipo de exame.",
+                    "The document was read but no recognisable parameters were found. It may be a different kind of report.")
+                : L("O ficheiro pode estar protegido por palavra-passe ou danificado.",
+                    "The file may be password-protected or damaged.")}
+            </div>
+            <button className="rv-cta-primary" style={{marginTop: 18}} onClick={() => { setStep("pick"); setFile(null); }}>
+              {L("Escolher outro ficheiro","Choose another file")}
+            </button>
+          </div>
+        )}
+
+        {step === "review" && doc && (
+          <>
+            <div className="rv-doc-meta">
+              <div className="rv-doc-file">
+                <span className="rv-doc-file-icon">{ORIGIN_ICON.upload}</span>
+                <span className="rv-doc-file-name">{file?.name}</span>
+              </div>
+              <div className="rv-doc-file-sub">
+                {doc.lab ?? L("Laboratório não identificado","Lab not identified")} · {doc.pages} {L("pág.","pages")}
+                {doc.collectedISO ? ` · ${L("colheita","sample")} ${fmtDay(doc.collectedISO, lang, true)}` : ""}
+              </div>
+            </div>
+
+            <div className="rv-up-summary">
+              <strong>{values.length}</strong> {L("parâmetros reconhecidos","parameters recognised")}
+              <span>{L("Confirme antes de guardar. Toque para excluir um valor.","Check before saving. Tap to exclude a value.")}</span>
+            </div>
+
+            <div className="rv-doc-rows">
+              {values.map((v, i) => (
+                <button key={i} type="button" className="rv-up-row" data-off={!v.keep || undefined} onClick={() => toggle(i)}>
+                  <span className="rv-up-check" data-on={v.keep || undefined}>{v.keep ? "✓" : ""}</span>
+                  <span className="rv-up-row-body">
+                    <span className="rv-up-row-name">{v.marker}</span>
+                    <span className="rv-up-row-raw">{v.label}</span>
+                  </span>
+                  <span className="rv-up-row-vals">
+                    <span className="rv-doc-row-val">{v.value}<span className="rv-doc-row-unit">{v.unit}</span></span>
+                    {v.ref && <span className="rv-doc-row-ref">ref {v.ref}</span>}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="rv-q-actions" style={{margin: "0 20px"}}>
+              <button className="rv-cta-ghost" onClick={() => { setStep("pick"); setFile(null); }}>{L("Cancelar","Cancel")}</button>
+              <button className="rv-cta-primary" disabled={keptCount === 0} onClick={save}>
+                {L(`Guardar ${keptCount}`, `Save ${keptCount}`)}
+              </button>
+            </div>
+            <div className="rv-doc-foot" style={{marginTop: 14}}>
+              {L("Fica guardado neste telemóvel. A equipa clínica só vê depois de confirmar a partilha.",
+                 "Stored on this phone. Your clinical team only sees it after you confirm sharing.")}
+            </div>
+          </>
+        )}
+
+        {step === "saved" && (
+          <div className="rv-up-center">
             <div className="rv-import-mark">
               <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="var(--lime)"/><path d="M9 16 L14 21 L23 11" stroke="#0b0d0f" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
-            <div className="rv-import-title">Análise importada</div>
-            <div className="rv-import-sub">14 marcadores extraídos do PDF Synlab.<br/>A tua equipa clínica foi notificada.</div>
-            <div className="rv-import-meta">
-              <span>Synlab·22abr</span>
-              <span>432 KB</span>
-              <span>14 valores</span>
+            <div className="rv-up-center-title">{L("Análise guardada","Lab result saved")}</div>
+            <div className="rv-up-center-sub">
+              {L(`${keptCount} valores guardados neste telemóvel.`, `${keptCount} values stored on this phone.`)}
             </div>
-            <button className="rv-import-btn" onClick={() => go("data")}>Ver dados</button>
-            <button className="rv-import-btn rv-import-btn--ghost" onClick={() => go("home")}>Voltar ao início</button>
+            <div style={{display: "flex", gap: 8, marginTop: 20, width: "100%", padding: "0 20px"}}>
+              <button className="rv-cta-ghost" style={{flex: 1, margin: 0}} onClick={() => go("registos")}>{L("Ver registos","See records")}</button>
+              <button className="rv-cta-primary" style={{flex: 1, margin: 0}}
+                onClick={() => savedId && go({ route: "documento", docId: savedId })}>
+                {L("Abrir","Open")}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        <div style={{height: 90}}/>
+      </div>
     </div>
   );
 }
