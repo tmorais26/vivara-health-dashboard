@@ -343,9 +343,10 @@ function WhoopHomeCard({ status }: { status: WhoopStatus | null }) {
         </div>
         <span className="rv-chev">{Icon.chev}</span>
       </div>
+      {/* Só métricas fixas da manhã: são todas comparáveis entre si e estáveis
+          ao longo do dia. O strain acumula e vive no cartão de Dispositivos. */}
       <div className="rv-whoop-metrics">
         <WhoopMetric label={L("Recuperação","Recovery")} value={m.recovery} unit="%" />
-        <WhoopMetric label="Strain" value={m.strain} />
         <WhoopMetric label="HRV" value={m.hrv} unit="ms" />
         <WhoopMetric label={L("FC repouso","Resting HR")} value={m.restingHr} unit="bpm" />
         <WhoopMetric label={L("Sono","Sleep")} value={m.sleepHours} unit="h" />
@@ -2220,11 +2221,20 @@ function WhoopCard() {
         <>
           <div className="rv-whoop-metrics">
             <WhoopMetric label={L("Recuperação","Recovery")} value={m?.recovery ?? null} unit="%" />
-            <WhoopMetric label="Strain" value={m?.strain ?? null} />
             <WhoopMetric label="HRV" value={m?.hrv ?? null} unit="ms" />
             <WhoopMetric label={L("FC repouso","Resting HR")} value={m?.restingHr ?? null} unit="bpm" />
             <WhoopMetric label={L("Sono","Sleep")} value={m?.sleepHours ?? null} unit="h" />
           </div>
+          {m?.strain != null && (
+            <div className="rv-strain">
+              <div className="rv-strain-head">
+                <span className="rv-strain-label">{L("Strain de hoje","Today's strain")}</span>
+                <span className="rv-strain-val">{m.strain}<span className="rv-strain-max"> / 21</span></span>
+              </div>
+              <div className="rv-strain-bar"><div className="rv-strain-fill" style={{width: `${Math.min(100, (m.strain / 21) * 100)}%`}}/></div>
+              <div className="rv-strain-note">{L("Acumula ao longo do dia — de manhã começa perto de zero.","Accumulates through the day — starts near zero each morning.")}</div>
+            </div>
+          )}
           {status?.error && <div className="rv-whoop-note">{L("Sem dados recentes do Whoop.","No recent Whoop data.")}</div>}
           <div className="rv-whoop-actions">
             <button className="rv-device-btn" disabled={busy} onClick={refresh}>{L("Sincronizar","Sync")}</button>

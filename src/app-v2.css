@@ -1373,8 +1373,16 @@ button.rv-whoop-home{
 .rv-whoop-name{font-size:15px;font-weight:600;color:var(--fg);letter-spacing:-0.01em;}
 .rv-whoop-sub{font-size:11.5px;color:var(--fg-50);margin-top:1px;}
 .rv-whoop-metrics{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;
 }
+.rv-strain{margin-top:12px;background:rgba(255,255,255,0.05);border-radius:12px;padding:11px 12px;}
+.rv-strain-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+.rv-strain-label{font-size:9.5px;color:var(--fg-50);text-transform:uppercase;letter-spacing:0.04em;}
+.rv-strain-val{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;letter-spacing:-0.02em;}
+.rv-strain-max{font-size:10px;color:var(--fg-50);font-weight:500;}
+.rv-strain-bar{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
+.rv-strain-fill{height:100%;background:var(--violet);border-radius:2px;transition:width .6s cubic-bezier(0.2,0.8,0.2,1);}
+.rv-strain-note{font-size:10px;color:var(--fg-30);margin-top:6px;line-height:1.35;}
 .rv-whoop-metric{
   background:rgba(255,255,255,0.05);border-radius:12px;padding:9px 6px;text-align:center;
 }
