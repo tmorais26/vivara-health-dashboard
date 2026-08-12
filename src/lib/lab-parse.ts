@@ -17,6 +17,7 @@ export interface ParsedValue {
   unit: string;
   ref: string;
   keep: boolean;
+  suspect: boolean; // valor fora do fisicamente possível — pede confirmação
 }
 
 export interface ExtractedDoc {
@@ -30,8 +31,17 @@ export interface ExtractedDoc {
 // é conservadora de propósito: um falso positivo aqui grava um valor errado no
 // historial, portanto quando há dúvida prefere-se não reconhecer e deixar a
 // linha para revisão manual.
-const MARKER_ALIASES: { marker: string; aliases: string[] }[] = [
-  { marker: "Estradiol",         aliases: ["estradiol", "estradiol (e2)", "17-beta-estradiol", "17 beta estradiol", "e2"] },
+// `units` é a defesa contra confusões de nome. "Hemoglobina A1c 5,7 %" seria
+// apanhado pelo alias "hemoglobina" — sobretudo quando o OCR lê "A1c" como
+// "Alc" e o alias longo falha — e gravava 5,7 como hemoglobina, além de
+// ocupar o lugar da hemoglobina verdadeira. Como a hemoglobina vem em g/dL e
+// nunca em %, a unidade desmente o nome e o candidato é descartado.
+// `plaus` são limites de plausibilidade física, não julgamento clínico: servem
+// para apanhar o erro de OCR que come o separador decimal — "5,7" lido como
+// "57" num HbA1c é 10× e nenhuma regra de nomes o deteta. O valor não é
+// rejeitado, é marcado para confirmação no ecrã de revisão.
+const MARKER_ALIASES: { marker: string; aliases: string[]; units?: string[]; plaus?: [number, number] }[] = [
+  { marker: "Estradiol",         aliases: ["estradiol", "estradiol (e2)", "17-beta-estradiol", "17 beta estradiol", "e2"], units: ["pg/mL"], plaus: [1,3000] },
   { marker: "FSH",               aliases: ["fsh", "hormona folículo estimulante", "hormona foliculo estimulante"] },
   { marker: "LH",                aliases: ["lh", "hormona luteinizante"] },
   { marker: "Progesterona",      aliases: ["progesterona"] },
@@ -39,61 +49,63 @@ const MARKER_ALIASES: { marker: string; aliases: string[] }[] = [
   { marker: "SHBG",              aliases: ["shbg", "globulina de ligacao"] },
   { marker: "DHEA-S",            aliases: ["dhea-s", "dhea s", "sulfato de dheas", "dheas"] },
   { marker: "Cortisol matinal",  aliases: ["cortisol matinal", "cortisol"] },
-  { marker: "Prolactina",        aliases: ["prolactina"] },
+  { marker: "Prolactina",        aliases: ["prolactina"], units: ["ng/mL"] },
   { marker: "AMH",               aliases: ["amh", "hormona anti-mulleriana", "hormona anti mulleriana"] },
-  { marker: "ApoB",              aliases: ["apolipoproteina b", "apolipoproteína b", "apo b", "apob"] },
-  { marker: "Apo A1",            aliases: ["apolipoproteina a1", "apolipoproteína a1", "apo a1", "apoa1"] },
-  { marker: "LDL-C",             aliases: ["colesterol ldl", "ldl colesterol", "c-ldl", "ldl-c", "ldl"] },
-  { marker: "HDL-C",             aliases: ["colesterol hdl", "hdl colesterol", "c-hdl", "hdl-c", "hdl"] },
-  { marker: "Colesterol total",  aliases: ["colesterol total", "colesterol, total"] },
-  { marker: "Triglicéridos",     aliases: ["triglicerideos", "triglicéridos", "trigliceridos", "triglicerides"] },
+  { marker: "ApoB",              aliases: ["apolipoproteina b", "apolipoproteína b", "apo b", "apob"], units: ["mg/dL"], plaus: [20,300] },
+  { marker: "Apo A1",            aliases: ["apolipoproteina a1", "apolipoproteína a1", "apo a1", "apoa1"], units: ["mg/dL"] },
+  { marker: "LDL-C",             aliases: ["colesterol ldl", "ldl colesterol", "c-ldl", "ldl-c", "ldl"], units: ["mg/dL"], plaus: [10,400] },
+  { marker: "HDL-C",             aliases: ["colesterol hdl", "hdl colesterol", "c-hdl", "hdl-c", "hdl"], units: ["mg/dL"], plaus: [10,150] },
+  { marker: "Colesterol total",  aliases: ["colesterol total", "colesterol, total"], units: ["mg/dL"], plaus: [50,500] },
+  { marker: "Triglicéridos",     aliases: ["triglicerideos", "triglicéridos", "trigliceridos", "triglicerides"], units: ["mg/dL"], plaus: [20,2000] },
   { marker: "Lp(a)",             aliases: ["lipoproteina (a)", "lipoproteína (a)", "lp(a)", "lpa"] },
-  { marker: "HbA1c",             aliases: ["hemoglobina a1c", "hemoglobina glicada", "hemoglobina glicosilada", "hba1c", "a1c"] },
-  { marker: "Glicose",           aliases: ["glicose jejum", "glicose em jejum", "glicemia jejum", "glicose", "glicemia"] },
-  { marker: "Insulina",          aliases: ["insulina"] },
+  // "alc"/"hbalc" são o 1 lido como l pelo OCR. Só são seguros porque a
+  // unidade (%) desmente qualquer confusão com a hemoglobina, em g/dL.
+  { marker: "HbA1c",             aliases: ["hemoglobina a1c", "hemoglobina alc", "hemoglobina glicada", "hemoglobina glicosilada", "hba1c", "hbalc", "a1c"], units: ["%"], plaus: [3,20] },
+  { marker: "Glicose",           aliases: ["glicose jejum", "glicose em jejum", "glicemia jejum", "glicose", "glicemia"], units: ["mg/dL"], plaus: [20,800] },
+  { marker: "Insulina",          aliases: ["insulina"], units: ["µU/mL","uU/mL"], plaus: [0.5,300] },
   { marker: "HOMA-IR",           aliases: ["homa-ir", "homa ir", "indice homa", "índice homa"] },
   { marker: "Peptídeo C",        aliases: ["peptideo c", "peptídeo c", "peptido c"] },
-  { marker: "TSH",               aliases: ["tsh", "tirotropina"] },
-  { marker: "T4 livre",          aliases: ["t4 livre", "tiroxina livre", "ft4"] },
-  { marker: "T3 livre",          aliases: ["t3 livre", "triiodotironina livre", "ft3"] },
+  { marker: "TSH",               aliases: ["tsh", "tirotropina"], units: ["mUI/L","mU/L","mU/mL","µU/mL","uU/mL"], plaus: [0.01,100] },
+  { marker: "T4 livre",          aliases: ["t4 livre", "tiroxina livre", "ft4"], plaus: [0.1,8] },
+  { marker: "T3 livre",          aliases: ["t3 livre", "triiodotironina livre", "ft3"], plaus: [0.5,20] },
   { marker: "Anti-TPO",          aliases: ["anti-tpo", "anti tpo", "anticorpos anti-peroxidase"] },
-  { marker: "PCR-us",            aliases: ["pcr ultrassensivel", "pcr ultra-sensivel", "proteina c reactiva ultrassensivel", "pcr us", "pcr-as", "proteina c reactiva", "proteína c reativa"] },
-  { marker: "Homocisteína",      aliases: ["homocisteina", "homocisteína"] },
+  { marker: "PCR-us",            aliases: ["pcr ultrassensivel", "pcr ultra-sensivel", "proteina c reactiva ultrassensivel", "pcr us", "pcr-as", "proteina c reactiva", "proteína c reativa"], units: ["mg/L"], plaus: [0.01,300] },
+  { marker: "Homocisteína",      aliases: ["homocisteina", "homocisteína"], units: ["µmol/L","umol/L"], plaus: [1,100] },
   { marker: "Fibrinogénio",      aliases: ["fibrinogenio", "fibrinogénio"] },
-  { marker: "Ácido úrico",       aliases: ["acido urico", "ácido úrico"] },
-  { marker: "Vitamina D",        aliases: ["25-oh vitamina d", "25 oh vitamina d", "vitamina d 25 oh", "25-hidroxivitamina d", "vitamina d3", "vitamina d"] },
-  { marker: "Vitamina B12",      aliases: ["vitamina b12", "cobalamina", "b12"] },
+  { marker: "Ácido úrico",       aliases: ["acido urico", "ácido úrico"], units: ["mg/dL"], plaus: [1,20] },
+  { marker: "Vitamina D",        aliases: ["25-oh vitamina d", "25 oh vitamina d", "vitamina d 25 oh", "25-hidroxivitamina d", "vitamina d3", "vitamina d"], units: ["ng/mL"], plaus: [1,200] },
+  { marker: "Vitamina B12",      aliases: ["vitamina b12", "cobalamina", "b12"], units: ["pg/mL"] },
   { marker: "Folato",            aliases: ["folato", "acido folico", "ácido fólico"] },
-  { marker: "Ferritina",         aliases: ["ferritina"] },
+  { marker: "Ferritina",         aliases: ["ferritina"], units: ["ng/mL"], plaus: [1,3000] },
   { marker: "Ferro sérico",      aliases: ["ferro serico", "ferro sérico", "ferro"] },
   { marker: "Transferrina",      aliases: ["transferrina"] },
-  { marker: "Magnésio",          aliases: ["magnesio", "magnésio"] },
+  { marker: "Magnésio",          aliases: ["magnesio", "magnésio"], units: ["mg/dL"], plaus: [0.5,5] },
   { marker: "Zinco",             aliases: ["zinco"] },
   { marker: "Selénio",           aliases: ["selenio", "selénio"] },
-  { marker: "Cálcio",            aliases: ["calcio", "cálcio"] },
+  { marker: "Cálcio",            aliases: ["calcio", "cálcio"], units: ["mg/dL"], plaus: [5,15] },
   { marker: "PTH",               aliases: ["pth", "paratormona"] },
-  { marker: "Fósforo",           aliases: ["fosforo", "fósforo"] },
-  { marker: "ALT",               aliases: ["alt", "tgp", "alanina aminotransferase"] },
-  { marker: "AST",               aliases: ["ast", "tgo", "aspartato aminotransferase"] },
-  { marker: "GGT",               aliases: ["ggt", "gama gt", "gama-gt"] },
-  { marker: "Fosfatase alcalina", aliases: ["fosfatase alcalina"] },
-  { marker: "Bilirrubina total", aliases: ["bilirrubina total"] },
-  { marker: "Albumina",          aliases: ["albumina"] },
-  { marker: "Proteína total",    aliases: ["proteinas totais", "proteína total", "proteinas total"] },
-  { marker: "Creatinina",        aliases: ["creatinina"] },
+  { marker: "Fósforo",           aliases: ["fosforo", "fósforo"], units: ["mg/dL"], plaus: [1,10] },
+  { marker: "ALT",               aliases: ["alt", "tgp", "alanina aminotransferase"], units: ["U/L"] },
+  { marker: "AST",               aliases: ["ast", "tgo", "aspartato aminotransferase"], units: ["U/L"] },
+  { marker: "GGT",               aliases: ["ggt", "gama gt", "gama-gt"], units: ["U/L"] },
+  { marker: "Fosfatase alcalina", aliases: ["fosfatase alcalina"], units: ["U/L"] },
+  { marker: "Bilirrubina total", aliases: ["bilirrubina total"], units: ["mg/dL"], plaus: [0.05,20] },
+  { marker: "Albumina",          aliases: ["albumina"], units: ["g/dL"], plaus: [1,7] },
+  { marker: "Proteína total",    aliases: ["proteinas totais", "proteína total", "proteinas total"], units: ["g/dL"], plaus: [3,12] },
+  { marker: "Creatinina",        aliases: ["creatinina"], units: ["mg/dL"], plaus: [0.1,15] },
   { marker: "TFG estimada",      aliases: ["tfg", "taxa de filtracao glomerular", "egfr"] },
-  { marker: "Ureia",             aliases: ["ureia"] },
+  { marker: "Ureia",             aliases: ["ureia"], units: ["mg/dL"] },
   { marker: "Cistatina C",       aliases: ["cistatina c"] },
-  { marker: "Hemoglobina",       aliases: ["hemoglobina"] },
-  { marker: "Hematócrito",       aliases: ["hematocrito", "hematócrito"] },
+  { marker: "Hemoglobina",       aliases: ["hemoglobina"], units: ["g/dL"], plaus: [3,25] },
+  { marker: "Hematócrito",       aliases: ["hematocrito", "hematócrito"], units: ["%"], plaus: [10,65] },
   { marker: "Eritrócitos",       aliases: ["eritrocitos", "eritrócitos", "globulos vermelhos"] },
   { marker: "VGM",               aliases: ["vgm", "volume globular medio"] },
   { marker: "HGM",               aliases: ["hgm", "hemoglobina globular media"] },
   { marker: "RDW",               aliases: ["rdw"] },
-  { marker: "Leucócitos",        aliases: ["leucocitos", "leucócitos", "globulos brancos"] },
+  { marker: "Leucócitos",        aliases: ["leucocitos", "leucócitos", "globulos brancos"], units: ["10^9/L","10^3/µL","10*9/L"] },
   { marker: "Neutrófilos",       aliases: ["neutrofilos", "neutrófilos"] },
   { marker: "Linfócitos",        aliases: ["linfocitos", "linfócitos"] },
-  { marker: "Plaquetas",         aliases: ["plaquetas"] },
+  { marker: "Plaquetas",         aliases: ["plaquetas"], units: ["10^9/L","10^3/µL","10*9/L"] },
   { marker: "Eosinófilos",       aliases: ["eosinofilos", "eosinófilos"] },
 ];
 
@@ -104,7 +116,10 @@ export const norm = (s: string) =>
 
 // Unidades aceites. Serve para não confundir o número do valor com números que
 // aparecem noutras colunas (datas, códigos de exame, intervalos).
-const UNIT_RE = /(mg\/dL|g\/dL|µg\/dL|ug\/dL|ng\/mL|pg\/mL|µU\/mL|uU\/mL|mUI\/mL|mUI\/L|UI\/mL|U\/L|µmol\/L|umol\/L|mmol\/L|nmol\/L|mg\/L|µg\/L|ug\/L|ng\/dL|10\^?[369]\/L|10\^?12\/L|mL\/min[^\s]*|fL|pg|%|mm\/h|mg\/g)/i;
+// A lookbehind impede que "U/L" seja apanhado dentro de "mU/L": sem ela, um
+// TSH lido pelo OCR como "mU/L" ficava com unidade "U/L", incompatível com o
+// marcador, e o valor era descartado por engano.
+const UNIT_RE = /(?<![A-Za-zµ])(mU\/mL|mU\/L|mg\/dL|g\/dL|µg\/dL|ug\/dL|ng\/mL|pg\/mL|µU\/mL|uU\/mL|mUI\/mL|mUI\/L|UI\/mL|U\/L|µmol\/L|umol\/L|mmol\/L|nmol\/L|mg\/L|µg\/L|ug\/L|ng\/dL|10\^?[369]\/L|10\^?12\/L|mL\/min[^\s]*|fL|pg|%|mm\/h|mg\/g)/i;
 
 function parseNumber(tok: string): string | null {
   // Aceita "5.7" e "5,7"; rejeita anos e códigos longos.
@@ -128,44 +143,91 @@ export function parseLine(line: string): ParsedValue | null {
   if (clean.length < 4) return null;
   const n = norm(clean);
 
-  // Escolhe o alias mais longo que apareça no início da linha, para
-  // "colesterol total" não ser capturado por "colesterol".
-  let best: { marker: string; alias: string } | null = null;
+  // Escolhe o alias mais longo que abra a linha, para "colesterol total" não
+  // ser capturado por "colesterol".
+  //
+  // Alguns laboratórios (Joaquim Chaves, entre outros) imprimem um código de
+  // exame antes do nome — "B12.4 Glicose 98 mg/dL". Aceitam-se esses códigos
+  // antes do nome, mas só se cada palavra do prefixo tiver algum dígito: assim
+  // "B12.4 " passa e "Rácio Colesterol / " não, evitando apanhar um nome de
+  // parâmetro que na verdade faz parte do nome de outro.
+  const prefixIsCode = (prefix: string) =>
+    prefix.trim() === "" ||
+    (prefix.length <= 14 && prefix.trim().split(/\s+/).every((tok) => /\d/.test(tok)));
+
+  // O alias tem de acabar em fronteira de palavra. Sem isto, o código de exame
+  // "B12.4" seria lido como o marcador "B12" e o 98 da glicose entrava no
+  // historial como vitamina B12.
+  const endsAtBoundary = (idx: number, alias: string) => {
+    const after = n[idx + alias.length];
+    return after === undefined || /[\s:;)\]]/.test(after);
+  };
+
+  // Todos os candidatos, do alias mais longo para o mais curto. Testam-se por
+  // ordem e fica o primeiro que produza um valor com unidade compatível — em
+  // vez de eleger um vencedor à partida e desistir se ele não servir.
+  const candidates: { marker: string; alias: string; at: number; units?: string[]; plaus?: [number, number] }[] = [];
   for (const entry of MARKER_ALIASES) {
     for (const alias of entry.aliases) {
       const idx = n.indexOf(alias);
-      // O nome do parâmetro está no início da linha, não perdido no meio.
-      if (idx !== 0) continue;
-      if (!best || alias.length > best.alias.length) best = { marker: entry.marker, alias };
+      if (idx < 0) continue;
+      if (!prefixIsCode(n.slice(0, idx))) continue;
+      if (!endsAtBoundary(idx, alias)) continue;
+  candidates.push({ marker: entry.marker, alias, at: idx, units: entry.units, plaus: entry.plaus });
     }
   }
-  if (!best) return null;
+  if (candidates.length === 0) return null;
+  candidates.sort((a, b) => b.alias.length - a.alias.length);
 
-  const rest = clean.slice(best.alias.length);
-  const tokens = rest.split(/\s+/).filter(Boolean);
+  // Se um alias é apenas o começo de outro mais longo que também encaixou no
+  // mesmo sítio, o documento está a falar do parâmetro de nome longo. Descarta-
+  // -se o curto em vez de o guardar como alternativa: numa linha "Hemoglobina
+  // A1c", "Hemoglobina" não é uma segunda hipótese — é metade de outro nome.
+  const truncated = candidates.filter((c) =>
+    candidates.some(
+      (o) => o.marker !== c.marker && o.at === c.at && o.alias.length > c.alias.length && o.alias.startsWith(c.alias),
+    ),
+  );
+  const viable = candidates.filter((c) => !truncated.includes(c));
+  if (viable.length === 0) return null;
 
-  let value: string | null = null;
-  let valueIdx = -1;
-  for (let i = 0; i < tokens.length; i++) {
-    const num = parseNumber(tokens[i]);
-    if (num != null) { value = num; valueIdx = i; break; }
+  const unitKey = (u: string) => u.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  for (const cand of viable) {
+    const rest = clean.slice(cand.at + cand.alias.length);
+    const tokens = rest.split(/\s+/).filter(Boolean);
+
+    let value: string | null = null;
+    let valueIdx = -1;
+    for (let i = 0; i < tokens.length; i++) {
+      const num = parseNumber(tokens[i]);
+      if (num != null) { value = num; valueIdx = i; break; }
+    }
+    if (value == null) continue;
+
+    const after = tokens.slice(valueIdx + 1).join(" ");
+    const unitMatch = after.match(UNIT_RE);
+    const unit = unitMatch ? unitMatch[1] : "";
+
+    // Unidade presente e incompatível com o marcador: o nome enganou-se.
+    // Passa-se ao candidato seguinte em vez de gravar o valor no sítio errado.
+    if (unit && cand.units && !cand.units.some((u) => unitKey(u) === unitKey(unit))) continue;
+
+    const ref = extractRef(unit ? after.slice(after.indexOf(unit) + unit.length) : after);
+    const num = Number(value);
+    const suspect = !!cand.plaus && (num < cand.plaus[0] || num > cand.plaus[1]);
+    return {
+      marker: cand.marker,
+      label: clean.slice(cand.at, cand.at + cand.alias.length).trim(),
+      raw: line.trim(),
+      value,
+      unit,
+      ref,
+      keep: true,
+      suspect,
+    };
   }
-  if (value == null) return null;
-
-  const after = tokens.slice(valueIdx + 1).join(" ");
-  const unitMatch = after.match(UNIT_RE);
-  const unit = unitMatch ? unitMatch[1] : "";
-  const ref = extractRef(unit ? after.slice(after.indexOf(unit) + unit.length) : after);
-
-  return {
-    marker: best.marker,
-    label: clean.slice(0, best.alias.length).trim(),
-    raw: line.trim(),
-    value,
-    unit,
-    ref,
-    keep: true,
-  };
+  return null;
 }
 
 export function parseValues(lines: string[]): ParsedValue[] {
@@ -181,6 +243,13 @@ export function parseValues(lines: string[]): ParsedValue[] {
     out.push(v);
   }
   return out;
+}
+
+// Laboratório e data de colheita, a partir das primeiras linhas. Exposto
+// separadamente porque o texto pode vir do PDF ou do OCR de uma imagem, e a
+// detecção é a mesma nos dois casos.
+export function detectFromLines(lines: string[]): { lab: string | null; collectedISO: string | null } {
+  return { lab: detectLab(lines), collectedISO: detectDate(lines) };
 }
 
 function detectLab(lines: string[]): string | null {

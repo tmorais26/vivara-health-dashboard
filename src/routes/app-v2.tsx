@@ -5,7 +5,7 @@ import { askAssistente } from "@/lib/assistente.functions";
 import { whoopAuthUrl, whoopExchange, whoopStatus, whoopDisconnect, type WhoopStatus } from "@/lib/whoop.server";
 import { translate, LANG_STORAGE_KEY, type Lang } from "@/lib/app-v2-i18n";
 import type { ExtractedDoc, ParsedValue } from "@/lib/lab-parse";
-import type { StoredUpload } from "@/lib/uploads.store";
+import type { StoredUpload, UploadKind } from "@/lib/uploads.store";
 import "../app-v2.css";
 
 export const Route = createFileRoute("/app-v2")({
@@ -1915,46 +1915,87 @@ function DocumentoScreen({ docId }: { docId?: string }) {
   );
 }
 
-// ─── Upload / Share Sheet ────────────────────────────
 // ─── Carregar análise (leitura no dispositivo) ───────
-// O ficheiro é lido aqui no browser: pdf.js extrai o texto, o parser reconhece
-// os parâmetros e o resultado fica no localStorage/IndexedDB deste telemóvel.
-// Não há upload — nenhum byte do PDF sai do dispositivo.
+// Três caminhos, todos no browser:
+//   PDF com texto  → pdf.js extrai o texto (exacto)
+//   PDF de scan    → páginas desenhadas em canvas e lidas por OCR
+//   Imagem/foto    → OCR directo
+// Nenhum deles envia o ficheiro para lado nenhum.
 type UploadStep = "pick" | "reading" | "review" | "saved" | "error";
+type UploadErr = "notext" | "novalues" | "failed";
 
 function ShareUploadScreen() {
   const { go, showToast } = useNav();
   const { L, lang } = useLang();
   const fileRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<UploadStep>("pick");
-  const [errorKind, setErrorKind] = useState<"notext" | "novalues" | "failed">("failed");
+  const [errorKind, setErrorKind] = useState<UploadErr>("failed");
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [doc, setDoc] = useState<ExtractedDoc | null>(null);
+  const [kind, setKind] = useState<UploadKind>("pdf-text");
   const [values, setValues] = useState<ParsedValue[]>([]);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [phase, setPhase] = useState("");
+  const [pct, setPct] = useState<number | null>(null);
+
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     e.target.value = ""; // permite escolher o mesmo ficheiro outra vez
     if (!f) return;
     setFile(f);
+    setPreview((prev) => { if (prev) URL.revokeObjectURL(prev); return f.type.startsWith("image/") ? URL.createObjectURL(f) : null; });
     setStep("reading");
+    setPct(null);
+
     try {
-      const { extractFromPdf, parseValues } = await import("@/lib/lab-parse");
-      const extracted = await extractFromPdf(f);
-      if (extracted.lines.length === 0) {
+      const { parseValues } = await import("@/lib/lab-parse");
+      const isImage = f.type.startsWith("image/");
+      let lines: string[] = [];
+      let pages = 1;
+      let usedKind: UploadKind = "image";
+
+      if (isImage) {
+        setPhase(L("A ler a imagem…", "Reading the image…"));
+        const { ocrImageFile } = await import("@/lib/lab-ocr");
+        lines = await ocrImageFile(f, setPct);
+      } else {
+        setPhase(L("A abrir o PDF…", "Opening the PDF…"));
+        const { extractFromPdf } = await import("@/lib/lab-parse");
+        const extracted = await extractFromPdf(f);
+        pages = extracted.pages;
+        if (extracted.lines.length > 0) {
+          lines = extracted.lines;
+          usedKind = "pdf-text";
+        } else {
+          // PDF sem camada de texto: é uma digitalização, lê-se por OCR.
+          setPhase(L("PDF digitalizado — a reconhecer o texto…", "Scanned PDF — recognising text…"));
+          const { ocrScannedPdf } = await import("@/lib/lab-ocr");
+          lines = await ocrScannedPdf(f, setPct);
+          usedKind = "pdf-ocr";
+        }
+      }
+
+      if (lines.length === 0) {
         setErrorKind("notext");
         setStep("error");
         return;
       }
-      const parsed = parseValues(extracted.lines);
+
+      const { detectFromLines } = await import("@/lib/lab-parse");
+      const meta = detectFromLines(lines);
+      const extractedDoc: ExtractedDoc = { lines, pages, lab: meta.lab, collectedISO: meta.collectedISO };
+      const parsed = parseValues(lines);
+      setDoc(extractedDoc);
+      setKind(usedKind);
+
       if (parsed.length === 0) {
         setErrorKind("novalues");
-        setDoc(extracted);
         setStep("error");
         return;
       }
-      setDoc(extracted);
       setValues(parsed);
       setStep("review");
     } catch {
@@ -1966,8 +2007,8 @@ function ShareUploadScreen() {
   async function save() {
     if (!file || !doc) return;
     const { makeUpload, saveUpload, putFile } = await import("@/lib/uploads.store");
-    const kept = values.filter((v) => v.keep);
-    const upload = makeUpload(file, doc, kept);
+    const kept = values.filter((v) => v.keep && v.value.trim() !== "");
+    const upload = makeUpload(file, doc, kept, kind);
     upload.hasFile = await putFile(upload.id, file);
     saveUpload(upload);
     setSavedId(upload.id);
@@ -1975,10 +2016,11 @@ function ShareUploadScreen() {
     showToast(L(`${kept.length} valores guardados`, `${kept.length} values saved`));
   }
 
-  const toggle = (i: number) =>
-    setValues((prev) => prev.map((v, idx) => (idx === i ? { ...v, keep: !v.keep } : v)));
-
-  const keptCount = values.filter((v) => v.keep).length;
+  const reset = () => { setStep("pick"); setFile(null); setDoc(null); setValues([]); setPct(null); };
+  const toggle = (i: number) => setValues((p) => p.map((v, k) => (k === i ? { ...v, keep: !v.keep } : v)));
+  const edit = (i: number, val: string) => setValues((p) => p.map((v, k) => (k === i ? { ...v, value: val } : v)));
+  const keptCount = values.filter((v) => v.keep && v.value.trim() !== "").length;
+  const isOcr = kind !== "pdf-text";
 
   return (
     <div className="rv-screen">
@@ -1992,7 +2034,7 @@ function ShareUploadScreen() {
       <input
         ref={fileRef}
         type="file"
-        accept="application/pdf,.pdf"
+        accept="application/pdf,image/*,.pdf,.jpg,.jpeg,.png,.heic,.webp"
         style={{display: "none"}}
         onChange={onPick}
       />
@@ -2002,8 +2044,8 @@ function ShareUploadScreen() {
           <>
             <button type="button" className="rv-up-drop" onClick={() => fileRef.current?.click()}>
               <span className="rv-up-drop-icon">{Icon.upload}</span>
-              <span className="rv-up-drop-title">{L("Escolher PDF da análise","Choose lab result PDF")}</span>
-              <span className="rv-up-drop-sub">{L("dos Ficheiros, Mail ou Drive","from Files, Mail or Drive")}</span>
+              <span className="rv-up-drop-title">{L("Escolher ficheiro","Choose file")}</span>
+              <span className="rv-up-drop-sub">{L("PDF ou fotografia · dos Ficheiros, Fotos, Mail ou Drive","PDF or photo · from Files, Photos, Mail or Drive")}</span>
             </button>
 
             <div className="rv-up-privacy">
@@ -2012,14 +2054,14 @@ function ShareUploadScreen() {
                 {L("O ficheiro não sai do seu telemóvel","The file never leaves your phone")}
               </div>
               <p>
-                {L("O PDF é lido aqui, dentro da app. Os valores ficam guardados neste telemóvel e não são enviados para nenhum servidor. Se apagar a app ou os dados do navegador, desaparecem.",
-                   "The PDF is read here, inside the app. The values are stored on this phone and are not sent to any server. If you delete the app or your browser data, they are gone.")}
+                {L("É lido aqui dentro da app, incluindo o reconhecimento de texto em fotografias. Os valores ficam guardados neste telemóvel e não são enviados para nenhum servidor.",
+                   "It's read here inside the app, including text recognition on photos. The values are stored on this phone and are not sent to any server.")}
               </p>
             </div>
 
             <div className="rv-up-note">
-              {L("Funciona com os PDFs que os laboratórios enviam por email. Fotografias de folhas em papel não são lidas.",
-                 "Works with the PDFs labs send by email. Photos of printed sheets can't be read.")}
+              {L("PDFs do laboratório são lidos com exactidão. Fotografias e digitalizações são reconhecidas por leitura automática — confirme sempre os valores antes de guardar.",
+                 "Lab PDFs are read exactly. Photos and scans go through automatic recognition — always check the values before saving.")}
             </div>
           </>
         )}
@@ -2027,33 +2069,52 @@ function ShareUploadScreen() {
         {step === "reading" && (
           <div className="rv-up-center">
             <div className="rv-up-spinner"/>
-            <div className="rv-up-center-title">{L("A ler o documento…","Reading the document…")}</div>
+            <div className="rv-up-center-title">{phase || L("A ler…","Reading…")}</div>
             <div className="rv-up-center-sub">{file?.name}</div>
+            {pct != null && (
+              <div className="rv-up-progress"><div style={{width: `${pct}%`}}/></div>
+            )}
           </div>
         )}
 
         {step === "error" && (
-          <div className="rv-up-center">
-            <div className="rv-up-center-title">
-              {errorKind === "notext"
-                ? L("Este PDF não tem texto","This PDF has no text")
-                : errorKind === "novalues"
-                ? L("Não reconheci parâmetros","No parameters recognised")
-                : L("Não consegui ler o ficheiro","Couldn't read the file")}
+          <div style={{padding: "10px 0"}}>
+            <div className="rv-up-center" style={{padding: "20px 28px 12px"}}>
+              <div className="rv-up-center-title">
+                {errorKind === "notext"
+                  ? L("Não consegui ler texto","Couldn't read any text")
+                  : errorKind === "novalues"
+                  ? L("Não reconheci parâmetros","No parameters recognised")
+                  : L("Não consegui abrir o ficheiro","Couldn't open the file")}
+              </div>
+              <div className="rv-up-center-sub">
+                {errorKind === "notext"
+                  ? L("A imagem pode estar desfocada, escura ou torta. Tente uma fotografia mais direita e com boa luz, ou peça o PDF ao laboratório.",
+                      "The image may be blurry, dark or skewed. Try a straighter, well-lit photo, or ask the lab for the PDF.")
+                  : errorKind === "novalues"
+                  ? L("O documento foi lido, mas nenhum dos nomes de parâmetros me é familiar. Em baixo está o que consegui ler — envie-o à equipa Vivara para acrescentarmos este laboratório.",
+                      "The document was read, but none of the parameter names are familiar. Below is what was read — send it to the Vivara team so we can add this lab.")
+                  : L("O ficheiro pode estar protegido por palavra-passe ou danificado.",
+                      "The file may be password-protected or damaged.")}
+              </div>
             </div>
-            <div className="rv-up-center-sub">
-              {errorKind === "notext"
-                ? L("Parece ser uma imagem digitalizada. Peça ao laboratório o PDF original, que costuma vir por email.",
-                    "It looks like a scan. Ask the lab for the original PDF, usually sent by email.")
-                : errorKind === "novalues"
-                ? L("O documento foi lido mas não encontrei parâmetros que reconheça. Pode ser um relatório de outro tipo de exame.",
-                    "The document was read but no recognisable parameters were found. It may be a different kind of report.")
-                : L("O ficheiro pode estar protegido por palavra-passe ou danificado.",
-                    "The file may be password-protected or damaged.")}
+
+            {errorKind === "novalues" && doc && (
+              <>
+                <div className="rv-sub-section-head">{L("Texto lido do documento","Text read from the document")}</div>
+                <div className="rv-doc-page">
+                  <div className="rv-doc-lines" data-scroll="true">
+                    {doc.lines.slice(0, 60).map((line, i) => (
+                      <div key={i} className="rv-doc-line">{line}</div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="rv-q-actions" style={{margin: "4px 20px 0"}}>
+              <button className="rv-cta-primary" onClick={reset}>{L("Escolher outro ficheiro","Choose another file")}</button>
             </div>
-            <button className="rv-cta-primary" style={{marginTop: 18}} onClick={() => { setStep("pick"); setFile(null); }}>
-              {L("Escolher outro ficheiro","Choose another file")}
-            </button>
           </div>
         )}
 
@@ -2065,34 +2126,75 @@ function ShareUploadScreen() {
                 <span className="rv-doc-file-name">{file?.name}</span>
               </div>
               <div className="rv-doc-file-sub">
-                {doc.lab ?? L("Laboratório não identificado","Lab not identified")} · {doc.pages} {L("pág.","pages")}
+                {doc.lab ?? L("Laboratório não identificado","Lab not identified")}
+                {kind !== "image" ? ` · ${doc.pages} ${L("pág.","pages")}` : ""}
                 {doc.collectedISO ? ` · ${L("colheita","sample")} ${fmtDay(doc.collectedISO, lang, true)}` : ""}
               </div>
             </div>
 
+            {preview && (
+              <div className="rv-up-preview">
+                <img src={preview} alt={L("Imagem carregada","Uploaded image")}/>
+              </div>
+            )}
+
+            {isOcr && (
+              <div className="rv-up-warn">
+                <strong>{L("Valores lidos automaticamente","Values read automatically")}</strong>
+                <span>
+                  {L("O reconhecimento de imagem engana-se, sobretudo em dígitos. Compare cada valor com o original e corrija o que estiver errado — toque no número para editar.",
+                     "Image recognition makes mistakes, especially with digits. Compare each value with the original and fix anything wrong — tap a number to edit.")}
+                </span>
+              </div>
+            )}
+
+            {values.some((v) => v.suspect) && (
+              <div className="rv-up-warn" data-tone="alert">
+                <strong>{L("Há valores fora do possível","Some values look impossible")}</strong>
+                <span>
+                  {L("Marcados com “confirmar”. Costuma ser a vírgula decimal perdida na leitura — 5,7 lido como 57. Corrija-os ou exclua-os.",
+                     "Marked “check”. Usually a decimal point lost in reading — 5.7 read as 57. Correct or exclude them.")}
+                </span>
+              </div>
+            )}
             <div className="rv-up-summary">
               <strong>{values.length}</strong> {L("parâmetros reconhecidos","parameters recognised")}
-              <span>{L("Confirme antes de guardar. Toque para excluir um valor.","Check before saving. Tap to exclude a value.")}</span>
+              <span>{L("Toque na caixa para excluir, ou no número para corrigir.","Tap the box to exclude, or the number to correct.")}</span>
             </div>
 
             <div className="rv-doc-rows">
               {values.map((v, i) => (
-                <button key={i} type="button" className="rv-up-row" data-off={!v.keep || undefined} onClick={() => toggle(i)}>
-                  <span className="rv-up-check" data-on={v.keep || undefined}>{v.keep ? "✓" : ""}</span>
+                <div key={i} className="rv-up-row" data-off={!v.keep || undefined} data-suspect={v.suspect || undefined}>
+                  <button type="button" className="rv-up-check" data-on={v.keep || undefined}
+                    onClick={() => toggle(i)} aria-label={v.keep ? L("Excluir","Exclude") : L("Incluir","Include")}>
+                    {v.keep ? "✓" : ""}
+                  </button>
                   <span className="rv-up-row-body">
-                    <span className="rv-up-row-name">{v.marker}</span>
+                    <span className="rv-up-row-name">
+                      {v.marker}
+                      {v.suspect && <span className="rv-up-flag">{L("confirmar","check")}</span>}
+                    </span>
                     <span className="rv-up-row-raw">{v.label}</span>
                   </span>
                   <span className="rv-up-row-vals">
-                    <span className="rv-doc-row-val">{v.value}<span className="rv-doc-row-unit">{v.unit}</span></span>
+                    <span className="rv-up-edit">
+                      <input
+                        className="rv-up-input"
+                        inputMode="decimal"
+                        value={v.value}
+                        onChange={(e) => edit(i, e.target.value)}
+                        aria-label={`${v.marker} ${L("valor","value")}`}
+                      />
+                      <span className="rv-doc-row-unit">{v.unit}</span>
+                    </span>
                     {v.ref && <span className="rv-doc-row-ref">ref {v.ref}</span>}
                   </span>
-                </button>
+                </div>
               ))}
             </div>
 
             <div className="rv-q-actions" style={{margin: "0 20px"}}>
-              <button className="rv-cta-ghost" onClick={() => { setStep("pick"); setFile(null); }}>{L("Cancelar","Cancel")}</button>
+              <button className="rv-cta-ghost" onClick={reset}>{L("Cancelar","Cancel")}</button>
               <button className="rv-cta-primary" disabled={keptCount === 0} onClick={save}>
                 {L(`Guardar ${keptCount}`, `Save ${keptCount}`)}
               </button>

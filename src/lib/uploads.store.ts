@@ -16,9 +16,16 @@ export interface StoredValue {
   ref: string;
 }
 
+// Como o conteúdo foi lido. Muda o que o ecrã de documento mostra (texto do
+// PDF ou a imagem) e o aviso de fiabilidade: o texto de um PDF digital é
+// exacto, o que sai de OCR é uma leitura e pode ter erros.
+export type UploadKind = "pdf-text" | "pdf-ocr" | "image";
+
 export interface StoredUpload {
   id: string;
+  kind: UploadKind;
   filename: string;
+  mime: string;
   sizeKb: number;
   pages: number;
   uploadedISO: string;
@@ -65,11 +72,14 @@ export function makeUpload(
   file: File,
   doc: { lines: string[]; pages: number; lab: string | null; collectedISO: string | null },
   values: ParsedValue[],
+  kind: UploadKind,
 ): StoredUpload {
   const now = new Date();
   return {
     id: `u-${now.getTime()}`,
+    kind,
     filename: file.name,
+    mime: file.type || "application/octet-stream",
     sizeKb: Math.max(1, Math.round(file.size / 1024)),
     pages: doc.pages,
     uploadedISO: now.toISOString(),
