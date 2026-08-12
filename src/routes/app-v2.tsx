@@ -1164,8 +1164,11 @@ const SYMPTOM_LOG: SymptomEntry[] = [
   { id: "cefaleia",        namePt: "Cefaleia",        nameEn: "Headache",     intensity: 1, at: "2026-04-25T08:30:00" },
 ];
 
-// Data de referência usada em todo o /app-v2 para "hoje" (ver home.observation, diary.eyebrow).
-const SINTOMAS_TODAY = new Date("2026-04-27T09:00:00");
+// Data de referência usada em todo o /app-v2 para "hoje" (ver home.observation,
+// diary.eyebrow). Os dados de demonstração vivem à volta desta data, por isso
+// filtros relativos ("últimos 30 dias") têm de contar a partir daqui e não do
+// relógio real, senão não apanhariam nada.
+const APP_TODAY = new Date("2026-04-27T09:00:00");
 
 function startOfWeek(d: Date): Date {
   const x = new Date(d);
@@ -1175,9 +1178,21 @@ function startOfWeek(d: Date): Date {
   return x;
 }
 
+// A escala 1–5 do registo tem nome em cada nível: "3/5" obriga a traduzir
+// mentalmente, "Moderado" lê-se de imediato. Os rótulos ficam em HTML e não
+// dentro do SVG porque o gráfico usa preserveAspectRatio="none" — texto lá
+// dentro sairia esticado na horizontal.
+const INTENSITY_LEVELS: { level: number; pt: string; en: string }[] = [
+  { level: 5, pt: "Muito forte",   en: "Very severe" },
+  { level: 4, pt: "Forte",         en: "Severe" },
+  { level: 3, pt: "Moderado",      en: "Moderate" },
+  { level: 2, pt: "Ligeiro",       en: "Mild" },
+  { level: 1, pt: "Muito ligeiro", en: "Very mild" },
+];
+
 function SymptomTrendCard({ entries }: { entries: SymptomEntry[] }) {
   const { L, lang } = useLang();
-  const W = 320, H = 90, PAD = 10;
+  const W = 320, H = 132, PAD = 12;
   const sorted = [...entries].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
   const toY = (v: number) => H - PAD - ((v - 1) / 4) * (H - PAD * 2);
   const xs = sorted.map((_, i) => PAD + (sorted.length === 1 ? (W - PAD * 2) / 2 : (i / (sorted.length - 1)) * (W - PAD * 2)));
@@ -1193,17 +1208,30 @@ function SymptomTrendCard({ entries }: { entries: SymptomEntry[] }) {
         <span style={{fontSize: 13.5, fontWeight: 600, letterSpacing: "-0.005em"}}>{L(sorted[0].namePt, sorted[0].nameEn)}</span>
         <span style={{fontSize: 11, color: "var(--fg-50)"}}>{sorted.length} {L("registos", "entries")}</span>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" width="100%" height={H}>
-        <rect x="0" y="0" width={W} height={yRedBot} fill="var(--alert)" opacity="0.10"/>
-        <rect x="0" y={yRedBot} width={W} height={Math.max(0, yGreenTop - yRedBot)} fill="var(--watch)" opacity="0.10"/>
-        <rect x="0" y={yGreenTop} width={W} height={Math.max(0, H - yGreenTop)} fill="var(--lime)" opacity="0.10"/>
-        <path d={path} fill="none" stroke="var(--watch)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        {sorted.map((_, i) => (
-          <circle key={i} cx={xs[i]} cy={ys[i]} r={i === sorted.length - 1 ? 4 : 2.5}
-            fill={i === sorted.length - 1 ? "var(--watch)" : "var(--bg-elev)"} stroke="var(--watch)" strokeWidth="1.5"/>
-        ))}
-      </svg>
-      <div className="rv-marker-chart-axis"><span>{fmt(sorted[0].at)}</span><span>{fmt(sorted[sorted.length - 1].at)}</span></div>
+      <div className="rv-sym-chart" style={{height: H}}>
+        <div className="rv-sym-axis">
+          {INTENSITY_LEVELS.map((lv) => (
+            <span key={lv.level} className="rv-sym-axis-label" style={{top: `${toY(lv.level)}px`}}>
+              {L(lv.pt, lv.en)}
+            </span>
+          ))}
+        </div>
+        <svg className="rv-sym-plot" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" width="100%" height={H}>
+          <rect x="0" y="0" width={W} height={yRedBot} fill="var(--alert)" opacity="0.10"/>
+          <rect x="0" y={yRedBot} width={W} height={Math.max(0, yGreenTop - yRedBot)} fill="var(--watch)" opacity="0.10"/>
+          <rect x="0" y={yGreenTop} width={W} height={Math.max(0, H - yGreenTop)} fill="var(--lime)" opacity="0.10"/>
+          {INTENSITY_LEVELS.map((lv) => (
+            <line key={lv.level} x1="0" x2={W} y1={toY(lv.level)} y2={toY(lv.level)}
+              stroke="var(--fg)" strokeOpacity="0.07" strokeWidth="1"/>
+          ))}
+          <path d={path} fill="none" stroke="var(--watch)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          {sorted.map((_, i) => (
+            <circle key={i} cx={xs[i]} cy={ys[i]} r={i === sorted.length - 1 ? 4 : 2.5}
+              fill={i === sorted.length - 1 ? "var(--watch)" : "var(--bg-elev)"} stroke="var(--watch)" strokeWidth="1.5"/>
+          ))}
+        </svg>
+      </div>
+      <div className="rv-marker-chart-axis rv-sym-xaxis"><span>{fmt(sorted[0].at)}</span><span>{fmt(sorted[sorted.length - 1].at)}</span></div>
     </div>
   );
 }
@@ -1225,7 +1253,7 @@ function SintomasScreen() {
     if (!weekMap.has(wk)) weekMap.set(wk, []);
     weekMap.get(wk)!.push(e);
   }
-  const todayWeek = startOfWeek(SINTOMAS_TODAY).getTime();
+  const todayWeek = startOfWeek(APP_TODAY).getTime();
   const weekEntries = [...weekMap.entries()].sort((a, b) => b[0] - a[0]);
   const thisWeekCount = weekMap.get(todayWeek)?.length ?? 0;
 
@@ -1253,7 +1281,7 @@ function SintomasScreen() {
     const preset = SYMPTOM_PRESETS.find((s) => s.id === formSymptom)!;
     const next: SymptomEntry = {
       id: preset.id, namePt: preset.namePt, nameEn: preset.nameEn,
-      intensity: formIntensity, at: SINTOMAS_TODAY.toISOString(),
+      intensity: formIntensity, at: APP_TODAY.toISOString(),
       notePt: formNote || undefined, noteEn: formNote || undefined,
     };
     setEntries((prev) => [next, ...prev]);
@@ -1507,20 +1535,66 @@ function buildTimeline(): RecordEntry[] {
     .sort((a, b) => new Date(b.iso).getTime() - new Date(a.iso).getTime());
 }
 
+const RANGE_OPTIONS: { id: string; months: number | null; pt: string; en: string }[] = [
+  { id: "1m",  months: 1,    pt: "30 dias", en: "30 days" },
+  { id: "3m",  months: 3,    pt: "3M",      en: "3M" },
+  { id: "6m",  months: 6,    pt: "6M",      en: "6M" },
+  { id: "1y",  months: 12,   pt: "1A",      en: "1Y" },
+  { id: "all", months: null, pt: "Tudo",    en: "All" },
+];
+
+const MONTHS_LONG_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const MONTHS_LONG_EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
 function RegistosScreen() {
   const { go } = useNav();
   const { L, lang } = useLang();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<RecordType | "all">("all");
+  const [range, setRange] = useState("all");
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   const all = buildTimeline();
   const term = q.trim().toLowerCase();
+
+  // O intervalo conta para trás a partir da data de referência da app, não do
+  // relógio real — os dados de demonstração são de 2026 e um "últimos 30 dias"
+  // ancorado no relógio devolveria uma lista vazia.
+  const months = RANGE_OPTIONS.find((r) => r.id === range)?.months ?? null;
+  const cutoff = months == null ? null : new Date(new Date(APP_TODAY).setMonth(APP_TODAY.getMonth() - months));
+
   const entries = all.filter((e) => {
     if (filter !== "all" && e.type !== filter) return false;
+    // Entradas futuras (consultas agendadas) escapam ao corte: não faz sentido
+    // "últimos 30 dias" esconder a consulta da semana que vem.
+    if (cutoff && new Date(e.iso) < cutoff && new Date(e.iso) <= APP_TODAY) return false;
     if (!term) return true;
     const hay = norm(`${e.titlePt} ${e.titleEn} ${e.subPt} ${e.subEn} ${e.sourcePt ?? ""} ${e.sourceEn ?? ""} ${RECORD_META[e.type].pt} ${RECORD_META[e.type].en}`);
     return hay.includes(norm(term));
   });
+
+  // Agrupamento cronológico: o que ainda está para vir fica destacado no topo,
+  // o resto agrupa por mês.
+  const groups: { key: string; label: string; items: RecordEntry[] }[] = [];
+  for (const e of entries) {
+    const d = new Date(e.iso);
+    const future = d > APP_TODAY;
+    const key = future ? "upcoming" : `${d.getFullYear()}-${d.getMonth()}`;
+    const label = future
+      ? L("Próximos", "Upcoming")
+      : `${(lang === "pt" ? MONTHS_LONG_PT : MONTHS_LONG_EN)[d.getMonth()]} ${d.getFullYear()}`;
+    const last = groups[groups.length - 1];
+    if (last && last.key === key) last.items.push(e);
+    else groups.push({ key, label, items: [e] });
+  }
+
+  const toggleGroup = (key: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
 
   const filters: { id: RecordType | "all"; label: string }[] = [
     { id: "all",       label: L("Tudo","All") },
@@ -1560,41 +1634,64 @@ function RegistosScreen() {
           ))}
         </div>
 
+        <div className="rv-panel-chips rv-range-chips">
+          <span className="rv-range-label">{L("Período","Period")}</span>
+          {RANGE_OPTIONS.map((r) => (
+            <button key={r.id} className="rv-period-chip" data-active={range === r.id || undefined} onClick={() => setRange(r.id)}>
+              {L(r.pt, r.en)}
+            </button>
+          ))}
+        </div>
+
         <div className="rv-bio-section-head" style={{color: "var(--fg-50)"}}>
           <span className="rv-dot"/>{entries.length} {entries.length === 1 ? L("registo","record") : L("registos","records")}
         </div>
 
         {entries.length === 0 ? (
           <div style={{padding: "20px", textAlign: "center", color: "var(--fg-50)", fontSize: 13}}>
-            {L("Nada encontrado para esta pesquisa.","Nothing found for this search.")}
+            {L("Nada encontrado para estes filtros.","Nothing found for these filters.")}
           </div>
         ) : (
-          <div className="rv-rec-list">
-            {entries.map((e) => {
-              const meta = RECORD_META[e.type];
-              return (
-                <button key={e.id} type="button" className="rv-rec-row" onClick={() => e.go && go(e.go)}>
-                  <span className="rv-rec-bar" style={{background: meta.color}}/>
-                  <span className="rv-rec-origin" data-origin={e.origin}
-                    aria-label={e.origin === "upload" ? L("Documento carregado","Uploaded document") : e.origin === "manual" ? L("Registo manual","Manual entry") : L("Equipa clínica","Clinical team")}>
-                    {ORIGIN_ICON[e.origin]}
-                  </span>
-                  <span className="rv-rec-body">
-                    <span className="rv-rec-top">
-                      <span className="rv-rec-tag" style={{color: meta.color, borderColor: meta.color}}>{L(meta.pt, meta.en)}</span>
-                      <span className="rv-rec-date">{fmtDate(e.iso)}</span>
-                    </span>
-                    <span className="rv-rec-title">{L(e.titlePt, e.titleEn)}</span>
-                    <span className="rv-rec-sub">{L(e.subPt, e.subEn)}</span>
-                    {(e.sourcePt || e.sourceEn) && (
-                      <span className="rv-rec-source">{L(e.sourcePt ?? "", e.sourceEn ?? "")}</span>
-                    )}
-                  </span>
-                  <span className="rv-chev">{Icon.chev}</span>
+          groups.map((g) => {
+            const isOpen = !collapsed.has(g.key);
+            return (
+              <div key={g.key} className="rv-rec-group">
+                <button type="button" className="rv-rec-group-head" onClick={() => toggleGroup(g.key)} aria-expanded={isOpen}>
+                  <span className="rv-rec-group-chev" data-open={isOpen || undefined}>{Icon.chev}</span>
+                  <span className="rv-rec-group-label">{g.label}</span>
+                  <span className="rv-rec-group-count">{g.items.length}</span>
                 </button>
-              );
-            })}
-          </div>
+                {isOpen && (
+                  <div className="rv-rec-list">
+                    {g.items.map((e) => {
+                      const meta = RECORD_META[e.type];
+                      return (
+                        <button key={e.id} type="button" className="rv-rec-row" onClick={() => e.go && go(e.go)}>
+                          <span className="rv-rec-bar" style={{background: meta.color}}/>
+                          <span className="rv-rec-origin" data-origin={e.origin}
+                            aria-label={e.origin === "upload" ? L("Documento carregado","Uploaded document") : e.origin === "manual" ? L("Registo manual","Manual entry") : L("Equipa clínica","Clinical team")}>
+                            {ORIGIN_ICON[e.origin]}
+                          </span>
+                          <span className="rv-rec-body">
+                            <span className="rv-rec-top">
+                              <span className="rv-rec-tag" style={{color: meta.color, borderColor: meta.color}}>{L(meta.pt, meta.en)}</span>
+                              <span className="rv-rec-date">{fmtDate(e.iso)}</span>
+                            </span>
+                            <span className="rv-rec-title">{L(e.titlePt, e.titleEn)}</span>
+                            <span className="rv-rec-sub">{L(e.subPt, e.subEn)}</span>
+                            {(e.sourcePt || e.sourceEn) && (
+                              <span className="rv-rec-source">{L(e.sourcePt ?? "", e.sourceEn ?? "")}</span>
+                            )}
+                          </span>
+                          <span className="rv-chev">{Icon.chev}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
 
         <div style={{height: 90}}/>

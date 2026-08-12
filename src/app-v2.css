@@ -398,6 +398,16 @@
 .rv-panel-chips{display:flex;gap:6px;padding:0 20px 14px;overflow-x:auto;}
 .rv-panel-chips .rv-period-chip{flex:none;}
 
+/* Gráfico de sintomas com escala nomeada */
+.rv-sym-chart{position:relative;padding-left:66px;}
+.rv-sym-axis{position:absolute;left:0;top:0;bottom:0;width:62px;pointer-events:none;}
+.rv-sym-axis-label{
+  position:absolute;right:0;transform:translateY(-50%);
+  font-size:9px;color:var(--fg-30);letter-spacing:0.01em;white-space:nowrap;
+}
+.rv-sym-plot{background:var(--bg-elev-2);border-radius:12px;display:block;}
+.rv-sym-xaxis{padding-left:66px;}
+
 /* Registos — origem e fonte */
 .rv-rec-origin{
   display:flex;align-items:center;justify-content:center;flex:none;
@@ -408,6 +418,32 @@
 .rv-rec-origin[data-origin="manual"]{background:rgba(255,187,51,0.12);color:var(--watch);}
 .rv-rec-origin[data-origin="clinic"]{background:rgba(77,155,255,0.12);color:var(--bio-good);}
 .rv-rec-source{font-size:10.5px;color:var(--fg-30);margin-top:2px;}
+
+/* Registos — período e grupos cronológicos */
+.rv-range-chips{align-items:center;padding-top:0;}
+.rv-range-label{
+  font-size:10px;text-transform:uppercase;letter-spacing:0.06em;
+  color:var(--fg-30);flex:none;margin-right:2px;
+}
+.rv-rec-group{margin-bottom:6px;}
+.rv-rec-group-head{
+  display:flex;align-items:center;gap:8px;width:100%;
+  background:none;border:none;padding:8px 20px;font:inherit;color:inherit;cursor:pointer;
+}
+.rv-rec-group-chev{
+  display:inline-flex;color:var(--fg-50);flex:none;
+  transform:rotate(90deg);transition:transform .18s ease;
+}
+.rv-rec-group-chev[data-open="true"]{transform:rotate(90deg);}
+.rv-rec-group-chev:not([data-open]){transform:rotate(0deg);}
+.rv-rec-group-label{
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;
+  color:var(--fg-50);flex:1;text-align:left;
+}
+.rv-rec-group-count{
+  font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--fg-30);
+  background:var(--bg-elev-2);padding:2px 7px;border-radius:999px;
+}
 
 /* Documento carregado + valores extraídos */
 .rv-doc-meta{margin:0 20px 14px;}
