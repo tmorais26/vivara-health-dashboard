@@ -1957,6 +1957,13 @@ function ShareUploadScreen() {
       let pages = 1;
       let usedKind: UploadKind = "image";
 
+      // Ter linhas não é o mesmo que ter texto útil: há PDFs digitalizados com
+      // uma camada de texto vazia, e PDFs cujas fontes não trazem mapa de
+      // caracteres, dos quais se extraem linhas sem uma única letra. Nesses
+      // casos o texto não serve e é preciso ler a imagem à mesma.
+      const usefulText = (ls: string[]) =>
+        ls.join("").replace(/[^\p{L}\p{N}]/gu, "").length >= 40;
+
       if (isImage) {
         setPhase(L("A ler a imagem…", "Reading the image…"));
         const { ocrImageFile } = await import("@/lib/lab-ocr");
@@ -1966,22 +1973,23 @@ function ShareUploadScreen() {
         const { extractFromPdf } = await import("@/lib/lab-parse");
         const extracted = await extractFromPdf(f);
         pages = extracted.pages;
-        if (extracted.lines.length > 0) {
-          lines = extracted.lines;
-          usedKind = "pdf-text";
-        } else {
-          // PDF sem camada de texto: é uma digitalização, lê-se por OCR.
+        lines = extracted.lines;
+        usedKind = "pdf-text";
+
+        // Recorre-se ao OCR quando não há texto aproveitável, e também quando
+        // há texto mas dele não sai nenhum parâmetro — nesse caso o texto
+        // existe mas não diz nada de útil, e a imagem ainda pode dizer.
+        const needsOcr = !usefulText(lines) || parseValues(lines).length === 0;
+        if (needsOcr) {
           setPhase(L("PDF digitalizado — a reconhecer o texto…", "Scanned PDF — recognising text…"));
           const { ocrScannedPdf } = await import("@/lib/lab-ocr");
-          lines = await ocrScannedPdf(f, setPct);
-          usedKind = "pdf-ocr";
+          const ocrLines = await ocrScannedPdf(f, setPct);
+          // Fica-se pelo OCR se ele produzir parâmetros que o texto não deu.
+          if (parseValues(ocrLines).length > parseValues(lines).length) {
+            lines = ocrLines;
+            usedKind = "pdf-ocr";
+          }
         }
-      }
-
-      if (lines.length === 0) {
-        setErrorKind("notext");
-        setStep("error");
-        return;
       }
 
       const { detectFromLines } = await import("@/lib/lab-parse");
@@ -1991,6 +1999,11 @@ function ShareUploadScreen() {
       setDoc(extractedDoc);
       setKind(usedKind);
 
+      if (!usefulText(lines)) {
+        setErrorKind("notext");
+        setStep("error");
+        return;
+      }
       if (parsed.length === 0) {
         setErrorKind("novalues");
         setStep("error");
@@ -2099,15 +2112,34 @@ function ShareUploadScreen() {
               </div>
             </div>
 
-            {errorKind === "novalues" && doc && (
+            {doc && (
               <>
-                <div className="rv-sub-section-head">{L("Texto lido do documento","Text read from the document")}</div>
+                <div className="rv-sub-section-head">
+                  {L("Texto lido do documento","Text read from the document")} · {doc.lines.length} {L("linhas","lines")} · {doc.lines.join("").length} {L("caracteres","chars")}
+                </div>
                 <div className="rv-doc-page">
-                  <div className="rv-doc-lines" data-scroll="true">
-                    {doc.lines.slice(0, 60).map((line, i) => (
-                      <div key={i} className="rv-doc-line">{line}</div>
-                    ))}
-                  </div>
+                  {doc.lines.length === 0 ? (
+                    <div className="rv-doc-line rv-doc-line-more">{L("(nada foi extraído)","(nothing was extracted)")}</div>
+                  ) : (
+                    <div className="rv-doc-lines" data-scroll="true">
+                      {doc.lines.slice(0, 80).map((line, i) => (
+                        <div key={i} className={line.trim() ? "rv-doc-line" : "rv-doc-line rv-doc-line-more"}>
+                          {line.trim() ? line : L("(linha vazia)","(empty line)")}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="rv-q-actions" style={{margin: "0 20px 12px"}}>
+                  <button className="rv-cta-ghost" onClick={async () => {
+                    const dump = `${file?.name} · ${kind} · ${doc.lines.length} linhas\n\n${doc.lines.join("\n")}`;
+                    try {
+                      await navigator.clipboard.writeText(dump);
+                      showToast(L("Texto copiado","Text copied"));
+                    } catch {
+                      showToast(L("Não foi possível copiar","Couldn't copy"));
+                    }
+                  }}>{L("Copiar texto lido","Copy the text read")}</button>
                 </div>
               </>
             )}
