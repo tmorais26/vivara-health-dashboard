@@ -50,6 +50,7 @@ interface BioMarker {
   tone?: "alert" | "watch";
   state: BioState;
   panel: string;
+  fromUpload?: boolean; // valor veio de uma análise carregada pela utente
 }
 
 // ─── Contexts ────────────────────────────────────────
@@ -772,6 +773,79 @@ const BIOMARKERS: BioMarker[] = BIO_TABLE.map(([name, value, unit, target, min, 
   state, panel,
 }));
 
+// ─── Análises carregadas entram no historial ─────────
+// Depois de confirmados na revisão, os valores lidos passam a ser os valores
+// do marcador: substituem o do painel de demonstração e, havendo mais do que
+// uma colheita, formam a linha de tendência. Marcadores que o painel não
+// tinha são acrescentados. O que fica em memória é sempre a colheita mais
+// recente — as anteriores ficam na série.
+function parseRefRange(ref: string): { min: number | null; max: number | null } {
+  const range = ref.match(/^(-?\d+(?:\.\d+)?)\s*[-–]\s*(-?\d+(?:\.\d+)?)$/);
+  if (range) return { min: Number(range[1]), max: Number(range[2]) };
+  const upper = ref.match(/^[<≤]\s*(-?\d+(?:\.\d+)?)$/);
+  if (upper) return { min: null, max: Number(upper[1]) };
+  const lower = ref.match(/^[>≥]\s*(-?\d+(?:\.\d+)?)$/);
+  if (lower) return { min: Number(lower[1]), max: null };
+  return { min: null, max: null };
+}
+
+function stateFromRange(v: number, r: { min: number | null; max: number | null }): BioState {
+  if (r.min == null && r.max == null) return "good";
+  if (r.min != null && v < r.min) return "attention";
+  if (r.max != null && v > r.max) return "attention";
+  return "optimal";
+}
+
+function mergeUploads(base: BioMarker[], uploads: StoredUpload[]): BioMarker[] {
+  if (uploads.length === 0) return base;
+
+  // Série por marcador, da colheita mais antiga para a mais recente.
+  const series = new Map<string, { iso: string; value: number; unit: string; ref: string }[]>();
+  for (const u of [...uploads].sort((a, b) => a.collectedISO.localeCompare(b.collectedISO))) {
+    for (const v of u.values) {
+      if (!v.marker) continue;
+      const num = Number(v.value);
+      if (!Number.isFinite(num)) continue;
+      if (!series.has(v.marker)) series.set(v.marker, []);
+      series.get(v.marker)!.push({ iso: u.collectedISO, value: num, unit: v.unit, ref: v.ref });
+    }
+  }
+  if (series.size === 0) return base;
+
+  const shape = (name: string, pts: { value: number; unit: string; ref: string }[], prev?: BioMarker): BioMarker => {
+    const last = pts[pts.length - 1];
+    const range = prev && (prev.targetRange.min != null || prev.targetRange.max != null)
+      ? prev.targetRange
+      : parseRefRange(last.ref);
+    const first = pts[0];
+    const pct = pts.length >= 2 && first.value !== 0
+      ? Math.round(((last.value - first.value) / Math.abs(first.value)) * 1000) / 10
+      : 0;
+    const state = stateFromRange(last.value, range);
+    return {
+      name,
+      value: String(last.value),
+      unit: last.unit || prev?.unit || "",
+      target: prev?.target || last.ref || "—",
+      targetRange: range,
+      delta: pts.length >= 2 ? deltaLabel(pct) : "→",
+      spark: pts.length >= 2 ? pts.map((p) => p.value) : [],
+      tone: toneFromState(state, pct),
+      state,
+      panel: prev?.panel ?? "carregados",
+      fromUpload: true,
+    };
+  };
+
+  const merged = base.map((b) => {
+    const pts = series.get(b.name);
+    return pts ? shape(b.name, pts, b) : b;
+  });
+  const known = new Set(base.map((b) => b.name));
+  for (const [name, pts] of series) if (!known.has(name)) merged.push(shape(name, pts));
+  return merged;
+}
+
 const BIOS_ALERT = BIOMARKERS.filter((b) => b.state === "attention");
 const BIOS_OK = BIOMARKERS.filter((b) => b.state === "optimal" || b.state === "good");
 const BIOS_NODATA = BIOMARKERS.filter((b) => b.state === "nodata");
@@ -789,6 +863,7 @@ const BIO_PANELS: BioPanel[] = [
   { id: "vitaminas", namePt: "Vitaminas e minerais", nameEn: "Vitamins & minerals", icon: Icon.pill },
   { id: "figado",    namePt: "Fígado e rim",       nameEn: "Liver & kidney",    icon: Icon.flask },
   { id: "hemato",    namePt: "Hematologia",        nameEn: "Haematology",       icon: Icon.heart },
+  { id: "carregados", namePt: "Das suas análises", nameEn: "From your labs", icon: Icon.doc },
 ];
 
 // Notas de contexto clínico escritas pela equipa médica. Ficam aqui em vez de
@@ -885,7 +960,10 @@ function BioRow({ b }: { b: BioMarker }) {
   return (
     <div className="rv-bio-row" data-status={valTone} onClick={() => go({ route: "marker", marker: b })} style={{cursor: "pointer"}}>
       <div className="rv-bio-row-meta">
-        <div className="rv-bio-row-name">{b.name}</div>
+        <div className="rv-bio-row-name">
+          {b.name}
+          {b.fromUpload && <span className="rv-bio-mine">{L("seu","yours")}</span>}
+        </div>
         <div className="rv-bio-row-target">{L("alvo","target")} {b.target}</div>
       </div>
       <Spark pts={b.spark} color={sparkCol} w={90} h={26} bandMin={b.targetRange.min} bandMax={b.targetRange.max}/>
@@ -915,11 +993,20 @@ function DadosScreen() {
   const { go } = useNav();
   const { t, L } = useLang();
   const [panelId, setPanelId] = useState<string | null>(null);
-  const inPanel = (b: BioMarker) => panelId === null || b.panel === panelId;
-  const gridList = BIOMARKERS.filter(inPanel);
-  const alertList = BIOS_ALERT.filter(inPanel);
-  const okList = BIOS_OK.filter(inPanel);
-  const noDataList = BIOS_NODATA.filter(inPanel);
+  const uploads = useUploads();
+  // Os valores confirmados nas análises carregadas substituem os do painel de
+  // demonstração — é aqui que "ir para o histórico" acontece.
+  const markers = mergeUploads(BIOMARKERS, uploads);
+  // "Das suas análises" agrupa por proveniência, não por painel temático: um
+  // marcador carregado continua a pertencer ao painel dele (a glicose é
+  // cardiometabólica venha de onde vier), e o que muda é a origem do valor.
+  const inPanel = (b: BioMarker) =>
+    panelId === null || (panelId === "carregados" ? !!b.fromUpload : b.panel === panelId);
+  const gridList = markers.filter(inPanel);
+  const alertList = markers.filter((b) => b.state === "attention").filter(inPanel);
+  const okList = markers.filter((b) => b.state === "optimal" || b.state === "good").filter(inPanel);
+  const noDataList = markers.filter((b) => b.state === "nodata").filter(inPanel);
+  const uploadedCount = markers.filter((b) => b.fromUpload).length;
 
   return (
     <div className="rv-screen">
@@ -935,7 +1022,7 @@ function DadosScreen() {
 
         <div className="rv-panel-chips">
           <button className="rv-period-chip" data-active={panelId === null || undefined} onClick={() => setPanelId(null)}>{L("Ver tudo","View all")}</button>
-          {BIO_PANELS.map((p) => (
+          {BIO_PANELS.filter((p) => p.id !== "carregados" || uploadedCount > 0).map((p) => (
             <button key={p.id} className="rv-period-chip" data-active={panelId === p.id || undefined} onClick={() => setPanelId(p.id)}>
               <span style={{display: "inline-flex", verticalAlign: "-3px", marginRight: 4}}>{p.icon}</span>{L(p.namePt, p.nameEn)}
             </button>
@@ -943,6 +1030,12 @@ function DadosScreen() {
         </div>
 
         <BioStateSummary markers={gridList} />
+        {uploadedCount > 0 && (
+          <div className="rv-bio-fromyou">
+            {L(`${uploadedCount} valores vêm das suas análises carregadas`,
+               `${uploadedCount} values come from your uploaded labs`)}
+          </div>
+        )}
 
         <div className="rv-list">
           <a className="rv-list-row" style={{cursor: "pointer"}} onClick={() => go("registos")}>

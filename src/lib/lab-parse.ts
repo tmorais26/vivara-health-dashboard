@@ -91,22 +91,36 @@ const MARKER_ALIASES: { marker: string; aliases: string[]; units?: string[]; pla
   { marker: "Fosfatase alcalina", aliases: ["fosfatase alcalina"], units: ["U/L"] },
   { marker: "Bilirrubina total", aliases: ["bilirrubina total"], units: ["mg/dL"], plaus: [0.05,20] },
   { marker: "Albumina",          aliases: ["albumina"], units: ["g/dL"], plaus: [1,7] },
-  { marker: "Proteína total",    aliases: ["proteinas totais", "proteína total", "proteinas total"], units: ["g/dL"], plaus: [3,12] },
+  { marker: "Proteína total",    aliases: ["proteinas totais", "proteínas totais", "proteína total", "proteinas total"], units: ["g/dL"], plaus: [3,12] },
   { marker: "Creatinina",        aliases: ["creatinina"], units: ["mg/dL"], plaus: [0.1,15] },
   { marker: "TFG estimada",      aliases: ["tfg", "taxa de filtracao glomerular", "egfr"] },
   { marker: "Ureia",             aliases: ["ureia"], units: ["mg/dL"] },
   { marker: "Cistatina C",       aliases: ["cistatina c"] },
   { marker: "Hemoglobina",       aliases: ["hemoglobina"], units: ["g/dL"], plaus: [3,25] },
   { marker: "Hematócrito",       aliases: ["hematocrito", "hematócrito"], units: ["%"], plaus: [10,65] },
-  { marker: "Eritrócitos",       aliases: ["eritrocitos", "eritrócitos", "globulos vermelhos"] },
-  { marker: "VGM",               aliases: ["vgm", "volume globular medio"] },
-  { marker: "HGM",               aliases: ["hgm", "hemoglobina globular media"] },
-  { marker: "RDW",               aliases: ["rdw"] },
-  { marker: "Leucócitos",        aliases: ["leucocitos", "leucócitos", "globulos brancos"], units: ["10^9/L","10^3/µL","10*9/L"] },
-  { marker: "Neutrófilos",       aliases: ["neutrofilos", "neutrófilos"] },
-  { marker: "Linfócitos",        aliases: ["linfocitos", "linfócitos"] },
-  { marker: "Plaquetas",         aliases: ["plaquetas"], units: ["10^9/L","10^3/µL","10*9/L"] },
-  { marker: "Eosinófilos",       aliases: ["eosinofilos", "eosinófilos"] },
+  { marker: "Eritrócitos",       aliases: ["eritrocitos", "eritrócitos", "globulos vermelhos", "eritrograma"], units: ["x10^12/L","10^12/L"] },
+  { marker: "VGM",               aliases: ["vgm", "volume globular medio", "volume globular médio"], units: ["fL"] },
+  { marker: "HGM",               aliases: ["hgm", "hemoglobina globular media", "hemoglobina globular média"], units: ["pg"] },
+  { marker: "RDW",               aliases: ["rdw", "indice de dispersao eritrocitaria", "índice de dispersão eritrocitária"], units: ["%"] },
+  { marker: "Leucócitos",        aliases: ["leucocitos", "leucócitos", "globulos brancos"], units: ["10^9/L","x10^9/L","10^3/µL","10*9/L"] },
+  { marker: "Neutrófilos",       aliases: ["neutrofilos", "neutrófilos"], units: ["x10^9/L","10^9/L"] },
+  { marker: "Linfócitos",        aliases: ["linfocitos", "linfócitos"], units: ["x10^9/L","10^9/L"] },
+  { marker: "Plaquetas",         aliases: ["plaquetas"], units: ["10^9/L","x10^9/L","10^3/µL","10*9/L"] },
+  { marker: "Eosinófilos",       aliases: ["eosinofilos", "eosinófilos"], units: ["x10^9/L","10^9/L"] },
+  // Parâmetros que a Joaquim Chaves reporta e não existiam no painel.
+  { marker: "CHGM",              aliases: ["concentracao de hemoglobina globular media", "concentração de hemoglobina globular média", "chgm"], units: ["g/dL"] },
+  { marker: "Monócitos",         aliases: ["monocitos", "monócitos"], units: ["x10^9/L","10^9/L"] },
+  { marker: "Basófilos",         aliases: ["basofilos", "basófilos"], units: ["x10^9/L","10^9/L"] },
+  { marker: "Plaquetócrito",     aliases: ["plaquetocrito", "plaquetócrito"], units: ["%"] },
+  { marker: "VPM",               aliases: ["volume plaquetario medio", "volume plaquetário médio", "vpm"], units: ["fL"] },
+  { marker: "IgA",               aliases: ["imunoglobulina a - iga", "imunoglobulina a", "iga"], units: ["mg/dL"] },
+  { marker: "IgG",               aliases: ["imunoglobulina g - igg", "imunoglobulina g", "igg"], units: ["mg/dL"] },
+  { marker: "IgM",               aliases: ["imunoglobulina m - igm", "imunoglobulina m", "igm"], units: ["mg/dL"] },
+  { marker: "IgE total",         aliases: ["imunoglobulina e, ige total", "imunoglobulina e - ige total", "ige total"], units: ["KU/L"] },
+  { marker: "Alfa-1-Globulina",  aliases: ["alfa-1-globulina", "alfa 1 globulina"], units: ["%","g/dL"] },
+  { marker: "Alfa-2-Globulina",  aliases: ["alfa-2-globulina", "alfa 2 globulina"], units: ["%","g/dL"] },
+  { marker: "Beta-Globulina",    aliases: ["beta-globulina", "beta globulina"], units: ["%","g/dL"] },
+  { marker: "Gama-Globulina",    aliases: ["gama-globulina", "gama globulina"], units: ["%","g/dL"] },
 ];
 
 const LABS = ["Synlab", "CUF", "Joaquim Chaves", "Germano de Sousa", "Unilabs", "Labeto", "Beatriz Godinho"];
@@ -119,7 +133,7 @@ export const norm = (s: string) =>
 // A lookbehind impede que "U/L" seja apanhado dentro de "mU/L": sem ela, um
 // TSH lido pelo OCR como "mU/L" ficava com unidade "U/L", incompatível com o
 // marcador, e o valor era descartado por engano.
-const UNIT_RE = /(?<![A-Za-zµ])(mU\/mL|mU\/L|mg\/dL|g\/dL|µg\/dL|ug\/dL|ng\/mL|pg\/mL|µU\/mL|uU\/mL|mUI\/mL|mUI\/L|UI\/mL|U\/L|µmol\/L|umol\/L|mmol\/L|nmol\/L|mg\/L|µg\/L|ug\/L|ng\/dL|10\^?[369]\/L|10\^?12\/L|mL\/min[^\s]*|fL|pg|%|mm\/h|mg\/g)/i;
+const UNIT_RE = /(?<![A-Za-zµ])(x?10\^?12\/L|x?10\^?9\/L|x?10\*9\/L|KUA\/L|KU\/L|mU\/mL|mU\/L|mg\/dL|g\/dL|µg\/dL|ug\/dL|ng\/mL|pg\/mL|µU\/mL|uU\/mL|mUI\/mL|mUI\/L|UI\/mL|U\/L|µmol\/L|umol\/L|mmol\/L|nmol\/L|mg\/L|µg\/L|ug\/L|ng\/dL|10\^?[369]\/L|10\^?12\/L|mL\/min[^\s]*|fL|pg|%|mm\/h|mg\/g)/i;
 
 function parseNumber(tok: string): string | null {
   // Aceita "5.7" e "5,7"; rejeita anos e códigos longos.
@@ -138,9 +152,15 @@ function extractRef(after: string): string {
   return "";
 }
 
-export function parseLine(line: string): ParsedValue | null {
-  const clean = line.replace(/\.{3,}/g, " ").replace(/\s+/g, " ").trim();
-  if (clean.length < 4) return null;
+interface Candidate { marker: string; alias: string; at: number; units?: string[]; plaus?: [number, number] }
+
+// Reconhecimento do nome, separado da extracção do valor: há laboratórios
+// (Joaquim Chaves, por exemplo) que imprimem o nome do parâmetro numa linha e
+// o resultado na linha seguinte, depois de uma fila de pontos. Nesses casos é
+// preciso saber que a linha nomeia um marcador antes de haver valor nenhum.
+function findCandidates(line: string): { clean: string; viable: Candidate[] } {
+  const clean = line.replace(/\.{3,}/g, " ").replace(/[.\-–—_]{4,}/g, " ").replace(/\s+/g, " ").trim();
+  if (clean.length < 3) return { clean, viable: [] };
   const n = norm(clean);
 
   // Escolhe o alias mais longo que abra a linha, para "colesterol total" não
@@ -166,17 +186,17 @@ export function parseLine(line: string): ParsedValue | null {
   // Todos os candidatos, do alias mais longo para o mais curto. Testam-se por
   // ordem e fica o primeiro que produza um valor com unidade compatível — em
   // vez de eleger um vencedor à partida e desistir se ele não servir.
-  const candidates: { marker: string; alias: string; at: number; units?: string[]; plaus?: [number, number] }[] = [];
+  const candidates: Candidate[] = [];
   for (const entry of MARKER_ALIASES) {
     for (const alias of entry.aliases) {
       const idx = n.indexOf(alias);
       if (idx < 0) continue;
       if (!prefixIsCode(n.slice(0, idx))) continue;
       if (!endsAtBoundary(idx, alias)) continue;
-  candidates.push({ marker: entry.marker, alias, at: idx, units: entry.units, plaus: entry.plaus });
+      candidates.push({ marker: entry.marker, alias, at: idx, units: entry.units, plaus: entry.plaus });
     }
   }
-  if (candidates.length === 0) return null;
+  if (candidates.length === 0) return { clean, viable: [] };
   candidates.sort((a, b) => b.alias.length - a.alias.length);
 
   // Se um alias é apenas o começo de outro mais longo que também encaixou no
@@ -188,44 +208,53 @@ export function parseLine(line: string): ParsedValue | null {
       (o) => o.marker !== c.marker && o.at === c.at && o.alias.length > c.alias.length && o.alias.startsWith(c.alias),
     ),
   );
-  const viable = candidates.filter((c) => !truncated.includes(c));
-  if (viable.length === 0) return null;
+  return { clean, viable: candidates.filter((c) => !truncated.includes(c)) };
+}
 
-  const unitKey = (u: string) => u.toLowerCase().replace(/[^a-z0-9]/g, "");
+const unitKey = (u: string) => u.toLowerCase().replace(/[^a-z0-9]/g, "");
 
+// Extrai valor, unidade e intervalo de um pedaço de texto à direita do nome —
+// ou de uma linha inteira, quando o resultado vem separado do nome.
+function readValue(tail: string, cand: Candidate): { value: string; unit: string; ref: string } | null {
+  const tokens = tail.split(/\s+/).filter(Boolean);
+  let value: string | null = null;
+  let valueIdx = -1;
+  for (let i = 0; i < tokens.length; i++) {
+    const num = parseNumber(tokens[i]);
+    if (num != null) { value = num; valueIdx = i; break; }
+  }
+  if (value == null) return null;
+
+  const after = tokens.slice(valueIdx + 1).join(" ");
+  const unitMatch = after.match(UNIT_RE);
+  const unit = unitMatch ? unitMatch[1] : "";
+
+  // Unidade presente e incompatível com o marcador: o nome enganou-se.
+  if (unit && cand.units && !cand.units.some((u) => unitKey(u) === unitKey(unit))) return null;
+
+  const ref = extractRef(unit ? after.slice(after.indexOf(unit) + unit.length) : after);
+  return { value, unit, ref };
+}
+
+function build(cand: Candidate, clean: string, raw: string, v: { value: string; unit: string; ref: string }): ParsedValue {
+  const num = Number(v.value);
+  return {
+    marker: cand.marker,
+    label: clean.slice(cand.at, cand.at + cand.alias.length).trim(),
+    raw: raw.trim(),
+    value: v.value,
+    unit: v.unit,
+    ref: v.ref,
+    keep: true,
+    suspect: !!cand.plaus && (num < cand.plaus[0] || num > cand.plaus[1]),
+  };
+}
+
+export function parseLine(line: string): ParsedValue | null {
+  const { clean, viable } = findCandidates(line);
   for (const cand of viable) {
-    const rest = clean.slice(cand.at + cand.alias.length);
-    const tokens = rest.split(/\s+/).filter(Boolean);
-
-    let value: string | null = null;
-    let valueIdx = -1;
-    for (let i = 0; i < tokens.length; i++) {
-      const num = parseNumber(tokens[i]);
-      if (num != null) { value = num; valueIdx = i; break; }
-    }
-    if (value == null) continue;
-
-    const after = tokens.slice(valueIdx + 1).join(" ");
-    const unitMatch = after.match(UNIT_RE);
-    const unit = unitMatch ? unitMatch[1] : "";
-
-    // Unidade presente e incompatível com o marcador: o nome enganou-se.
-    // Passa-se ao candidato seguinte em vez de gravar o valor no sítio errado.
-    if (unit && cand.units && !cand.units.some((u) => unitKey(u) === unitKey(unit))) continue;
-
-    const ref = extractRef(unit ? after.slice(after.indexOf(unit) + unit.length) : after);
-    const num = Number(value);
-    const suspect = !!cand.plaus && (num < cand.plaus[0] || num > cand.plaus[1]);
-    return {
-      marker: cand.marker,
-      label: clean.slice(cand.at, cand.at + cand.alias.length).trim(),
-      raw: line.trim(),
-      value,
-      unit,
-      ref,
-      keep: true,
-      suspect,
-    };
+    const v = readValue(clean.slice(cand.at + cand.alias.length), cand);
+    if (v) return build(cand, clean, line, v);
   }
   return null;
 }
@@ -233,14 +262,39 @@ export function parseLine(line: string): ParsedValue | null {
 export function parseValues(lines: string[]): ParsedValue[] {
   const out: ParsedValue[] = [];
   const seen = new Set<string>();
-  for (const line of lines) {
-    const v = parseLine(line);
-    if (!v || !v.marker) continue;
+
+  const take = (v: ParsedValue | null) => {
+    if (!v || !v.marker) return false;
     // Uma folha repete o nome do parâmetro no cabeçalho e no rodapé; fica o
     // primeiro reconhecido, que é o da tabela de resultados.
-    if (seen.has(v.marker)) continue;
+    if (seen.has(v.marker)) return false;
     seen.add(v.marker);
     out.push(v);
+    return true;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    if (take(parseLine(lines[i]))) continue;
+
+    // Nome reconhecido mas sem valor na própria linha: o resultado está nas
+    // linhas seguintes. Exige-se que a linha do valor traga unidade — assim
+    // salta-se por cima da coluna de "Resultados Anteriores", que é só números
+    // soltos, e apanha-se a linha do resultado desta colheita.
+    const { clean, viable } = findCandidates(lines[i]);
+    if (viable.length === 0) continue;
+    const hasOwnValue = viable.some((c) => readValue(clean.slice(c.at + c.alias.length), c));
+    if (hasOwnValue) continue;
+
+    for (let j = i + 1; j <= Math.min(i + 3, lines.length - 1); j++) {
+      // Se a linha seguinte já nomeia outro parâmetro, este ficou sem valor.
+      if (findCandidates(lines[j]).viable.length > 0 && parseLine(lines[j])) break;
+      let matched = false;
+      for (const cand of viable) {
+        const v = readValue(lines[j], cand);
+        if (v && v.unit) { matched = take(build(cand, clean, `${lines[i]} ⏎ ${lines[j]}`, v)); break; }
+      }
+      if (matched) break;
+    }
   }
   return out;
 }
