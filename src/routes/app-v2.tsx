@@ -21,7 +21,7 @@ type RouteId =
   | "home" | "data" | "upload" | "messages" | "alerts"
   | "diary" | "consultas" | "profile" | "marker" | "summary" | "schedule" | "devices" | "assistente"
   | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar"
-  | "sintomas" | "nutricao";
+  | "sintomas" | "nutricao" | "registos";
 
 type NavRoute = RouteId | { route: "marker"; marker: BioMarker };
 
@@ -32,6 +32,8 @@ interface NavCtxValue {
   logout: () => void;
 }
 
+type BioState = "optimal" | "good" | "attention" | "nodata";
+
 interface BioMarker {
   name: string;
   value: string;
@@ -41,6 +43,8 @@ interface BioMarker {
   delta: string;
   spark: number[];
   tone?: "alert" | "watch";
+  state: BioState;
+  panel: string;
 }
 
 // ─── Contexts ────────────────────────────────────────
@@ -92,6 +96,15 @@ const Icon = {
 // da linha — verde dentro do intervalo, vermelho fora — usando o mesmo domínio
 // vertical dos dados, sem alterar o traçado nem o comportamento dos outros usos.
 function Spark({ pts, color = "currentColor", w = 80, h = 22, bandMin, bandMax }: { pts: number[]; color?: string; w?: number; h?: number; bandMin?: number | null; bandMax?: number | null }) {
+  // Marcadores ainda sem colheita chegam com série vazia — sem pontos não há
+  // linha para desenhar, e Math.min([]) devolveria Infinity.
+  if (pts.length < 2) {
+    return (
+      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+        <line x1="0" x2={w} y1={h / 2} y2={h / 2} stroke="var(--fg-15)" strokeWidth="1.5" strokeDasharray="3 4" strokeLinecap="round"/>
+      </svg>
+    );
+  }
   const min = Math.min(...pts);
   const max = Math.max(...pts);
   const range = max - min || 1;
@@ -456,7 +469,7 @@ function PlanoHoje() {
 // ─── 00 Home ─────────────────────────────────────────
 function HomeScreenV2() {
   const { go } = useNav();
-  const { t } = useLang();
+  const { t, L } = useLang();
   const { status: whoop } = useWhoopStatus();
   const wm = whoop?.connected ? whoop.metrics : null;
 
@@ -467,6 +480,14 @@ function HomeScreenV2() {
   const deepSleepLive = deepSleepHist.length >= 2 ? median(deepSleepHist) : null;
   const hrvLive = hrvHist.length >= 2 ? wm?.hrv ?? null : null;
   const restHrLive = restHrHist.length >= 2 ? median(restHrHist) : null;
+
+  // Cada sinal declara de onde vem, segundo a fonte principal escolhida em
+  // Dispositivos — nunca há dois dispositivos a alimentar a mesma linha.
+  const sleepSrc = useSourceName("sleep");
+  const hrvSrc = useSourceName("hrv");
+  const stepsSrc = useSourceName("steps");
+  const restHrSrc = useSourceName("restingHr");
+  const withSrc = (base: string, src: string | null) => (src ? `${base} · ${src}` : base);
 
   return (
     <div className="rv-screen">
@@ -521,7 +542,9 @@ function HomeScreenV2() {
               {t("home.insightPre")}<strong>{t("home.insightStrong1")}</strong>{t("home.insightMid")}<strong>{t("home.insightStrong2")}</strong>{t("home.insightPost")}
             </div>
             <div className="rv-insight-foot">
-              {t("home.insightSource")}
+              {hrvSrc
+                ? `${L("Fonte","Source")}: ${hrvSrc} · ${L("sincronizado há 4 min","synced 4 min ago")}`
+                : L("Sem dispositivo ligado","No device connected")}
             </div>
           </div>
         </section>
@@ -536,7 +559,7 @@ function HomeScreenV2() {
               <div className="rv-signal-icon">{Icon.moon}</div>
               <div className="rv-signal-meta">
                 <span className="rv-signal-name">{t("signal.deepSleep")}</span>
-                <span className="rv-signal-sub">{deepSleepLive != null ? "via Whoop" : t("signal.deepSleepSub")}</span>
+                <span className="rv-signal-sub">{withSrc(t("signal.deepSleepSub"), sleepSrc)}</span>
               </div>
               <span className="rv-signal-val">{deepSleepLive ?? 68} <span style={{color: "var(--fg-50)", fontSize: 11}}>min</span></span>
               <Spark pts={deepSleepHist.length >= 2 ? deepSleepHist : [60,72,54,68,80,52,68]} color="var(--lime)"/>
@@ -545,7 +568,7 @@ function HomeScreenV2() {
               <div className="rv-signal-icon">{Icon.heart}</div>
               <div className="rv-signal-meta">
                 <span className="rv-signal-name">{t("signal.hrv")}</span>
-                <span className="rv-signal-sub">{t("signal.hrvSub")}</span>
+                <span className="rv-signal-sub">{withSrc(t("signal.hrvSub"), hrvSrc)}</span>
               </div>
               <span className="rv-signal-val">{hrvLive ?? 42} <span style={{color: "var(--fg-50)", fontSize: 11}}>ms</span></span>
               <Spark pts={hrvHist.length >= 2 ? hrvHist : [48,52,46,40,38,44,42]} color="var(--watch)"/>
@@ -554,7 +577,7 @@ function HomeScreenV2() {
               <div className="rv-signal-icon">{Icon.steps}</div>
               <div className="rv-signal-meta">
                 <span className="rv-signal-name">{t("signal.steps")}</span>
-                <span className="rv-signal-sub">{t("signal.stepsSub")}</span>
+                <span className="rv-signal-sub">{withSrc(t("signal.stepsSub"), stepsSrc)}</span>
               </div>
               <span className="rv-signal-val">7,2k</span>
               <Spark pts={[6800,8200,5400,9100,7600,6900,7200]} color="var(--accent)"/>
@@ -563,7 +586,7 @@ function HomeScreenV2() {
               <div className="rv-signal-icon">{Icon.zap}</div>
               <div className="rv-signal-meta">
                 <span className="rv-signal-name">{t("signal.restHr")}</span>
-                <span className="rv-signal-sub">{t("signal.restHrSub")}</span>
+                <span className="rv-signal-sub">{withSrc(t("signal.restHrSub"), restHrSrc)}</span>
               </div>
               <span className="rv-signal-val">{restHrLive ?? 58} <span style={{color: "var(--fg-50)", fontSize: 11}}>bpm</span></span>
               <Spark pts={restHrHist.length >= 2 ? restHrHist : [62,60,58,57,59,56,58]} color="var(--lime)"/>
@@ -608,36 +631,213 @@ function HomeScreenV2() {
 }
 
 // ─── Data ────────────────────────────────────────────
-const BIOS_ALERT: BioMarker[] = [
-  { name: "Estradiol",  value: "38",  unit: "pg/mL", target: "60–150", targetRange: { min: 60,   max: 150 }, delta: "↓ 36.7%", spark: [78,72,65,58,52,45,38],           tone: "alert" },
-  { name: "ApoB",       value: "102", unit: "mg/dL", target: "≤ 80",   targetRange: { min: null, max: 80  }, delta: "↓ 7.3%",  spark: [125,120,115,110,108,105,102],     tone: "watch" },
-  { name: "HbA1c",      value: "5.7", unit: "%",     target: "≤ 5.4",  targetRange: { min: null, max: 5.4 }, delta: "↓ 3.4%",  spark: [6.1,5.9,5.9,5.8,5.8,5.7,5.7],   tone: "watch" },
-  { name: "LDL-C",      value: "118", unit: "mg/dL", target: "≤ 100",  targetRange: { min: null, max: 100 }, delta: "↓ 4.0%",  spark: [142,135,130,125,122,120,118],     tone: "watch" },
+// Painel completo de demonstração. A série de 7 pontos de cada marcador é
+// gerada de forma determinística a partir do valor atual e da variação — tem
+// de ser determinística (nada de Math.random) senão o servidor e o cliente
+// desenham gráficos diferentes e a hidratação parte.
+const SPARK_WOBBLE = [0, 0.35, -0.2, 0.5, -0.15, 0.25, 0];
+
+function roundLike(v: number, ref: number): number {
+  if (Math.abs(ref) >= 100) return Math.round(v);
+  if (Math.abs(ref) >= 10) return Math.round(v * 10) / 10;
+  return Math.round(v * 100) / 100;
+}
+
+function mkSpark(end: number, deltaPct: number): number[] {
+  const start = deltaPct === 0 ? end * 0.98 : end / (1 + deltaPct / 100);
+  const span = end - start;
+  const amp = Math.abs(span) * 0.25 || Math.abs(end) * 0.015;
+  return SPARK_WOBBLE.map((w, i) => roundLike(start + span * (i / 6) + w * amp, end));
+}
+
+function deltaLabel(pct: number): string {
+  if (pct === 0) return "→";
+  return `${pct > 0 ? "↑" : "↓"} ${Math.abs(pct)}%`;
+}
+
+// [nome, valor, unidade, alvo legível, min, max, variação %, estado, painel]
+type BioRowTuple = [string, string, string, string, number | null, number | null, number, BioState, string];
+
+const BIO_TABLE: BioRowTuple[] = [
+  // Hormonal
+  ["Estradiol",              "38",   "pg/mL",   "60–150",  60,   150,  -36.7, "attention", "hormonal"],
+  ["FSH",                    "18.4", "mUI/mL",  "3–20",    3,    20,    22,   "good",      "hormonal"],
+  ["LH",                     "9.2",  "mUI/mL",  "2–15",    2,    15,    14,   "good",      "hormonal"],
+  ["Progesterona",           "0.8",  "ng/mL",   "0.2–1.5", 0.2,  1.5,  -12,   "optimal",   "hormonal"],
+  ["Testosterona total",     "32",   "ng/dL",   "15–70",   15,   70,     6,   "optimal",   "hormonal"],
+  ["SHBG",                   "62",   "nmol/L",  "30–90",   30,   90,     9,   "optimal",   "hormonal"],
+  ["DHEA-S",                 "148",  "µg/dL",   "65–380",  65,   380,   -8,   "optimal",   "hormonal"],
+  ["Cortisol matinal",       "16.2", "µg/dL",   "6–19",    6,    19,    11,   "good",      "hormonal"],
+  ["Prolactina",             "12.4", "ng/mL",   "4–23",    4,    23,    -5,   "optimal",   "hormonal"],
+  ["AMH",                    "0.42", "ng/mL",   "> 0.5",   0.5,  null, -28,   "attention", "hormonal"],
+  ["Testosterona livre",     "—",    "pg/mL",   "0.5–5.0", 0.5,  5.0,    0,   "nodata",    "hormonal"],
+  ["Cortisol salivar 23h",   "—",    "nmol/L",  "< 3.0",   null, 3.0,    0,   "nodata",    "hormonal"],
+  // Cardiometabólico
+  ["ApoB",                   "102",  "mg/dL",   "≤ 80",    null, 80,    -7.3, "attention", "cardio"],
+  ["LDL-C",                  "118",  "mg/dL",   "≤ 100",   null, 100,   -4,   "attention", "cardio"],
+  ["HDL-C",                  "62",   "mg/dL",   "≥ 60",    60,   null,   1.6, "good",      "cardio"],
+  ["Colesterol total",       "218",  "mg/dL",   "< 200",   null, 200,   -3,   "attention", "cardio"],
+  ["Triglicéridos",          "92",   "mg/dL",   "< 100",   null, 100,   -6,   "good",      "cardio"],
+  ["Lp(a)",                  "24",   "nmol/L",  "< 75",    null, 75,     0,   "optimal",   "cardio"],
+  ["Apo A1",                 "168",  "mg/dL",   "> 140",   140,  null,   5,   "optimal",   "cardio"],
+  ["Rácio ApoB/ApoA1",       "0.61", "—",       "< 0.6",   null, 0.6,   -6,   "good",      "cardio"],
+  ["HbA1c",                  "5.7",  "%",       "≤ 5.4",   null, 5.4,   -3.4, "attention", "cardio"],
+  ["Glicose",                "98",   "mg/dL",   "70–99",   70,   99,    -2,   "good",      "cardio"],
+  ["Insulina",               "12.4", "µU/mL",   "< 10",    null, 10,    -5,   "attention", "cardio"],
+  ["HOMA-IR",                "3.0",  "—",       "< 2.0",   null, 2.0,   -6,   "attention", "cardio"],
+  ["Rácio TG/HDL",           "1.5",  "—",       "< 2.0",   null, 2.0,   -8,   "optimal",   "cardio"],
+  ["Peptídeo C",             "2.4",  "ng/mL",   "0.8–3.9", 0.8,  3.9,   -4,   "good",      "cardio"],
+  ["Frutosamina",            "232",  "µmol/L",  "205–285", 205,  285,   -2,   "good",      "cardio"],
+  ["NT-proBNP",              "42",   "pg/mL",   "< 125",   null, 125,    0,   "optimal",   "cardio"],
+  ["Insulina pós-prandial",  "—",    "µU/mL",   "< 60",    null, 60,     0,   "nodata",    "cardio"],
+  // Tiroide
+  ["TSH",                    "2.1",  "mUI/L",   "0.5–2.5", 0.5,  2.5,    0,   "optimal",   "tiroide"],
+  ["T4 livre",               "1.15", "ng/dL",   "0.9–1.7", 0.9,  1.7,    2,   "optimal",   "tiroide"],
+  ["T3 livre",               "3.1",  "pg/mL",   "2.3–4.2", 2.3,  4.2,   -3,   "optimal",   "tiroide"],
+  ["Anti-TPO",               "12",   "UI/mL",   "< 34",    null, 34,    -4,   "optimal",   "tiroide"],
+  ["Anti-tiroglobulina",     "15",   "UI/mL",   "< 115",   null, 115,    0,   "optimal",   "tiroide"],
+  // Inflamação
+  ["PCR-us",                 "1.2",  "mg/L",    "< 1.0",   null, 1.0,   -8,   "attention", "inflam"],
+  ["Homocisteína",           "6.4",  "µmol/L",  "< 8",     null, 8,      0,   "optimal",   "inflam"],
+  ["Fibrinogénio",           "312",  "mg/dL",   "200–400", 200,  400,    3,   "optimal",   "inflam"],
+  ["Velocidade de sedim.",   "14",   "mm/h",    "< 20",    null, 20,   -12,   "optimal",   "inflam"],
+  ["IL-6",                   "2.8",  "pg/mL",   "< 3.0",   null, 3.0,   -6,   "good",      "inflam"],
+  ["Ácido úrico",            "5.2",  "mg/dL",   "2.5–6.0", 2.5,  6.0,    4,   "good",      "inflam"],
+  // Vitaminas e minerais
+  ["Vitamina D",             "48",   "ng/mL",   "40–60",   40,   60,    14,   "optimal",   "vitaminas"],
+  ["Vitamina B12",           "512",  "pg/mL",   "400–900", 400,  900,    9,   "optimal",   "vitaminas"],
+  ["Folato",                 "11.2", "ng/mL",   "> 5.0",   5.0,  null,   6,   "optimal",   "vitaminas"],
+  ["Ferritina",              "68",   "ng/mL",   "30–200",  30,   200,   12,   "optimal",   "vitaminas"],
+  ["Ferro sérico",           "92",   "µg/dL",   "60–170",  60,   170,    4,   "optimal",   "vitaminas"],
+  ["Transferrina",           "268",  "mg/dL",   "200–360", 200,  360,   -2,   "optimal",   "vitaminas"],
+  ["Sat. transferrina",      "26",   "%",       "20–45",   20,   45,     3,   "optimal",   "vitaminas"],
+  ["Magnésio",               "2.1",  "mg/dL",   "1.8–2.4", 1.8,  2.4,    5,   "optimal",   "vitaminas"],
+  ["Zinco",                  "88",   "µg/dL",   "70–120",  70,   120,    7,   "optimal",   "vitaminas"],
+  ["Selénio",                "98",   "µg/L",    "70–150",  70,   150,    2,   "optimal",   "vitaminas"],
+  ["Cobre",                  "102",  "µg/dL",   "70–140",  70,   140,    0,   "optimal",   "vitaminas"],
+  ["Vitamina A",             "0.52", "mg/L",    "0.3–0.8", 0.3,  0.8,    3,   "optimal",   "vitaminas"],
+  ["Vitamina E",             "12.4", "mg/L",    "5–18",    5,    18,     4,   "optimal",   "vitaminas"],
+  ["Iodo urinário",          "118",  "µg/L",    "100–200", 100,  200,   -6,   "good",      "vitaminas"],
+  ["Cálcio",                 "9.4",  "mg/dL",   "8.6–10.2",8.6,  10.2,   1,   "optimal",   "vitaminas"],
+  ["PTH",                    "42",   "pg/mL",   "15–65",   15,   65,    -6,   "optimal",   "vitaminas"],
+  ["Fósforo",                "3.4",  "mg/dL",   "2.5–4.5", 2.5,  4.5,    0,   "optimal",   "vitaminas"],
+  ["Índice Ómega-3",         "—",    "%",       "> 8",     8,    null,   0,   "nodata",    "vitaminas"],
+  // Fígado e rim
+  ["ALT",                    "22",   "U/L",     "< 33",    null, 33,    -8,   "optimal",   "figado"],
+  ["AST",                    "20",   "U/L",     "< 32",    null, 32,    -5,   "optimal",   "figado"],
+  ["GGT",                    "28",   "U/L",     "< 40",    null, 40,   -12,   "optimal",   "figado"],
+  ["Fosfatase alcalina",     "68",   "U/L",     "35–105",  35,   105,    2,   "optimal",   "figado"],
+  ["Bilirrubina total",      "0.6",  "mg/dL",   "0.2–1.2", 0.2,  1.2,   -4,   "optimal",   "figado"],
+  ["Albumina",               "4.4",  "g/dL",    "3.5–5.0", 3.5,  5.0,    1,   "optimal",   "figado"],
+  ["Proteína total",         "7.1",  "g/dL",    "6.4–8.3", 6.4,  8.3,    0,   "optimal",   "figado"],
+  ["Creatinina",             "0.82", "mg/dL",   "0.5–1.0", 0.5,  1.0,    2,   "optimal",   "figado"],
+  ["TFG estimada",           "92",   "mL/min",  "> 90",    90,   null,  -3,   "good",      "figado"],
+  ["Ureia",                  "32",   "mg/dL",   "15–45",   15,   45,     5,   "optimal",   "figado"],
+  ["Cistatina C",            "0.88", "mg/L",    "0.6–1.0", 0.6,  1.0,    3,   "good",      "figado"],
+  ["Rácio alb./creat.",      "12",   "mg/g",    "< 30",    null, 30,    -6,   "optimal",   "figado"],
+  // Hematologia
+  ["Hemoglobina",            "13.4", "g/dL",    "12–16",   12,   16,     2,   "optimal",   "hemato"],
+  ["Hematócrito",            "40.2", "%",       "36–46",   36,   46,     1,   "optimal",   "hemato"],
+  ["Eritrócitos",            "4.6",  "10¹²/L",  "4.0–5.2", 4.0,  5.2,    0,   "optimal",   "hemato"],
+  ["VGM",                    "88",   "fL",      "80–100",  80,   100,    1,   "optimal",   "hemato"],
+  ["HGM",                    "29.4", "pg",      "27–33",   27,   33,     0,   "optimal",   "hemato"],
+  ["RDW",                    "13.1", "%",       "11.5–14.5",11.5,14.5,  -2,   "optimal",   "hemato"],
+  ["Leucócitos",             "6.2",  "10⁹/L",   "4.0–10.0",4.0,  10.0,  -4,   "optimal",   "hemato"],
+  ["Neutrófilos",            "3.6",  "10⁹/L",   "1.8–7.0", 1.8,  7.0,   -3,   "optimal",   "hemato"],
+  ["Linfócitos",             "2.0",  "10⁹/L",   "1.0–3.5", 1.0,  3.5,    2,   "optimal",   "hemato"],
+  ["Rácio neutr./linf.",     "1.8",  "—",       "< 2.5",   null, 2.5,   -5,   "good",      "hemato"],
+  ["Plaquetas",              "248",  "10⁹/L",   "150–400", 150,  400,    3,   "optimal",   "hemato"],
+  ["Eosinófilos",            "0.18", "10⁹/L",   "0.0–0.5", 0.0,  0.5,   -8,   "optimal",   "hemato"],
 ];
 
-const BIOS_OK: BioMarker[] = [
-  { name: "Vitamina D",      value: "48",   unit: "ng/mL",  target: "40–60",   targetRange: { min: 40,   max: 60   }, delta: "↑ 14%",  spark: [28,32,35,38,42,45,48] },
-  { name: "HDL-C",           value: "62",   unit: "mg/dL",  target: "≥ 60",    targetRange: { min: 60,   max: null }, delta: "↑ 1.6%", spark: [60,61,60,62,61,62,62] },
-  { name: "TSH",             value: "2.1",  unit: "mUI/L",  target: "0.5–2.5", targetRange: { min: 0.5,  max: 2.5  }, delta: "→",       spark: [2.2,2.1,2.0,2.1,2.1,2.1,2.1] },
-  { name: "PCR-us",          value: "1.2",  unit: "mg/L",   target: "< 1.0",   targetRange: { min: null, max: 1.0  }, delta: "↓ 8%",   spark: [2.1,1.8,1.6,1.5,1.4,1.3,1.2], tone: "watch" },
-  { name: "Glicose",         value: "98",   unit: "mg/dL",  target: "70–99",   targetRange: { min: 70,   max: 99   }, delta: "↓ 2%",   spark: [105,102,100,99,99,98,98] },
-  { name: "Insulina",        value: "12.4", unit: "µU/mL",  target: "< 10",    targetRange: { min: null, max: 10   }, delta: "↓ 5%",   spark: [14.0,13.6,13.2,13.0,12.8,12.6,12.4], tone: "watch" },
-  { name: "Triglicéridos",   value: "92",   unit: "mg/dL",  target: "< 100",   targetRange: { min: null, max: 100  }, delta: "↓ 6%",   spark: [110,105,100,98,95,93,92] },
-  { name: "Colesterol total", value: "218", unit: "mg/dL",  target: "< 200",   targetRange: { min: null, max: 200  }, delta: "↓ 3%",   spark: [232,228,225,222,220,219,218], tone: "watch" },
-  { name: "Homocisteína",    value: "6.4",  unit: "µmol/L", target: "< 8",     targetRange: { min: null, max: 8    }, delta: "→",       spark: [7.0,6.8,6.5,6.5,6.4,6.4,6.4] },
-];
+// O tom antigo ("alert"/"watch"/ausente) continua a comandar a cor das linhas
+// e sparklines já existentes; deriva-se do estado para não haver duas fontes
+// de verdade sobre o mesmo marcador.
+function toneFromState(state: BioState, deltaPct: number): "alert" | "watch" | undefined {
+  if (state !== "attention") return undefined;
+  return Math.abs(deltaPct) >= 20 ? "alert" : "watch";
+}
 
-// Painéis temáticos: agrupamento de biomarcadores definido pela equipa clínica
-// no portal do médico e refletido aqui. Cobrem os 13 biomarcadores disponíveis
-// sem sobreposição — "Painel de Recuperação" não entra aqui porque HRV, sono e
-// FC repouso são sinais do wearable (cartão Whoop), não análises de sangue com
-// alvo laboratorial como os desta lista.
-interface BioPanel { id: string; namePt: string; nameEn: string; icon: ReactNode; markers: string[] }
+const BIOMARKERS: BioMarker[] = BIO_TABLE.map(([name, value, unit, target, min, max, deltaPct, state, panel]) => ({
+  name, value, unit, target,
+  targetRange: { min, max },
+  delta: state === "nodata" ? "—" : deltaLabel(deltaPct),
+  spark: state === "nodata" ? [] : mkSpark(Number(value), deltaPct),
+  tone: toneFromState(state, deltaPct),
+  state, panel,
+}));
+
+const BIOS_ALERT = BIOMARKERS.filter((b) => b.state === "attention");
+const BIOS_OK = BIOMARKERS.filter((b) => b.state === "optimal" || b.state === "good");
+const BIOS_NODATA = BIOMARKERS.filter((b) => b.state === "nodata");
+
+// Painéis temáticos: agrupamento definido pela equipa clínica no portal do
+// médico e refletido aqui. "Painel de Recuperação" não entra porque HRV, sono
+// e FC repouso são sinais do wearable (cartão Whoop), não análises de sangue
+// com alvo laboratorial como as desta lista.
+interface BioPanel { id: string; namePt: string; nameEn: string; icon: ReactNode }
 const BIO_PANELS: BioPanel[] = [
-  { id: "hormonal", namePt: "Painel Hormonal", nameEn: "Hormonal Panel", icon: Icon.flask, markers: ["Estradiol", "TSH"] },
-  { id: "cardio", namePt: "Painel Cardiometabólico", nameEn: "Cardiometabolic Panel", icon: Icon.heart, markers: ["ApoB", "LDL-C", "HbA1c", "HDL-C", "Glicose", "Insulina", "Triglicéridos", "Colesterol total"] },
-  { id: "inflam", namePt: "Painel Metabólico & Inflamatório", nameEn: "Metabolic & Inflammatory Panel", icon: Icon.zap, markers: ["PCR-us", "Homocisteína", "Vitamina D"] },
+  { id: "hormonal",  namePt: "Hormonal",           nameEn: "Hormonal",          icon: Icon.flask },
+  { id: "cardio",    namePt: "Cardiometabólico",   nameEn: "Cardiometabolic",   icon: Icon.heart },
+  { id: "tiroide",   namePt: "Tiroide",            nameEn: "Thyroid",           icon: Icon.zap },
+  { id: "inflam",    namePt: "Inflamação",         nameEn: "Inflammation",      icon: Icon.pulse },
+  { id: "vitaminas", namePt: "Vitaminas e minerais", nameEn: "Vitamins & minerals", icon: Icon.pill },
+  { id: "figado",    namePt: "Fígado e rim",       nameEn: "Liver & kidney",    icon: Icon.flask },
+  { id: "hemato",    namePt: "Hematologia",        nameEn: "Haematology",       icon: Icon.heart },
 ];
+
+const BIO_STATE_META: { state: BioState; color: string; pt: string; en: string }[] = [
+  { state: "optimal",   color: "var(--lime)",     pt: "Optimizado",      en: "Optimised" },
+  { state: "good",      color: "var(--bio-good)", pt: "Bom",             en: "Good" },
+  { state: "attention", color: "var(--watch)",    pt: "Precisa atenção", en: "Needs attention" },
+  { state: "nodata",    color: "var(--fg-15)",    pt: "Sem dados",       en: "No data" },
+];
+
+// Resumo visual do painel: um ponto por marcador, ordenado por estado para
+// que a contagem de cada cor se leia sem contar os pontos um a um.
+const BIO_STATE_ORDER: BioState[] = ["optimal", "good", "attention", "nodata"];
+
+function BioStateGrid({ markers }: { markers: BioMarker[] }) {
+  const { go } = useNav();
+  const { L } = useLang();
+  const colorOf = (s: BioState) => BIO_STATE_META.find((m) => m.state === s)!.color;
+  const sorted = [...markers].sort(
+    (a, b) => BIO_STATE_ORDER.indexOf(a.state) - BIO_STATE_ORDER.indexOf(b.state),
+  );
+  const counts = BIO_STATE_META.map((meta) => ({
+    ...meta,
+    n: markers.filter((m) => m.state === meta.state).length,
+  })).filter((c) => c.n > 0);
+
+  return (
+    <div className="rv-dotgrid-card">
+      <div className="rv-dotgrid-head">
+        <span className="rv-dotgrid-title">{L("Biomarcadores","Biomarkers")}</span>
+        <span className="rv-dotgrid-total">{markers.length}</span>
+      </div>
+      <div className="rv-dotgrid">
+        {sorted.map((m) => (
+          <button
+            key={m.name}
+            type="button"
+            className="rv-dot-cell"
+            style={{ background: colorOf(m.state) }}
+            onClick={() => go({ route: "marker", marker: m })}
+            aria-label={`${m.name} · ${m.state === "nodata" ? L("sem dados","no data") : `${m.value} ${m.unit}`}`}
+          />
+        ))}
+      </div>
+      <div className="rv-dotgrid-legend">
+        {counts.map((c) => (
+          <span key={c.state} className="rv-dotgrid-legend-item">
+            <span className="rv-dotgrid-legend-dot" style={{ background: c.color }}/>
+            <strong>{c.n}</strong> {L(c.pt, c.en)}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function BioRow({ b }: { b: BioMarker }) {
   const { go } = useNav();
@@ -677,9 +877,11 @@ function DadosScreen() {
   const { go } = useNav();
   const { t, L } = useLang();
   const [panelId, setPanelId] = useState<string | null>(null);
-  const panel = BIO_PANELS.find((p) => p.id === panelId) ?? null;
-  const alertList = panel ? BIOS_ALERT.filter((b) => panel.markers.includes(b.name)) : BIOS_ALERT;
-  const okList = panel ? BIOS_OK.filter((b) => panel.markers.includes(b.name)) : BIOS_OK;
+  const inPanel = (b: BioMarker) => panelId === null || b.panel === panelId;
+  const gridList = BIOMARKERS.filter(inPanel);
+  const alertList = BIOS_ALERT.filter(inPanel);
+  const okList = BIOS_OK.filter(inPanel);
+  const noDataList = BIOS_NODATA.filter(inPanel);
 
   return (
     <div className="rv-screen">
@@ -702,7 +904,17 @@ function DadosScreen() {
           ))}
         </div>
 
+        <BioStateGrid markers={gridList} />
+
         <div className="rv-list">
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={() => go("registos")}>
+            <div className="rv-list-icon">{Icon.doc}</div>
+            <div className="rv-list-text">
+              <span className="rv-list-name">{L("Registos","Records")}</span>
+              <span className="rv-list-sub">{L("Sintomas, consultas, medicação e análises","Symptoms, appointments, medication and labs")}</span>
+            </div>
+            <span className="rv-chev">{Icon.chev}</span>
+          </a>
           <a className="rv-list-row" style={{cursor: "pointer"}} onClick={() => go("sintomas")}>
             <div className="rv-list-icon">{Icon.pulse}</div>
             <div className="rv-list-text">
@@ -735,6 +947,17 @@ function DadosScreen() {
           </>
         )}
 
+        {noDataList.length > 0 && (
+          <>
+            <div className="rv-bio-section-head" style={{color: "var(--fg-30)"}}>
+              <span className="rv-dot"/>{L("Sem dados","No data")} · {noDataList.length}
+            </div>
+            <div className="rv-bio-list">
+              {noDataList.map((b, i) => <BioRow key={i} b={b}/>)}
+            </div>
+          </>
+        )}
+
         <div style={{height: 100}}/>
       </div>
 
@@ -748,17 +971,19 @@ function DadosScreen() {
 function MarkerDetail({ marker }: { marker?: BioMarker }) {
   const { go } = useNav();
   const { t, L } = useLang();
-  const m: BioMarker = marker ?? { name: "Estradiol", value: "38", unit: "pg/mL", target: "60–150", targetRange: { min: 60, max: 150 }, delta: "↓ 36.7%", spark: [78,72,65,58,52,45,38], tone: "alert" };
+  const m: BioMarker = marker ?? BIOMARKERS[0];
   const tone = m.tone || "ok";
   const col = tone === "alert" ? "var(--alert)" : tone === "watch" ? "var(--watch)" : "var(--lime)";
   const pts = m.spark;
-  const min = Math.min(...pts) * 0.75;
-  const max = Math.max(...pts) * 1.25;
+  const hasSeries = pts.length >= 2;
+  const min = hasSeries ? Math.min(...pts) * 0.75 : 0;
+  const max = hasSeries ? Math.max(...pts) * 1.25 : 1;
   const W = 360, H = 180;
   const xs = pts.map((_, i) => 10 + (i / (pts.length - 1)) * (W - 20));
   const ys = pts.map((p) => H - 10 - ((p - min) / (max - min)) * (H - 20));
   const path = pts.map((_, i) => `${i === 0 ? "M" : "L"} ${xs[i].toFixed(1)} ${ys[i].toFixed(1)}`).join(" ");
-  const area = `${path} L ${xs[xs.length-1].toFixed(1)} ${H-10} L ${xs[0].toFixed(1)} ${H-10} Z`;
+  // Sem pontos não há área para fechar — xs[-1] seria undefined.
+  const area = hasSeries ? `${path} L ${xs[xs.length-1].toFixed(1)} ${H-10} L ${xs[0].toFixed(1)} ${H-10} Z` : "";
   const toY = (v: number) => H - 10 - ((v - min) / (max - min)) * (H - 20);
   const bandY1 = m.targetRange.max != null ? toY(m.targetRange.max) : null; // limite superior
   const bandY2 = m.targetRange.min != null ? toY(m.targetRange.min) : null; // limite inferior
@@ -778,32 +1003,41 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
             <div className="rv-marker-hero-val" style={{color: col}}>{m.value}<span className="rv-marker-hero-unit">{m.unit}</span></div>
             <div className="rv-marker-hero-delta" data-tone={tone}>{m.delta}</div>
           </div>
-          <div className="rv-marker-hero-target">{L("alvo","target")} {m.target} · {t("marker.lastCollection")}</div>
-        </div>
-
-        <PeriodChips className="rv-marker-period" />
-
-
-        <div className="rv-marker-chart">
-          <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" width="100%" height={H}>
-            {bandY1 != null && bandY2 != null && (
-              <rect x="0" y={bandY1} width={W} height={bandY2 - bandY1} fill="var(--lime)" opacity="0.10"/>
-            )}
-            {bandY1 != null && <line x1="0" x2={W} y1={bandY1} y2={bandY1} stroke="var(--lime)" strokeOpacity="0.5" strokeDasharray="3 3"/>}
-            {bandY2 != null && <line x1="0" x2={W} y1={bandY2} y2={bandY2} stroke="var(--lime)" strokeOpacity="0.5" strokeDasharray="3 3"/>}
-            <path d={area} fill={col} opacity="0.15"/>
-            <path d={path} fill="none" stroke={col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            {pts.map((_, i) => (
-              <circle key={i} cx={xs[i]} cy={ys[i]} r={i === pts.length - 1 ? 4.5 : 2.5}
-                fill={i === pts.length - 1 ? col : "var(--bg-elev)"} stroke={col} strokeWidth="1.5"/>
-            ))}
-          </svg>
-          <div className="rv-marker-chart-axis">
-            <span>out 25</span><span>dez 25</span><span>fev 26</span><span>abr 26</span>
+          <div className="rv-marker-hero-target">
+            {L("alvo","target")} {m.target}
+            {hasSeries ? ` · ${t("marker.lastCollection")}` : ` · ${L("sem colheita","no sample yet")}`}
           </div>
         </div>
 
-        <div className="rv-marker-context">
+        {hasSeries && <PeriodChips className="rv-marker-period" />}
+
+        {hasSeries ? (
+          <div className="rv-marker-chart">
+            <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" width="100%" height={H}>
+              {bandY1 != null && bandY2 != null && (
+                <rect x="0" y={bandY1} width={W} height={bandY2 - bandY1} fill="var(--lime)" opacity="0.10"/>
+              )}
+              {bandY1 != null && <line x1="0" x2={W} y1={bandY1} y2={bandY1} stroke="var(--lime)" strokeOpacity="0.5" strokeDasharray="3 3"/>}
+              {bandY2 != null && <line x1="0" x2={W} y1={bandY2} y2={bandY2} stroke="var(--lime)" strokeOpacity="0.5" strokeDasharray="3 3"/>}
+              <path d={area} fill={col} opacity="0.15"/>
+              <path d={path} fill="none" stroke={col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              {pts.map((_, i) => (
+                <circle key={i} cx={xs[i]} cy={ys[i]} r={i === pts.length - 1 ? 4.5 : 2.5}
+                  fill={i === pts.length - 1 ? col : "var(--bg-elev)"} stroke={col} strokeWidth="1.5"/>
+              ))}
+            </svg>
+            <div className="rv-marker-chart-axis">
+              <span>out 25</span><span>dez 25</span><span>fev 26</span><span>abr 26</span>
+            </div>
+          </div>
+        ) : (
+          <div className="rv-info-note" style={{margin: "0 20px 14px"}}>
+            <strong>{L("Ainda sem colheita","No sample yet")}</strong>
+            <span>{L("Este marcador faz parte do seu painel mas ainda não foi medido. Aparece na próxima requisição da equipa clínica.","This marker is part of your panel but hasn't been measured yet. It will be included in your clinical team's next request.")}</span>
+          </div>
+        )}
+
+        {hasSeries && <div className="rv-marker-context">
           <div className="rv-marker-context-head">
             <span className="rv-dot" data-tone={tone}/>{t("marker.contextHead")}
           </div>
@@ -817,20 +1051,22 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
               : L("Valor em monitorização. Sem alteração ao plano nesta consulta.",
                   "Value under monitoring. No change to the plan at this appointment.")}
           </div>
-        </div>
+        </div>}
 
-        <div className="rv-marker-history">
-          <div className="rv-section-head" style={{margin: "0 0 8px"}}>
-            <h3>{t("marker.history")}</h3>
-            <a>{t("marker.seeAll")}</a>
+        {hasSeries && (
+          <div className="rv-marker-history">
+            <div className="rv-section-head" style={{margin: "0 0 8px"}}>
+              <h3>{t("marker.history")}</h3>
+              <a>{t("marker.seeAll")}</a>
+            </div>
+            <div className="rv-marker-rows">
+              <div className="rv-marker-row"><span className="rv-marker-row-date">22 abr 2026</span><span className="rv-marker-row-lab">Synlab</span><span className="rv-marker-row-val" style={{color: col}}>{m.value}</span></div>
+              <div className="rv-marker-row"><span className="rv-marker-row-date">18 fev 2026</span><span className="rv-marker-row-lab">Synlab</span><span className="rv-marker-row-val">{pts[pts.length - 2]}</span></div>
+              <div className="rv-marker-row"><span className="rv-marker-row-date">06 dez 2025</span><span className="rv-marker-row-lab">CUF</span><span className="rv-marker-row-val">{pts[pts.length - 3]}</span></div>
+              <div className="rv-marker-row"><span className="rv-marker-row-date">14 set 2025</span><span className="rv-marker-row-lab">CUF</span><span className="rv-marker-row-val">{pts[0]}</span></div>
+            </div>
           </div>
-          <div className="rv-marker-rows">
-            <div className="rv-marker-row"><span className="rv-marker-row-date">22 abr 2026</span><span className="rv-marker-row-lab">Synlab</span><span className="rv-marker-row-val" style={{color: col}}>{m.value}</span></div>
-            <div className="rv-marker-row"><span className="rv-marker-row-date">18 fev 2026</span><span className="rv-marker-row-lab">Synlab</span><span className="rv-marker-row-val">{pts[pts.length - 2]}</span></div>
-            <div className="rv-marker-row"><span className="rv-marker-row-date">06 dez 2025</span><span className="rv-marker-row-lab">CUF</span><span className="rv-marker-row-val">{pts[pts.length - 3]}</span></div>
-            <div className="rv-marker-row"><span className="rv-marker-row-date">14 set 2025</span><span className="rv-marker-row-lab">CUF</span><span className="rv-marker-row-val">{pts[0]}</span></div>
-          </div>
-        </div>
+        )}
 
         {tone === "alert" && (
           <div className="rv-info-note">
@@ -901,8 +1137,7 @@ function SymptomTrendCard({ entries }: { entries: SymptomEntry[] }) {
   const path = sorted.map((_, i) => `${i === 0 ? "M" : "L"} ${xs[i].toFixed(1)} ${ys[i].toFixed(1)}`).join(" ");
   const yRedBot = toY(3.5);
   const yGreenTop = toY(2.5);
-  const locale = lang === "pt" ? "pt-PT" : "en-GB";
-  const fmt = (iso: string) => new Date(iso).toLocaleDateString(locale, { day: "2-digit", month: "short" });
+  const fmt = (iso: string) => fmtDay(iso, lang);
 
   return (
     <div className="rv-marker-chart" style={{margin: "0 20px 16px"}}>
@@ -953,8 +1188,7 @@ function SintomasScreen() {
     const monday = new Date(wkTime);
     const sunday = new Date(wkTime);
     sunday.setDate(sunday.getDate() + 6);
-    const locale = lang === "pt" ? "pt-PT" : "en-GB";
-    const fmt = (d: Date) => d.toLocaleDateString(locale, { day: "2-digit", month: "short" });
+    const fmt = (d: Date) => fmtDay(d, lang);
     return `${fmt(monday)} – ${fmt(sunday)}`;
   };
 
@@ -1045,7 +1279,7 @@ function SintomasScreen() {
                     {L(e.namePt, e.nameEn)}
                     {e.notePt ? <span style={{color: "var(--fg-50)"}}> · {L(e.notePt, e.noteEn ?? e.notePt)}</span> : null}
                   </span>
-                  <span className="rv-marker-row-lab">{new Date(e.at).toLocaleDateString(lang === "pt" ? "pt-PT" : "en-GB", {day: "2-digit", month: "short"})}</span>
+                  <span className="rv-marker-row-lab">{fmtDay(e.at, lang)}</span>
                   <span className="rv-marker-row-val">{e.intensity}/5</span>
                 </div>
               ))}
@@ -1057,6 +1291,173 @@ function SintomasScreen() {
       </div>
 
       <button className="rv-fab" aria-label={L("Registar sintoma", "Log symptom")} onClick={() => setShowForm(true)}>{Icon.plus}</button>
+    </div>
+  );
+}
+
+// ─── Registos (timeline unificada) ───────────────────
+type RecordType = "sintoma" | "consulta" | "medicacao" | "analise";
+
+interface RecordEntry {
+  id: string;
+  type: RecordType;
+  iso: string;
+  titlePt: string; titleEn: string;
+  subPt: string; subEn: string;
+  go?: NavRoute;
+}
+
+const RECORD_META: Record<RecordType, { color: string; pt: string; en: string }> = {
+  sintoma:   { color: "var(--watch)",    pt: "Sintoma",   en: "Symptom" },
+  consulta:  { color: "var(--bio-good)", pt: "Consulta",  en: "Appointment" },
+  medicacao: { color: "var(--violet)",   pt: "Medicação", en: "Medication" },
+  analise:   { color: "var(--lime)",     pt: "Análise",   en: "Lab" },
+};
+
+const CONSULTA_ENTRIES: RecordEntry[] = [
+  { id: "c-2026-05-12", type: "consulta", iso: "2026-05-12T14:30:00", go: "consultas",
+    titlePt: "Discussão sobre TRH personalizada", titleEn: "Personalised HRT discussion",
+    subPt: "Agendada · 14:30 · Clínica Lumiar",    subEn: "Scheduled · 14:30 · Lumiar Clinic" },
+  { id: "c-2026-04-22", type: "consulta", iso: "2026-04-22T10:00:00", go: "summary",
+    titlePt: "Revisão trimestral",                 titleEn: "Quarterly review",
+    subPt: "45 min · 3 alterações ao plano",       subEn: "45 min · 3 plan changes" },
+  { id: "c-2026-02-03", type: "consulta", iso: "2026-02-03T10:00:00", go: "consultas",
+    titlePt: "Revisão de resultados",              titleEn: "Results review",
+    subPt: "30 min · 1 alteração ao plano",        subEn: "30 min · 1 plan change" },
+  { id: "c-2025-12-10", type: "consulta", iso: "2025-12-10T10:00:00", go: "consultas",
+    titlePt: "Primeira consulta",                  titleEn: "First appointment",
+    subPt: "75 min · 4 alterações ao plano",       subEn: "75 min · 4 plan changes" },
+];
+
+const ANALISE_ENTRIES: RecordEntry[] = [
+  { id: "a-2026-04-22", type: "analise", iso: "2026-04-22T08:00:00", go: "data",
+    titlePt: "Painel completo · Synlab", titleEn: "Full panel · Synlab",
+    subPt: "82 marcadores · 9 fora do alvo", subEn: "82 markers · 9 off target" },
+  { id: "a-2026-02-18", type: "analise", iso: "2026-02-18T08:00:00", go: "data",
+    titlePt: "Painel cardiometabólico · Synlab", titleEn: "Cardiometabolic panel · Synlab",
+    subPt: "17 marcadores", subEn: "17 markers" },
+  { id: "a-2025-12-06", type: "analise", iso: "2025-12-06T08:00:00", go: "data",
+    titlePt: "Painel completo · CUF", titleEn: "Full panel · CUF",
+    subPt: "76 marcadores", subEn: "76 markers" },
+  { id: "a-2025-09-14", type: "analise", iso: "2025-09-14T08:00:00", go: "data",
+    titlePt: "Painel inicial · CUF", titleEn: "Baseline panel · CUF",
+    subPt: "68 marcadores", subEn: "68 markers" },
+];
+
+// A timeline é montada a partir das mesmas fontes que alimentam os outros
+// ecrãs — não há aqui uma segunda cópia dos dados a divergir com o tempo.
+function buildTimeline(): RecordEntry[] {
+  const sintomas: RecordEntry[] = SYMPTOM_LOG.map((s, i) => ({
+    id: `s-${i}`,
+    type: "sintoma",
+    iso: s.at,
+    go: "sintomas",
+    titlePt: s.namePt, titleEn: s.nameEn,
+    subPt: `Intensidade ${s.intensity}/5${s.notePt ? ` · ${s.notePt}` : ""}`,
+    subEn: `Intensity ${s.intensity}/5${s.noteEn ? ` · ${s.noteEn}` : ""}`,
+  }));
+
+  const medicacao: RecordEntry[] = SUPPLEMENTS.flatMap((sup) =>
+    sup.history.map((h, i) => ({
+      id: `m-${sup.id}-${i}`,
+      type: "medicacao" as const,
+      iso: `${h.iso}T09:00:00`,
+      go: "nutricao" as NavRoute,
+      titlePt: sup.namePt, titleEn: sup.nameEn,
+      subPt: `${h.eventPt} · ${h.byPt}`,
+      subEn: `${h.eventEn} · ${h.byEn}`,
+    })),
+  );
+
+  return [...sintomas, ...medicacao, ...CONSULTA_ENTRIES, ...ANALISE_ENTRIES]
+    .sort((a, b) => new Date(b.iso).getTime() - new Date(a.iso).getTime());
+}
+
+function RegistosScreen() {
+  const { go } = useNav();
+  const { L, lang } = useLang();
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<RecordType | "all">("all");
+
+  const all = buildTimeline();
+  const term = q.trim().toLowerCase();
+  const entries = all.filter((e) => {
+    if (filter !== "all" && e.type !== filter) return false;
+    if (!term) return true;
+    const hay = `${e.titlePt} ${e.titleEn} ${e.subPt} ${e.subEn} ${RECORD_META[e.type].pt} ${RECORD_META[e.type].en}`.toLowerCase();
+    return hay.includes(term);
+  });
+
+  const filters: { id: RecordType | "all"; label: string }[] = [
+    { id: "all",       label: L("Tudo","All") },
+    { id: "sintoma",   label: L("Sintoma","Symptom") },
+    { id: "consulta",  label: L("Consulta","Appointment") },
+    { id: "medicacao", label: L("Medicação","Medication") },
+    { id: "analise",   label: L("Análise","Lab") },
+  ];
+
+  const fmtDate = (iso: string) => fmtDay(iso, lang, true);
+
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <header className="rv-header">
+        <button className="rv-header-btn" onClick={() => go("data")} aria-label={L("Voltar","Back")}>{Icon.back}</button>
+        <div className="rv-header-title">{L("Registos","Records")}</div>
+        <div style={{width: 36}}/>
+      </header>
+
+      <div className="rv-body">
+        <div style={{padding: "4px 20px 12px"}}>
+          <input
+            className="rv-rec-search"
+            placeholder={L("Pesquisar nos seus registos…","Search your records…")}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
+
+        <div className="rv-panel-chips">
+          {filters.map((f) => (
+            <button key={f.id} className="rv-period-chip" data-active={filter === f.id || undefined} onClick={() => setFilter(f.id)}>
+              {f.id !== "all" && <span className="rv-rec-chip-dot" style={{background: RECORD_META[f.id as RecordType].color}}/>}
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="rv-bio-section-head" style={{color: "var(--fg-50)"}}>
+          <span className="rv-dot"/>{entries.length} {entries.length === 1 ? L("registo","record") : L("registos","records")}
+        </div>
+
+        {entries.length === 0 ? (
+          <div style={{padding: "20px", textAlign: "center", color: "var(--fg-50)", fontSize: 13}}>
+            {L("Nada encontrado para esta pesquisa.","Nothing found for this search.")}
+          </div>
+        ) : (
+          <div className="rv-rec-list">
+            {entries.map((e) => {
+              const meta = RECORD_META[e.type];
+              return (
+                <button key={e.id} type="button" className="rv-rec-row" onClick={() => e.go && go(e.go)}>
+                  <span className="rv-rec-bar" style={{background: meta.color}}/>
+                  <span className="rv-rec-body">
+                    <span className="rv-rec-top">
+                      <span className="rv-rec-tag" style={{color: meta.color, borderColor: meta.color}}>{L(meta.pt, meta.en)}</span>
+                      <span className="rv-rec-date">{fmtDate(e.iso)}</span>
+                    </span>
+                    <span className="rv-rec-title">{L(e.titlePt, e.titleEn)}</span>
+                    <span className="rv-rec-sub">{L(e.subPt, e.subEn)}</span>
+                  </span>
+                  <span className="rv-chev">{Icon.chev}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div style={{height: 90}}/>
+      </div>
     </div>
   );
 }
@@ -2039,7 +2440,7 @@ function PerfilScreen() {
 }
 
 // ─── Nutrição & Suplementos ──────────────────────────
-interface SupplementChange { datePt: string; dateEn: string; byPt: string; byEn: string; eventPt: string; eventEn: string }
+interface SupplementChange { iso: string; datePt: string; dateEn: string; byPt: string; byEn: string; eventPt: string; eventEn: string }
 interface Supplement {
   id: string;
   namePt: string; nameEn: string;
@@ -2058,9 +2459,9 @@ const SUPPLEMENTS: Supplement[] = [
     notePt: "Vitamina D estava em 28 ng/mL em set 25 — subiu para 48 com a dose atual. Manter.",
     noteEn: "Vitamin D was at 28 ng/mL in Sep 25 — rose to 48 with the current dose. Keep as is.",
     history: [
-      { datePt: "22 abr 2026", dateEn: "22 Apr 2026", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Dose mantida após reavaliação", eventEn: "Dose kept after review" },
-      { datePt: "06 dez 2025", dateEn: "06 Dec 2025", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Dose aumentada para 4000 UI", eventEn: "Dose increased to 4000 IU" },
-      { datePt: "14 set 2025", dateEn: "14 Sep 2025", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Prescrito · 2000 UI", eventEn: "Prescribed · 2000 IU" },
+      { iso: "2026-04-22", datePt: "22 abr 2026", dateEn: "22 Apr 2026", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Dose mantida após reavaliação", eventEn: "Dose kept after review" },
+      { iso: "2025-12-06", datePt: "06 dez 2025", dateEn: "06 Dec 2025", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Dose aumentada para 4000 UI", eventEn: "Dose increased to 4000 IU" },
+      { iso: "2025-09-14", datePt: "14 set 2025", dateEn: "14 Sep 2025", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Prescrito · 2000 UI", eventEn: "Prescribed · 2000 IU" },
     ],
   },
   {
@@ -2071,8 +2472,8 @@ const SUPPLEMENTS: Supplement[] = [
     notePt: "ApoB em descida progressiva desde o início (jan 26). Manter o plano atual e reavaliar em 8 semanas.",
     noteEn: "ApoB progressively decreasing since it started (Jan 26). Keep the current plan and reassess in 8 weeks.",
     history: [
-      { datePt: "18 fev 2026", dateEn: "18 Feb 2026", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Mantida após 1º controlo de ApoB", eventEn: "Kept after 1st ApoB check" },
-      { datePt: "20 jan 2026", dateEn: "20 Jan 2026", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Prescrita · 500 mg antes do jantar", eventEn: "Prescribed · 500 mg before dinner" },
+      { iso: "2026-02-18", datePt: "18 fev 2026", dateEn: "18 Feb 2026", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Mantida após 1º controlo de ApoB", eventEn: "Kept after 1st ApoB check" },
+      { iso: "2026-01-20", datePt: "20 jan 2026", dateEn: "20 Jan 2026", byPt: "Médica responsável", byEn: "Responsible doctor", eventPt: "Prescrita · 500 mg antes do jantar", eventEn: "Prescribed · 500 mg before dinner" },
     ],
   },
   {
@@ -2083,7 +2484,7 @@ const SUPPLEMENTS: Supplement[] = [
     notePt: "Introduzido após queixas de sono fragmentado. Sono profundo tem melhorado de forma consistente desde então.",
     noteEn: "Introduced after fragmented sleep complaints. Deep sleep has improved consistently since.",
     history: [
-      { datePt: "11 mar 2026", dateEn: "11 Mar 2026", byPt: "Nutricionista", byEn: "Nutritionist", eventPt: "Prescrito · 400 mg ao deitar", eventEn: "Prescribed · 400 mg at bedtime" },
+      { iso: "2026-03-11", datePt: "11 mar 2026", dateEn: "11 Mar 2026", byPt: "Nutricionista", byEn: "Nutritionist", eventPt: "Prescrito · 400 mg ao deitar", eventEn: "Prescribed · 400 mg at bedtime" },
     ],
   },
 ];
@@ -2142,7 +2543,7 @@ interface DeviceDef {
 }
 
 const DEVICES: DeviceDef[] = [
-  { id: "apple-health", name: "Apple Health",        vendor: "Apple",      metrics: "Sono · HRV · passos · FC repouso · VO₂máx", initials: "",  tint: "#ffffff" },
+  { id: "apple-health", name: "Apple Watch",         vendor: "Apple",      metrics: "Sono · HRV · passos · FC repouso · VO₂máx", initials: "",  tint: "#ffffff" },
   { id: "oura",         name: "Oura Ring",           vendor: "Oura",       metrics: "Sono · HRV · temperatura · prontidão",      initials: "O", tint: "#c6ff3d" },
   { id: "garmin",       name: "Garmin Connect",      vendor: "Garmin",     metrics: "Treino · VO₂máx · stress · sono",           initials: "G", tint: "#0066ff" },
   { id: "fitbit",       name: "Fitbit",              vendor: "Fitbit",     metrics: "Passos · sono · FC · SpO₂",                 initials: "F", tint: "#25d96b" },
@@ -2249,10 +2650,12 @@ function WhoopCard() {
 interface DeviceState { connected: boolean; lastSync: number | null }
 type DevicesMap = Record<DeviceId, DeviceState>;
 
-const STORAGE_KEY = "rv-devices-v1";
+// v2: passa a haver dois wearables ligados por omissão (Apple Watch + Oura),
+// para que a escolha de fonte principal tenha um conflito real para resolver.
+const STORAGE_KEY = "rv-devices-v2";
 const DEFAULT_DEVICES: DevicesMap = {
   "apple-health": { connected: true,  lastSync: Date.now() - 4 * 60 * 1000 },
-  "oura":         { connected: false, lastSync: null },
+  "oura":         { connected: true,  lastSync: Date.now() - 26 * 60 * 1000 },
   "garmin":       { connected: false, lastSync: null },
   "fitbit":       { connected: false, lastSync: null },
   "google-fit":   { connected: false, lastSync: null },
@@ -2275,6 +2678,90 @@ function saveDevices(d: DevicesMap) {
   try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch { /* ignore */ }
 }
 
+// ─── Fonte principal por métrica ─────────────────────
+// Dois wearables ligados dizem os dois que medem "HRV", mas não medem o
+// mesmo: a Whoop mede RMSSD durante o sono, o Apple Watch mede SDNN em
+// momentos avulsos. Misturá-los produziria uma série sem significado
+// clínico, por isso cada métrica tem UMA fonte de cada vez — nunca média.
+type SourceId = DeviceId | "whoop";
+type MetricKey = "sleep" | "hrv" | "steps" | "restingHr" | "body";
+
+interface MetricDef { key: MetricKey; pt: string; en: string; providers: SourceId[] }
+
+// A ordem de `providers` é a prioridade por omissão quando o utente ainda
+// não escolheu nada. A Whoop não conta passos, por isso não aparece lá.
+const METRICS: MetricDef[] = [
+  { key: "sleep",     pt: "Sono",       en: "Sleep",      providers: ["whoop", "oura", "apple-health", "garmin", "fitbit"] },
+  { key: "hrv",       pt: "HRV",        en: "HRV",        providers: ["whoop", "oura", "apple-health", "garmin"] },
+  { key: "steps",     pt: "Passos",     en: "Steps",      providers: ["apple-health", "garmin", "fitbit", "google-fit", "oura"] },
+  { key: "restingHr", pt: "FC repouso", en: "Resting HR", providers: ["whoop", "oura", "apple-health", "garmin", "fitbit"] },
+  { key: "body",      pt: "Peso e composição", en: "Weight & composition", providers: ["whoop", "apple-health", "fitbit", "garmin"] },
+];
+
+type SourcesMap = Partial<Record<MetricKey, SourceId>>;
+const SOURCES_KEY = "rv-metric-sources-v1";
+
+function sourceName(id: SourceId): string {
+  return id === "whoop" ? "Whoop" : DEVICES.find((d) => d.id === id)?.name ?? id;
+}
+
+function loadSources(): SourcesMap {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(SOURCES_KEY) || "{}") as SourcesMap;
+  } catch {
+    return {};
+  }
+}
+
+function availableSources(metric: MetricDef, devices: DevicesMap, whoopConnected: boolean): SourceId[] {
+  return metric.providers.filter((p) => (p === "whoop" ? whoopConnected : devices[p]?.connected));
+}
+
+// A escolha guardada só vale enquanto esse dispositivo continuar ligado —
+// se for desligado, cai para o seguinte da lista de prioridade em vez de
+// deixar a métrica sem fonte.
+function resolveSource(metric: MetricDef, devices: DevicesMap, whoopConnected: boolean, choices: SourcesMap): SourceId | null {
+  const avail = availableSources(metric, devices, whoopConnected);
+  const chosen = choices[metric.key];
+  if (chosen && avail.includes(chosen)) return chosen;
+  return avail[0] ?? null;
+}
+
+interface DevicesCtxValue {
+  devices: DevicesMap;
+  setDevices: (d: DevicesMap) => void;
+  sources: SourcesMap;
+  setSource: (k: MetricKey, s: SourceId) => void;
+}
+const DevicesCtx = createContext<DevicesCtxValue>({
+  devices: DEFAULT_DEVICES, setDevices: () => {}, sources: {}, setSource: () => {},
+});
+const useDevices = () => useContext(DevicesCtx);
+
+// Nome da fonte resolvida para uma métrica, pronto a mostrar em "Fonte: X".
+function useSourceName(key: MetricKey): string | null {
+  const { devices, sources } = useDevices();
+  const { status } = useWhoopStatus();
+  const metric = METRICS.find((m) => m.key === key)!;
+  const id = resolveSource(metric, devices, !!status?.connected, sources);
+  return id ? sourceName(id) : null;
+}
+
+// Formatação de datas sem depender dos dados de locale do dispositivo:
+// `toLocaleDateString(..., { month: "short" })` cai para o formato numérico
+// em builds com ICU reduzido (e o resultado no servidor pode não coincidir
+// com o do cliente, partindo a hidratação).
+const MONTHS_PT = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function fmtDay(iso: string | Date, lang: Lang, withYear = false): string {
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  const month = (lang === "pt" ? MONTHS_PT : MONTHS_EN)[d.getMonth()];
+  const day = String(d.getDate()).padStart(2, "0");
+  return withYear ? `${day} ${month} ${d.getFullYear()}` : `${day} ${month}`;
+}
+
 function formatRelative(ts: number | null): string {
   if (!ts) return "—";
   const diffMin = Math.max(0, Math.round((Date.now() - ts) / 60000));
@@ -2286,16 +2773,71 @@ function formatRelative(ts: number | null): string {
   return `há ${d} d`;
 }
 
+// Selector de fonte principal — só aparece quando há mais do que um
+// dispositivo ligado a medir a mesma coisa. Com um só, não há escolha a
+// fazer e mostrar um selector de uma opção seria ruído.
+function FonteSection() {
+  const { L } = useLang();
+  const { devices, sources, setSource } = useDevices();
+  const { status } = useWhoopStatus();
+  const whoopConnected = !!status?.connected;
+
+  const rows = METRICS.map((metric) => ({
+    metric,
+    avail: availableSources(metric, devices, whoopConnected),
+    active: resolveSource(metric, devices, whoopConnected, sources),
+  }));
+
+  if (rows.every((r) => r.avail.length === 0)) return null;
+
+  return (
+    <>
+      <div className="rv-section-head" style={{margin: "0 20px 8px"}}>
+        <h3>{L("Fonte principal","Primary source")}</h3>
+      </div>
+      <div className="rv-src-note">
+        {L("Cada métrica usa um dispositivo de cada vez. Os valores nunca são misturados entre dispositivos — medem de formas diferentes e a média não teria significado clínico.",
+           "Each metric uses one device at a time. Values are never blended across devices — they measure differently and an average would have no clinical meaning.")}
+      </div>
+      <div className="rv-src-list">
+        {rows.map(({ metric, avail, active }) => (
+          <div key={metric.key} className="rv-src-row">
+            <div className="rv-src-label">{L(metric.pt, metric.en)}</div>
+            {avail.length === 0 ? (
+              <div className="rv-src-empty">{L("Sem fonte ligada","No source connected")}</div>
+            ) : avail.length === 1 ? (
+              <div className="rv-src-single">{sourceName(avail[0])} <span>{L("· fonte única","· only source")}</span></div>
+            ) : (
+              <div className="rv-src-opts">
+                {avail.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className="rv-src-opt"
+                    data-active={active === id || undefined}
+                    onClick={() => setSource(metric.key, id)}
+                  >
+                    {sourceName(id)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 function DispositivosScreen() {
   const { go, showToast } = useNav();
   const { L } = useLang();
-  const [devices, setDevices] = useState<DevicesMap>(() => loadDevices());
+  const { devices, setDevices } = useDevices();
   const [authorizing, setAuthorizing] = useState<DeviceId | null>(null);
   const [authStep, setAuthStep] = useState<"redirect" | "authorize">("redirect");
 
   function persist(next: DevicesMap) {
     setDevices(next);
-    saveDevices(next);
   }
 
   function startConnect(id: DeviceId) {
@@ -2343,6 +2885,8 @@ function DispositivosScreen() {
         </div>
 
         <WhoopCard />
+
+        <FonteSection />
 
         <div className="rv-section-head" style={{margin: "0 20px 10px"}}>
           <h3>{L("Ligados","Connected")}</h3>
@@ -2741,6 +3285,7 @@ function renderScreen(route: NavRoute): ReactNode {
     case "exportar":     return <ExportarScreen />;
     case "sintomas":     return <SintomasScreen />;
     case "nutricao":     return <NutricaoScreen />;
+    case "registos":     return <RegistosScreen />;
     default:          return <HomeScreenV2 />;
   }
 }
@@ -2899,10 +3444,35 @@ function AppV2Page() {
     setRoute("home");
   }, []);
 
+  // Dispositivos e fontes vivem aqui em cima porque são lidos em vários ecrãs
+  // (Dispositivos escreve, home e Dados leem). Arrancam do valor por omissão
+  // e só sincronizam com o localStorage depois de montar, para o HTML do
+  // servidor e o do cliente coincidirem.
+  const [devices, setDevicesState] = useState<DevicesMap>(DEFAULT_DEVICES);
+  const [sources, setSourcesState] = useState<SourcesMap>({});
+  useEffect(() => {
+    setDevicesState(loadDevices());
+    setSourcesState(loadSources());
+  }, []);
+
+  const setDevices = useCallback((d: DevicesMap) => {
+    setDevicesState(d);
+    saveDevices(d);
+  }, []);
+
+  const setSource = useCallback((k: MetricKey, s: SourceId) => {
+    setSourcesState((prev) => {
+      const next = { ...prev, [k]: s };
+      try { localStorage.setItem(SOURCES_KEY, JSON.stringify(next)); } catch { /* modo privado */ }
+      return next;
+    });
+  }, []);
+
   return (
     <div className="rv-root" data-theme="dark">
       <LangCtx.Provider value={{ lang, setLang, t, L }}>
         <NavCtx.Provider value={{ go: setRoute, current: route, showToast, logout }}>
+        <DevicesCtx.Provider value={{ devices, setDevices, sources, setSource }}>
           <div className="rv-phone-shell">
             {authed ? (
               <>
@@ -2914,6 +3484,7 @@ function AppV2Page() {
               <LoginScreen onLogin={() => setAuthed(true)} />
             )}
           </div>
+        </DevicesCtx.Provider>
         </NavCtx.Provider>
       </LangCtx.Provider>
     </div>
