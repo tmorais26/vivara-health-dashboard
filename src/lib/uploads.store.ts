@@ -91,6 +91,59 @@ export function makeUpload(
   };
 }
 
+// ─── Durabilidade ────────────────────────────────────
+// Por omissão, o que uma app web guarda é "best-effort": o browser pode
+// apagá-lo quando lhe faltar espaço, e o Safari no iOS apaga tudo depois de
+// 7 dias sem visitas. Pedir armazenamento persistente muda isso — no Chrome
+// é concedido por envolvimento com o site, no Safari quando a app é
+// adicionada ao ecrã principal.
+export async function requestPersistence(): Promise<boolean> {
+  if (typeof navigator === "undefined" || !navigator.storage?.persist) return false;
+  try {
+    if (await navigator.storage.persisted?.()) return true;
+    return await navigator.storage.persist();
+  } catch {
+    return false;
+  }
+}
+
+export interface StorageStatus {
+  persisted: boolean;   // o browser comprometeu-se a não apagar
+  supported: boolean;   // a API existe neste browser
+  usedBytes: number;
+  quotaMb: number;
+}
+
+export async function storageStatus(): Promise<StorageStatus> {
+  const supported = typeof navigator !== "undefined" && !!navigator.storage?.estimate;
+  if (!supported) return { persisted: false, supported: false, usedBytes: 0, quotaMb: 0 };
+  try {
+    const est = await navigator.storage.estimate();
+    const persisted = (await navigator.storage.persisted?.()) ?? false;
+    return {
+      persisted,
+      supported: true,
+      usedBytes: est.usage ?? 0,
+      quotaMb: Math.round((est.quota ?? 0) / 1048576),
+    };
+  } catch {
+    return { persisted: false, supported: true, usedBytes: 0, quotaMb: 0 };
+  }
+}
+
+// Há espaço para este ficheiro? Melhor saber antes de dizer ao utente que
+// ficou guardado.
+export async function hasRoomFor(bytes: number): Promise<boolean> {
+  if (typeof navigator === "undefined" || !navigator.storage?.estimate) return true;
+  try {
+    const est = await navigator.storage.estimate();
+    if (est.quota == null || est.usage == null) return true;
+    return est.quota - est.usage > bytes * 1.5; // margem para o registo e o índice
+  } catch {
+    return true;
+  }
+}
+
 // ─── PDF original em IndexedDB ───────────────────────
 const DB_NAME = "rv-vivara";
 const STORE = "files";

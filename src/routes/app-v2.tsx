@@ -23,7 +23,7 @@ type RouteId =
   | "home" | "data" | "upload" | "messages" | "alerts"
   | "diary" | "consultas" | "profile" | "marker" | "summary" | "schedule" | "devices" | "assistente"
   | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar"
-  | "sintomas" | "nutricao" | "registos" | "documento";
+  | "sintomas" | "nutricao" | "registos" | "documento" | "guardadas";
 
 type NavRoute =
   | RouteId
@@ -2107,6 +2107,8 @@ function ShareUploadScreen() {
   const [kind, setKind] = useState<UploadKind>("pdf-text");
   const [values, setValues] = useState<ParsedValue[]>([]);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [savedFile, setSavedFile] = useState(true);
+  const [persisted, setPersisted] = useState(false);
   const [phase, setPhase] = useState("");
   const [pct, setPct] = useState<number | null>(null);
 
@@ -2190,12 +2192,20 @@ function ShareUploadScreen() {
 
   async function save() {
     if (!file || !doc) return;
-    const { makeUpload, saveUpload, putFile } = await import("@/lib/uploads.store");
+    const store = await import("@/lib/uploads.store");
     const kept = values.filter((v) => v.keep && v.value.trim() !== "");
-    const upload = makeUpload(file, doc, kept, kind);
-    upload.hasFile = await putFile(upload.id, file);
-    saveUpload(upload);
+    const upload = store.makeUpload(file, doc, kept, kind);
+
+    // Pede ao browser para não apagar isto sozinho. Sem este pedido, o que
+    // aqui fica é descartável e o Safari limpa-o ao fim de uma semana.
+    const persisted = await store.requestPersistence();
+
+    const room = await store.hasRoomFor(file.size);
+    upload.hasFile = room ? await store.putFile(upload.id, file) : false;
+    store.saveUpload(upload);
     setSavedId(upload.id);
+    setSavedFile(upload.hasFile);
+    setPersisted(persisted);
     setStep("saved");
     showToast(L(`${kept.length} valores guardados`, `${kept.length} values saved`));
   }
@@ -2418,6 +2428,18 @@ function ShareUploadScreen() {
             <div className="rv-up-center-sub">
               {L(`${keptCount} valores guardados neste telemóvel.`, `${keptCount} values stored on this phone.`)}
             </div>
+            {!savedFile && (
+              <div className="rv-up-warn" data-tone="alert" style={{margin: "14px 20px 0"}}>
+                <strong>{L("O PDF original não coube","The original PDF didn't fit")}</strong>
+                <span>{L("Os valores ficaram guardados, mas não há espaço para o documento. Liberte espaço em Perfil › Análises carregadas.","The values were saved, but there's no room for the document. Free up space in Profile › Uploaded labs.")}</span>
+              </div>
+            )}
+            {!persisted && (
+              <div className="rv-up-warn" style={{margin: "14px 20px 0"}}>
+                <strong>{L("Adicione a app ao ecrã principal","Add the app to your Home Screen")}</strong>
+                <span>{L("O browser ainda não garante que guarda isto para sempre. No iPhone: Partilhar › Adicionar ao ecrã principal. Passa a ser tratado como uma app instalada e deixa de ser apagado sozinho.","The browser doesn't yet guarantee this is kept. On iPhone: Share › Add to Home Screen. It's then treated as an installed app and stops being cleared automatically.")}</span>
+              </div>
+            )}
             <div style={{display: "flex", gap: 8, marginTop: 20, width: "100%", padding: "0 20px"}}>
               <button className="rv-cta-ghost" style={{flex: 1, margin: 0}} onClick={() => go("registos")}>{L("Ver registos","See records")}</button>
               <button className="rv-cta-primary" style={{flex: 1, margin: 0}}
@@ -3231,6 +3253,14 @@ function PerfilScreen() {
             </div>
             <span className="rv-chev">{Icon.chev}</span>
           </a>
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("guardadas"); }}>
+            <div className="rv-list-icon">{Icon.doc}</div>
+            <div className="rv-list-text">
+              <span className="rv-list-name">{L("Análises carregadas","Uploaded labs")}</span>
+              <span className="rv-list-sub">{L("Guardadas no dispositivo · apagar e exportar","Stored on device · delete and export")}</span>
+            </div>
+            <span className="rv-chev">{Icon.chev}</span>
+          </a>
           <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("nutricao"); }}>
             <div className="rv-list-icon">{Icon.pill}</div>
             <div className="rv-list-text">
@@ -3288,6 +3318,138 @@ function PerfilScreen() {
 
       <TabBar active="profile" />
     </div>
+  );
+}
+
+// ─── Análises carregadas (gestão) ────────────────────
+// Onde se vê o que está guardado, se o browser se comprometeu a não o
+// apagar, e onde se apaga — porque "fica até o utente apagar" exige que
+// haja uma forma de apagar.
+function AnalisesGuardadasScreen() {
+  const { go, showToast } = useNav();
+  const { L, lang } = useLang();
+  const [uploads, setUploads] = useState<StoredUpload[]>([]);
+  const [status, setStatus] = useState<{ persisted: boolean; supported: boolean; usedBytes: number; quotaMb: number } | null>(null);
+  const [confirming, setConfirming] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    const store = await import("@/lib/uploads.store");
+    setUploads(store.loadUploads());
+    setStatus(await store.storageStatus());
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const askPersist = async () => {
+    const { requestPersistence } = await import("@/lib/uploads.store");
+    const ok = await requestPersistence();
+    showToast(ok
+      ? L("Armazenamento garantido","Storage secured")
+      : L("O browser não concedeu — adicione ao ecrã principal","Browser declined — add to Home Screen"));
+    refresh();
+  };
+
+  const remove = async (id: string) => {
+    const { deleteUpload } = await import("@/lib/uploads.store");
+    deleteUpload(id);
+    setConfirming(null);
+    showToast(L("Análise apagada","Lab result deleted"));
+    refresh();
+  };
+
+  const exportAll = () => {
+    const payload = JSON.stringify({ exportedAt: new Date().toISOString(), uploads }, null, 2);
+    const blob = new Blob([payload], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `vivara-analises-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  };
+
+  const totalValues = uploads.reduce((n, u) => n + u.values.length, 0);
+
+  return (
+    <SubScreen title={L("Análises carregadas","Uploaded labs")} onBack={() => go("profile")}>
+      {status && (
+        <div className="rv-store-card" data-ok={status.persisted || undefined}>
+          <div className="rv-store-head">
+            <span className="rv-store-icon">{Icon.shield}</span>
+            {status.persisted
+              ? L("Guardado até você apagar","Kept until you delete it")
+              : L("Ainda sem garantia do browser","No browser guarantee yet")}
+          </div>
+          <p>
+            {status.persisted
+              ? L("O browser comprometeu-se a não apagar estes dados por iniciativa própria. Só desaparecem se os apagar aqui, ou se limpar os dados do site.",
+                  "The browser has committed not to delete this data on its own. It only goes away if you delete it here, or clear the site's data.")
+              : L("Sem esta garantia, o browser pode apagar tudo quando precisar de espaço — e no iPhone o Safari limpa ao fim de 7 dias sem visitas. Adicione a app ao ecrã principal (Partilhar › Adicionar ao ecrã principal) para ficar garantido.",
+                  "Without it, the browser may delete everything when it needs space — and on iPhone, Safari clears it after 7 days without visits. Add the app to your Home Screen (Share › Add to Home Screen) to secure it.")}
+          </p>
+          {status.supported && (
+            <div className="rv-store-meta">
+              {status.usedBytes < 1048576
+                ? `${Math.max(1, Math.round(status.usedBytes / 1024))} KB`
+                : `${Math.round((status.usedBytes / 1048576) * 10) / 10} MB`} {L("usados","used")}
+              {status.quotaMb > 0 ? ` · ${L("de","of")} ${status.quotaMb} MB ${L("disponíveis","available")}` : ""}
+            </div>
+          )}
+          {!status.persisted && (
+            <button className="rv-device-btn" data-tone="primary" style={{marginTop: 10}} onClick={askPersist}>
+              {L("Pedir garantia agora","Request guarantee now")}
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="rv-section-head" style={{margin: "0 20px 8px"}}>
+        <h3>{L("Guardadas","Stored")}</h3>
+        <span style={{fontSize: 11, color: "var(--fg-50)"}}>
+          {uploads.length} · {totalValues} {L("valores","values")}
+        </span>
+      </div>
+
+      {uploads.length === 0 ? (
+        <div style={{padding: "0 20px 16px", fontSize: 13, color: "var(--fg-50)"}}>
+          {L("Ainda não carregou nenhuma análise.","You haven't uploaded any labs yet.")}
+        </div>
+      ) : (
+        <div className="rv-store-list">
+          {uploads.map((u) => (
+            <div key={u.id} className="rv-store-row">
+              <div className="rv-store-row-main">
+                <div className="rv-store-row-name">{u.filename}</div>
+                <div className="rv-store-row-sub">
+                  {u.lab ? `${u.lab} · ` : ""}{fmtDay(u.collectedISO, lang, true)} · {u.values.length} {L("valores","values")} · {u.sizeKb} KB
+                  {!u.hasFile && ` · ${L("sem o original","original missing")}`}
+                </div>
+              </div>
+              {confirming === u.id ? (
+                <div className="rv-store-confirm">
+                  <button className="rv-device-btn" onClick={() => setConfirming(null)}>{L("Não","No")}</button>
+                  <button className="rv-device-btn" data-tone="danger" onClick={() => remove(u.id)}>{L("Apagar","Delete")}</button>
+                </div>
+              ) : (
+                <button className="rv-device-btn" data-tone="ghost" onClick={() => setConfirming(u.id)}>{L("Apagar","Delete")}</button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {uploads.length > 0 && (
+        <div style={{padding: "4px 20px 0"}}>
+          <button className="rv-cta-ghost" style={{width: "100%"}} onClick={exportAll}>
+            {L("Exportar cópia dos valores","Export a copy of the values")}
+          </button>
+          <div className="rv-doc-foot" style={{textAlign: "left", margin: "10px 0 0"}}>
+            {L("Guarda um ficheiro com os valores lidos, para ter uma cópia fora da app. Os PDFs originais abrem-se um a um a partir de cada análise.",
+               "Saves a file with the values read, so you have a copy outside the app. The original PDFs can be opened one by one from each lab result.")}
+          </div>
+        </div>
+      )}
+    </SubScreen>
   );
 }
 
@@ -4276,6 +4438,7 @@ function renderScreen(route: NavRoute): ReactNode {
     case "nutricao":     return <NutricaoScreen />;
     case "registos":     return <RegistosScreen />;
     case "documento":    return <DocumentoScreen docId={docId} />;
+    case "guardadas":    return <AnalisesGuardadasScreen />;
     default:          return <HomeScreenV2 />;
   }
 }
