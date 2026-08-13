@@ -1868,6 +1868,73 @@ function docViewFromUpload(u: StoredUpload, lang: Lang): DocView {
   };
 }
 
+// Mostra o documento verdadeiro, lido do armazenamento do dispositivo: as
+// páginas do PDF desenhadas uma a uma, ou a imagem, conforme o que foi
+// carregado. Nada é pedido à rede.
+function DocPages({ docId, lab }: { docId: string; lab: string }) {
+  const { L } = useLang();
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [url, setUrl] = useState<string | null>(null);
+  const [state, setState] = useState<"loading" | "ok" | "fail">("loading");
+
+  useEffect(() => {
+    let alive = true;
+    let objectUrl: string | null = null;
+    setState("loading");
+    (async () => {
+      try {
+        const { getFile } = await import("@/lib/uploads.store");
+        const file = await getFile(docId);
+        if (!file) { if (alive) setState("fail"); return; }
+        if (file.type.startsWith("image/")) {
+          objectUrl = URL.createObjectURL(file);
+          if (!alive) return;
+          setUrl(objectUrl);
+          setPages(1);
+        } else {
+          const { renderPdfPage } = await import("@/lib/lab-ocr");
+          const r = await renderPdfPage(file, page);
+          if (!alive) return;
+          setUrl(r.url);
+          setPages(r.pages);
+        }
+        if (alive) setState("ok");
+      } catch {
+        if (alive) setState("fail");
+      }
+    })();
+    return () => { alive = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [docId, page]);
+
+  if (state === "fail") return null; // sem ficheiro guardado, não se finge que há
+
+  return (
+    <>
+      <div className="rv-sub-section-head">
+        {L("Documento original","Original document")}
+        {pages > 1 && ` · ${pages} ${L("páginas","pages")}`}
+      </div>
+      <div className="rv-docview">
+        <div className="rv-docview-bar">
+          <span className="rv-doc-lab">{lab}</span>
+          {pages > 1 && (
+            <span className="rv-docview-nav">
+              <button type="button" onClick={() => setPage((n) => Math.max(1, n - 1))} disabled={page <= 1} aria-label={L("Página anterior","Previous page")}>‹</button>
+              <span className="rv-docview-n">{page} / {pages}</span>
+              <button type="button" onClick={() => setPage((n) => Math.min(pages, n + 1))} disabled={page >= pages} aria-label={L("Página seguinte","Next page")}>›</button>
+            </span>
+          )}
+        </div>
+        <div className="rv-docview-stage">
+          {state === "loading" && <div className="rv-up-spinner" style={{margin: "40px auto"}}/>}
+          {url && <img src={url} alt={`${L("Página","Page")} ${page}`} style={{opacity: state === "loading" ? 0.4 : 1}}/>}
+        </div>
+      </div>
+    </>
+  );
+}
+
 function DocumentoScreen({ docId }: { docId?: string }) {
   const { go, showToast } = useNav();
   const { L, lang } = useLang();
@@ -1941,24 +2008,35 @@ function DocumentoScreen({ docId }: { docId?: string }) {
           )}
         </div>
 
-        <div className="rv-sub-section-head">{L("Documento original","Original document")}</div>
-        <div className="rv-doc-page">
-          <div className="rv-doc-page-head">
-            <span className="rv-doc-lab">{doc.lab}</span>
-            <span className="rv-doc-page-n">{doc.pages > 1 ? `1–${doc.pages}` : "1"} / {doc.pages}</span>
-          </div>
-          <div className="rv-doc-lines" data-scroll={doc.lines.length > 18 || undefined}>
-            {doc.lines.map((line, i) => (
-              <div key={i} className="rv-doc-line" data-hit={hitLine != null && line === hitLine ? "true" : undefined}>{line}</div>
-            ))}
-            {!doc.fromUpload && doc.totalExtracted > doc.rows.length && (
-              <div className="rv-doc-line rv-doc-line-more">
-                {L(`… mais ${doc.totalExtracted - doc.rows.length} parâmetros nas páginas seguintes`,
-                   `… ${doc.totalExtracted - doc.rows.length} more parameters on the following pages`)}
+        {/* Análises carregadas mostram o documento a sério, página a página.
+            As de demonstração não têm ficheiro nenhum por trás, por isso
+            continuam a mostrar o texto — e quando não há nem uma coisa nem
+            outra, a secção não aparece de todo, em vez de um rectângulo
+            branco vazio. */}
+        {doc.fromUpload ? (
+          doc.hasFile && <DocPages docId={doc.id} lab={doc.lab} />
+        ) : (
+          <>
+            <div className="rv-sub-section-head">{L("Documento original","Original document")}</div>
+            <div className="rv-doc-page">
+              <div className="rv-doc-page-head">
+                <span className="rv-doc-lab">{doc.lab}</span>
+                <span className="rv-doc-page-n">1 / {doc.pages}</span>
               </div>
-            )}
-          </div>
-        </div>
+              <div className="rv-doc-lines" data-scroll={doc.lines.length > 18 || undefined}>
+                {doc.lines.map((line, i) => (
+                  <div key={i} className="rv-doc-line" data-hit={hitLine != null && line === hitLine ? "true" : undefined}>{line}</div>
+                ))}
+                {doc.totalExtracted > doc.rows.length && (
+                  <div className="rv-doc-line rv-doc-line-more">
+                    {L(`… mais ${doc.totalExtracted - doc.rows.length} parâmetros nas páginas seguintes`,
+                       `… ${doc.totalExtracted - doc.rows.length} more parameters on the following pages`)}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="rv-sub-section-head">
           {L("Valores extraídos","Extracted values")} · {doc.rows.length}

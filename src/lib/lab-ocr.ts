@@ -81,6 +81,31 @@ export async function canvasesFromPdf(file: File, maxPages = 4): Promise<HTMLCan
   return out;
 }
 
+// Desenha uma página do PDF para mostrar ao utilizador — sem o
+// pré-processamento do OCR, que deixa a imagem a preto e branco esticado.
+export async function renderPdfPage(
+  file: File,
+  pageNum: number,
+  maxWidth = 1000,
+): Promise<{ url: string; pages: number }> {
+  const pdfjs = await import("pdfjs-dist");
+  const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  const pages = doc.numPages;
+  const page = await doc.getPage(Math.min(Math.max(1, pageNum), pages));
+  const base = page.getViewport({ scale: 1 });
+  const viewport = page.getViewport({ scale: Math.min(3, maxWidth / base.width) });
+  const canvas = document.createElement("canvas");
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvasContext: canvas.getContext("2d")!, viewport }).promise;
+  const url = canvas.toDataURL("image/jpeg", 0.85);
+  await doc.destroy();
+  return { url, pages };
+}
+
 let workerPromise: Promise<import("tesseract.js").Worker> | null = null;
 
 async function getWorker(onProgress?: OcrProgress) {

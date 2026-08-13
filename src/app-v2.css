@@ -543,6 +543,27 @@
 }
 .rv-up-input:focus{outline:none;border-color:var(--lime);}
 
+/* Visualizador do documento verdadeiro */
+.rv-docview{margin:0 20px 16px;background:var(--bg-elev-2);border-radius:var(--radius);overflow:hidden;}
+.rv-docview-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 14px;border-bottom:1px solid var(--line);
+}
+.rv-docview-bar .rv-doc-lab{color:var(--fg-70);font-size:11px;}
+.rv-docview-nav{display:inline-flex;align-items:center;gap:4px;}
+.rv-docview-nav button{
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+  background:var(--bg-elev-3);color:var(--fg);font-size:17px;line-height:1;
+  cursor:pointer;font-family:inherit;
+}
+.rv-docview-nav button:disabled{opacity:0.3;cursor:default;}
+.rv-docview-n{
+  font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--fg-70);
+  min-width:44px;text-align:center;
+}
+.rv-docview-stage{background:#e9e9e6;min-height:120px;display:flex;justify-content:center;}
+.rv-docview-stage img{display:block;width:100%;height:auto;transition:opacity .15s ease;}
+
 /* Documento carregado + valores extraídos */
 .rv-doc-meta{margin:0 20px 14px;}
 .rv-doc-file{display:flex;align-items:center;gap:8px;}
