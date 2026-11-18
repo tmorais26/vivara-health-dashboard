@@ -19,7 +19,9 @@ const T = {
       { title: "Plano diário e mensagens", desc: "Plano diário, mensagens com a equipa clínica e lembretes de consultas." },
     ],
     planBadge: "Plano de utente",
+    price: "€9,99",
     perMonth: "/mês",
+    annualNote: "ou €95,90 por ano, com plano anual",
     planDesc: "Acesso total à app. Funciona com qualquer médico na Vivara. Cancela quando quiser. IVA incluído.",
     planNote: "O seu médico ainda não usa a Vivara? Pode começar sozinho — o seu historial fica pronto para partilhar assim que ele se juntar.",
     planCta: "Ver planos",
@@ -77,7 +79,9 @@ const T = {
       { title: "Daily plan and messages", desc: "A daily plan, messages with your care team and appointment reminders." },
     ],
     planBadge: "Patient plan",
+    price: "€9.99",
     perMonth: "/month",
+    annualNote: "or €95.90 a year on the annual plan",
     planDesc: "Full access to the app. Works with any doctor on Vivara. Cancel anytime. VAT included.",
     planNote: "Your doctor doesn't use Vivara yet? You can start on your own — your record will be ready to share as soon as they join.",
     planCta: "See plans",
@@ -152,8 +156,9 @@ export default function Utentes() {
           <Reveal>
             <SectionBadge>{L.planBadge}</SectionBadge>
             <h2 className="font-serif font-light text-4xl md:text-5xl mt-5">
-              €14,99 <span className="text-2xl text-brand-muted/60">{L.perMonth}</span>
+              {L.price} <span className="text-2xl text-brand-muted/60">{L.perMonth}</span>
             </h2>
+            <p className="mt-1 text-sm text-brand-muted/60">{L.annualNote}</p>
             <p className="mt-4 text-brand-muted/80 leading-relaxed">{L.planDesc}</p>
             <p className="mt-3 text-sm text-brand-muted/70 leading-relaxed">{L.planNote}</p>
             <Link to="/precos"><CTAButton className="mt-8">{L.planCta}</CTAButton></Link>

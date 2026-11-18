@@ -19,6 +19,7 @@ const T = {
     patientsBadge: "Para utentes",
     perMonth: "/mês",
     billedAnnually: "Faturado anualmente",
+    perYear: "ano",
     patient: {
       name: "Utente",
       desc: "Acesso completo à app Vivara. Histórico, wearables, mensagens com a equipa e resumos de cada consulta.",
@@ -51,7 +52,7 @@ const T = {
       {
         name: "Equipa",
         monthly: 69,
-        desc: "Para clínicas com 3+ profissionais.",
+        desc: "Para clínicas com vários médicos e outros profissionais.",
         features: ["Utentes ilimitados", "Tudo do Individual", "Equipa multidisciplinar", "Permissões granulares", "Suporte prioritário"],
         featured: true,
       },
@@ -60,7 +61,7 @@ const T = {
     footnote: "Sem custos de setup. Cancela quando quiser. IVA não incluído. Os planos de médicos e utentes são independentes.",
     compareTitle: "Compara os planos.",
     compareRows: [
-      ["Médicos", "1", "3+"],
+      ["Médicos", "1", "Vários"],
       ["Utentes activos", "Até 200", "Ilimitados"],
       ["Portal clínico", "✦", "✦"],
       ["App de utente", "✦", "✦"],
@@ -81,6 +82,7 @@ const T = {
     patientsBadge: "For patients",
     perMonth: "/month",
     billedAnnually: "Billed annually",
+    perYear: "year",
     patient: {
       name: "Patient",
       desc: "Full access to the Vivara app. Record, wearables, messages with your team and a summary after every appointment.",
@@ -113,7 +115,7 @@ const T = {
       {
         name: "Team",
         monthly: 69,
-        desc: "For clinics with 3+ professionals.",
+        desc: "For clinics with several doctors and other professionals.",
         features: ["Unlimited patients", "Everything in Individual", "Multidisciplinary team", "Granular permissions", "Priority support"],
         featured: true,
       },
@@ -122,7 +124,7 @@ const T = {
     footnote: "No setup costs. Cancel anytime. VAT not included. Doctor and patient plans are independent.",
     compareTitle: "Compare the plans.",
     compareRows: [
-      ["Doctors", "1", "3+"],
+      ["Doctors", "1", "Several"],
       ["Active patients", "Up to 200", "Unlimited"],
       ["Clinical portal", "✦", "✦"],
       ["Patient app", "✦", "✦"],
@@ -134,7 +136,7 @@ const T = {
   },
 };
 
-const PATIENT_MONTHLY = 14.99;
+const PATIENT_MONTHLY = 9.99;
 
 export default function Precos() {
   const { lang } = useLang();
@@ -184,7 +186,7 @@ export default function Precos() {
                 <div className="mb-6">
                   <span className="font-serif text-4xl">€{formatPrice(PATIENT_MONTHLY)}</span>
                   <span className="text-white/60 text-sm">{L.perMonth}</span>
-                  {billing === "anual" && <p className="text-xs text-brand-lime mt-1">{L.billedAnnually}</p>}
+                  {billing === "anual" && <p className="text-xs text-brand-lime mt-1">{L.billedAnnually} · €{formatPrice(PATIENT_MONTHLY * 12)}/{L.perYear}</p>}
                 </div>
                 <ul className="space-y-3 mb-8 text-sm">
                   {L.patient.features.map((f) => (
