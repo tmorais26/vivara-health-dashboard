@@ -55,28 +55,19 @@ const T = {
         features: ["Utentes ilimitados", "Tudo do Individual", "Equipa multidisciplinar", "Permissões granulares", "Suporte prioritário"],
         featured: true,
       },
-      {
-        name: "Instituição",
-        monthly: null,
-        desc: "Para hospitais e grupos clínicos.",
-        features: ["Tudo do Equipa", "SSO e integrações HL7/FHIR", "Onboarding dedicado", "SLA personalizado", "Gestor de conta"],
-      },
     ],
-    ctaTalk: "Falar connosco",
     ctaStart: "Começar",
     footnote: "Sem custos de setup. Cancela quando quiser. IVA não incluído. Os planos de médicos e utentes são independentes.",
     compareTitle: "Compara os planos.",
     compareRows: [
-      ["Médicos", "1", "Até 20", "Ilimitados"],
-      ["Utentes activos", "Até 200", "Ilimitados", "Ilimitados"],
-      ["Portal clínico", "✦", "✦", "✦"],
-      ["App de utente", "✦", "✦", "✦"],
-      ["Wearables", "✦", "✦", "✦"],
-      ["Equipa multidisciplinar", "◦", "✦", "✦"],
-      ["SSO (SAML/OIDC)", "◦", "◦", "✦"],
-      ["HL7/FHIR", "◦", "◦", "✦"],
-      ["Onboarding", "Self-serve", "Assistido", "Dedicado"],
-      ["Suporte", "Email", "Prioritário", "Dedicado"],
+      ["Médicos", "1", "3+"],
+      ["Utentes activos", "Até 200", "Ilimitados"],
+      ["Portal clínico", "✦", "✦"],
+      ["App de utente", "✦", "✦"],
+      ["Wearables", "✦", "✦"],
+      ["Equipa multidisciplinar", "◦", "✦"],
+      ["Onboarding", "Self-serve", "Assistido"],
+      ["Suporte", "Email", "Prioritário"],
     ],
   },
   en: {
@@ -126,28 +117,19 @@ const T = {
         features: ["Unlimited patients", "Everything in Individual", "Multidisciplinary team", "Granular permissions", "Priority support"],
         featured: true,
       },
-      {
-        name: "Institution",
-        monthly: null,
-        desc: "For hospitals and clinical groups.",
-        features: ["Everything in Team", "SSO and HL7/FHIR integrations", "Dedicated onboarding", "Custom SLA", "Account manager"],
-      },
     ],
-    ctaTalk: "Talk to us",
     ctaStart: "Get started",
     footnote: "No setup costs. Cancel anytime. VAT not included. Doctor and patient plans are independent.",
     compareTitle: "Compare the plans.",
     compareRows: [
-      ["Doctors", "1", "Up to 20", "Unlimited"],
-      ["Active patients", "Up to 200", "Unlimited", "Unlimited"],
-      ["Clinical portal", "✦", "✦", "✦"],
-      ["Patient app", "✦", "✦", "✦"],
-      ["Wearables", "✦", "✦", "✦"],
-      ["Multidisciplinary team", "◦", "✦", "✦"],
-      ["SSO (SAML/OIDC)", "◦", "◦", "✦"],
-      ["HL7/FHIR", "◦", "◦", "✦"],
-      ["Onboarding", "Self-serve", "Assisted", "Dedicated"],
-      ["Support", "Email", "Priority", "Dedicated"],
+      ["Doctors", "1", "3+"],
+      ["Active patients", "Up to 200", "Unlimited"],
+      ["Clinical portal", "✦", "✦"],
+      ["Patient app", "✦", "✦"],
+      ["Wearables", "✦", "✦"],
+      ["Multidisciplinary team", "◦", "✦"],
+      ["Onboarding", "Self-serve", "Assisted"],
+      ["Support", "Email", "Priority"],
     ],
   },
 };
@@ -239,7 +221,7 @@ export default function Precos() {
       <section className="bg-brand-beige pb-16">
         <div className="mx-auto max-w-6xl px-6">
           <SectionBadge>{L.doctorsBadge}</SectionBadge>
-          <div className="mt-6 grid md:grid-cols-3 gap-6">
+          <div className="mt-6 mx-auto grid max-w-4xl md:grid-cols-2 gap-6">
             {L.doctorPlans.map((p, i) => (
               <Reveal key={p.name} delay={i * 0.1}>
                 <div
@@ -277,7 +259,7 @@ export default function Precos() {
                       p.featured ? "bg-brand-lime text-brand-text" : "bg-brand-olive text-white hover:bg-brand-olive-hover"
                     }`}
                   >
-                    {i === 2 ? L.ctaTalk : L.ctaStart}
+                    {L.ctaStart}
                   </Link>
                 </div>
               </Reveal>
@@ -353,12 +335,11 @@ export default function Precos() {
                   </tr>
                 </thead>
                 <tbody>
-                  {L.compareRows.map(([label, ind, team, inst], i) => (
+                  {L.compareRows.map(([label, ind, team], i) => (
                     <tr key={label} className={i < L.compareRows.length - 1 ? "border-b border-black/5" : ""}>
                       <td className="px-4 py-3 text-brand-muted lg:px-6">{label}</td>
                       <td className="px-4 py-3 lg:px-6">{ind}</td>
                       <td className="px-4 py-3 lg:px-6">{team}</td>
-                      <td className="px-4 py-3 lg:px-6">{inst}</td>
                     </tr>
                   ))}
                 </tbody>

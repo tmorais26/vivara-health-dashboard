@@ -20,7 +20,6 @@ const T = {
     send: "Enviar mensagem",
     whereLabel: "Onde estamos",
     where: "Lisboa, Portugal",
-    institution: "Para clientes com plano Instituição: contacte o seu gestor de conta diretamente.",
   },
   en: {
     header: {
@@ -39,7 +38,6 @@ const T = {
     send: "Send message",
     whereLabel: "Where we are",
     where: "Lisbon, Portugal",
-    institution: "For clients on the Institution plan: contact your account manager directly.",
   },
 };
 
@@ -129,8 +127,6 @@ export default function Contacto() {
                 <p className="text-xs uppercase tracking-[0.18em] text-brand-muted/60 mb-1">{L.whereLabel}</p>
                 <p className="font-serif text-lg">{L.where}</p>
               </div>
-              <hr className="border-black/10" />
-              <p className="text-sm text-brand-muted/60 leading-relaxed">{L.institution}</p>
             </div>
           </Reveal>
         </div>

@@ -30,7 +30,7 @@ const T = {
       },
     ],
     audienceBadge: "Para quem é",
-    audienceTitle: "De uma consulta a um grupo hospitalar.",
+    audienceTitle: "Do consultório individual à clínica com equipa.",
     audience: [
       {
         title: "Médico independente",
@@ -39,10 +39,6 @@ const T = {
       {
         title: "Clínica com equipa",
         desc: "Vários profissionais, um só histórico. Partilha o utente com nutricionistas, enfermeiros e outros médicos, cada um com o seu nível de acesso.",
-      },
-      {
-        title: "Hospital ou grupo clínico",
-        desc: "Integrações HL7/FHIR, SSO e onboarding dedicado para equipas maiores, com o mesmo portal clínico no centro.",
       },
     ],
     alertsBadge: "O portal, por dentro",
@@ -117,7 +113,7 @@ const T = {
       },
     ],
     audienceBadge: "Who it's for",
-    audienceTitle: "From a single practice to a hospital group.",
+    audienceTitle: "From a solo practice to a clinic with a team.",
     audience: [
       {
         title: "Independent doctor",
@@ -126,10 +122,6 @@ const T = {
       {
         title: "Clinic with a team",
         desc: "Several professionals, one record. Share the patient with nutritionists, nurses and other doctors, each with their own level of access.",
-      },
-      {
-        title: "Hospital or clinical group",
-        desc: "HL7/FHIR integrations, SSO and dedicated onboarding for larger teams, with the same clinical portal at the centre.",
       },
     ],
     alertsBadge: "Inside the portal",
@@ -211,7 +203,7 @@ export default function Medicos() {
               {L.audienceTitle}
             </h2>
           </Reveal>
-          <div className="mt-10 grid md:grid-cols-3 gap-6">
+          <div className="mt-10 grid md:grid-cols-2 gap-6">
             {L.audience.map((a, i) => (
               <Reveal key={a.title} delay={i * 0.1}>
                 <div className="rounded-2xl border border-black/10 bg-brand-beige p-6 h-full">
