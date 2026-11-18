@@ -6,31 +6,22 @@ const T = {
     badge: "O problema",
     title: (
       <>
-        A informação existe. <em>Só não está junta.</em>
+        Os resultados existem. <em>Só não chegam ao mesmo sítio.</em>
       </>
     ),
-    desc: "E cada consulta acaba por começar do zero.",
-    // PLACEHOLDER — substituir pelo dado real depois de validada a fonte.
-    stat: {
-      value: "00%",
-      support: "[Frase de suporte ao dado — a confirmar com a fonte]",
-      sourceLabel: "Fonte",
-      sourceName: "[CONFIRMAR FONTE]",
-      sourceYear: "[ANO]",
-      sourceUrl: "#",
-    },
+    desc: "O utente faz um exame num sítio e análises noutro. O médico só vê o que lhe chega às mãos — e a consulta começa com «trouxe as análises?».",
     points: [
       {
-        title: "Análises perdidas em emails.",
-        desc: <>Resultados espalhados por caixas de correio, sem organização nem <Highlight>contexto histórico</Highlight>.</>,
+        title: "Exames num sítio, análises noutro.",
+        desc: <>Um exame num hospital, análises num laboratório, consulta numa terceira clínica. <Highlight>Cada um guarda a sua parte.</Highlight></>,
       },
       {
-        title: "Exames em pastas diferentes.",
-        desc: <>Cada clínica, cada laboratório, a sua pasta. <Highlight>Nada fala com nada.</Highlight></>,
+        title: "Tudo chega por email, em PDF.",
+        desc: <>Cada resultado vem por uma via diferente e fica numa caixa de correio — <Highlight>longe de quem precisa dele</Highlight> na consulta.</>,
       },
       {
-        title: "Wearables que não falam com a clínica.",
-        desc: <>Sono, atividade e recuperação ficam na app do relógio — <Highlight>nunca chegam à consulta</Highlight>.</>,
+        title: "O médico junta tudo à mão.",
+        desc: <>O que foi feito fora da clínica tem de ser anexado manualmente, <Highlight>quando chega a sê‑lo</Highlight>.</>,
       },
     ],
   },
@@ -38,31 +29,22 @@ const T = {
     badge: "The problem",
     title: (
       <>
-        The information exists. <em>It just isn't together.</em>
+        The results exist. <em>They just don't end up in one place.</em>
       </>
     ),
-    desc: "And every appointment ends up starting from scratch.",
-    // PLACEHOLDER — replace with the real figure once the source is validated.
-    stat: {
-      value: "00%",
-      support: "[Supporting sentence for the figure — to confirm with the source]",
-      sourceLabel: "Source",
-      sourceName: "[CONFIRM SOURCE]",
-      sourceYear: "[YEAR]",
-      sourceUrl: "#",
-    },
+    desc: "The patient has an exam in one place and lab tests in another. The doctor only sees what reaches them — and the appointment starts with \"did you bring your results?\".",
     points: [
       {
-        title: "Lab results lost in emails.",
-        desc: <>Results scattered across inboxes, with no organisation and no <Highlight>historical context</Highlight>.</>,
+        title: "An exam here, lab tests there.",
+        desc: <>An exam at a hospital, lab tests at a lab, the appointment at a third clinic. <Highlight>Each one keeps its own part.</Highlight></>,
       },
       {
-        title: "Exams in different folders.",
-        desc: <>Every clinic, every lab, its own folder. <Highlight>Nothing talks to anything.</Highlight></>,
+        title: "Everything arrives by email, as a PDF.",
+        desc: <>Each result comes through a different channel and sits in an inbox — <Highlight>far from whoever needs it</Highlight> at the appointment.</>,
       },
       {
-        title: "Wearables that don't talk to the clinic.",
-        desc: <>Sleep, activity and recovery stay in the watch app — <Highlight>they never make it to the appointment</Highlight>.</>,
+        title: "The doctor pieces it together by hand.",
+        desc: <>Anything done outside the clinic has to be attached manually, <Highlight>if it gets attached at all</Highlight>.</>,
       },
     ],
   },
@@ -86,29 +68,7 @@ export default function Problem() {
       <div className="mx-auto max-w-6xl px-6">
         <Reveal>
           <SectionBadge>{L.badge}</SectionBadge>
-        </Reveal>
-
-        <Reveal delay={0.08}>
-          <div className="mt-8 max-w-2xl border-l-2 border-brand-lime pl-6 md:pl-8">
-            <p className="font-serif font-light leading-none tracking-tight text-6xl md:text-7xl">
-              {L.stat.value}
-            </p>
-            <p className="mt-4 text-lg text-brand-muted/85 leading-relaxed">{L.stat.support}</p>
-            <p className="mt-2 text-xs text-brand-muted/50">
-              {L.stat.sourceLabel}:{" "}
-              <a
-                href={L.stat.sourceUrl}
-                className="underline underline-offset-2 hover:text-brand-muted/80"
-              >
-                {L.stat.sourceName}
-              </a>
-              , {L.stat.sourceYear}
-            </p>
-          </div>
-        </Reveal>
-
-        <Reveal delay={0.12}>
-          <h2 className="font-serif font-light tracking-tight text-4xl md:text-6xl mt-12 max-w-2xl">
+          <h2 className="font-serif font-light tracking-tight text-4xl md:text-6xl mt-5 max-w-3xl">
             {L.title}
           </h2>
           <p className="mt-5 text-lg text-brand-muted/80 max-w-2xl leading-relaxed">{L.desc}</p>

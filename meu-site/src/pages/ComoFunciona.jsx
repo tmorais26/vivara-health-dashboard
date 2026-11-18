@@ -14,9 +14,10 @@ const T = {
         title: "Reúna os seus dados",
         desc: (
           <>
-            Carregue análises e exames à medida que os recebe, ligue os seus wearables e escreva
-            sintomas quando surgem. Tudo fica guardado num <Highlight>cofre encriptado</Highlight>,
-            organizado automaticamente por data — sem pastas, sem PDFs perdidos em emails.
+            Recebeu as análises por email? Carregue o PDF na app, venha do laboratório ou da
+            clínica que vier. Se não o fizer, o seu médico também pode acrescentar o que recebe.
+            Tudo fica num <Highlight>cofre encriptado</Highlight>, organizado por data — sem
+            pastas, sem PDFs perdidos na caixa de correio.
           </>
         ),
       },
@@ -93,9 +94,10 @@ const T = {
         title: "Gather your data",
         desc: (
           <>
-            Upload lab results and exams as you receive them, connect your wearables and note
-            symptoms as they appear. Everything is kept in an <Highlight>encrypted vault</Highlight>,
-            automatically organised by date — no folders, no PDFs lost in emails.
+            Got your lab results by email? Upload the PDF to the app, whichever lab or clinic it
+            came from. If you don't, your doctor can add what they receive too. Everything is kept
+            in an <Highlight>encrypted vault</Highlight>, organised by date — no folders, no PDFs
+            lost in your inbox.
           </>
         ),
       },
