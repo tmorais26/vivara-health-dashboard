@@ -6,6 +6,7 @@ import { whoopAuthUrl, whoopExchange, whoopStatus, whoopDisconnect, type WhoopSt
 import { translate, LANG_STORAGE_KEY, type Lang } from "@/lib/app-v2-i18n";
 import type { ExtractedDoc, ParsedValue } from "@/lib/lab-parse";
 import type { StoredUpload, UploadKind } from "@/lib/uploads.store";
+import { phenoAge, PHENO_NEEDS, type PhenoValue } from "@/lib/bioage";
 import "../app-v2.css";
 
 export const Route = createFileRoute("/app-v2")({
@@ -175,48 +176,224 @@ function InfoDrawer({ title, onClose, children }: { title: string; onClose: () =
 }
 
 // ─── Idade biológica ─────────────────────────────────
-const IDADE_BIOLOGICA = 43;
-const IDADE_REAL = 47;
+// Calculada a partir de uma análise ao sangue (PhenoAge, ver lib/bioage.ts).
+// Não há número fixo: se faltarem marcadores, o cartão diz quais faltam em vez
+// de estimar. Os wearables não entram no número — não existe fórmula validada
+// que os combine com análises, e teríamos de inventar os pesos. Ficam ao lado,
+// como "ritmo" face ao próprio histórico do utente.
+const IDADE_REAL = 47; // idade da persona de demonstração; o utente pode alterá-la
+const AGE_KEY = "rv-profile-age-v1";
+
+function useChronoAge(): [number, (n: number) => void] {
+  const [age, setAge] = useState(IDADE_REAL);
+  useEffect(() => {
+    try {
+      const v = Number(localStorage.getItem(AGE_KEY));
+      if (Number.isFinite(v) && v >= 18 && v <= 110) setAge(v);
+    } catch { /* modo privado */ }
+  }, []);
+  const set = useCallback((n: number) => {
+    setAge(n);
+    try { localStorage.setItem(AGE_KEY, String(n)); } catch { /* modo privado */ }
+  }, []);
+  return [age, set];
+}
+
+// Valores das análises carregadas: o mais recente de cada marcador. Só estes
+// contam quando há análises carregadas — misturar com os valores de
+// demonstração daria uma idade calculada com metade de cada pessoa.
+function phenoInputsFromUploads(uploads: StoredUpload[]): PhenoValue[] {
+  const latest = new Map<string, PhenoValue>();
+  for (const u of [...uploads].sort((a, b) => a.collectedISO.localeCompare(b.collectedISO))) {
+    for (const v of u.values) {
+      if (!v.marker) continue;
+      const n = Number(v.value);
+      if (!Number.isFinite(n)) continue;
+      latest.set(v.marker, { name: v.marker, value: n, unit: v.unit, iso: u.collectedISO });
+    }
+  }
+  return [...latest.values()];
+}
+
+const DEMO_PANEL_ISO = "2026-04-22"; // colheita Synlab do painel de demonstração
+function phenoInputsFromDemo(): PhenoValue[] {
+  return PHENO_NEEDS.flatMap((name) => {
+    const b = BIOMARKERS.find((m) => m.name === name);
+    return b && Number.isFinite(Number(b.value))
+      ? [{ name, value: Number(b.value), unit: b.unit, iso: DEMO_PANEL_ISO }]
+      : [];
+  });
+}
+
+// Compara o último valor com a mediana dos anteriores. Sem juízo de valor: um
+// HRV mais alto ou uma FC mais baixa não são "bons" nem "maus" por si só.
+function rhythmOf(hist: number[]): { latest: number; delta: number; n: number } | null {
+  if (hist.length < 4) return null;
+  const latest = hist[hist.length - 1];
+  const prev = hist.slice(0, -1);
+  const base = median(prev);
+  if (base == null) return null;
+  return { latest, delta: Math.round(latest - base), n: prev.length };
+}
 
 const InfoGlyph = <span className="rv-info"><svg width="9" height="9" viewBox="0 0 10 10"><circle cx="5" cy="1.8" r="1.1" fill="currentColor"/><path d="M5 4.4 V8.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></span>;
 
-function BioAgeCard() {
-  const { t } = useLang();
-  const shown = useCountUp(IDADE_BIOLOGICA);
+function BioAgeCard({ whoop }: { whoop: WhoopStatus | null }) {
+  const { t, L, lang } = useLang();
+  const { go } = useNav();
+  const uploads = useUploads();
+  const [realAge, setRealAge] = useChronoAge();
+  const [editing, setEditing] = useState(false);
   const [info, setInfo] = useState(false);
-  const diff = IDADE_REAL - IDADE_BIOLOGICA;
+
+  const fromUploads = uploads.length > 0;
+  const inputs = fromUploads ? phenoInputsFromUploads(uploads) : phenoInputsFromDemo();
+  const result = phenoAge(inputs, realAge);
+  const bio = result.status === "ok" ? Math.round(result.age) : null;
+  const shown = useCountUp(bio ?? 0);
+
+  const dates = inputs.map((v) => v.iso).filter((d): d is string => !!d).sort();
+  const source = fromUploads
+    ? L("As suas análises carregadas", "Your uploaded labs") +
+      (dates.length ? ` · ${fmtDay(dates[0], lang, true)}${dates[0] !== dates[dates.length - 1] ? ` – ${fmtDay(dates[dates.length - 1], lang, true)}` : ""}` : "")
+    : L(`Análise de ${fmtDay(DEMO_PANEL_ISO, lang, true)} · Synlab (demonstração)`, `Lab from ${fmtDay(DEMO_PANEL_ISO, lang, true)} · Synlab (demo)`);
+
+  const commitAge = (raw: string) => {
+    const n = Math.round(Number(raw));
+    if (Number.isFinite(n) && n >= 18 && n <= 110) setRealAge(n);
+    setEditing(false);
+  };
+  const ageControl = editing ? (
+    <input className="rv-bioage-age-input" type="number" inputMode="numeric" min={18} max={110}
+      defaultValue={realAge} autoFocus
+      onBlur={(e) => commitAge(e.target.value)}
+      onKeyDown={(e) => { if (e.key === "Enter") commitAge((e.target as HTMLInputElement).value); }}
+      aria-label={L("Idade real","Actual age")}/>
+  ) : (
+    <button type="button" className="rv-bioage-age-btn" onClick={() => setEditing(true)} aria-label={L("Alterar idade real","Change actual age")}>
+      {realAge}
+    </button>
+  );
+
+  // Ritmo face ao próprio histórico — só com dados reais da Whoop.
+  const wm = whoop?.connected ? whoop.metrics : null;
+  const rhythm = wm
+    ? [
+        { label: L("FC repouso","Resting HR"), unit: "bpm", r: rhythmOf(wm.history.restingHr) },
+        { label: "HRV", unit: "ms", r: rhythmOf(wm.history.hrv) },
+        { label: L("Sono profundo","Deep sleep"), unit: "min", r: rhythmOf(wm.history.deepSleepMin) },
+      ].filter((x) => x.r != null)
+    : [];
+
+  const diff = bio != null ? realAge - bio : 0;
   const younger = diff > 0;
   const unitWord = Math.abs(diff) === 1 ? t("bioage.year") : t("bioage.years");
+  const missingList = result.status === "missing" ? [...result.missing, ...result.invalid] : [];
+
   return (
     <>
       <div className="rv-bioage-card">
         <button type="button" className="rv-bioage-eyebrow rv-score-eyebrow-btn" onClick={() => setInfo(true)}>
           {t("bioage.eyebrow")} {InfoGlyph}
         </button>
-        <div className="rv-bioage-main">
-          <div className="rv-bioage-num">{shown}<span className="rv-bioage-unit">{t("bioage.unit")}</span></div>
-          <span className="rv-bioage-badge" data-good={younger}>
-            {younger ? "−" : "+"}{Math.abs(diff)} {unitWord}
-          </span>
-        </div>
-        <div className="rv-bioage-sub">{t("bioage.sub")}</div>
-        <div className="rv-bioage-compare">
-          <div className="rv-bioage-row">
-            <span className="rv-bioage-row-label">{t("bioage.biological")}</span>
-            <div className="rv-bioage-bar"><div className="rv-bioage-fill" data-good="true" style={{width: `${(IDADE_BIOLOGICA / IDADE_REAL) * 100}%`}}/></div>
-            <span className="rv-bioage-row-val">{IDADE_BIOLOGICA}</span>
+
+        {result.status === "ok" && bio != null ? (
+          <>
+            <div className="rv-bioage-main">
+              <div className="rv-bioage-num">{shown}<span className="rv-bioage-unit">{t("bioage.unit")}</span></div>
+              {diff !== 0 && (
+                <span className="rv-bioage-badge" data-good={younger}>
+                  {younger ? "−" : "+"}{Math.abs(diff)} {unitWord}
+                </span>
+              )}
+            </div>
+            <div className="rv-bioage-sub">{t("bioage.sub")}</div>
+            <div className="rv-bioage-compare">
+              <div className="rv-bioage-row">
+                <span className="rv-bioage-row-label">{t("bioage.biological")}</span>
+                <div className="rv-bioage-bar"><div className="rv-bioage-fill" data-good={younger} style={{width: `${Math.min(100, (bio / realAge) * 100)}%`}}/></div>
+                <span className="rv-bioage-row-val">{bio}</span>
+              </div>
+              <div className="rv-bioage-row">
+                <span className="rv-bioage-row-label">{t("bioage.real")}</span>
+                <div className="rv-bioage-bar"><div className="rv-bioage-fill" style={{width: "100%"}}/></div>
+                <span className="rv-bioage-row-val">{ageControl}</span>
+              </div>
+            </div>
+            <div className="rv-bioage-method">
+              <strong>PhenoAge</strong> · {source}
+            </div>
+            {result.span != null && result.span > 90 && (
+              <div className="rv-bioage-warn">
+                {L(`Valores de colheitas com ${result.span} dias de intervalo — o ideal é uma única análise.`,
+                   `Values from samples ${result.span} days apart — a single panel is ideal.`)}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="rv-bioage-pending">
+            {result.status === "age" ? (
+              <>
+                <div className="rv-bioage-pending-title">{L("Indique a idade real","Enter your actual age")}</div>
+                <div className="rv-bioage-pending-text">{L("O cálculo é para adultos entre os 20 e os 100 anos.","The calculation is for adults aged 20 to 100.")}</div>
+              </>
+            ) : (
+              <>
+                <div className="rv-bioage-pending-title">
+                  {L(`Faltam ${missingList.length} marcadores para calcular`, `${missingList.length} markers missing to calculate`)}
+                </div>
+                <div className="rv-bioage-pending-text">
+                  {fromUploads
+                    ? L("Calculada só com as suas análises carregadas, sem valores de demonstração.","Calculated only from your uploaded labs, with no demo values.")
+                    : L("A idade biológica precisa de uma análise ao sangue com estes marcadores.","Biological age needs a blood panel with these markers.")}
+                </div>
+                <div className="rv-bioage-chips">
+                  {missingList.map((m) => <span key={m} className="rv-bioage-chip">{m}</span>)}
+                </div>
+                {result.status === "missing" && result.invalid.length > 0 && (
+                  <div className="rv-bioage-pending-text" style={{marginTop: 6}}>
+                    {L("Os marcadores a vermelho estão com uma unidade que não reconheço — corrija-os na revisão.","Markers with an unrecognised unit — correct them in the review.")}
+                  </div>
+                )}
+                <button className="rv-cta-ghost" style={{margin: "12px 0 0", width: "100%"}} onClick={() => go("upload")}>
+                  {L("Carregar análise","Upload lab result")}
+                </button>
+              </>
+            )}
+            <div className="rv-bioage-pending-age">
+              {L("Idade real usada","Actual age used")}: {ageControl}
+            </div>
           </div>
-          <div className="rv-bioage-row">
-            <span className="rv-bioage-row-label">{t("bioage.real")}</span>
-            <div className="rv-bioage-bar"><div className="rv-bioage-fill" style={{width: "100%"}}/></div>
-            <span className="rv-bioage-row-val">{IDADE_REAL}</span>
+        )}
+
+        {rhythm.length > 0 && (
+          <div className="rv-bioage-rhythm">
+            <div className="rv-bioage-rhythm-head">{L("Ritmo · Whoop · face ao seu histórico","Rhythm · Whoop · vs your own history")}</div>
+            {rhythm.map((x) => (
+              <div key={x.label} className="rv-bioage-rhythm-row">
+                <span>{x.label}</span>
+                <span className="rv-bioage-rhythm-val">
+                  {x.r!.latest} {x.unit}
+                  <span className="rv-bioage-rhythm-delta">
+                    {x.r!.delta === 0 ? "=" : x.r!.delta > 0 ? `▲ ${x.r!.delta}` : `▼ ${Math.abs(x.r!.delta)}`}
+                  </span>
+                </span>
+              </div>
+            ))}
+            <div className="rv-bioage-rhythm-note">
+              {L("Compara o último dia com a mediana dos anteriores. Não é uma idade e não entra no número acima.",
+                 "Compares the latest day with the median of the previous ones. It isn't an age and isn't part of the number above.")}
+            </div>
           </div>
-        </div>
+        )}
       </div>
       {info && (
         <InfoDrawer title={t("bioage.drawerTitle")} onClose={() => setInfo(false)}>
           <p>{t("bioage.drawerP1a")}<strong>{t("bioage.drawerP1strong")}</strong>{t("bioage.drawerP1b")}</p>
-          <p>{t("bioage.drawerP2a")}<strong>{t("bioage.drawerP2strong")}</strong>{t("bioage.drawerP2b")}</p>
+          <p>{L("Usa a fórmula publicada PhenoAge (Levine et al., 2018) com 9 marcadores: albumina, creatinina, glicose, PCR, % de linfócitos, VGM, RDW, fosfatase alcalina e leucócitos. Se faltar algum, não se calcula.",
+                "Uses the published PhenoAge formula (Levine et al., 2018) with 9 markers: albumin, creatinine, glucose, CRP, lymphocyte %, MCV, RDW, alkaline phosphatase and white cells. If any is missing, it isn't calculated.")}</p>
+          <p>{L("Os dados dos wearables não entram neste número: não existe uma fórmula validada que os combine com análises. Aparecem à parte, como ritmo face ao seu próprio histórico.",
+                "Wearable data isn't part of this number: there's no validated formula that combines it with labs. It appears separately, as rhythm against your own history.")}</p>
           <div className="rv-drawer-note">{t("bioage.drawerNotePre")}<strong>{t("bioage.drawerNoteStrong")}</strong>{t("bioage.drawerNotePost")}</div>
         </InfoDrawer>
       )}
@@ -494,6 +671,10 @@ function HomeScreenV2() {
   const stepsSrc = useSourceName("steps");
   const restHrSrc = useSourceName("restingHr");
   const withSrc = (base: string, src: string | null) => (src ? `${base} · ${src}` : base);
+  // Há wearable ligado mas não fornece passos (a Whoop): a linha diz isso em vez
+  // de mostrar um valor de demonstração com a origem de outro dispositivo.
+  const activeW = useActiveWearable();
+  const stepsMissing = !!activeW && !WEARABLE_PROVIDES[activeW].includes("steps");
 
   return (
     <div className="rv-screen">
@@ -516,7 +697,7 @@ function HomeScreenV2() {
       </div>
 
       <div className="rv-body">
-        <BioAgeCard />
+        <BioAgeCard whoop={whoop} />
         <ScoreLongevidadeCard />
         <WhoopHomeCard status={whoop} />
 
@@ -583,10 +764,18 @@ function HomeScreenV2() {
               <div className="rv-signal-icon">{Icon.steps}</div>
               <div className="rv-signal-meta">
                 <span className="rv-signal-name">{t("signal.steps")}</span>
-                <span className="rv-signal-sub">{withSrc(t("signal.stepsSub"), stepsSrc)}</span>
+                <span className="rv-signal-sub">
+                  {stepsMissing && activeW
+                    ? L(`Não disponível em ${wearableName(activeW)}`, `Not available on ${wearableName(activeW)}`)
+                    : withSrc(t("signal.stepsSub"), stepsSrc)}
+                </span>
               </div>
-              <span className="rv-signal-val">7,2k</span>
-              <Spark pts={[6800,8200,5400,9100,7600,6900,7200]} color="var(--accent)"/>
+              {stepsMissing
+                ? <span className="rv-signal-val" style={{color: "var(--fg-30)"}}>—</span>
+                : <>
+                    <span className="rv-signal-val">7,2k</span>
+                    <Spark pts={[6800,8200,5400,9100,7600,6900,7200]} color="var(--accent)"/>
+                  </>}
             </div>
             <div className="rv-signal">
               <div className="rv-signal-icon">{Icon.zap}</div>
@@ -3577,15 +3766,24 @@ function WhoopMetric({ label, value, unit }: { label: string; value: number | nu
   );
 }
 
-function WhoopCard() {
+function WhoopCard({ onRequestReplace }: { onRequestReplace: (proceed: () => void) => void }) {
   const { showToast } = useNav();
   const { L } = useLang();
+  const { devices } = useDevices();
   const getAuthUrl = useServerFn(whoopAuthUrl);
   const doDisconnect = useServerFn(whoopDisconnect);
   const { status, refresh } = useWhoopStatus();
   const [busy, setBusy] = useState(false);
 
-  const connect = async () => {
+  // Com outro wearable ligado, a Whoop só entra se o utente aceitar
+  // substituí-lo — um de cada vez.
+  const connect = () => {
+    const other = WEARABLE_IDS.find((id) => id !== "whoop" && devices[id as DeviceId]?.connected);
+    if (other) onRequestReplace(startOAuth);
+    else startOAuth();
+  };
+
+  const startOAuth = async () => {
     setBusy(true);
     try {
       const r = await getAuthUrl();
@@ -3664,12 +3862,12 @@ function WhoopCard() {
 interface DeviceState { connected: boolean; lastSync: number | null }
 type DevicesMap = Record<DeviceId, DeviceState>;
 
-// v2: passa a haver dois wearables ligados por omissão (Apple Watch + Oura),
-// para que a escolha de fonte principal tenha um conflito real para resolver.
-const STORAGE_KEY = "rv-devices-v2";
+// v3: um só wearable ligado por omissão. A chave mudou para que o estado
+// guardado pela versão anterior (Apple Watch + Oura ligados) não volte.
+const STORAGE_KEY = "rv-devices-v3";
 const DEFAULT_DEVICES: DevicesMap = {
   "apple-health": { connected: true,  lastSync: Date.now() - 4 * 60 * 1000 },
-  "oura":         { connected: true,  lastSync: Date.now() - 26 * 60 * 1000 },
+  "oura":         { connected: false, lastSync: null },
   "garmin":       { connected: false, lastSync: null },
   "fitbit":       { connected: false, lastSync: null },
   "google-fit":   { connected: false, lastSync: null },
@@ -3681,7 +3879,18 @@ function loadDevices(): DevicesMap {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_DEVICES;
-    return { ...DEFAULT_DEVICES, ...JSON.parse(raw) } as DevicesMap;
+    const merged = { ...DEFAULT_DEVICES, ...JSON.parse(raw) } as DevicesMap;
+    // No máximo um wearable ligado: se o armazenamento tiver mais, fica o
+    // primeiro da lista de prioridade.
+    let kept = false;
+    for (const id of WEARABLE_IDS) {
+      if (id === "whoop") continue;
+      if (merged[id as DeviceId]?.connected) {
+        if (kept) merged[id as DeviceId] = { connected: false, lastSync: null };
+        kept = true;
+      }
+    }
+    return merged;
   } catch {
     return DEFAULT_DEVICES;
   }
@@ -3692,74 +3901,65 @@ function saveDevices(d: DevicesMap) {
   try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch { /* ignore */ }
 }
 
-// ─── Fonte principal por métrica ─────────────────────
+// ─── Um wearable de cada vez ─────────────────────────
 // Dois wearables ligados dizem os dois que medem "HRV", mas não medem o
 // mesmo: a Whoop mede RMSSD durante o sono, o Apple Watch mede SDNN em
-// momentos avulsos. Misturá-los produziria uma série sem significado
-// clínico, por isso cada métrica tem UMA fonte de cada vez — nunca média.
-type SourceId = DeviceId | "whoop";
+// momentos avulsos. Em vez de pedir ao utente que escolha uma fonte por
+// métrica, só pode haver UM wearable de pulso/anel ligado de cada vez — e é
+// dele que vem tudo, com a origem sempre visível. O CGM fica fora desta regra
+// porque mede glicose, que nenhuma pulseira mede: não concorre com ninguém.
+type WearableId = "whoop" | "apple-health" | "oura" | "garmin" | "fitbit" | "google-fit";
 type MetricKey = "sleep" | "hrv" | "steps" | "restingHr" | "body";
 
-interface MetricDef { key: MetricKey; pt: string; en: string; providers: SourceId[] }
+// Ordem de prioridade só para desempatar dados antigos guardados com mais do
+// que um ligado (versões anteriores da app permitiam dois).
+const WEARABLE_IDS: WearableId[] = ["whoop", "apple-health", "oura", "garmin", "fitbit", "google-fit"];
 
-// A ordem de `providers` é a prioridade por omissão quando o utente ainda
-// não escolheu nada. A Whoop não conta passos, por isso não aparece lá.
-const METRICS: MetricDef[] = [
-  { key: "sleep",     pt: "Sono",       en: "Sleep",      providers: ["whoop", "oura", "apple-health", "garmin", "fitbit"] },
-  { key: "hrv",       pt: "HRV",        en: "HRV",        providers: ["whoop", "oura", "apple-health", "garmin"] },
-  { key: "steps",     pt: "Passos",     en: "Steps",      providers: ["apple-health", "garmin", "fitbit", "google-fit", "oura"] },
-  { key: "restingHr", pt: "FC repouso", en: "Resting HR", providers: ["whoop", "oura", "apple-health", "garmin", "fitbit"] },
-  { key: "body",      pt: "Peso e composição", en: "Weight & composition", providers: ["whoop", "apple-health", "fitbit", "garmin"] },
-];
+// O que cada wearable fornece. Quando o ligado não fornece uma métrica (a API
+// da Whoop não expõe passos), a app diz que não está disponível em vez de a
+// preencher com um valor de outra origem.
+const WEARABLE_PROVIDES: Record<WearableId, MetricKey[]> = {
+  "whoop":        ["sleep", "hrv", "restingHr", "body"],
+  "apple-health": ["sleep", "hrv", "steps", "restingHr", "body"],
+  "oura":         ["sleep", "hrv", "steps", "restingHr"],
+  "garmin":       ["sleep", "hrv", "steps", "restingHr", "body"],
+  "fitbit":       ["sleep", "steps", "restingHr", "body"],
+  "google-fit":   ["sleep", "steps", "restingHr", "body"],
+};
 
-type SourcesMap = Partial<Record<MetricKey, SourceId>>;
-const SOURCES_KEY = "rv-metric-sources-v1";
+const isWearable = (id: DeviceId): boolean => id !== "libre-cgm";
 
-function sourceName(id: SourceId): string {
+function wearableName(id: WearableId): string {
   return id === "whoop" ? "Whoop" : DEVICES.find((d) => d.id === id)?.name ?? id;
 }
 
-function loadSources(): SourcesMap {
-  if (typeof window === "undefined") return {};
-  try {
-    return JSON.parse(window.localStorage.getItem(SOURCES_KEY) || "{}") as SourcesMap;
-  } catch {
-    return {};
-  }
-}
-
-function availableSources(metric: MetricDef, devices: DevicesMap, whoopConnected: boolean): SourceId[] {
-  return metric.providers.filter((p) => (p === "whoop" ? whoopConnected : devices[p]?.connected));
-}
-
-// A escolha guardada só vale enquanto esse dispositivo continuar ligado —
-// se for desligado, cai para o seguinte da lista de prioridade em vez de
-// deixar a métrica sem fonte.
-function resolveSource(metric: MetricDef, devices: DevicesMap, whoopConnected: boolean, choices: SourcesMap): SourceId | null {
-  const avail = availableSources(metric, devices, whoopConnected);
-  const chosen = choices[metric.key];
-  if (chosen && avail.includes(chosen)) return chosen;
-  return avail[0] ?? null;
+// O wearable ativo: a Whoop (integração real) tem precedência; senão o
+// primeiro ligado da lista.
+function activeWearable(devices: DevicesMap, whoopConnected: boolean): WearableId | null {
+  if (whoopConnected) return "whoop";
+  return WEARABLE_IDS.find((id) => id !== "whoop" && devices[id as DeviceId]?.connected) ?? null;
 }
 
 interface DevicesCtxValue {
   devices: DevicesMap;
   setDevices: (d: DevicesMap) => void;
-  sources: SourcesMap;
-  setSource: (k: MetricKey, s: SourceId) => void;
 }
 const DevicesCtx = createContext<DevicesCtxValue>({
-  devices: DEFAULT_DEVICES, setDevices: () => {}, sources: {}, setSource: () => {},
+  devices: DEFAULT_DEVICES, setDevices: () => {},
 });
 const useDevices = () => useContext(DevicesCtx);
 
-// Nome da fonte resolvida para uma métrica, pronto a mostrar em "Fonte: X".
-function useSourceName(key: MetricKey): string | null {
-  const { devices, sources } = useDevices();
+function useActiveWearable(): WearableId | null {
+  const { devices } = useDevices();
   const { status } = useWhoopStatus();
-  const metric = METRICS.find((m) => m.key === key)!;
-  const id = resolveSource(metric, devices, !!status?.connected, sources);
-  return id ? sourceName(id) : null;
+  return activeWearable(devices, !!status?.connected);
+}
+
+// Nome do wearable ativo para uma métrica, pronto a mostrar em "Fonte: X".
+// Devolve null se não há wearable ligado ou se o ligado não fornece a métrica.
+function useSourceName(key: MetricKey): string | null {
+  const id = useActiveWearable();
+  return id && WEARABLE_PROVIDES[id].includes(key) ? wearableName(id) : null;
 }
 
 // Formatação de datas sem depender dos dados de locale do dispositivo:
@@ -3787,98 +3987,81 @@ function formatRelative(ts: number | null): string {
   return `há ${d} d`;
 }
 
-// Selector de fonte principal — só aparece quando há mais do que um
-// dispositivo ligado a medir a mesma coisa. Com um só, não há escolha a
-// fazer e mostrar um selector de uma opção seria ruído.
-function FonteSection() {
-  const { L } = useLang();
-  const { devices, sources, setSource } = useDevices();
-  const { status } = useWhoopStatus();
-  const whoopConnected = !!status?.connected;
-
-  const rows = METRICS.map((metric) => ({
-    metric,
-    avail: availableSources(metric, devices, whoopConnected),
-    active: resolveSource(metric, devices, whoopConnected, sources),
-  }));
-
-  if (rows.every((r) => r.avail.length === 0)) return null;
-
-  return (
-    <>
-      <div className="rv-section-head" style={{margin: "0 20px 8px"}}>
-        <h3>{L("Fonte principal","Primary source")}</h3>
-      </div>
-      <div className="rv-src-note">
-        {L("Cada métrica usa um dispositivo de cada vez. Os valores nunca são misturados entre dispositivos — medem de formas diferentes e a média não teria significado clínico.",
-           "Each metric uses one device at a time. Values are never blended across devices — they measure differently and an average would have no clinical meaning.")}
-      </div>
-      <div className="rv-src-list">
-        {rows.map(({ metric, avail, active }) => (
-          <div key={metric.key} className="rv-src-row">
-            <div className="rv-src-label">{L(metric.pt, metric.en)}</div>
-            {avail.length === 0 ? (
-              <div className="rv-src-empty">{L("Sem fonte ligada","No source connected")}</div>
-            ) : avail.length === 1 ? (
-              <div className="rv-src-single">{sourceName(avail[0])} <span>{L("· fonte única","· only source")}</span></div>
-            ) : (
-              <div className="rv-src-opts">
-                {avail.map((id) => (
-                  <button
-                    key={id}
-                    type="button"
-                    className="rv-src-opt"
-                    data-active={active === id || undefined}
-                    onClick={() => setSource(metric.key, id)}
-                  >
-                    {sourceName(id)}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
 function DispositivosScreen() {
   const { go, showToast } = useNav();
   const { L } = useLang();
   const { devices, setDevices } = useDevices();
+  const { status: whoopStatusNow } = useWhoopStatus();
+  const doWhoopDisconnect = useServerFn(whoopDisconnect);
+  const active = activeWearable(devices, !!whoopStatusNow?.connected);
+  const [whoopKey, setWhoopKey] = useState(0); // força o cartão Whoop a reler o estado
   const [authorizing, setAuthorizing] = useState<DeviceId | null>(null);
   const [authStep, setAuthStep] = useState<"redirect" | "authorize">("redirect");
+  // Substituição pendente: quem sai, e o que fazer depois de o utente aceitar.
+  const [replacing, setReplacing] = useState<{ from: WearableId; proceed: () => void } | null>(null);
 
   function persist(next: DevicesMap) {
     setDevices(next);
   }
 
-  function startConnect(id: DeviceId) {
+  // Desliga todos os wearables de pulso/anel, deixando o CGM como está.
+  function allWearablesOff(d: DevicesMap): DevicesMap {
+    const next = { ...d };
+    for (const id of WEARABLE_IDS) if (id !== "whoop") next[id as DeviceId] = { connected: false, lastSync: null };
+    return next;
+  }
+
+  function beginAuthorize(id: DeviceId) {
     setAuthStep("redirect");
     setAuthorizing(id);
     setTimeout(() => setAuthStep("authorize"), 900);
   }
 
+  function startConnect(id: DeviceId) {
+    // O CGM não concorre com os wearables; os restantes só entram um de cada vez.
+    if (isWearable(id) && active && active !== id) {
+      setReplacing({ from: active, proceed: () => beginAuthorize(id) });
+      return;
+    }
+    beginAuthorize(id);
+  }
+
+  async function confirmReplace() {
+    if (!replacing) return;
+    const { from, proceed } = replacing;
+    setReplacing(null);
+    // A Whoop é a única integração real: sai-se dela no servidor.
+    if (from === "whoop") {
+      try { await doWhoopDisconnect(); } catch { /* o cookie expira sozinho */ }
+      setWhoopKey((k) => k + 1);
+    }
+    proceed();
+  }
+
   function confirmAuthorize() {
     if (!authorizing) return;
     const id = authorizing;
-    persist({ ...devices, [id]: { connected: true, lastSync: Date.now() } });
+    const base = isWearable(id) ? allWearablesOff(devices) : devices;
+    persist({ ...base, [id]: { connected: true, lastSync: Date.now() } });
     setAuthorizing(null);
-    showToast("Dispositivo ligado");
+    showToast(L("Dispositivo ligado","Device connected"));
   }
 
   function disconnect(id: DeviceId) {
     persist({ ...devices, [id]: { connected: false, lastSync: null } });
-    showToast("Dispositivo desligado");
+    showToast(L("Dispositivo desligado","Device disconnected"));
   }
 
   function syncNow(id: DeviceId) {
     persist({ ...devices, [id]: { ...devices[id], lastSync: Date.now() } });
-    showToast("Sincronizado");
+    showToast(L("Sincronizado","Synced"));
   }
 
-  const connectedCount = Object.values(devices).filter((d) => d.connected).length;
+  // O que está de facto "ligado" no ecrã: o wearable ativo e o CGM. Se a
+  // Whoop é a ativa, os outros wearables não contam, mesmo que o armazenamento
+  // ainda os marque como ligados.
+  const shownConnected = (d: DeviceDef) => (isWearable(d.id) ? active === d.id : devices[d.id].connected);
+  const connectedCount = DEVICES.filter(shownConnected).length + (active === "whoop" ? 1 : 0);
   const authorizingDef = authorizing ? DEVICES.find((d) => d.id === authorizing) : null;
 
   return (
@@ -3898,16 +4081,19 @@ function DispositivosScreen() {
           </p>
         </div>
 
-        <WhoopCard />
+        <div className="rv-src-note">
+          {L("Só pode ter um wearable ligado de cada vez. Dispositivos diferentes medem de formas diferentes (o HRV, por exemplo), e misturá-los daria valores sem significado. O Abbott Libre mede glicose e pode estar ligado em simultâneo.",
+             "Only one wearable can be connected at a time. Different devices measure differently (HRV, for example), and blending them would give meaningless values. The Abbott Libre measures glucose and can be connected alongside.")}
+        </div>
 
-        <FonteSection />
+        <WhoopCard key={whoopKey} onRequestReplace={(proceed) => active && setReplacing({ from: active, proceed })} />
 
         <div className="rv-section-head" style={{margin: "0 20px 10px"}}>
           <h3>{L("Ligados","Connected")}</h3>
-          <span style={{fontSize: 11, color: "var(--fg-50)"}}>{connectedCount} de {DEVICES.length}</span>
+          <span style={{fontSize: 11, color: "var(--fg-50)"}}>{connectedCount} {L("de","of")} {DEVICES.length + 1}</span>
         </div>
         <div className="rv-devices">
-          {DEVICES.filter((d) => devices[d.id].connected).map((d) => (
+          {DEVICES.filter(shownConnected).map((d) => (
             <div key={d.id} className="rv-device" data-connected="true">
               <div className="rv-device-head">
                 <div className="rv-device-logo" style={{background: d.tint, color: "#0b0d0f"}}>{d.initials || Icon.watch}</div>
@@ -3935,7 +4121,7 @@ function DispositivosScreen() {
           <h3>{L("Disponíveis","Available")}</h3>
         </div>
         <div className="rv-devices">
-          {DEVICES.filter((d) => !devices[d.id].connected).map((d) => (
+          {DEVICES.filter((d) => !shownConnected(d)).map((d) => (
             <div key={d.id} className="rv-device">
               <div className="rv-device-head">
                 <div className="rv-device-logo" style={{background: d.tint, color: "#0b0d0f"}}>{d.initials || Icon.watch}</div>
@@ -3953,6 +4139,24 @@ function DispositivosScreen() {
           {L("Não encontra o seu dispositivo? ","Can\u2019t find your device? ")}<a onClick={() => showToast(L("Pedido enviado · suporte@vivara.health","Request sent · support@vivara.health"))} style={{cursor:"pointer", color:"var(--accent)"}}>{L("Pedir suporte","Request support")}</a>
         </div>
       </div>
+
+      {replacing && (
+        <div className="rv-overlay" role="dialog" aria-modal="true">
+          <div className="rv-modal">
+            <div className="rv-modal-title">
+              {L("Substituir","Replace")} {wearableName(replacing.from)}?
+            </div>
+            <div className="rv-modal-text">
+              {L("Só pode ter um wearable ligado de cada vez. A partir daqui, o sono, o HRV e a FC passam a vir do novo dispositivo, e os valores do anterior não são misturados com os dele.",
+                 "Only one wearable can be connected at a time. From here on, sleep, HRV and heart rate come from the new device, and the previous device's values are not blended with it.")}
+            </div>
+            <div className="rv-modal-actions">
+              <button className="rv-device-btn" data-tone="ghost" onClick={() => setReplacing(null)}>{L("Cancelar","Cancel")}</button>
+              <button className="rv-device-btn" data-tone="primary" onClick={confirmReplace}>{L("Substituir","Replace")}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {authorizing && authorizingDef && (
         <div className="rv-overlay" role="dialog" aria-modal="true">
@@ -4572,7 +4776,18 @@ function AppV2Page() {
     }
 
     doExchange({ data: { code: code as string, state: params.get("state") ?? "" } })
-      .then((r) => { if (!r.ok && r.error && r.error !== "not_configured") setToastMsg(lang === "en" ? "Failed to connect Whoop" : "Falha ao ligar o Whoop"); })
+      .then((r) => {
+        if (r.ok) {
+          // A Whoop entrou: os outros wearables saem (um de cada vez).
+          const cur = loadDevices();
+          const next = { ...cur };
+          for (const id of WEARABLE_IDS) if (id !== "whoop") next[id as DeviceId] = { connected: false, lastSync: null };
+          saveDevices(next);
+          setDevicesState(next);
+        } else if (r.error && r.error !== "not_configured") {
+          setToastMsg(lang === "en" ? "Failed to connect Whoop" : "Falha ao ligar o Whoop");
+        }
+      })
       .catch(() => {})
       .finally(() => { clean(); setRoute("devices"); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -4602,10 +4817,8 @@ function AppV2Page() {
   // e só sincronizam com o localStorage depois de montar, para o HTML do
   // servidor e o do cliente coincidirem.
   const [devices, setDevicesState] = useState<DevicesMap>(DEFAULT_DEVICES);
-  const [sources, setSourcesState] = useState<SourcesMap>({});
   useEffect(() => {
     setDevicesState(loadDevices());
-    setSourcesState(loadSources());
   }, []);
 
   const setDevices = useCallback((d: DevicesMap) => {
@@ -4613,19 +4826,11 @@ function AppV2Page() {
     saveDevices(d);
   }, []);
 
-  const setSource = useCallback((k: MetricKey, s: SourceId) => {
-    setSourcesState((prev) => {
-      const next = { ...prev, [k]: s };
-      try { localStorage.setItem(SOURCES_KEY, JSON.stringify(next)); } catch { /* modo privado */ }
-      return next;
-    });
-  }, []);
-
   return (
     <div className="rv-root" data-theme="dark">
       <LangCtx.Provider value={{ lang, setLang, t, L }}>
         <NavCtx.Provider value={{ go: setRoute, current: route, showToast, logout }}>
-        <DevicesCtx.Provider value={{ devices, setDevices, sources, setSource }}>
+        <DevicesCtx.Provider value={{ devices, setDevices }}>
           <div className="rv-phone-shell">
             {authed ? (
               <>

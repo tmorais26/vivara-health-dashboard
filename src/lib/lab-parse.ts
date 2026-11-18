@@ -69,7 +69,7 @@ const MARKER_ALIASES: { marker: string; aliases: string[]; units?: string[]; pla
   { marker: "T4 livre",          aliases: ["t4 livre", "tiroxina livre", "ft4"], plaus: [0.1,8] },
   { marker: "T3 livre",          aliases: ["t3 livre", "triiodotironina livre", "ft3"], plaus: [0.5,20] },
   { marker: "Anti-TPO",          aliases: ["anti-tpo", "anti tpo", "anticorpos anti-peroxidase"] },
-  { marker: "PCR-us",            aliases: ["pcr ultrassensivel", "pcr ultra-sensivel", "proteina c reactiva ultrassensivel", "pcr us", "pcr-as", "proteina c reactiva", "proteína c reativa"], units: ["mg/L"], plaus: [0.01,300] },
+  { marker: "PCR-us",            aliases: ["pcr ultrassensivel", "pcr ultra-sensivel", "proteina c reactiva ultrassensivel", "pcr us", "pcr-as", "proteina c reactiva", "proteína c reativa"], units: ["mg/L","mg/dL"], plaus: [0.01,300] },
   { marker: "Homocisteína",      aliases: ["homocisteina", "homocisteína"], units: ["µmol/L","umol/L"], plaus: [1,100] },
   { marker: "Fibrinogénio",      aliases: ["fibrinogenio", "fibrinogénio"] },
   { marker: "Ácido úrico",       aliases: ["acido urico", "ácido úrico"], units: ["mg/dL"], plaus: [1,20] },
@@ -188,7 +188,11 @@ function findCandidates(line: string): { clean: string; viable: Candidate[] } {
   // vez de eleger um vencedor à partida e desistir se ele não servir.
   const candidates: Candidate[] = [];
   for (const entry of MARKER_ALIASES) {
-    for (const alias of entry.aliases) {
+    for (const rawAlias of entry.aliases) {
+      // O texto já vem sem acentos; os sinónimos têm de ser comparados na mesma
+      // forma, senão um sinónimo escrito com acento ("proteína c reativa")
+      // nunca encontra nada.
+      const alias = norm(rawAlias);
       const idx = n.indexOf(alias);
       if (idx < 0) continue;
       if (!prefixIsCode(n.slice(0, idx))) continue;
@@ -216,6 +220,17 @@ const unitKey = (u: string) => u.toLowerCase().replace(/[^a-z0-9]/g, "");
 // Extrai valor, unidade e intervalo de um pedaço de texto à direita do nome —
 // ou de uma linha inteira, quando o resultado vem separado do nome.
 function readValue(tail: string, cand: Candidate): { value: string; unit: string; ref: string } | null {
+  // Electroforese de proteínas (Joaquim Chaves): o resultado vem em %, e o
+  // valor absoluto em g/dL entre parênteses retos — "66,6 [4,7] % [g/dL]
+  // 47,8-65,0 [3,4-4,8]". Para a albumina e as proteínas totais interessa o
+  // g/dL (é o que o PhenoAge e o painel usam), por isso lê-se o valor entre
+  // parênteses e o intervalo de referência que vem igualmente entre parênteses.
+  if (cand.units?.includes("g/dL") && !cand.units.includes("%")) {
+    const br = tail.match(/^\s*-?\d+(?:[.,]\d+)?\s*\[(\d+(?:[.,]\d+)?)\]\s*%\s*\[g\/dL\][^\[]*\[(\d+(?:[.,]\d+)?\s*[-–]\s*\d+(?:[.,]\d+)?)\]/i);
+    if (br) {
+      return { value: br[1].replace(",", "."), unit: "g/dL", ref: br[2].replace(/,/g, ".").replace(/\s*[-–]\s*/, " – ") };
+    }
+  }
   const tokens = tail.split(/\s+/).filter(Boolean);
   let value: string | null = null;
   let valueIdx = -1;
