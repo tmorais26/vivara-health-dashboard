@@ -45,19 +45,20 @@ const T = {
     doctorPlans: [
       {
         name: "Individual",
-        monthly: 89,
+        monthly: 20,
         desc: "Para médicos a trabalhar de forma independente.",
         features: ["Até 200 utentes", "Portal clínico completo", "Funciona com ou sem app do utente", "Integrações com wearables", "Suporte por email"],
       },
       {
         name: "Equipa",
-        monthly: 69,
+        monthly: null,
         desc: "Para clínicas com 2 ou mais profissionais.",
         features: ["Utentes ilimitados", "Tudo do Individual", "Equipa multidisciplinar", "Permissões granulares", "Suporte prioritário"],
         featured: true,
       },
     ],
     ctaStart: "Começar",
+    ctaTalk: "Falar connosco",
     footnote: "Sem custos de setup. Cancela quando quiser. IVA não incluído. Os planos de médicos e utentes são independentes.",
     compareTitle: "Compara os planos.",
     compareRows: [
@@ -107,19 +108,20 @@ const T = {
     doctorPlans: [
       {
         name: "Individual",
-        monthly: 89,
+        monthly: 20,
         desc: "For doctors working independently.",
         features: ["Up to 200 patients", "Full clinical portal", "Works with or without the patient app", "Wearable integrations", "Email support"],
       },
       {
         name: "Team",
-        monthly: 69,
+        monthly: null,
         desc: "For clinics with 2 or more professionals.",
         features: ["Unlimited patients", "Everything in Individual", "Multidisciplinary team", "Granular permissions", "Priority support"],
         featured: true,
       },
     ],
     ctaStart: "Get started",
+    ctaTalk: "Talk to us",
     footnote: "No setup costs. Cancel anytime. VAT not included. Doctor and patient plans are independent.",
     compareTitle: "Compare the plans.",
     compareRows: [
@@ -259,7 +261,7 @@ export default function Precos() {
                       p.featured ? "bg-brand-lime text-brand-text" : "bg-brand-olive text-white hover:bg-brand-olive-hover"
                     }`}
                   >
-                    {L.ctaStart}
+                    {p.monthly ? L.ctaStart : L.ctaTalk}
                   </Link>
                 </div>
               </Reveal>
