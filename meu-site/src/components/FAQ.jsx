@@ -37,6 +37,10 @@ const T = {
         a: "Pode começar sozinho como utente. O seu historial fica organizado e pronto para partilhar com a sua equipa clínica assim que ela se juntar à Vivara.",
       },
       {
+        q: "O meu utente tem de ter a app?",
+        a: "Não. O portal serve por si só para organizar o historial: se o utente lhe reencaminhar as análises por email, você acrescenta-as. Com a app, o utente carrega os resultados diretamente e vê o mesmo historial.",
+      },
+      {
         q: "Posso cancelar a qualquer momento?",
         a: "Sim, sem período de fidelização. Depois de cancelar, os seus dados ficam disponíveis para exportação durante 90 dias.",
       },
@@ -81,6 +85,10 @@ const T = {
       {
         q: "What if my doctor doesn't use Vivara yet?",
         a: "You can start on your own as a patient. Your record stays organised and ready to share with your care team as soon as they join Vivara.",
+      },
+      {
+        q: "Does my patient have to have the app?",
+        a: "No. The portal works on its own to organise the record: if the patient forwards you their lab results by email, you add them. With the app, the patient uploads results directly and sees the same record.",
       },
       {
         q: "Can I cancel at any time?",

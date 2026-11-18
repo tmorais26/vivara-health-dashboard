@@ -24,6 +24,7 @@ const T = {
     annualNote: "ou €95,90 por ano, com plano anual",
     planDesc: "Acesso total à app. Funciona com qualquer médico na Vivara. Cancela quando quiser. IVA incluído.",
     planNote: "O seu médico ainda não usa a Vivara? Pode começar sozinho — o seu historial fica pronto para partilhar assim que ele se juntar.",
+    noAppNote: "Prefere não usar a app? Se o seu médico usa a Vivara, basta reencaminhar-lhe por email as análises que recebe.",
     planCta: "Ver planos",
     includedTitle: "O que está incluído",
     plan: [
@@ -84,6 +85,7 @@ const T = {
     annualNote: "or €95.90 a year on the annual plan",
     planDesc: "Full access to the app. Works with any doctor on Vivara. Cancel anytime. VAT included.",
     planNote: "Your doctor doesn't use Vivara yet? You can start on your own — your record will be ready to share as soon as they join.",
+    noAppNote: "Rather not use the app? If your doctor uses Vivara, just forward them the lab results you receive by email.",
     planCta: "See plans",
     includedTitle: "What's included",
     plan: [
@@ -161,6 +163,7 @@ export default function Utentes() {
             <p className="mt-1 text-sm text-brand-muted/60">{L.annualNote}</p>
             <p className="mt-4 text-brand-muted/80 leading-relaxed">{L.planDesc}</p>
             <p className="mt-3 text-sm text-brand-muted/70 leading-relaxed">{L.planNote}</p>
+            <p className="mt-2 text-sm text-brand-muted/70 leading-relaxed">{L.noAppNote}</p>
             <Link to="/precos"><CTAButton className="mt-8">{L.planCta}</CTAButton></Link>
           </Reveal>
           <Reveal delay={0.1}>

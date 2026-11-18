@@ -15,17 +15,17 @@ const T = {
     steps: [
       {
         n: "01",
-        title: "Convida o utente",
-        desc: "Setup rápido: envias um convite por email, o utente aceita e o histórico começa a construir-se a partir desse momento — sem importações complexas nem formulários longos.",
+        title: "Registe o utente",
+        desc: "Comece em minutos. Se o utente quiser, convide-o por email para a app. Se preferir não usar a app, basta ele reencaminhar-lhe os resultados que recebe — e você acrescenta-os ao historial.",
       },
       {
         n: "02",
-        title: "Acompanha entre consultas",
-        desc: "Análises, exames e notas em linha do tempo, com wearables, sono e atividade ao lado dos dados clínicos. Vê a evolução do utente muito antes de ele voltar à consulta.",
+        title: "Acompanhe entre consultas",
+        desc: "Análises, exames e notas numa só linha do tempo, venham de onde vierem. Com a app do utente, também wearables, sono e atividade ao lado dos dados clínicos. Veja a evolução muito antes de ele voltar à consulta.",
       },
       {
         n: "03",
-        title: "Chega preparado à consulta",
+        title: "Chegue preparado à consulta",
         desc: "Todo o contexto reunido num só ecrã — alertas de valores fora do alvo, notas da última visita, adesão ao plano. A decisão clínica continua a ser sempre sua.",
       },
     ],
@@ -68,12 +68,12 @@ const T = {
         desc: <>Notas internas da equipa, visíveis só entre profissionais — <Highlight>nunca partilhadas com o utente</Highlight>.</>,
       },
       {
-        title: "Setup por convite",
-        desc: <>Convida o utente por email; <Highlight>não há importações manuais</Highlight> nem onboarding complicado.</>,
+        title: "Setup rápido",
+        desc: <>Registe o utente em minutos, <Highlight>sem importações manuais</Highlight> nem onboarding complicado.</>,
       },
       {
         title: "Com ou sem app do utente",
-        desc: <>O portal funciona mesmo que o utente não tenha a app. Se a tiver, o que ele carrega <Highlight>chega-lhe antes da consulta</Highlight>.</>,
+        desc: <>O utente não precisa de app: basta reencaminhar-lhe o email com os resultados e você acrescenta-os ao historial. Com a app, o que ele carrega <Highlight>chega-lhe antes da consulta</Highlight>.</>,
       },
       {
         title: "Mensagens diretas",
@@ -98,13 +98,13 @@ const T = {
     steps: [
       {
         n: "01",
-        title: "Invite the patient",
-        desc: "Quick setup: you send an email invitation, the patient accepts, and the record starts building from that moment — no complex imports, no long forms.",
+        title: "Register the patient",
+        desc: "Start in minutes. If the patient wants, invite them to the app by email. If they'd rather not use the app, they can simply forward you the results they receive — and you add them to the record.",
       },
       {
         n: "02",
         title: "Follow between appointments",
-        desc: "Lab results, exams and notes on a timeline, with wearables, sleep and activity next to the clinical data. See how the patient is doing long before they return to the clinic.",
+        desc: "Lab results, exams and notes on a single timeline, wherever they come from. With the patient's app, also wearables, sleep and activity next to the clinical data. See how they're doing long before they return to the clinic.",
       },
       {
         n: "03",
@@ -151,12 +151,12 @@ const T = {
         desc: <>Internal team notes, visible only between professionals — <Highlight>never shared with the patient</Highlight>.</>,
       },
       {
-        title: "Setup by invitation",
-        desc: <>Invite the patient by email; <Highlight>no manual imports</Highlight> and no complicated onboarding.</>,
+        title: "Quick setup",
+        desc: <>Register the patient in minutes, <Highlight>no manual imports</Highlight> and no complicated onboarding.</>,
       },
       {
         title: "With or without the patient app",
-        desc: <>The portal works even if the patient doesn't have the app. If they do, what they upload <Highlight>reaches you before the appointment</Highlight>.</>,
+        desc: <>The patient doesn't need the app: they can just forward you the email with their results and you add them to the record. With the app, what they upload <Highlight>reaches you before the appointment</Highlight>.</>,
       },
       {
         title: "Direct messaging",
