@@ -72,8 +72,8 @@ const T = {
         desc: <>Convida o utente por email; <Highlight>não há importações manuais</Highlight> nem onboarding complicado.</>,
       },
       {
-        title: "App de utente incluída",
-        desc: <>Sem custo adicional para os seus utentes — eles têm <Highlight>sempre acesso ao seu próprio histórico</Highlight>.</>,
+        title: "Com ou sem app do utente",
+        desc: <>O portal funciona mesmo que o utente não tenha a app. Se a tiver, o que ele carrega <Highlight>chega-lhe antes da consulta</Highlight>.</>,
       },
       {
         title: "Mensagens diretas",
@@ -155,8 +155,8 @@ const T = {
         desc: <>Invite the patient by email; <Highlight>no manual imports</Highlight> and no complicated onboarding.</>,
       },
       {
-        title: "Patient app included",
-        desc: <>No extra cost for your patients — they <Highlight>always have access to their own record</Highlight>.</>,
+        title: "With or without the patient app",
+        desc: <>The portal works even if the patient doesn't have the app. If they do, what they upload <Highlight>reaches you before the appointment</Highlight>.</>,
       },
       {
         title: "Direct messaging",
