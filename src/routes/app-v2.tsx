@@ -1,12 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState, useContext, createContext, useRef, useCallback, useEffect, type ReactNode } from "react";
-import { askAssistente } from "@/lib/assistente.functions";
 import { whoopAuthUrl, whoopExchange, whoopStatus, whoopDisconnect, type WhoopStatus } from "@/lib/whoop.server";
 import { translate, LANG_STORAGE_KEY, type Lang } from "@/lib/app-v2-i18n";
 import type { ExtractedDoc, ParsedValue } from "@/lib/lab-parse";
 import type { StoredUpload, UploadKind } from "@/lib/uploads.store";
 import { phenoAge, PHENO_NEEDS, type PhenoValue } from "@/lib/bioage";
+import { answer as answerQuestion, type Facts as AsstFacts, type Action as AsstAction } from "@/lib/assistant-rules";
+import { CONDITION_LIST, searchConditions } from "@/lib/conditions";
+import { dayKey, dayOf, monthGrid, monthName, shiftMonth } from "@/lib/calendar";
+import {
+  loadReminders, addReminder, removeReminder, loadConditions, saveCondition, removeCondition, loadRead, markRead,
+  type Reminder, type PatientCondition, type ConditionStatus,
+} from "@/lib/patient.store";
 import "../app-v2.css";
 
 export const Route = createFileRoute("/app-v2")({
@@ -24,7 +30,7 @@ type RouteId =
   | "home" | "data" | "upload" | "messages" | "alerts"
   | "diary" | "consultas" | "profile" | "marker" | "summary" | "schedule" | "devices" | "assistente"
   | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar"
-  | "sintomas" | "nutricao" | "registos" | "documento" | "guardadas";
+  | "sintomas" | "nutricao" | "registos" | "documento" | "guardadas" | "calendario" | "condicoes";
 
 type NavRoute =
   | RouteId
@@ -654,6 +660,7 @@ function HomeScreenV2() {
   const { go } = useNav();
   const { t, L } = useLang();
   const { status: whoop } = useWhoopStatus();
+  const unreadCount = useNotifications().unread.length;
   const wm = whoop?.connected ? whoop.metrics : null;
 
   const deepSleepHist = wm?.history.deepSleepMin ?? [];
@@ -688,7 +695,7 @@ function HomeScreenV2() {
         <div className="rv-home-greet-actions">
         <button className="rv-home-bell" onClick={() => go("alerts")} aria-label={t("home.bell")}>
           {Icon.bell}
-          <span className="rv-home-bell-dot"/>
+          {unreadCount > 0 && <span className="rv-home-bell-dot"/>}
         </button>
         <button className="rv-home-avatar" onClick={() => go("profile")} aria-label={t("home.profile")}>
           <svg width="18" height="18" viewBox="0 0 22 22"><circle cx="11" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.6" fill="none"/><path d="M3 19 a8 8 0 0 1 16 0" stroke="currentColor" strokeWidth="1.6" fill="none"/></svg>
@@ -1743,6 +1750,10 @@ const CONSULTA_ENTRIES: RecordEntry[] = [
     sourcePt: "Clínica Lumiar", sourceEn: "Lumiar Clinic",
     titlePt: "Discussão sobre TRH personalizada", titleEn: "Personalised HRT discussion",
     subPt: "Agendada · 14:30",                     subEn: "Scheduled · 14:30" },
+  { id: "c-2026-05-20", type: "consulta", origin: "clinic", iso: "2026-05-20T09:00:00", go: "calendario",
+    sourcePt: "Clínica Lumiar", sourceEn: "Lumiar Clinic",
+    titlePt: "Colheita de sangue", titleEn: "Blood draw",
+    subPt: "Agendada · 09:00 · marcada pela administrativa", subEn: "Scheduled · 09:00 · booked by the administrator" },
   { id: "c-2026-04-22", type: "consulta", origin: "clinic", iso: "2026-04-22T10:00:00", go: "summary",
     sourcePt: "Clínica Lumiar", sourceEn: "Lumiar Clinic",
     titlePt: "Revisão trimestral",                 titleEn: "Quarterly review",
@@ -2646,103 +2657,55 @@ function ShareUploadScreen() {
 }
 
 // ─── Avisos ──────────────────────────────────────────
+// Caixa de notificações. Um único sítio para tudo o que há de novo; o chat só
+// mostra a bolinha de mensagens por ler e o assistente responde a «o que há de
+// novo?» sem enviar nada.
 function AvisosScreen() {
   const { go } = useNav();
-  const { L } = useLang();
-  const [tab, setTab] = useState<"medicos" | "lembretes">("medicos");
-  const [calAdded, setCalAdded] = useState(false);
+  const { L, lang } = useLang();
+  const notifs = useNotifications();
+
+  const tone = (k: AppNotif["kind"]) => (k === "analise" ? "success" : k === "pedido" ? "alert" : "info");
+  const icon = (k: AppNotif["kind"]) => (k === "consulta" ? CalIcon : k === "pedido" ? Icon.bell : Icon.doc);
+
+  const open = (n: AppNotif) => {
+    notifs.markRead([n.id]);
+    go(n.to);
+  };
+
   return (
     <div className="rv-screen">
       <StatusBar />
       <header className="rv-header">
         <div style={{width: 36}}/>
-        <div className="rv-header-title">{L("Avisos", "Alerts")}</div>
-        <button className="rv-header-btn" onClick={() => go("profile")} aria-label={L("Perfil", "Profile")}>{Icon.settings}</button>
+        <div className="rv-header-title">{L("Notificações", "Notifications")}</div>
+        <button className="rv-header-btn" onClick={() => go("notificacoes")} aria-label={L("Preferências de notificações", "Notification preferences")}>{Icon.settings}</button>
       </header>
 
       <div className="rv-body">
-        <div className="rv-avisos-tabs">
-          <button className="rv-avisos-tab" data-active={tab === "medicos"} onClick={() => setTab("medicos")}>
-            {L("Clínicos", "Clinical")} <span className="rv-pill-count">2</span>
-          </button>
-          <button className="rv-avisos-tab" data-active={tab === "lembretes"} onClick={() => setTab("lembretes")}>
-            {L("Lembretes", "Reminders")} <span className="rv-pill-count" data-muted={tab !== "lembretes"}>3</span>
-          </button>
-        </div>
-
-        {tab === "medicos" ? (
-          <>
-            <article className="rv-aviso" data-tone="alert">
-              <div className="rv-aviso-icon">
-                <svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 2 V11 M9 14 V14.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.5" fill="none"/></svg>
-              </div>
-              <div className="rv-aviso-text">
-                <div className="rv-aviso-time">{L("Há 12 min · Equipa clínica", "12 min ago · Clinical team")}</div>
-                <div className="rv-aviso-title">{L("Pedido de reanálise · Estradiol", "Re-test request · Estradiol")}</div>
-                <div className="rv-aviso-body">{L("Repetir colheita até", "Repeat the sample by")} <strong>{L("10 mai 2026", "10 May 2026")}</strong>. {L("A sua equipa clínica pediu nova medição para confirmar a tendência descendente.", "Your clinical team requested a new measurement to confirm the downward trend.")}</div>
-                <div className="rv-aviso-cta" style={{color: "var(--fg-50)"}}>{L("Faça a colheita no seu laboratório habitual", "Take the sample at your usual lab")}</div>
-              </div>
-              <div className="rv-aviso-unread"/>
-            </article>
-
-            <article className="rv-aviso" data-tone="info" onClick={() => go("summary")} style={{cursor: "pointer"}}>
-              <div className="rv-aviso-icon">
-                <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.5" fill="none"/><path d="M9 8 V13 M9 5 V5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-              </div>
-              <div className="rv-aviso-text">
-                <div className="rv-aviso-time">{L("Hoje · 09:30 · Plano", "Today · 09:30 · Plan")}</div>
-                <div className="rv-aviso-title">{L("Resumo da consulta de 22 abr", "Summary of 22 Apr appointment")}</div>
-                <div className="rv-aviso-body">{L("Plano metabólico atualizado pela equipa clínica: manter Metformina, aumentar Magnésio para 400 mg ao deitar.", "Metabolic plan updated by the clinical team: keep Metformin, increase Magnesium to 400 mg at bedtime.")}</div>
-                <div className="rv-aviso-cta">{L("Abrir resumo", "Open summary")} →</div>
-              </div>
-            </article>
-
-            <article className="rv-aviso" data-tone="success" onClick={() => go("data")} style={{cursor: "pointer"}}>
-              <div className="rv-aviso-icon">
-                <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.5" fill="none"/><path d="M5.5 9 L8 11.5 L12.5 6.5" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </div>
-              <div className="rv-aviso-text">
-                <div className="rv-aviso-time">{L("Ontem · 16:42", "Yesterday · 16:42")}</div>
-                <div className="rv-aviso-title">{L("Análise importada com sucesso", "Lab result imported successfully")}</div>
-                <div className="rv-aviso-body">{L("14 marcadores extraídos do PDF Synlab. A sua equipa clínica foi notificada.", "14 markers extracted from the Synlab PDF. Your clinical team was notified.")}</div>
-                <div className="rv-aviso-cta" style={{color: "var(--ok)"}}>{L("Ver dados", "See data")} →</div>
-              </div>
-            </article>
-          </>
-        ) : (
-          <>
-            <article className="rv-aviso">
-              <div className="rv-aviso-icon">{Icon.pill}</div>
-              <div className="rv-aviso-text">
-                <div className="rv-aviso-time">{L("Hoje · 19:00 (em 4h)", "Today · 19:00 (in 4h)")}</div>
-                <div className="rv-aviso-title">{L("Berberina 500 mg", "Berberine 500 mg")}</div>
-                <div className="rv-aviso-body">{L("Antes do jantar. Faltam 18 dias na embalagem atual.", "Before dinner. 18 days left in the current pack.")}</div>
-                <div className="rv-aviso-cta">{L("Marcar como tomado", "Mark as taken")} →</div>
-              </div>
-            </article>
-            <article className="rv-aviso">
-              <div className="rv-aviso-icon">{Icon.pill}</div>
-              <div className="rv-aviso-text">
-                <div className="rv-aviso-time">{L("Hoje · 22:30 (em 7h)", "Today · 22:30 (in 7h)")}</div>
-                <div className="rv-aviso-title">{L("Magnésio 400 mg", "Magnesium 400 mg")}</div>
-                <div className="rv-aviso-body">{L("Ao deitar. Nova dose conforme plano de 22 abr.", "At bedtime. New dose per the 22 Apr plan.")}</div>
-              </div>
-            </article>
-            <article className="rv-aviso" onClick={() => setCalAdded(true)} style={{cursor: "pointer"}}>
-              <div className="rv-aviso-icon">
-                <svg width="18" height="18" viewBox="0 0 18 18"><rect x="3" y="4" width="12" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.5" fill="none"/><path d="M3 8 H15 M6 2 V5 M12 2 V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              </div>
-              <div className="rv-aviso-text">
-                <div className="rv-aviso-time">{L("12 mai · 14:30", "12 May · 14:30")}</div>
-                <div className="rv-aviso-title">{L("Próxima consulta", "Next appointment")}</div>
-                <div className="rv-aviso-body">{L("Clínica Lumiar · TRH personalizada.", "Lumiar Clinic · personalised HRT.")}</div>
-                <div className="rv-aviso-cta" style={{color: calAdded ? "var(--lime)" : undefined}}>
-                  {calAdded ? L("✓ Adicionado ao calendário", "✓ Added to calendar") : `${L("Adicionar ao calendário", "Add to calendar")} →`}
-                </div>
-              </div>
-            </article>
-          </>
+        {notifs.unread.length > 0 && (
+          <div className="rv-notif-bar">
+            <span>{notifs.unread.length} {L("por ler", "unread")}</span>
+            <button type="button" className="rv-notif-markall" onClick={() => notifs.markRead(notifs.items.map((n) => n.id))}>
+              {L("Marcar tudo como lido", "Mark all as read")}
+            </button>
+          </div>
         )}
+
+        {notifs.items.map((n) => {
+          const unread = !notifs.isRead(n);
+          return (
+            <button key={n.id} type="button" className="rv-aviso rv-notif" data-tone={tone(n.kind)} data-unread={unread || undefined} onClick={() => open(n)}>
+              <div className="rv-aviso-icon">{icon(n.kind)}</div>
+              <div className="rv-aviso-text">
+                <div className="rv-aviso-time">{fmtDay(n.iso, lang)}{hhmm(n.iso) ? ` · ${hhmm(n.iso)}` : ""}</div>
+                <div className="rv-aviso-title">{L(n.titlePt, n.titleEn)}</div>
+                <div className="rv-aviso-body">{L(n.bodyPt, n.bodyEn)}</div>
+              </div>
+              {unread && <div className="rv-aviso-unread" aria-label={L("Por ler", "Unread")}/>}
+            </button>
+          );
+        })}
         <div style={{height: 20}}/>
       </div>
 
@@ -2895,94 +2858,429 @@ function MensagensScreen() {
   );
 }
 
-// ─── Assistente Vivara (chatbot) ─────────────────────
-function buildAssistantContext(): string {
-  const fmtBio = (b: BioMarker) =>
-    `- ${b.name}: ${b.value} ${b.unit} (${b.target}) · variação ${b.delta} · histórico [${b.spark.join(", ")}]${b.tone ? ` · estado: ${b.tone}` : ""}`;
-
-  const plano = [
-    "Metformina 500 mg — pequeno-almoço, 08:00",
-    "Vitamina D 4000 UI — almoço, 13:00",
-    "Ómega-3 1 g — jantar, 19:00",
-    "Magnésio 400 mg — ao deitar, 22:30",
-    "Treino de força · 35 min — recomendado pela Dra. Sofia, horário livre",
-  ];
-
-  return [
-    `PRÓXIMA CONSULTA: 12 mai 2026, 14:30 · Dra. Sofia Cardoso · Discussão sobre TRH personalizada.`,
-    `MÉDICA RESPONSÁVEL: Dra. Sofia Cardoso · Clínica Lumiar.`,
-    ``,
-    `BIOMARCADORES FORA DE ALVO / EM ATENÇÃO:`,
-    ...BIOS_ALERT.map(fmtBio),
-    ``,
-    `BIOMARCADORES EM ALVO / ACOMPANHAMENTO:`,
-    ...BIOS_OK.map(fmtBio),
-    ``,
-    `PLANO DE HOJE (suplementos / medicação / atividade):`,
-    ...plano.map((p) => `- ${p}`),
-  ].join("\n");
+// ─── Consultas da clínica, notificações e dados do utente ──
+// Consultas: marcadas pelo médico ou pela administrativa, o utente só as vê.
+// Lembretes: do próprio utente, privados, nunca chegam à clínica.
+interface ClinicAppt {
+  id: string;
+  iso: string; // "2026-05-12T14:30:00"
+  titlePt: string; titleEn: string;
+  placePt: string; placeEn: string;
+  by: "medico" | "administrativa";
 }
 
-type ChatMsg = { role: "user" | "assistant" | "system"; content: string };
+const CLINIC_APPTS: ClinicAppt[] = [
+  { id: "c-2026-05-12", iso: "2026-05-12T14:30:00", titlePt: "Discussão sobre TRH personalizada", titleEn: "Personalised HRT discussion", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic", by: "medico" },
+  { id: "c-2026-05-20", iso: "2026-05-20T09:00:00", titlePt: "Colheita de sangue", titleEn: "Blood draw", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic", by: "administrativa" },
+  { id: "c-2026-04-22", iso: "2026-04-22T10:00:00", titlePt: "Revisão trimestral", titleEn: "Quarterly review", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic", by: "medico" },
+  { id: "c-2026-02-03", iso: "2026-02-03T10:00:00", titlePt: "Revisão de resultados", titleEn: "Results review", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic", by: "medico" },
+  { id: "c-2025-12-10", iso: "2025-12-10T10:00:00", titlePt: "Primeira consulta", titleEn: "First appointment", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic", by: "medico" },
+];
 
-const ASSISTANT_INTRO =
-  "Posso ajudar-te a consultar os teus dados — exames, valores, consultas e plano. Para perguntas sobre o que estes resultados significam para ti, fala com a Dra. Sofia.";
-const ASSISTANT_INTRO_EN =
-  "I can help you look up your data — labs, values, appointments and plan. For questions about what these results mean for you, talk to Dr. Sofia.";
+// A etiqueta diz quem marcou — pelo papel, não pelo nome.
+const apptByLabel = (by: ClinicAppt["by"], L: (pt: string, en: string) => string) =>
+  by === "medico" ? L("Marcada pelo médico", "Booked by the doctor") : L("Marcada pela administrativa", "Booked by the administrator");
+
+const hhmm = (iso: string) => (iso.slice(11, 16) && iso.slice(11, 16) !== "00:00" ? iso.slice(11, 16) : "");
+
+// Notificações simples. O texto não leva valores nem interpretação: o que há
+// para ver está no documento ou na consulta, não na notificação.
+interface AppNotif {
+  id: string;
+  iso: string;
+  kind: "consulta" | "analise" | "pedido" | "resumo";
+  titlePt: string; titleEn: string;
+  bodyPt: string; bodyEn: string;
+  to: NavRoute;
+  readByDefault?: boolean;
+}
+
+const APP_NOTIFS: AppNotif[] = [
+  { id: "n-pedido", iso: "2026-04-27T09:18:00", kind: "pedido", titlePt: "Pedido da equipa clínica", titleEn: "Request from the clinical team",
+    bodyPt: "Há um pedido novo para si.", bodyEn: "There's a new request for you.", to: "consultas" },
+  { id: "n-appt-20", iso: "2026-04-27T08:40:00", kind: "consulta", titlePt: "Consulta marcada", titleEn: "Appointment booked",
+    bodyPt: "20 mai · 09:00 · marcada pela administrativa", bodyEn: "20 May · 09:00 · booked by the administrator", to: "calendario" },
+  { id: "n-appt-12", iso: "2026-04-24T11:02:00", kind: "consulta", titlePt: "Consulta marcada", titleEn: "Appointment booked",
+    bodyPt: "12 mai · 14:30 · marcada pelo médico", bodyEn: "12 May · 14:30 · booked by the doctor", to: "calendario" },
+  { id: "n-resumo", iso: "2026-04-22T18:05:00", kind: "resumo", titlePt: "Resumo da consulta disponível", titleEn: "Appointment summary available",
+    bodyPt: "Consulta de 22 abr", bodyEn: "22 Apr appointment", to: "summary", readByDefault: true },
+  { id: "n-lab", iso: "2026-04-22T16:42:00", kind: "analise", titlePt: "Análise nova", titleEn: "New lab result",
+    bodyPt: "Synlab · 22 abr 2026", bodyEn: "Synlab · 22 Apr 2026", to: { route: "documento", docId: "a-2026-04-22" }, readByDefault: true },
+];
+
+function useReminders() {
+  const [list, setList] = useState<Reminder[]>([]);
+  useEffect(() => { setList(loadReminders()); }, []);
+  return { list, add: (r: { day: string; time: string | null; text: string }) => setList(addReminder(r)), remove: (id: string) => setList(removeReminder(id)) };
+}
+
+function useConditions() {
+  const [list, setList] = useState<PatientCondition[]>([]);
+  useEffect(() => { setList(loadConditions()); }, []);
+  return {
+    list,
+    save: (c: Parameters<typeof saveCondition>[0]) => setList(saveCondition(c)),
+    remove: (id: string) => setList(removeCondition(id)),
+  };
+}
+
+function useNotifications() {
+  const [read, setRead] = useState<string[]>([]);
+  useEffect(() => { setRead(loadRead()); }, []);
+  const isRead = (n: AppNotif) => !!n.readByDefault || read.includes(n.id);
+  const items = [...APP_NOTIFS].sort((a, b) => b.iso.localeCompare(a.iso));
+  return {
+    items,
+    isRead,
+    unread: items.filter((n) => !isRead(n)),
+    markRead: (ids: string[]) => setRead(markRead(ids)),
+  };
+}
+
+// ─── Calendário ──────────────────────────────────────
+const CalIcon = (
+  <svg width="18" height="18" viewBox="0 0 18 18"><rect x="3" y="4" width="12" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.5" fill="none"/><path d="M3 7.5 H15 M6.5 2.5 V5 M11.5 2.5 V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+);
+
+function CalendarioScreen() {
+  const { go } = useNav();
+  const { L, lang } = useLang();
+  const reminders = useReminders();
+  const todayKey = dayKey(APP_TODAY);
+  const [ym, setYm] = useState({ year: APP_TODAY.getFullYear(), month: APP_TODAY.getMonth() });
+  const [sel, setSel] = useState(todayKey);
+  const [adding, setAdding] = useState(false);
+  const [text, setText] = useState("");
+  const [time, setTime] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+
+  const grid = monthGrid(ym.year, ym.month);
+  const apptsOn = (key: string) => CLINIC_APPTS.filter((a) => dayOf(a.iso) === key);
+  const remindersOn = (key: string) => reminders.list.filter((r) => r.day === key);
+  const weekdays = lang === "pt" ? ["S", "T", "Q", "Q", "S", "S", "D"] : ["M", "T", "W", "T", "F", "S", "S"];
+
+  const selAppts = apptsOn(sel).sort((a, b) => a.iso.localeCompare(b.iso));
+  const selRems = remindersOn(sel).sort((a, b) => (a.time ?? "").localeCompare(b.time ?? ""));
+
+  function closeForm() { setAdding(false); setText(""); setTime(""); setErr(null); }
+  function save() {
+    if (text.trim().length < 2) { setErr(L("Escreva o que quer lembrar.", "Write what you want to remember.")); return; }
+    reminders.add({ day: sel, time: time || null, text });
+    closeForm();
+  }
+
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <header className="rv-header">
+        <button className="rv-header-btn" onClick={() => go("consultas")} aria-label={L("Voltar", "Back")}>{Icon.back}</button>
+        <div className="rv-header-title">{L("Calendário", "Calendar")}</div>
+        <div style={{width: 36}}/>
+      </header>
+
+      <div className="rv-body">
+        <div className="rv-cal-nav">
+          <button type="button" className="rv-cal-nav-btn" onClick={() => setYm(shiftMonth(ym.year, ym.month, -1))} aria-label={L("Mês anterior", "Previous month")}>‹</button>
+          <div className="rv-cal-month" aria-live="polite">{monthName(ym.month, lang)} {ym.year}</div>
+          <button type="button" className="rv-cal-nav-btn" onClick={() => setYm(shiftMonth(ym.year, ym.month, 1))} aria-label={L("Mês seguinte", "Next month")}>›</button>
+        </div>
+
+        <div className="rv-cal-grid" role="grid" aria-label={`${monthName(ym.month, lang)} ${ym.year}`}>
+          {weekdays.map((w, i) => <div key={i} className="rv-cal-wd" aria-hidden="true">{w}</div>)}
+          {grid.map((c) => {
+            const na = apptsOn(c.key).length;
+            const nr = remindersOn(c.key).length;
+            return (
+              <button
+                key={c.key}
+                type="button"
+                className="rv-cal-cell"
+                data-in={c.inMonth || undefined}
+                data-today={c.key === todayKey || undefined}
+                data-sel={c.key === sel || undefined}
+                aria-pressed={c.key === sel}
+                aria-label={`${c.day} ${monthName(new Date(c.key + "T00:00").getMonth(), lang)}${na ? `, ${na} ${L("consulta(s) da clínica", "clinic appointment(s)")}` : ""}${nr ? `, ${nr} ${L("lembrete(s) seu(s)", "reminder(s) of yours")}` : ""}`}
+                onClick={() => { setSel(c.key); closeForm(); }}
+              >
+                <span className="rv-cal-num">{c.day}</span>
+                <span className="rv-cal-dots" aria-hidden="true">
+                  {na > 0 && <span className="rv-cal-dot" data-kind="clinic"/>}
+                  {nr > 0 && <span className="rv-cal-dot" data-kind="mine"/>}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="rv-cal-legend">
+          <span><span className="rv-cal-dot" data-kind="clinic"/>{L("Marcada pela clínica", "Booked by the clinic")}</span>
+          <span><span className="rv-cal-dot" data-kind="mine"/>{L("Lembrete seu", "Your reminder")}</span>
+        </div>
+
+        <div className="rv-sub-section-head">{fmtDay(sel, lang, true)}</div>
+
+        {selAppts.length === 0 && selRems.length === 0 && !adding && (
+          <div className="rv-cal-empty">{L("Nada neste dia.", "Nothing on this day.")}</div>
+        )}
+
+        {selAppts.map((a) => (
+          <div key={a.id} className="rv-cal-item" data-kind="clinic">
+            <span className="rv-cal-item-tag" data-kind="clinic">{apptByLabel(a.by, L)}</span>
+            <div className="rv-cal-item-title">{hhmm(a.iso) && <span className="rv-cal-item-time">{hhmm(a.iso)}</span>}{L(a.titlePt, a.titleEn)}</div>
+            <div className="rv-cal-item-sub">{L(a.placePt, a.placeEn)}</div>
+          </div>
+        ))}
+
+        {selRems.map((r) => (
+          <div key={r.id} className="rv-cal-item" data-kind="mine">
+            <span className="rv-cal-item-tag" data-kind="mine">{L("Lembrete seu", "Your reminder")}</span>
+            <div className="rv-cal-item-title">{r.time && <span className="rv-cal-item-time">{r.time}</span>}{r.text}</div>
+            <button type="button" className="rv-cal-item-del" onClick={() => reminders.remove(r.id)} aria-label={`${L("Apagar lembrete", "Delete reminder")}: ${r.text}`}>{L("Apagar", "Delete")}</button>
+          </div>
+        ))}
+
+        {adding ? (
+          <div className="rv-cal-form">
+            <div className="rv-field">
+              <label className="rv-field-label" htmlFor="rem-text">{L("Lembrete", "Reminder")}</label>
+              <input id="rem-text" className="rv-field-input" value={text} maxLength={120} autoFocus
+                aria-invalid={!!err} aria-describedby={err ? "rem-err" : undefined}
+                placeholder={L("Ex.: tenho consulta", "E.g. I have an appointment")}
+                onChange={(e) => { setText(e.target.value); setErr(null); }}
+                onKeyDown={(e) => { if (e.key === "Enter") save(); }} />
+              {err && <div id="rem-err" className="rv-field-error" role="alert">{err}</div>}
+            </div>
+            <div className="rv-field">
+              <label className="rv-field-label" htmlFor="rem-time">{L("Hora (opcional)", "Time (optional)")}</label>
+              <input id="rem-time" type="time" className="rv-field-input" value={time} onChange={(e) => setTime(e.target.value)} />
+            </div>
+            <div className="rv-q-actions" style={{margin: "4px 0 0"}}>
+              <button type="button" className="rv-cta-ghost" onClick={closeForm}>{L("Cancelar", "Cancel")}</button>
+              <button type="button" className="rv-cta-primary" onClick={save}>{L("Guardar", "Save")}</button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" className="rv-cta-ghost rv-cal-add" onClick={() => setAdding(true)}>
+            + {L("Adicionar lembrete neste dia", "Add a reminder on this day")}
+          </button>
+        )}
+
+        <div className="rv-doc-foot" style={{textAlign: "left", margin: "14px 20px 0"}}>
+          {L("Os lembretes são só seus: ficam neste telemóvel e a clínica não os vê. Não criam consultas — servem para si saber que há algo nesse dia.",
+             "Reminders are only yours: they stay on this phone and the clinic can't see them. They don't create appointments — they just let you know something is on that day.")}
+        </div>
+        <div style={{height: 40}}/>
+      </div>
+    </div>
+  );
+}
+
+// ─── Condições ───────────────────────────────────────
+// Registadas pelo próprio utente, sem precisar de diagnóstico. É um registo
+// seu: a app não as interpreta nem altera nada com base nelas.
+function CondicoesScreen() {
+  const { go } = useNav();
+  const { L, lang } = useLang();
+  const conds = useConditions();
+  const [view, setView] = useState<"list" | "form">("list");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [since, setSince] = useState("");
+  const [status, setStatus] = useState<ConditionStatus>("active");
+  const [note, setNote] = useState("");
+  const [errs, setErrs] = useState<{ name?: string; since?: string }>({});
+  const [confirmDel, setConfirmDel] = useState<string | null>(null);
+  const thisYear = APP_TODAY.getFullYear();
+
+  const suggestions = view === "form" && name.trim().length >= 2 && !CONDITION_LIST.some(([pt, en]) => pt === name || en === name)
+    ? searchConditions(name) : [];
+
+  function openForm(c?: PatientCondition) {
+    setEditId(c?.id ?? null);
+    setName(c?.name ?? ""); setSince(c?.sinceYear ? String(c.sinceYear) : "");
+    setStatus(c?.status ?? "active"); setNote(c?.note ?? ""); setErrs({});
+    setView("form");
+  }
+
+  function save() {
+    const e: typeof errs = {};
+    const n = name.trim();
+    if (n.length < 2) e.name = L("Escreva ou escolha uma condição.", "Write or choose a condition.");
+    const y = since.trim() === "" ? null : Number(since);
+    if (y != null && (!Number.isInteger(y) || y < 1900 || y > thisYear)) e.since = L(`Indique um ano entre 1900 e ${thisYear}.`, `Enter a year between 1900 and ${thisYear}.`);
+    setErrs(e);
+    if (e.name || e.since) return;
+    const custom = !CONDITION_LIST.some(([pt, en]) => pt === n || en === n);
+    conds.save({ id: editId ?? undefined, name: n, custom, sinceYear: y, status, note });
+    setView("list");
+  }
+
+  const statusLabel = (s: ConditionStatus) => (s === "active" ? L("Ativa", "Active") : L("Resolvida", "Resolved"));
+
+  return (
+    <SubScreen title={L("Condições", "Conditions")} onBack={() => (view === "form" ? setView("list") : go("profile"))}>
+      {view === "list" ? (
+        <>
+          <p className="rv-cond-intro">
+            {L("Registe aqui as condições com que vive no dia a dia, das mais comuns às mais raras. Não precisa de um diagnóstico para começar. É um registo seu: não é um diagnóstico e fica neste telemóvel.",
+               "Record here the conditions you live with day to day, from the most common to the rarest. You don't need a diagnosis to start. It's your own record: it isn't a diagnosis and it stays on this phone.")}
+          </p>
+
+          {conds.list.length === 0 ? (
+            <div className="rv-cond-empty">{L("Ainda não registou nenhuma condição.", "You haven't recorded any conditions yet.")}</div>
+          ) : (
+            <div className="rv-cond-list">
+              {conds.list.map((c) => (
+                <div key={c.id} className="rv-cond-card">
+                  <div className="rv-cond-top">
+                    <span className="rv-cond-name">{c.name}</span>
+                    <span className="rv-cond-status" data-status={c.status}>{statusLabel(c.status)}</span>
+                  </div>
+                  <div className="rv-cond-sub">
+                    {c.sinceYear ? `${L("Desde", "Since")} ${c.sinceYear}` : L("Sem data", "No date")}
+                    {c.custom ? ` · ${L("escrita por si", "written by you")}` : ""}
+                  </div>
+                  {c.note && <div className="rv-cond-note">{c.note}</div>}
+                  <div className="rv-cond-actions">
+                    {confirmDel === c.id ? (
+                      <>
+                        <button type="button" className="rv-device-btn" onClick={() => setConfirmDel(null)}>{L("Não", "No")}</button>
+                        <button type="button" className="rv-device-btn" data-tone="danger" onClick={() => { conds.remove(c.id); setConfirmDel(null); }}>{L("Apagar", "Delete")}</button>
+                      </>
+                    ) : (
+                      <>
+                        <button type="button" className="rv-device-btn" onClick={() => openForm(c)} aria-label={`${L("Editar", "Edit")} ${c.name}`}>{L("Editar", "Edit")}</button>
+                        <button type="button" className="rv-device-btn" data-tone="ghost" onClick={() => setConfirmDel(c.id)} aria-label={`${L("Apagar", "Delete")} ${c.name}`}>{L("Apagar", "Delete")}</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{padding: "4px 20px 0"}}>
+            <button type="button" className="rv-cta-primary" style={{width: "100%", margin: 0}} onClick={() => openForm()}>
+              + {L("Adicionar condição", "Add a condition")}
+            </button>
+          </div>
+        </>
+      ) : (
+        <form className="rv-cond-form" noValidate onSubmit={(ev) => { ev.preventDefault(); save(); }}>
+          <div className="rv-field">
+            <label className="rv-field-label" htmlFor="cond-name">{L("Condição", "Condition")}</label>
+            <input id="cond-name" className="rv-field-input" value={name} autoFocus autoComplete="off" maxLength={80}
+              aria-invalid={!!errs.name} aria-describedby={errs.name ? "cond-name-err" : "cond-name-hint"}
+              placeholder={L("Pesquise ou escreva", "Search or type")}
+              onChange={(e) => { setName(e.target.value); setErrs((x) => ({ ...x, name: undefined })); }} />
+            <div id="cond-name-hint" className="rv-field-hint">{L("Se não encontrar na lista, escreva como quiser.", "If you can't find it in the list, write it as you like.")}</div>
+            {errs.name && <div id="cond-name-err" className="rv-field-error" role="alert">{errs.name}</div>}
+            {suggestions.length > 0 && (
+              <ul className="rv-cond-sugg" aria-label={L("Sugestões", "Suggestions")}>
+                {suggestions.map((s) => (
+                  <li key={s.pt}>
+                    <button type="button" onClick={() => setName(lang === "pt" ? s.pt : s.en)}>{lang === "pt" ? s.pt : s.en}</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="rv-field">
+            <label className="rv-field-label" htmlFor="cond-since">{L("Desde (ano, opcional)", "Since (year, optional)")}</label>
+            <input id="cond-since" className="rv-field-input" inputMode="numeric" value={since} maxLength={4}
+              aria-invalid={!!errs.since} aria-describedby={errs.since ? "cond-since-err" : undefined}
+              onChange={(e) => { setSince(e.target.value.replace(/\D/g, "")); setErrs((x) => ({ ...x, since: undefined })); }} />
+            {errs.since && <div id="cond-since-err" className="rv-field-error" role="alert">{errs.since}</div>}
+          </div>
+
+          <fieldset className="rv-field rv-field-set">
+            <legend className="rv-field-label">{L("Estado", "Status")}</legend>
+            {(["active", "resolved"] as const).map((s) => (
+              <label key={s} className="rv-radio">
+                <input type="radio" name="cond-status" checked={status === s} onChange={() => setStatus(s)} />
+                <span>{statusLabel(s)}</span>
+              </label>
+            ))}
+          </fieldset>
+
+          <div className="rv-field">
+            <label className="rv-field-label" htmlFor="cond-note">{L("Nota (opcional)", "Note (optional)")}</label>
+            <textarea id="cond-note" className="rv-field-input" rows={3} maxLength={300} value={note} onChange={(e) => setNote(e.target.value)} />
+          </div>
+
+          <div className="rv-q-actions" style={{margin: "8px 0 0"}}>
+            <button type="button" className="rv-cta-ghost" onClick={() => setView("list")}>{L("Cancelar", "Cancel")}</button>
+            <button type="submit" className="rv-cta-primary">{L("Guardar", "Save")}</button>
+          </div>
+        </form>
+      )}
+    </SubScreen>
+  );
+}
+
+// ─── Assistente Vivara ───────────────────────────────
+// Por regras, sem modelo de linguagem (ver lib/assistant-rules.ts): responde
+// sobre datas, documentos, lembretes, notificações e plano. Não interpreta
+// resultados nem dá conselhos.
+interface AsstMsg { role: "user" | "assistant"; text: string; actions?: AsstAction[] }
+
+function useAssistantFacts(): AsstFacts {
+  const uploads = useUploads();
+  const reminders = useReminders();
+  const conds = useConditions();
+  const notifs = useNotifications();
+  return {
+    today: dayKey(APP_TODAY),
+    appts: CLINIC_APPTS.map((a) => ({ id: a.id, iso: a.iso, titlePt: a.titlePt, titleEn: a.titleEn, by: a.by })),
+    reminders: reminders.list.map((r) => ({ day: r.day, time: r.time, text: r.text })),
+    docs: [
+      ...LAB_DOCS.map((d) => ({ id: d.id, iso: d.iso, lab: d.lab, titlePt: d.titlePt, titleEn: d.titleEn, markers: d.rows.map((r) => r.marker).filter((m): m is string => !!m) })),
+      ...uploads.map((u) => ({ id: u.id, iso: u.collectedISO, lab: u.lab ?? "—", titlePt: "Análise carregada por si", titleEn: "Lab result you uploaded", markers: u.values.map((v) => v.marker).filter((m): m is string => !!m) })),
+    ],
+    unread: notifs.unread.map((n) => ({ titlePt: n.titlePt, titleEn: n.titleEn })),
+    supplements: PLANO_HOJE.filter((p) => p.type === "supplement").map((p) => ({
+      namePt: translate("pt", p.key), nameEn: translate("en", p.key), whenPt: p.time, whenEn: p.time,
+    })),
+    conditions: conds.list.map((c) => c.name),
+  };
+}
 
 function AssistenteScreen() {
   const { go } = useNav();
-  const { L } = useLang();
-  const [messages, setMessages] = useState<ChatMsg[]>([
-    { role: "assistant", content: L(ASSISTANT_INTRO, ASSISTANT_INTRO_EN) },
-  ]);
+  const { L, lang } = useLang();
+  const facts = useAssistantFacts();
+  const [messages, setMessages] = useState<AsstMsg[]>([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const ask = useServerFn(askAssistente);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, loading]);
+  }, [messages]);
 
-  const send = async () => {
-    const text = input.trim();
-    if (!text || loading) return;
-    setError(null);
-    const nextMessages: ChatMsg[] = [...messages, { role: "user", content: text }];
-    setMessages(nextMessages);
+  const ask = (q: string) => {
+    const text = q.trim();
+    if (!text) return;
+    const reply = answerQuestion(text, facts, lang);
+    setMessages((prev) => [...prev, { role: "user", text }, { role: "assistant", text: reply.text, actions: reply.actions }]);
     setInput("");
-    setLoading(true);
-    try {
-      // exclude the fixed intro from history sent to the model
-      const history = nextMessages
-        .filter((m, i) => !(i === 0 && m.role === "assistant" && m.content === ASSISTANT_INTRO))
-        .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
-      const safeHistory = history.length === 0 ? [{ role: "user" as const, content: text }] : history;
-      const res = await ask({ data: { messages: safeHistory, context: buildAssistantContext() } });
-      setMessages((prev) => [...prev, { role: "assistant", content: res.text || "Sem resposta." }]);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Não consegui responder agora.";
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
   };
 
-  const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      send();
-    }
-  };
+  const intro = answerQuestion("", facts, lang);
+  const suggestions = [
+    L("Quando é a minha próxima consulta?", "When is my next appointment?"),
+    L("Mostra-me os meus exames", "Show me my tests"),
+    L("O que há de novo?", "What's new?"),
+  ];
+
+  const run = (to: AsstAction["to"]) => go(to as NavRoute);
 
   return (
     <div className="rv-screen">
       <StatusBar />
       <header className="rv-header rv-msg-header">
-        <button className="rv-header-btn" onClick={() => go("home")}>{Icon.back}</button>
+        <button className="rv-header-btn" onClick={() => go("home")} aria-label={L("Voltar", "Back")}>{Icon.back}</button>
         <div className="rv-msg-header-meta">
           <div className="rv-msg-header-avatar" style={{background: "var(--surface-2)"}}>AV</div>
           <div>
@@ -2994,46 +3292,39 @@ function AssistenteScreen() {
       </header>
 
       <div className="rv-body rv-asst-body" ref={scrollRef}>
+        <div className="rv-asst-msg rv-asst-msg--assistant"><div className="rv-asst-bubble" style={{whiteSpace: "pre-line"}}>{intro.text}</div></div>
+        {messages.length === 0 && (
+          <div className="rv-asst-suggest">
+            {suggestions.map((s) => <button key={s} type="button" className="rv-asst-chip" onClick={() => ask(s)}>{s}</button>)}
+          </div>
+        )}
         {messages.map((m, i) => (
           <div key={i} className={`rv-asst-msg rv-asst-msg--${m.role}`}>
-            <div className="rv-asst-bubble">{m.content}</div>
+            <div className="rv-asst-bubble" style={{whiteSpace: "pre-line"}}>{m.text}</div>
+            {m.actions && m.actions.length > 0 && (
+              <div className="rv-asst-actions">
+                {m.actions.map((a, k) => <button key={k} type="button" className="rv-asst-chip" onClick={() => run(a.to)}>{a.label}</button>)}
+              </div>
+            )}
           </div>
         ))}
-        {loading && (
-          <div className="rv-asst-msg rv-asst-msg--assistant">
-            <div className="rv-asst-bubble rv-asst-typing">
-              <span/><span/><span/>
-            </div>
-          </div>
-        )}
-        {error && (
-          <div className="rv-asst-msg rv-asst-msg--system">
-            <div className="rv-asst-bubble rv-asst-error">{error}</div>
-          </div>
-        )}
         <div style={{height: 8}}/>
       </div>
 
-      <div className="rv-msg-compose rv-asst-compose">
-        <textarea
+      <form className="rv-msg-compose rv-asst-compose" onSubmit={(e) => { e.preventDefault(); ask(input); }}>
+        <label htmlFor="asst-input" className="rv-sr-only">{L("Pergunta", "Question")}</label>
+        <input
+          id="asst-input"
           className="rv-msg-compose-input rv-asst-input"
           placeholder={L("Pergunte sobre os seus dados…", "Ask about your data…")}
-          rows={1}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={onKey}
-          disabled={loading}
+          autoComplete="off"
         />
-        <button
-          className="rv-msg-compose-send"
-          data-active={input.trim().length > 0 && !loading}
-          onClick={send}
-          disabled={loading || input.trim().length === 0}
-          aria-label="Enviar"
-        >
+        <button type="submit" className="rv-msg-compose-send" data-active={input.trim().length > 0} disabled={input.trim().length === 0} aria-label={L("Enviar", "Send")}>
           <svg width="18" height="18" viewBox="0 0 18 18"><path d="M3 9 L15 3 L11 15 L9 10 Z" fill="currentColor"/></svg>
         </button>
-      </div>
+      </form>
 
       <TabBar active="messages" />
     </div>
@@ -3182,7 +3473,7 @@ function ConsultasScreen() {
       <header className="rv-header">
         <button className="rv-header-btn" onClick={() => go("home")}>{Icon.back}</button>
         <div className="rv-header-title">{L("Consultas", "Appointments")}</div>
-        <div style={{width: 36}} />
+        <button className="rv-header-btn" onClick={() => go("calendario")} aria-label={L("Abrir calendário", "Open calendar")}>{CalIcon}</button>
       </header>
 
       <div className="rv-body">
@@ -3196,7 +3487,7 @@ function ConsultasScreen() {
             <div className="rv-upcoming-meta">
               <div className="rv-upcoming-title">{L("Discussão sobre TRH personalizada", "Personalised HRT discussion")}</div>
               <div className="rv-upcoming-when">{L("14:30 · Clínica Lumiar · 45 min", "14:30 · Lumiar Clinic · 45 min")}</div>
-              <div className="rv-upcoming-who">{L("Equipa clínica · Clínica Lumiar", "Clinical team · Lumiar Clinic")}</div>
+              <div className="rv-upcoming-who">{L("Marcada pelo médico · Clínica Lumiar", "Booked by the doctor · Lumiar Clinic")}</div>
             </div>
           </div>
           <div className="rv-upcoming-prep">
@@ -3447,6 +3738,14 @@ function PerfilScreen() {
             <div className="rv-list-text">
               <span className="rv-list-name">{L("Análises carregadas","Uploaded labs")}</span>
               <span className="rv-list-sub">{L("Guardadas no dispositivo · apagar e exportar","Stored on device · delete and export")}</span>
+            </div>
+            <span className="rv-chev">{Icon.chev}</span>
+          </a>
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("condicoes"); }}>
+            <div className="rv-list-icon">{Icon.pulse}</div>
+            <div className="rv-list-text">
+              <span className="rv-list-name">{L("Condições","Conditions")}</span>
+              <span className="rv-list-sub">{L("As que tem, num só registo","The ones you have, in one record")}</span>
             </div>
             <span className="rv-chev">{Icon.chev}</span>
           </a>
@@ -4643,6 +4942,8 @@ function renderScreen(route: NavRoute): ReactNode {
     case "registos":     return <RegistosScreen />;
     case "documento":    return <DocumentoScreen docId={docId} />;
     case "guardadas":    return <AnalisesGuardadasScreen />;
+    case "calendario":   return <CalendarioScreen />;
+    case "condicoes":    return <CondicoesScreen />;
     default:          return <HomeScreenV2 />;
   }
 }

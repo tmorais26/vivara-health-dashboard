@@ -16,6 +16,9 @@ const bundle = async (entry, name) => {
 };
 const { parseLine, parseValues } = await bundle("src/lib/lab-parse.ts", "lab-parse.mjs");
 const { phenoAge } = await bundle("src/lib/bioage.ts", "bioage.mjs");
+const { answer } = await bundle("src/lib/assistant-rules.ts", "assistant.mjs");
+const { searchConditions, CONDITION_LIST } = await bundle("src/lib/conditions.ts", "conditions.mjs");
+const { monthGrid, dayKey, shiftMonth } = await bundle("src/lib/calendar.ts", "calendar.mjs");
 
 let passed = 0;
 const test = (name, fn) => {
@@ -100,5 +103,65 @@ test("aceita as unidades do SI sem converter", () => {
   assert.ok(Math.abs(phenoAge(si, 47).age - phenoAge(panel, 47).age) < 0.15);
 });
 test("idade fora do intervalo do modelo", () => assert.equal(phenoAge(panel, 17).status, "age"));
+
+console.log("Assistente (sem modelo de linguagem)");
+const facts = {
+  today: "2026-04-27",
+  appts: [
+    { id: "c1", iso: "2026-05-12T14:30:00", titlePt: "Discussão sobre TRH", titleEn: "HRT discussion", by: "medico" },
+    { id: "c2", iso: "2026-05-20T10:00:00", titlePt: "Colheita de sangue", titleEn: "Blood draw", by: "administrativa" },
+    { id: "c0", iso: "2026-04-22T10:00:00", titlePt: "Revisão trimestral", titleEn: "Quarterly review", by: "medico" },
+  ],
+  reminders: [{ day: "2026-05-12", time: null, text: "levar a lista de medicação" }],
+  docs: [
+    { id: "d1", iso: "2026-04-22", lab: "Synlab", titlePt: "Painel completo", titleEn: "Full panel", markers: ["Estradiol", "ApoB"] },
+    { id: "d2", iso: "2025-12-06", lab: "CUF", titlePt: "Painel completo", titleEn: "Full panel", markers: ["Estradiol"] },
+  ],
+  unread: [{ titlePt: "Análise nova", titleEn: "New lab result" }],
+  supplements: [{ namePt: "Berberina 500 mg", nameEn: "Berberine 500 mg", whenPt: "19:00", whenEn: "7 pm" }],
+  conditions: ["Hipotiroidismo"],
+};
+const ask = (q, lang = "pt") => answer(q, facts, lang);
+test("próxima consulta diz quem marcou", () => {
+  const r = ask("Quando é a minha próxima consulta?");
+  assert.match(r.text, /12 mai 2026 às 14:30/); assert.match(r.text, /marcada pelo médico/); assert.match(r.text, /marcada pela administrativa/);
+});
+test("última consulta", () => assert.match(ask("qual foi a última consulta").text, /22 abr 2026/));
+test("exame de um ano sem documentos diz que não há e mostra os que há", () => {
+  const r = ask("Mostra-me o meu exame de 2020");
+  assert.match(r.text, /Não encontro nenhum exame de 2020/); assert.equal(r.actions.length, 2);
+});
+test("exame de um ano com documento abre o documento", () => {
+  const r = ask("mostra o exame de 2025");
+  assert.deepEqual(r.actions[0].to, { route: "documento", docId: "d2" });
+});
+test("marcador devolve o documento e não o valor", () => {
+  const r = ask("Em que exames tenho o ApoB?");
+  assert.match(r.text, /ApoB aparece/); assert.doesNotMatch(r.text, /\d+ mg/);
+});
+test("lembretes aparecem como do utente", () => assert.match(ask("os meus lembretes").text, /a clínica não os vê/));
+test("novidades listam o que está por ler", () => assert.match(ask("o que há de novo?").text, /Análise nova/));
+test("plano de hoje", () => assert.match(ask("que suplementos tomo hoje").text, /Berberina/));
+test("condições registadas", () => assert.match(ask("que condições tenho").text, /Hipotiroidismo/));
+for (const q of ["Como estão as minhas análises?", "O meu estradiol está baixo?", "Devo tomar mais magnésio?", "Isto é grave?", "o que significa HbA1c", "Está tudo normal?", "Is my result good?", "Should I worry?", "how are my results"]) {
+  test(`recusa interpretação: «${q}»`, () => {
+    const r = ask(q, /[a-z]/.test(q) && /should|good|how/.test(q) ? "en" : "pt");
+    assert.match(r.text, /médico|doctor/); assert.equal(r.actions.length, 0);
+  });
+}
+test("pergunta de consulta não é confundida com interpretação", () => assert.match(ask("when is my next appointment", "en").text, /12 May 2026/));
+test("pergunta desconhecida devolve a ajuda", () => assert.match(ask("qual é a capital da França").text, /Posso ajudar/));
+
+console.log("Condições e calendário");
+test("pesquisa sem acentos e por prefixo", () => assert.equal(searchConditions("hipotir")[0].pt, "Hipotiroidismo"));
+test("pesquisa em inglês", () => assert.ok(searchConditions("asthma").some((c) => c.pt === "Asma")));
+test("sem resultados devolve vazio", () => assert.equal(searchConditions("zzzzqq").length, 0));
+test("lista sem duplicados", () => assert.equal(new Set(CONDITION_LIST.map((c) => c[0])).size, CONDITION_LIST.length));
+test("grelha do mês tem 42 dias e começa à segunda", () => {
+  const g = monthGrid(2026, 4); // maio de 2026 começa a uma sexta
+  assert.equal(g.length, 42); assert.equal(g[0].key, "2026-04-27"); assert.equal(g[4].key, "2026-05-01"); assert.equal(g[4].inMonth, true); assert.equal(g[0].inMonth, false);
+});
+test("chave do dia não depende do fuso", () => assert.equal(dayKey(new Date(2026, 4, 12, 23, 59)), "2026-05-12"));
+test("mudar de mês passa o ano", () => assert.deepEqual(shiftMonth(2026, 11, 1), { year: 2027, month: 0 }));
 
 console.log(`\n${passed} testes passaram${process.exitCode ? " — HÁ FALHAS" : ""}`);
