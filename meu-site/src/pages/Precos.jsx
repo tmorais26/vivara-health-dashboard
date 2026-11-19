@@ -42,12 +42,10 @@ const T = {
     doctorsBadge: "Para médicos e clínicas",
     perDoctorMonth: "/médico/mês",
     custom: "Sob consulta",
-    launch: "Preço de lançamento: €20/médico/mês para os primeiros médicos, mantido enquanto forem clientes.",
     doctorPlans: [
       {
         name: "Individual",
         monthly: 29,
-        launch: true,
         desc: "Para médicos a trabalhar de forma independente.",
         features: ["Até 200 utentes", "Portal clínico completo", "Funciona com ou sem app do utente", "Integrações com wearables", "Suporte por email"],
       },
@@ -113,12 +111,10 @@ const T = {
     doctorsBadge: "For doctors and clinics",
     perDoctorMonth: "/doctor/month",
     custom: "Custom pricing",
-    launch: "Launch price: €20/doctor/month for the first doctors, kept for as long as they remain customers.",
     doctorPlans: [
       {
         name: "Individual",
         monthly: 29,
-        launch: true,
         desc: "For doctors working independently.",
         features: ["Up to 200 patients", "Full clinical portal", "Works with or without the patient app", "Wearable integrations", "Email support"],
       },
@@ -261,11 +257,6 @@ export default function Precos() {
                       </>
                     ) : (
                       <span className="font-serif text-4xl">{L.custom}</span>
-                    )}
-                    {p.launch && (
-                      <p className="mt-2 rounded-xl bg-brand-lime/40 px-3 py-2 text-xs leading-relaxed text-brand-dark">
-                        {L.launch}
-                      </p>
                     )}
                   </div>
                   <ul className="space-y-3 mb-8 text-sm">

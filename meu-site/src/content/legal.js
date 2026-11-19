@@ -274,7 +274,7 @@ export const LEGAL = {
             {
               rows: [
                 ["Utente", "€6,99 por mês ou €69,90 por ano."],
-                ["Médico individual", "€29 por mês. Preço de lançamento de €20 por mês para os primeiros médicos, mantido enquanto forem clientes."],
+                ["Médico individual", "€29 por mês ou €290 por ano."],
                 ["Clínica (2 ou mais profissionais)", "Sob consulta."],
               ],
             },
@@ -771,7 +771,7 @@ export const LEGAL = {
             {
               rows: [
                 ["Patient", "€6.99 per month or €69.90 per year."],
-                ["Individual doctor", "€29 per month. Launch price of €20 per month for the first doctors, kept for as long as they remain customers."],
+                ["Individual doctor", "€29 per month or €290 per year."],
                 ["Clinic (2 or more professionals)", "On request."],
               ],
             },
