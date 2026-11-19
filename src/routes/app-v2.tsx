@@ -97,6 +97,7 @@ const Icon = {
   doc:      <svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 1 H8.5 L11 3.5 V13 H3 Z M8.5 1 V3.5 H11" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinejoin="round"/></svg>,
   bars:     <svg width="18" height="18" viewBox="0 0 18 18"><path d="M4 14.5 V9 M9 14.5 V3.5 M14 14.5 V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>,
   watch:    <svg width="14" height="14" viewBox="0 0 14 14"><rect x="4" y="3" width="6" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill="none"/><path d="M5.5 1 H8.5 M5.5 13 H8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  sparkle:  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 L13.9 9.1 L20 11 L13.9 12.9 L12 19 L10.1 12.9 L4 11 L10.1 9.1 Z"/><path d="M19 3 V6 M17.5 4.5 H20.5" strokeLinecap="round"/><path d="M5 17.5 V20.5 M3.5 19 H6.5" strokeLinecap="round"/></svg>,
   chat:     <svg width="22" height="22" viewBox="0 0 22 22"><path d="M3 5 a2 2 0 0 1 2 -2 H17 a2 2 0 0 1 2 2 V13 a2 2 0 0 1 -2 2 H8 L4 19 V15 H5 a2 2 0 0 1 -2 -2 Z" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinejoin="round"/></svg>,
   smile:    <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.6" fill="none"/><circle cx="8" cy="9.5" r="1" fill="currentColor"/><circle cx="14" cy="9.5" r="1" fill="currentColor"/><path d="M7.5 13.5 Q 11 16 14.5 13.5" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round"/></svg>,
   cal:      <svg width="22" height="22" viewBox="0 0 22 22"><rect x="3" y="5" width="16" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" fill="none"/><path d="M3 9 H19 M7 3 V7 M15 3 V7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
@@ -570,6 +571,9 @@ function StatusBar() {
   );
 }
 
+// Nome pelo qual a app trata a utente (persona fictícia de demonstração).
+const PATIENT_FIRST_NAME = "Maria";
+
 function TabBar({ active }: { active: string }) {
   const { go } = useNav();
   const { t } = useLang();
@@ -689,7 +693,7 @@ function HomeScreenV2() {
 
       <div className="rv-home-greet">
         <div className="rv-home-greet-text">
-          <div className="rv-home-greet-hi">{t("home.hi")}</div>
+          <div className="rv-home-greet-hi">{t("home.hi")}, {PATIENT_FIRST_NAME}</div>
           <div className="rv-home-greet-name">{t("home.title")}</div>
         </div>
         <div className="rv-home-greet-actions">
@@ -3280,7 +3284,7 @@ function AssistenteScreen() {
       <header className="rv-header rv-msg-header">
         <button className="rv-header-btn" onClick={() => go("home")} aria-label={L("Voltar", "Back")}>{Icon.back}</button>
         <div className="rv-msg-header-meta">
-          <div className="rv-msg-header-avatar" style={{background: "var(--surface-2)"}}>AV</div>
+          <div className="rv-msg-header-avatar" aria-hidden="true">{Icon.sparkle}</div>
           <div>
             <div className="rv-msg-header-name">{L("Assistente Vivara", "Vivara Assistant")}</div>
             <div className="rv-msg-header-status">{L("Os seus dados, ao alcance", "Your data, within reach")}</div>
@@ -3324,7 +3328,7 @@ function AssistenteScreen() {
         </button>
       </form>
 
-      <TabBar active="messages" />
+      <TabBar active="" />
     </div>
   );
 }
@@ -4949,15 +4953,14 @@ function renderScreen(route: NavRoute): ReactNode {
 // ─── App Wrapper ─────────────────────────────────────
 function AssistantFAB() {
   const { current, go } = useNav();
+  const { L } = useLang();
   const currentRoute = typeof current === "string" ? current : current.route;
   // Ecrãs com o seu próprio FAB local (mesma posição) escondem o FAB global,
   // caso contrário o assistente fica por cima e bloqueia o botão do ecrã.
   if (currentRoute === "assistente" || currentRoute === "messages" || currentRoute === "data" || currentRoute === "sintomas") return null;
   return (
-    <button className="rv-fab-global" onClick={() => go("assistente")} aria-label="Assistente Vivara">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
+    <button className="rv-fab-global" onClick={() => go("assistente")} aria-label={L("Assistente Vivara", "Vivara Assistant")}>
+      {Icon.sparkle}
     </button>
   );
 }
