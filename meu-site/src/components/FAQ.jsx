@@ -54,7 +54,7 @@ const T = {
       },
       {
         q: "Como funciona o suporte?",
-        a: "Por email para todos os planos, com suporte prioritário no plano Equipa. Respondemos em 1-2 dias úteis.",
+        a: "Por email. Respondemos em 1-2 dias úteis. Nas clínicas, o apoio é acordado com a equipa.",
       },
     ],
   },
@@ -108,7 +108,7 @@ const T = {
       },
       {
         q: "How does support work?",
-        a: "By email on all plans, with priority support on the Team plan. We reply within 1-2 business days.",
+        a: "By email. We reply within 1-2 business days. For clinics, support is agreed with the team.",
       },
     ],
   },
