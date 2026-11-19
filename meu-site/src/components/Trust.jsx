@@ -19,8 +19,8 @@ const T = {
         desc: "Ao lado de cada valor vê de onde vem: uma análise de laboratório, um registo seu ou um wearable. Nunca se misturam.",
       },
       {
-        title: "A tecnologia apoia, não diagnostica",
-        desc: "A plataforma organiza, visualiza e avisa. As decisões clínicas são sempre do médico.",
+        title: "A decisão clínica é sempre do médico",
+        desc: "A Vivara organiza, mostra e avisa quando um valor sai do intervalo de referência. Não faz diagnósticos nem sugere tratamentos.",
       },
     ],
   },
@@ -41,8 +41,8 @@ const T = {
         desc: "Next to every value you can see where it comes from: a lab result, an entry of your own or a wearable. They are never mixed.",
       },
       {
-        title: "Technology supports, it doesn't diagnose",
-        desc: "The platform organises, visualises and alerts. Clinical decisions always belong to the doctor.",
+        title: "Clinical decisions always belong to the doctor",
+        desc: "Vivara organises, shows and alerts you when a value falls outside its reference range. It does not diagnose or suggest treatments.",
       },
     ],
   },

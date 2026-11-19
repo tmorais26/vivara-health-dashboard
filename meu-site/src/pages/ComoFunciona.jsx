@@ -65,7 +65,7 @@ const T = {
     principles: [
       ["Privacidade total", "Dados visíveis só à pessoa a quem pertencem e a quem ela escolher."],
       ["Cada dado, com a sua origem", "Cada valor mostra se vem de uma análise, de um registo ou de um wearable. Nunca se misturam."],
-      ["A tecnologia apoia, não diagnostica", "A plataforma organiza, visualiza e avisa; as decisões são sempre do médico."],
+      ["A decisão clínica é sempre do médico", "A Vivara organiza, mostra e avisa quando um valor sai do intervalo de referência. Não faz diagnósticos nem sugere tratamentos."],
     ],
   },
   en: {
@@ -129,7 +129,7 @@ const T = {
     principles: [
       ["Total privacy", "Data visible only to the person it belongs to and whoever they choose."],
       ["Every data point, with its source", "Each value shows whether it comes from a lab result, an entry or a wearable. They are never mixed."],
-      ["Technology supports, it doesn't diagnose", "The platform organises, visualises and alerts; decisions always belong to the doctor."],
+      ["Clinical decisions always belong to the doctor", "Vivara organises, shows and alerts you when a value falls outside its reference range. It does not diagnose or suggest treatments."],
     ],
   },
 };

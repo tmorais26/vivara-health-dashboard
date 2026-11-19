@@ -24,8 +24,8 @@ const T = {
       },
       {
         key: "Análises",
-        title: "Resultados que falam consigo",
-        desc: "Cada análise interpretada no contexto do seu histórico e dos seus intervalos funcionais.",
+        title: "Cada resultado, no seu contexto",
+        desc: "Cada resultado apresentado ao lado do seu histórico e do respetivo intervalo de referência.",
       },
     ],
     alerts: [
@@ -59,8 +59,8 @@ const T = {
       },
       {
         key: "Lab results",
-        title: "Results that speak to you",
-        desc: "Every result interpreted in the context of your history and your functional ranges.",
+        title: "Every result, in context",
+        desc: "Every result shown next to your history and its reference range.",
       },
     ],
     alerts: [
