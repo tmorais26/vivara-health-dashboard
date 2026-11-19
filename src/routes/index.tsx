@@ -6,6 +6,7 @@ import { formatarData } from "@/data/mock-utente";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
 import { useT } from "@/lib/i18n";
 import { FundamentoLegalDialog } from "@/components/dashboard/FundamentoLegalDialog";
+import { chatAcoes } from "@/lib/chat-store";
 import {
   Field,
   ModalActions,
@@ -144,6 +145,7 @@ function NovoUtenteModal({
   const [cidade, setCidade] = useState("");
   const [plano, setPlano] = useState("Essencial");
   const [pendente, setPendente] = useState<ResumoUtente | null>(null);
+  const [chatAtivo, setChatAtivo] = useState(false);
 
   function reset() {
     setNome("");
@@ -151,6 +153,7 @@ function NovoUtenteModal({
     setSexo("F");
     setCidade("");
     setPlano("Essencial");
+    setChatAtivo(false);
   }
 
   function criar() {
@@ -187,6 +190,7 @@ function NovoUtenteModal({
   function confirmarFundamento() {
     if (!pendente) return;
     onCreate(pendente);
+    if (chatAtivo) chatAcoes.definirEstado(pendente.id, "ativo");
     setPendente(null);
     reset();
     onClose();
@@ -257,6 +261,19 @@ function NovoUtenteModal({
             <option>Longevidade+</option>
           </select>
         </Field>
+        <div className="flex items-start gap-2.5 rounded-xl border border-border bg-background px-3 py-2.5">
+          <input
+            id="novo-utente-chat"
+            type="checkbox"
+            checked={chatAtivo}
+            onChange={(e) => setChatAtivo(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
+          />
+          <label htmlFor="novo-utente-chat" className="text-sm text-foreground">
+            {t.chat.ativarNoRegisto}
+            <span className="block text-[11px] text-muted-foreground">{t.chat.ativarNoRegistoAjuda}</span>
+          </label>
+        </div>
       </div>
       <ModalActions>
         <SecondaryButton
