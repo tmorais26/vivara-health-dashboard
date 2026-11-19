@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { CTAButton, OutlineButton } from "./ui";
+import { CTAButton } from "./ui";
 import { useT } from "../i18n";
 import heroPhoto from "../assets/hero-photo.jpg";
 
@@ -14,8 +14,7 @@ const T = {
       </>
     ),
     desc: "Uma só plataforma, duas vistas: o utente tem a sua saúde num só lugar, o médico tem o historial completo. O mesmo registo para ambos, para que cada consulta valha a pena.",
-    ctaPatient: "Sou utente",
-    ctaDoctor: "Sou médico",
+    cta: "Ver como funciona",
   },
   en: {
     title: (
@@ -26,8 +25,7 @@ const T = {
       </>
     ),
     desc: "One platform, two views: patients have their health in one place, doctors have the complete record. The same record for both, so that every appointment counts.",
-    ctaPatient: "I'm a patient",
-    ctaDoctor: "I'm a doctor",
+    cta: "See how it works",
   },
 };
 
@@ -72,13 +70,10 @@ export default function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="mt-10 flex flex-wrap gap-3"
+          className="mt-10"
         >
-          <Link to="/utentes">
-            <CTAButton>{L.ctaPatient}</CTAButton>
-          </Link>
-          <Link to="/medicos">
-            <OutlineButton className="px-8 py-4">{L.ctaDoctor}</OutlineButton>
+          <Link to="/como-funciona">
+            <CTAButton>{L.cta}</CTAButton>
           </Link>
         </motion.div>
 

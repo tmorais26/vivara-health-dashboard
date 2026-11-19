@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { SectionBadge, Reveal } from "./ui";
 import { useT } from "../i18n";
 
@@ -76,17 +76,19 @@ const T = {
   },
 };
 
-const DURATION = 5000;
+const DURATION = 3000;
 
 export default function Overview() {
   const t = useT();
   const L = t(T);
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  // «Reduzir movimento»: o conteúdo continua a mudar sozinho, mas só com
+  // um fundido suave, sem deslocações nem zoom.
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (paused || reduceMotion) return;
+    if (paused) return;
     const id = setTimeout(() => setActive((a) => (a + 1) % L.tabs.length), DURATION);
     return () => clearTimeout(id);
   }, [active, paused, L.tabs.length]);
@@ -104,9 +106,9 @@ export default function Overview() {
         {/* Tabs */}
         <div
           className="mt-12 flex flex-wrap gap-3"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          onFocus={() => setPaused(true)}
+          onPointerEnter={(e) => e.pointerType === "mouse" && setPaused(true)}
+          onPointerLeave={(e) => e.pointerType === "mouse" && setPaused(false)}
+          onFocus={(e) => e.target.matches(":focus-visible") && setPaused(true)}
           onBlur={() => setPaused(false)}
         >
           {L.tabs.map((tb, i) => (
@@ -137,9 +139,9 @@ export default function Overview() {
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
-              initial={{ opacity: 0, x: -16 }}
+              initial={{ opacity: 0, x: reduceMotion ? 0 : -16 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 16 }}
+              exit={{ opacity: 0, x: reduceMotion ? 0 : 16 }}
               transition={{ duration: 0.4 }}
             >
               <h3 className="font-serif text-3xl md:text-4xl mb-3">{L.tabs[active].title}</h3>
@@ -150,9 +152,9 @@ export default function Overview() {
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
-              initial={{ opacity: 0, scale: 0.96 }}
+              initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
+              exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.98 }}
               transition={{ duration: 0.45 }}
               className="aspect-[4/3] rounded-3xl border border-black/10 bg-white shadow-sm grid place-items-center"
             >
