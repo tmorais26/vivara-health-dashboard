@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { estadoConsentimento } from "@/lib/consent.functions";
 
 import appCss from "../styles.css?url";
 
@@ -100,6 +101,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
+  const [precisaConsentir, setPrecisaConsentir] = useState<boolean | null>(null);
 
   useEffect(() => {
     // Listener primeiro, depois leitura inicial.
@@ -114,6 +116,26 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   }, []);
 
   const isAuthRoute = pathname === "/auth";
+  const isReconsentRoute = pathname === "/reconsentimento";
+  const userId = session?.user.id;
+
+  // Nova versão de um documento legal (ou aceitação em falta) → pede nova aceitação.
+  useEffect(() => {
+    if (!userId) {
+      setPrecisaConsentir(null);
+      return;
+    }
+    let cancelled = false;
+    estadoConsentimento()
+      .then((r) => !cancelled && setPrecisaConsentir(r.precisaConsentir))
+      .catch((err) => {
+        console.warn("[consentimento] não foi possível verificar o estado", err);
+        if (!cancelled) setPrecisaConsentir(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, pathname]);
 
   useEffect(() => {
     if (!ready) return;
@@ -123,7 +145,10 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     if (session && isAuthRoute) {
       navigate({ to: "/" });
     }
-  }, [ready, session, isAuthRoute, navigate]);
+    if (session && precisaConsentir && !isReconsentRoute) {
+      navigate({ to: "/reconsentimento" });
+    }
+  }, [ready, session, isAuthRoute, isReconsentRoute, precisaConsentir, navigate]);
 
   if (!ready) {
     return (
@@ -134,6 +159,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   }
 
   if (!session && !isAuthRoute) return null;
+  if (session && !isAuthRoute && !isReconsentRoute && precisaConsentir !== false) return null;
 
   return <>{children}</>;
 }

@@ -14,7 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      medico_perfis: {
+        Row: { user_id: string; nome: string | null; especialidade: string | null; cedula_profissional: string | null; clinica: string | null; cedula_validada: boolean; criado_em: string }
+        Insert: { user_id: string; nome?: string | null; especialidade?: string | null; cedula_profissional?: string | null; clinica?: string | null; cedula_validada?: boolean; criado_em?: string }
+        Update: { user_id?: string; nome?: string | null; especialidade?: string | null; cedula_profissional?: string | null; clinica?: string | null; cedula_validada?: boolean; criado_em?: string }
+        Relationships: []
+      }
+      medico_consentimentos: {
+        Row: { id: string; user_id: string; tipo: string; codigo: string; versao: string; caixa_id: string; texto_caixa: string; aceite_em: string; ip: string | null }
+        Insert: { id?: string; user_id: string; tipo: string; codigo: string; versao: string; caixa_id: string; texto_caixa: string; aceite_em?: string; ip?: string | null }
+        Update: { id?: string; user_id?: string; tipo?: string; codigo?: string; versao?: string; caixa_id?: string; texto_caixa?: string; aceite_em?: string; ip?: string | null }
+        Relationships: []
+      }
+      medico_consentimento_marketing: {
+        Row: { id: string; user_id: string; aceite: boolean; texto_caixa: string | null; alterado_em: string; ip: string | null }
+        Insert: { id?: string; user_id: string; aceite: boolean; texto_caixa?: string | null; alterado_em?: string; ip?: string | null }
+        Update: { id?: string; user_id?: string; aceite?: boolean; texto_caixa?: string | null; alterado_em?: string; ip?: string | null }
+        Relationships: []
+      }
+      medico_utente_fundamento: {
+        Row: { id: string; user_id: string; utente_ref: string; texto_confirmado: string; confirmado_em: string; ip: string | null }
+        Insert: { id?: string; user_id: string; utente_ref: string; texto_confirmado: string; confirmado_em?: string; ip?: string | null }
+        Update: { id?: string; user_id?: string; utente_ref?: string; texto_confirmado?: string; confirmado_em?: string; ip?: string | null }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
