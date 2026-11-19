@@ -1,78 +1,116 @@
 import { PageHeader, Reveal } from "../components/ui";
 import { useT } from "../i18n";
+import { LEGAL } from "../content/legal";
 
-const T = {
-  pt: {
-    privacidade: {
-      badge: "Legal",
-      title: <>Política de <em>Privacidade.</em></>,
-      updated: "Última atualização: junho de 2026",
-      sections: [
-        ["Responsável pelo tratamento", "Vivara Health, Lda., com sede em Lisboa, Portugal. Contacto: privacidade@vivara.health."],
-        ["Dados que recolhemos", "Dados de conta, dados clínicos (marcadores, exames, wearables) e dados técnicos mínimos para segurança."],
-        ["Como usamos os dados", "Apenas para prestar o serviço. Nunca para publicidade nem para treinar modelos de IA. Nunca partilhamos com terceiros sem consentimento."],
-        ["Onde estão guardados", "Em servidores na União Europeia, encriptados em repouso e em trânsito, em conformidade com o RGPD."],
-        ["Os seus direitos", "Acesso, retificação, apagamento, portabilidade e oposição. Para exercer: privacidade@vivara.health."],
-      ],
-    },
-    termos: {
-      badge: "Legal",
-      title: <>Termos de <em>Serviço.</em></>,
-      updated: "Última atualização: junho de 2026",
-      sections: [
-        ["O serviço", "A Vivara é uma plataforma de acompanhamento de saúde longitudinal. Não substitui aconselhamento médico nem é um dispositivo de diagnóstico."],
-        ["Conta", "A conta é pessoal e intransmissível. É responsável por manter as suas credenciais seguras."],
-        ["Pagamentos", "Os planos são faturados conforme escolhido. Pode cancelar a qualquer momento; os dados ficam exportáveis durante 90 dias."],
-        ["Responsabilidade", "As decisões clínicas são sempre do profissional de saúde. Estes termos regem-se pela lei portuguesa."],
-      ],
-    },
-  },
-  en: {
-    privacidade: {
-      badge: "Legal",
-      title: <>Privacy <em>Policy.</em></>,
-      updated: "Last updated: June 2026",
-      sections: [
-        ["Data controller", "Vivara Health, Lda., headquartered in Lisbon, Portugal. Contact: privacidade@vivara.health."],
-        ["Data we collect", "Account data, clinical data (markers, exams, wearables) and the minimum technical data needed for security."],
-        ["How we use the data", "Only to provide the service. Never for advertising and never to train AI models. We never share with third parties without consent."],
-        ["Where it is stored", "On servers in the European Union, encrypted at rest and in transit, in compliance with the GDPR."],
-        ["Your rights", "Access, rectification, erasure, portability and objection. To exercise them: privacidade@vivara.health."],
-      ],
-    },
-    termos: {
-      badge: "Legal",
-      title: <>Terms of <em>Service.</em></>,
-      updated: "Last updated: June 2026",
-      sections: [
-        ["The service", "Vivara is a longitudinal health tracking platform. It does not replace medical advice and is not a diagnostic device."],
-        ["Account", "The account is personal and non-transferable. You are responsible for keeping your credentials secure."],
-        ["Payments", "Plans are billed as chosen. You can cancel at any time; data remains exportable for 90 days."],
-        ["Liability", "Clinical decisions always belong to the healthcare professional. These terms are governed by Portuguese law."],
-      ],
-    },
-  },
-};
+// Destaca o que ainda está por definir ([ … ]) e torna os sites citados clicáveis.
+function Rich({ text }) {
+  return text.split(/(\[[^\]]+\]|www\.[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s)]*)?)/gi).map((part, i) => {
+    if (part.startsWith("[")) {
+      return (
+        <mark key={i} className="rounded bg-black/[0.06] px-1 text-brand-muted">
+          {part}
+        </mark>
+      );
+    }
+    if (/^www\./i.test(part)) {
+      const url = part.replace(/[.,]$/, "");
+      return (
+        <a key={i} href={`https://${url}`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
+function Block({ item }) {
+  if (typeof item === "string") {
+    return <p className="text-brand-muted/80 leading-relaxed"><Rich text={item} /></p>;
+  }
+  if (item.list) {
+    return (
+      <ul className="list-disc space-y-2 pl-5 text-brand-muted/80 leading-relaxed marker:text-brand-muted/40">
+        {item.list.map((li) => (
+          <li key={li}><Rich text={li} /></li>
+        ))}
+      </ul>
+    );
+  }
+  return (
+    <dl className="divide-y divide-black/10 rounded-2xl border border-black/10 bg-white">
+      {item.rows.map(([k, v]) => (
+        <div key={k} className="grid gap-1 px-5 py-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-6">
+          <dt className="text-sm font-medium text-brand-dark">{k}</dt>
+          <dd className="text-sm text-brand-muted/80 leading-relaxed"><Rich text={v} /></dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
 
 export default function Legal({ kind }) {
   const t = useT();
-  const c = t(T)[kind];
+  const L = t(LEGAL);
+  const c = L[kind];
   return (
     <>
-      <PageHeader badge={c.badge} title={c.title} />
+      <PageHeader badge={c.badge} title={<>{c.title[0]}<em>{c.title[1]}</em></>} />
       <div className="bg-brand-beige -mt-6 pb-4">
         <div className="mx-auto max-w-2xl px-6">
-          <p className="text-sm text-brand-muted/60">{c.updated}</p>
+          <p className="text-sm text-brand-muted/60"><Rich text={c.updated} /></p>
         </div>
       </div>
       <section className="bg-brand-beige pb-24">
-        <div className="mx-auto max-w-2xl px-6 space-y-10">
-          {c.sections.map(([h, p]) => (
-            <Reveal key={h}>
-              <h2 className="font-serif text-2xl mb-3">{h}</h2>
-              <p className="text-brand-muted/80 leading-relaxed">{p}</p>
-            </Reveal>
-          ))}
+        <div className="mx-auto max-w-2xl px-6">
+          <div className="rounded-3xl bg-brand-dark px-7 py-8 text-white">
+            <p className="text-xs uppercase tracking-[0.18em] text-white/50">{L.summaryTitle}</p>
+            <ul className="mt-4 space-y-3">
+              {c.summary.map((s) => (
+                <li key={s} className="flex gap-3 leading-relaxed text-white/90">
+                  <span aria-hidden="true" className="mt-2.5 size-1.5 shrink-0 rounded-full bg-brand-lime" />
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <nav aria-label={L.toc} className="mt-10">
+            <p className="text-xs uppercase tracking-[0.18em] text-brand-muted/60">{L.toc}</p>
+            <ol className="mt-3 grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
+              {c.sections.map((s, i) => (
+                <li key={s.id}>
+                  <a
+                    href={`#${s.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className="text-brand-muted/80 hover:text-brand-dark hover:underline"
+                  >
+                    {i + 1}. {s.h}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+
+          <div className="mt-14 space-y-12">
+            {c.sections.map((s, i) => (
+              <Reveal key={s.id}>
+                <section id={s.id} className="scroll-mt-28">
+                  <h2 className="font-serif text-2xl mb-4">
+                    <span className="text-brand-muted/40">{i + 1}.</span> {s.h}
+                  </h2>
+                  <div className="space-y-4">
+                    {s.body.map((item, j) => (
+                      <Block key={j} item={item} />
+                    ))}
+                  </div>
+                </section>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
     </>

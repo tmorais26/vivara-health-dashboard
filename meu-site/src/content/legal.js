@@ -1,0 +1,767 @@
+// Política de Privacidade e Termos de Serviço da Vivara.
+// RASCUNHO para revisão jurídica. Tudo o que está entre [ ] ainda não está
+// decidido (fornecedores, sociedade, prazos) e aparece destacado no site.
+//
+// Formato de cada secção: { id, h, body: [...] }, em que cada elemento de
+// body é um parágrafo (string), { list: [...] } ou { rows: [[rótulo, texto]] }.
+
+const UPDATED_PT = "Última atualização: novembro de 2026 · Em vigor a partir de: [data de lançamento]";
+const UPDATED_EN = "Last updated: November 2026 · Effective from: [launch date]";
+
+export const LEGAL = {
+  pt: {
+    toc: "Nesta página",
+    summaryTitle: "Em resumo",
+    privacidade: {
+      badge: "Legal",
+      title: ["Política de ", "Privacidade."],
+      updated: UPDATED_PT,
+      summary: [
+        "Os seus dados de saúde servem apenas para prestar o serviço. Não os vendemos, não os usamos para publicidade e não os usamos para treinar modelos de inteligência artificial.",
+        "Só você e os profissionais de saúde que escolher veem o seu historial.",
+        "Os dados de saúde ficam alojados na União Europeia, encriptados.",
+        "Pode exportar ou apagar os seus dados a qualquer momento.",
+      ],
+      sections: [
+        {
+          id: "quem-somos",
+          h: "Quem somos",
+          body: [
+            "A Vivara é explorada pela [denominação social a definir], com sede em [morada a definir], Portugal, NIPC [a definir] («Vivara» ou «nós»).",
+            "Para qualquer questão sobre privacidade, escreva para privacidade@vivara.health. Encarregado de proteção de dados: [a definir].",
+            "Esta política aplica-se à app para utentes, ao portal para médicos e clínicas e a este site.",
+          ],
+        },
+        {
+          id: "papel",
+          h: "O nosso papel em cada caso",
+          body: [
+            {
+              list: [
+                "Utentes com a app: a Vivara é responsável pelo tratamento da sua conta e dos dados que carrega.",
+                "Médicos e clínicas: quando um profissional regista um utente e acrescenta resultados no portal, é o profissional ou a clínica o responsável por esses dados. A Vivara trata-os apenas por conta dele, como subcontratante (artigo 28.º do RGPD), ao abrigo de um acordo de tratamento de dados.",
+              ],
+            },
+            "Se tiver dúvidas sobre dados que o seu médico registou, pode falar diretamente com ele ou connosco — encaminhamos o pedido.",
+          ],
+        },
+        {
+          id: "dados",
+          h: "Que dados recolhemos",
+          body: [
+            {
+              list: [
+                "Conta: nome, email, palavra-passe (guardada cifrada) e idioma. Para profissionais, também especialidade, número de cédula profissional e clínica.",
+                "Saúde: resultados de análises e exames que você ou o seu médico carregam (PDF ou fotografia), os valores lidos desses documentos, e as notas, sintomas e medicação que registar.",
+                "Wearables: os dados das apps que decidir ligar (por exemplo, Apple Health, Oura ou Whoop), e só esses.",
+                "Pagamento: tratados pelo fornecedor de pagamentos. Não guardamos o número completo do seu cartão.",
+                "Técnicos: endereço IP, tipo de dispositivo e browser, e registos de acesso, para segurança e funcionamento.",
+                "Recomendações: quem o convidou e quem convidou, para atribuir os meses grátis.",
+                "Contacto: o nome, email, perfil e mensagem que nos envia pelo formulário do site.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "finalidades",
+          h: "Para que usamos os dados e com que fundamento",
+          body: [
+            {
+              rows: [
+                ["Prestar o serviço", "Organizar o seu historial e partilhá-lo com quem escolher. Fundamento: execução do contrato. Para dados de saúde, o seu consentimento explícito, que pode retirar a qualquer momento."],
+                ["Portal dos profissionais", "Os dados que um médico ou clínica regista são tratados para a prestação de cuidados de saúde, sob sigilo profissional. O fundamento legal é do profissional, que é o responsável."],
+                ["Faturação", "Emitir faturas e cumprir a lei fiscal. Fundamento: obrigação legal."],
+                ["Segurança", "Proteger contas e prevenir fraude e abusos. Fundamento: interesse legítimo."],
+                ["Responder-lhe", "Tratar mensagens e pedidos de demonstração. Fundamento: interesse legítimo e diligências pré-contratuais."],
+                ["Novidades", "Enviar notícias da Vivara, só se aceitar. Pode cancelar em qualquer email."],
+                ["Melhorar o serviço", "Estatísticas agregadas, que não identificam ninguém."],
+              ],
+            },
+          ],
+        },
+        {
+          id: "nunca",
+          h: "O que nunca fazemos",
+          body: [
+            {
+              list: [
+                "Vender dados pessoais.",
+                "Usar dados de saúde para publicidade.",
+                "Usar os seus dados para treinar modelos de inteligência artificial.",
+                "Partilhar dados com seguradoras ou entidades patronais sem pedido seu.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "acesso",
+          h: "Quem tem acesso",
+          body: [
+            {
+              list: [
+                "Você.",
+                "Os profissionais de saúde com quem escolher partilhar. Pode retirar o acesso a qualquer momento; isso não apaga o que o profissional já registou no processo clínico dele, que tem as suas próprias obrigações legais.",
+                "Os nossos subcontratantes, apenas no que for necessário e com contrato (lista abaixo).",
+                "Autoridades, quando a lei o exigir.",
+                "Um eventual comprador ou sucessor da Vivara, com aviso prévio e com as mesmas proteções.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "subcontratantes",
+          h: "Subcontratantes",
+          body: [
+            "Empresas que tratam dados por nossa conta. Atualizamos esta lista antes de acrescentar um novo subcontratante.",
+            {
+              rows: [
+                ["Alojamento e base de dados", "[fornecedor a definir] · União Europeia"],
+                ["Pagamentos", "[fornecedor a definir]"],
+                ["Envio de emails", "[fornecedor a definir]"],
+                ["Leitura automática de documentos", "[fornecedor a definir, se aplicável]"],
+                ["Estatísticas do site (só com consentimento)", "[fornecedor a definir]"],
+                ["Alojamento deste site", "Vercel Inc. · EUA. Não recebe dados de saúde."],
+                ["Formulário de contacto", "Web3Forms. Recebe apenas o que escreve no formulário."],
+              ],
+            },
+          ],
+        },
+        {
+          id: "onde",
+          h: "Onde ficam os dados",
+          body: [
+            "Os dados de saúde ficam alojados na União Europeia, encriptados em trânsito e em repouso.",
+            "Quando um fornecedor está fora do Espaço Económico Europeu (como no alojamento do site ou no formulário de contacto), a transferência apoia-se numa decisão de adequação da Comissão Europeia ou em cláusulas contratuais-tipo.",
+          ],
+        },
+        {
+          id: "ia",
+          h: "Leitura automática e inteligência artificial",
+          body: [
+            "Se usarmos ferramentas automáticas, incluindo inteligência artificial, para ler documentos ou organizar resultados:",
+            {
+              list: [
+                "enviamos apenas o mínimo necessário;",
+                "o fornecedor fica proibido de usar os dados para treinar os seus modelos;",
+                "a ferramenta não toma decisões clínicas nem decisões com efeitos jurídicos sobre si;",
+                "os valores lidos podem ter erros — confirme-os sempre no documento original.",
+              ],
+            },
+            "Fornecedor: [a definir].",
+          ],
+        },
+        {
+          id: "prazos",
+          h: "Quanto tempo guardamos",
+          body: [
+            {
+              list: [
+                "Enquanto a sua conta estiver ativa.",
+                "Depois de cancelar, os dados ficam disponíveis para exportação durante 90 dias e depois são apagados. As cópias de segurança são apagadas em [prazo a definir].",
+                "Pode pedir que apaguemos tudo de imediato.",
+                "Faturas: 10 anos, como exige a lei fiscal.",
+                "Mensagens do formulário de contacto: [prazo a definir].",
+                "Dados que um médico registou no seu processo clínico seguem as regras de conservação a que ele está obrigado.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "seguranca",
+          h: "Segurança",
+          body: [
+            "Usamos encriptação, controlo e registo de acessos, e autenticação segura. Se houver uma violação de dados, notificamos a CNPD no prazo de 72 horas e informamo-lo diretamente quando houver risco elevado para si.",
+          ],
+        },
+        {
+          id: "direitos",
+          h: "Os seus direitos",
+          body: [
+            "Tem direito a aceder aos seus dados, corrigi-los, apagá-los, limitar ou opor-se ao seu tratamento, recebê-los num formato aberto (portabilidade) e retirar o consentimento a qualquer momento.",
+            "Para exercer qualquer direito, use a app ou escreva para privacidade@vivara.health. É gratuito e respondemos no prazo de um mês (prorrogável por mais dois em casos complexos, com aviso).",
+            "Pode também apresentar reclamação à Comissão Nacional de Proteção de Dados (www.cnpd.pt).",
+          ],
+        },
+        {
+          id: "idade",
+          h: "Idade mínima",
+          body: [
+            "A Vivara destina-se a maiores de 18 anos. [Contas de menores geridas por um responsável parental: a definir.]",
+          ],
+        },
+        {
+          id: "cookies",
+          h: "Cookies",
+          body: [
+            "Usamos cookies essenciais para o site funcionar. Cookies de estatística só com o seu consentimento, dado na barra que aparece na primeira visita. [Forma de alterar a escolha mais tarde: a definir.]",
+          ],
+        },
+        {
+          id: "alteracoes",
+          h: "Alterações a esta política",
+          body: [
+            "Se fizermos alterações relevantes, avisamos por email ou na app pelo menos 30 dias antes. Nunca reduzimos os seus direitos sobre dados já recolhidos sem o seu consentimento.",
+          ],
+        },
+      ],
+    },
+    termos: {
+      badge: "Legal",
+      title: ["Termos de ", "Serviço."],
+      updated: UPDATED_PT,
+      summary: [
+        "A Vivara organiza resultados e historial clínico. Não presta cuidados de saúde nem dá conselhos médicos.",
+        "Em caso de emergência, ligue 112. Para aconselhamento, ligue SNS 24: 808 24 24 24.",
+        "Pode cancelar a qualquer momento; o plano termina no fim do período pago.",
+        "Os seus dados são seus: pode exportá-los sempre.",
+      ],
+      sections: [
+        {
+          id: "quem-somos",
+          h: "Quem somos",
+          body: [
+            "Estes termos regulam a utilização da Vivara, explorada pela [denominação social a definir], com sede em [morada a definir], Portugal, NIPC [a definir]. Ao criar uma conta, aceita estes termos e a Política de Privacidade.",
+          ],
+        },
+        {
+          id: "servico",
+          h: "O que é a Vivara — e o que não é",
+          body: [
+            "A Vivara tem dois acessos: uma app para utentes e um portal para médicos e clínicas. Ambos servem para reunir resultados de análises, exames e registos num só historial.",
+            {
+              list: [
+                "A Vivara não presta cuidados de saúde, não faz diagnósticos e não substitui o seu médico.",
+                "Os avisos e gráficos da plataforma são informativos. As decisões clínicas são sempre do profissional de saúde.",
+                "A Vivara não é monitorizada em tempo real. Em emergência, ligue 112.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "conta",
+          h: "A sua conta",
+          body: [
+            "Tem de ter 18 anos ou mais e dar informação verdadeira. A conta é pessoal e intransmissível: guarde as suas credenciais em segurança e avise-nos se suspeitar de uso indevido.",
+          ],
+        },
+        {
+          id: "utentes",
+          h: "Para utentes",
+          body: [
+            {
+              list: [
+                "Pode carregar resultados em PDF ou fotografia. Os valores lidos automaticamente podem ter erros: confirme-os no documento original.",
+                "Escolhe com que profissionais partilha o seu historial e pode retirar o acesso a qualquer momento.",
+                "Os dados de wearables são estimativas dos respetivos dispositivos e aparecem sempre separados das análises de laboratório. Dependem das apps de terceiros (como Apple Health, Oura ou Whoop) e dos termos delas.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "profissionais",
+          h: "Para médicos e clínicas",
+          body: [
+            {
+              list: [
+                "Declara estar legalmente habilitado para exercer e inscrito na respetiva ordem profissional.",
+                "Só regista utentes e carrega os seus dados quando tem fundamento legal para isso, e mantém o sigilo profissional.",
+                "É o responsável pelo tratamento dos dados que regista. A Vivara atua como sua subcontratante, nos termos do acordo de tratamento de dados, que faz parte destes termos. [Acordo de tratamento de dados: a disponibilizar.]",
+                "O plano Individual é para um profissional. Para clínicas com 2 ou mais profissionais, as condições são acordadas por escrito.",
+                "Cada profissional tem o seu próprio acesso. Não partilhe credenciais.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "precos",
+          h: "Planos, preços e pagamento",
+          body: [
+            {
+              rows: [
+                ["Utente", "€9,99 por mês ou €95,90 por ano."],
+                ["Médico individual", "€20 por mês."],
+                ["Clínica (2 ou mais profissionais)", "Sob consulta."],
+              ],
+            },
+            "[IVA: a confirmar se incluído nos preços.] O pagamento é feito no início de cada período e o plano renova automaticamente. Pagamentos tratados por [fornecedor a definir].",
+            "Se alterarmos um preço, avisamos pelo menos 30 dias antes; pode cancelar antes de a alteração produzir efeito. Se um pagamento falhar, avisamos e podemos suspender o acesso até à regularização — os seus dados não são apagados por isso.",
+          ],
+        },
+        {
+          id: "cancelamento",
+          h: "Cancelamento e livre resolução",
+          body: [
+            "Pode cancelar a qualquer momento na app, no portal ou por email. O cancelamento produz efeito no fim do período já pago e não há reembolso de períodos parciais, salvo quando a lei o exija.",
+            "Se for consumidor, tem 14 dias a contar da subscrição para desistir sem indicar motivo. Se pediu para começar a usar o serviço nesse prazo, pode ser cobrado o valor proporcional ao tempo já usado.",
+          ],
+        },
+        {
+          id: "recomendacoes",
+          h: "Programa de recomendação",
+          body: [
+            {
+              list: [
+                "Quando um utente recomenda outro utente, ou um médico recomenda outro médico, ambos ganham um mês grátis.",
+                "Quando um utente recomenda o seu médico, ambos ganham um mês grátis.",
+                "Quando um médico recomenda a Vivara a um utente, só o utente ganha um mês grátis.",
+                "O mês é atribuído depois do primeiro pagamento de quem foi convidado. Máximo de 12 meses grátis por ano. Nos planos anuais, o mês grátis prolonga a subscrição. Nos planos de clínica, as condições são acordadas.",
+              ],
+            },
+            "Podemos alterar ou terminar o programa com aviso prévio, sem afetar meses já ganhos.",
+          ],
+        },
+        {
+          id: "dados",
+          h: "Os seus dados",
+          body: [
+            "Os dados que carrega são seus. Dá-nos apenas a autorização necessária para os guardar e tratar com o objetivo de lhe prestar o serviço, como descrito na Política de Privacidade.",
+            "Pode exportar tudo num formato aberto a qualquer momento. Depois de cancelar, os dados ficam disponíveis para exportação durante 90 dias e depois são apagados.",
+          ],
+        },
+        {
+          id: "uso",
+          h: "Utilização aceitável",
+          body: [
+            "Não pode:",
+            {
+              list: [
+                "carregar dados de outra pessoa sem autorização (salvo profissionais de saúde com fundamento legal);",
+                "tentar aceder a contas ou dados de terceiros;",
+                "copiar, desmontar ou fazer engenharia inversa da plataforma;",
+                "recolher dados de forma automatizada ou revender o serviço.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "disponibilidade",
+          h: "Disponibilidade e alterações do serviço",
+          body: [
+            "Fazemos o possível para que a Vivara esteja sempre disponível, mas pode haver interrupções para manutenção ou por causas alheias. Podemos melhorar e alterar funcionalidades; se retirarmos algo essencial ao seu plano, avisamos e pode cancelar.",
+          ],
+        },
+        {
+          id: "propriedade",
+          h: "Propriedade intelectual",
+          body: [
+            "A plataforma, a marca e os conteúdos da Vivara pertencem à Vivara. Estes termos não lhe transmitem nenhum direito sobre eles, além do direito de usar o serviço.",
+          ],
+        },
+        {
+          id: "responsabilidade",
+          h: "Responsabilidade",
+          body: [
+            "A Vivara responde nos termos da lei. Não respondemos por decisões clínicas tomadas por profissionais, por erros nos documentos de origem (por exemplo, do laboratório) nem por serviços de terceiros, como os wearables.",
+            "Nada nestes termos limita a nossa responsabilidade por dolo ou culpa grave, nem os direitos que a lei garante aos consumidores.",
+          ],
+        },
+        {
+          id: "suspensao",
+          h: "Suspensão e fim da conta",
+          body: [
+            "Pode encerrar a sua conta a qualquer momento. Podemos suspender ou encerrar uma conta em caso de violação grave destes termos, com aviso prévio, salvo urgência ou obrigação legal.",
+          ],
+        },
+        {
+          id: "alteracoes",
+          h: "Alterações a estes termos",
+          body: [
+            "Avisamos por email ou na app pelo menos 30 dias antes de alterações relevantes. Se não concordar, pode cancelar antes de entrarem em vigor.",
+          ],
+        },
+        {
+          id: "lei",
+          h: "Lei aplicável e litígios",
+          body: [
+            "Estes termos regem-se pela lei portuguesa. Se for consumidor, mantém a proteção das normas imperativas do seu país de residência.",
+            "Em caso de litígio de consumo, pode recorrer a [entidade de resolução alternativa de litígios a definir]. Mais informação no Portal do Consumidor (www.consumidor.gov.pt). Dispomos de Livro de Reclamações Eletrónico (www.livroreclamacoes.pt).",
+            "Para profissionais, é competente o tribunal da comarca da sede da Vivara.",
+          ],
+        },
+        {
+          id: "contacto",
+          h: "Contacto",
+          body: ["equipa@vivara.health · [morada a definir], Portugal."],
+        },
+      ],
+    },
+  },
+
+  en: {
+    toc: "On this page",
+    summaryTitle: "In short",
+    privacidade: {
+      badge: "Legal",
+      title: ["Privacy ", "Policy."],
+      updated: UPDATED_EN,
+      summary: [
+        "Your health data is used only to provide the service. We don't sell it, we don't use it for advertising and we don't use it to train artificial intelligence models.",
+        "Only you and the healthcare professionals you choose can see your record.",
+        "Health data is hosted in the European Union, encrypted.",
+        "You can export or delete your data at any time.",
+      ],
+      sections: [
+        {
+          id: "quem-somos",
+          h: "Who we are",
+          body: [
+            "Vivara is operated by [company name to be defined], headquartered at [address to be defined], Portugal, tax number [to be defined] (\"Vivara\" or \"we\").",
+            "For any privacy question, write to privacidade@vivara.health. Data protection officer: [to be defined].",
+            "This policy covers the patient app, the portal for doctors and clinics, and this website.",
+          ],
+        },
+        {
+          id: "papel",
+          h: "Our role in each case",
+          body: [
+            {
+              list: [
+                "Patients using the app: Vivara is the controller of your account and of the data you upload.",
+                "Doctors and clinics: when a professional registers a patient and adds results in the portal, the professional or clinic is the controller of that data. Vivara processes it only on their behalf, as a processor (Article 28 GDPR), under a data processing agreement.",
+              ],
+            },
+            "If you have questions about data your doctor recorded, you can speak to them directly or to us — we will pass the request on.",
+          ],
+        },
+        {
+          id: "dados",
+          h: "What data we collect",
+          body: [
+            {
+              list: [
+                "Account: name, email, password (stored encrypted) and language. For professionals, also speciality, professional licence number and clinic.",
+                "Health: lab and exam results that you or your doctor upload (PDF or photo), the values read from those documents, and any notes, symptoms and medication you record.",
+                "Wearables: data from the apps you choose to connect (for example Apple Health, Oura or Whoop), and only those.",
+                "Payment: handled by the payment provider. We don't store your full card number.",
+                "Technical: IP address, device and browser type, and access logs, for security and operation.",
+                "Referrals: who invited you and whom you invited, to award free months.",
+                "Contact: the name, email, profile and message you send us through the website form.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "finalidades",
+          h: "What we use data for, and on what basis",
+          body: [
+            {
+              rows: [
+                ["Providing the service", "Organising your record and sharing it with whomever you choose. Basis: performance of the contract. For health data, your explicit consent, which you can withdraw at any time."],
+                ["Professional portal", "Data a doctor or clinic records is processed for the provision of healthcare, under professional secrecy. The legal basis belongs to the professional, who is the controller."],
+                ["Billing", "Issuing invoices and complying with tax law. Basis: legal obligation."],
+                ["Security", "Protecting accounts and preventing fraud and abuse. Basis: legitimate interest."],
+                ["Replying to you", "Handling messages and demo requests. Basis: legitimate interest and pre-contractual steps."],
+                ["News", "Sending Vivara news, only if you agree. You can unsubscribe from any email."],
+                ["Improving the service", "Aggregated statistics that don't identify anyone."],
+              ],
+            },
+          ],
+        },
+        {
+          id: "nunca",
+          h: "What we never do",
+          body: [
+            {
+              list: [
+                "Sell personal data.",
+                "Use health data for advertising.",
+                "Use your data to train artificial intelligence models.",
+                "Share data with insurers or employers unless you ask us to.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "acesso",
+          h: "Who has access",
+          body: [
+            {
+              list: [
+                "You.",
+                "The healthcare professionals you choose to share with. You can withdraw access at any time; this doesn't delete what the professional has already recorded in their own clinical file, which has its own legal obligations.",
+                "Our processors, only as needed and under contract (list below).",
+                "Authorities, when required by law.",
+                "A potential buyer or successor of Vivara, with prior notice and the same protections.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "subcontratantes",
+          h: "Processors",
+          body: [
+            "Companies that process data on our behalf. We update this list before adding a new processor.",
+            {
+              rows: [
+                ["Hosting and database", "[provider to be defined] · European Union"],
+                ["Payments", "[provider to be defined]"],
+                ["Email delivery", "[provider to be defined]"],
+                ["Automatic document reading", "[provider to be defined, if applicable]"],
+                ["Website analytics (consent only)", "[provider to be defined]"],
+                ["Hosting of this website", "Vercel Inc. · USA. Receives no health data."],
+                ["Contact form", "Web3Forms. Receives only what you write in the form."],
+              ],
+            },
+          ],
+        },
+        {
+          id: "onde",
+          h: "Where data is stored",
+          body: [
+            "Health data is hosted in the European Union, encrypted in transit and at rest.",
+            "When a provider is outside the European Economic Area (such as website hosting or the contact form), the transfer relies on a European Commission adequacy decision or on standard contractual clauses.",
+          ],
+        },
+        {
+          id: "ia",
+          h: "Automatic reading and artificial intelligence",
+          body: [
+            "If we use automated tools, including artificial intelligence, to read documents or organise results:",
+            {
+              list: [
+                "we send only the minimum necessary;",
+                "the provider is prohibited from using the data to train its models;",
+                "the tool makes no clinical decisions and no decisions with legal effects on you;",
+                "the values read may contain errors — always check them against the original document.",
+              ],
+            },
+            "Provider: [to be defined].",
+          ],
+        },
+        {
+          id: "prazos",
+          h: "How long we keep data",
+          body: [
+            {
+              list: [
+                "For as long as your account is active.",
+                "After you cancel, data remains available for export for 90 days and is then deleted. Backups are deleted within [period to be defined].",
+                "You can ask us to delete everything immediately.",
+                "Invoices: 10 years, as required by tax law.",
+                "Contact form messages: [period to be defined].",
+                "Data a doctor recorded in their clinical file follows the retention rules that apply to them.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "seguranca",
+          h: "Security",
+          body: [
+            "We use encryption, access control and logging, and secure authentication. If there is a data breach, we notify the Portuguese data protection authority (CNPD) within 72 hours and inform you directly when there is a high risk to you.",
+          ],
+        },
+        {
+          id: "direitos",
+          h: "Your rights",
+          body: [
+            "You have the right to access your data, correct it, delete it, restrict or object to its processing, receive it in an open format (portability) and withdraw consent at any time.",
+            "To exercise any right, use the app or write to privacidade@vivara.health. It is free and we reply within one month (extendable by two more in complex cases, with notice).",
+            "You can also lodge a complaint with the Portuguese data protection authority, CNPD (www.cnpd.pt).",
+          ],
+        },
+        {
+          id: "idade",
+          h: "Minimum age",
+          body: [
+            "Vivara is intended for people aged 18 or over. [Accounts for minors managed by a parent or guardian: to be defined.]",
+          ],
+        },
+        {
+          id: "cookies",
+          h: "Cookies",
+          body: [
+            "We use essential cookies for the website to work. Analytics cookies only with your consent, given in the bar shown on your first visit. [How to change your choice later: to be defined.]",
+          ],
+        },
+        {
+          id: "alteracoes",
+          h: "Changes to this policy",
+          body: [
+            "If we make relevant changes, we notify you by email or in the app at least 30 days in advance. We never reduce your rights over data already collected without your consent.",
+          ],
+        },
+      ],
+    },
+    termos: {
+      badge: "Legal",
+      title: ["Terms of ", "Service."],
+      updated: UPDATED_EN,
+      summary: [
+        "Vivara organises results and clinical history. It does not provide healthcare or medical advice.",
+        "In an emergency, call 112. For health advice in Portugal, call SNS 24: 808 24 24 24.",
+        "You can cancel at any time; your plan ends at the end of the paid period.",
+        "Your data is yours: you can always export it.",
+      ],
+      sections: [
+        {
+          id: "quem-somos",
+          h: "Who we are",
+          body: [
+            "These terms govern the use of Vivara, operated by [company name to be defined], headquartered at [address to be defined], Portugal, tax number [to be defined]. By creating an account, you accept these terms and the Privacy Policy.",
+          ],
+        },
+        {
+          id: "servico",
+          h: "What Vivara is — and isn't",
+          body: [
+            "Vivara has two kinds of access: an app for patients and a portal for doctors and clinics. Both bring lab results, exams and records together in a single history.",
+            {
+              list: [
+                "Vivara does not provide healthcare, does not diagnose and does not replace your doctor.",
+                "The platform's alerts and charts are for information. Clinical decisions always belong to the healthcare professional.",
+                "Vivara is not monitored in real time. In an emergency, call 112.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "conta",
+          h: "Your account",
+          body: [
+            "You must be 18 or over and provide accurate information. The account is personal and non-transferable: keep your credentials safe and tell us if you suspect misuse.",
+          ],
+        },
+        {
+          id: "utentes",
+          h: "For patients",
+          body: [
+            {
+              list: [
+                "You can upload results as a PDF or photo. Values read automatically may contain errors: check them against the original document.",
+                "You choose which professionals you share your record with and can withdraw access at any time.",
+                "Wearable data are estimates from the respective devices and are always shown separately from lab results. They depend on third-party apps (such as Apple Health, Oura or Whoop) and their terms.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "profissionais",
+          h: "For doctors and clinics",
+          body: [
+            {
+              list: [
+                "You confirm you are legally qualified to practise and registered with the relevant professional body.",
+                "You only register patients and upload their data when you have a legal basis to do so, and you keep professional secrecy.",
+                "You are the controller of the data you record. Vivara acts as your processor under the data processing agreement, which forms part of these terms. [Data processing agreement: to be provided.]",
+                "The Individual plan is for one professional. For clinics with 2 or more professionals, terms are agreed in writing.",
+                "Each professional has their own access. Don't share credentials.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "precos",
+          h: "Plans, prices and payment",
+          body: [
+            {
+              rows: [
+                ["Patient", "€9.99 per month or €95.90 per year."],
+                ["Individual doctor", "€20 per month."],
+                ["Clinic (2 or more professionals)", "On request."],
+              ],
+            },
+            "[VAT: to confirm whether included in prices.] Payment is made at the start of each period and the plan renews automatically. Payments handled by [provider to be defined].",
+            "If we change a price, we notify you at least 30 days in advance; you can cancel before the change takes effect. If a payment fails, we let you know and may suspend access until it is settled — your data is not deleted because of it.",
+          ],
+        },
+        {
+          id: "cancelamento",
+          h: "Cancellation and right of withdrawal",
+          body: [
+            "You can cancel at any time in the app, in the portal or by email. Cancellation takes effect at the end of the period already paid and partial periods are not refunded, unless the law requires it.",
+            "If you are a consumer, you have 14 days from subscribing to withdraw without giving a reason. If you asked to start using the service within that period, you may be charged for the time already used.",
+          ],
+        },
+        {
+          id: "recomendacoes",
+          h: "Referral programme",
+          body: [
+            {
+              list: [
+                "When a patient recommends another patient, or a doctor recommends another doctor, both get a free month.",
+                "When a patient recommends their doctor, both get a free month.",
+                "When a doctor recommends Vivara to a patient, only the patient gets a free month.",
+                "The month is awarded after the invitee's first payment. Up to 12 free months per year. On annual plans, the free month extends the subscription. For clinic plans, terms are agreed.",
+              ],
+            },
+            "We may change or end the programme with prior notice, without affecting months already earned.",
+          ],
+        },
+        {
+          id: "dados",
+          h: "Your data",
+          body: [
+            "The data you upload is yours. You give us only the permission needed to store and process it in order to provide the service, as described in the Privacy Policy.",
+            "You can export everything in an open format at any time. After you cancel, data remains available for export for 90 days and is then deleted.",
+          ],
+        },
+        {
+          id: "uso",
+          h: "Acceptable use",
+          body: [
+            "You may not:",
+            {
+              list: [
+                "upload another person's data without authorisation (except healthcare professionals with a legal basis);",
+                "try to access other people's accounts or data;",
+                "copy, decompile or reverse-engineer the platform;",
+                "collect data automatically or resell the service.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "disponibilidade",
+          h: "Availability and changes to the service",
+          body: [
+            "We do our best to keep Vivara always available, but there may be interruptions for maintenance or for reasons beyond our control. We may improve and change features; if we remove something essential to your plan, we will tell you and you can cancel.",
+          ],
+        },
+        {
+          id: "propriedade",
+          h: "Intellectual property",
+          body: [
+            "The platform, brand and content of Vivara belong to Vivara. These terms give you no rights over them beyond the right to use the service.",
+          ],
+        },
+        {
+          id: "responsabilidade",
+          h: "Liability",
+          body: [
+            "Vivara is liable as provided by law. We are not liable for clinical decisions made by professionals, for errors in source documents (for example from the lab), or for third-party services such as wearables.",
+            "Nothing in these terms limits our liability for wilful misconduct or gross negligence, nor the rights the law grants consumers.",
+          ],
+        },
+        {
+          id: "suspensao",
+          h: "Suspension and closing your account",
+          body: [
+            "You can close your account at any time. We may suspend or close an account for a serious breach of these terms, with prior notice, except in urgent cases or where the law requires otherwise.",
+          ],
+        },
+        {
+          id: "alteracoes",
+          h: "Changes to these terms",
+          body: [
+            "We notify you by email or in the app at least 30 days before relevant changes. If you don't agree, you can cancel before they take effect.",
+          ],
+        },
+        {
+          id: "lei",
+          h: "Governing law and disputes",
+          body: [
+            "These terms are governed by Portuguese law. If you are a consumer, you keep the protection of the mandatory rules of your country of residence.",
+            "For consumer disputes, you can turn to [alternative dispute resolution body to be defined]. More information on the Portuguese Consumer Portal (www.consumidor.gov.pt). We have an Electronic Complaints Book (www.livroreclamacoes.pt).",
+            "For professionals, the court of the district of Vivara's registered office has jurisdiction.",
+          ],
+        },
+        {
+          id: "contacto",
+          h: "Contact",
+          body: ["equipa@vivara.health · [address to be defined], Portugal."],
+        },
+      ],
+    },
+  },
+};
