@@ -273,8 +273,8 @@ export const LEGAL = {
           body: [
             {
               rows: [
-                ["Utente", "€6,99 por mês ou €76,89 por ano."],
-                ["Médico individual", "€29 por mês ou €319 por ano."],
+                ["Utente", "€6,99 por mês ou €79 por ano."],
+                ["Médico individual", "€29,99 por mês ou €320 por ano."],
                 ["Clínica (2 ou mais profissionais)", "Sob consulta."],
               ],
             },
@@ -770,8 +770,8 @@ export const LEGAL = {
           body: [
             {
               rows: [
-                ["Patient", "€6.99 per month or €76.89 per year."],
-                ["Individual doctor", "€29 per month or €319 per year."],
+                ["Patient", "€6.99 per month or €79 per year."],
+                ["Individual doctor", "€29.99 per month or €320 per year."],
                 ["Clinic (2 or more professionals)", "On request."],
               ],
             },

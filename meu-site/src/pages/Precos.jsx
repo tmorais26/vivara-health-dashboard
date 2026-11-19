@@ -15,11 +15,11 @@ const T = {
       desc: "Planos separados para quem acompanha e quem é acompanhado. O acesso do utente é independente do da clínica.",
     },
     monthly: "Mensal",
-    annual: "Anual — 1 mês grátis",
+    annual: "Anual",
     patientsBadge: "Para utentes",
     perMonth: "/mês",
-    billedAnnually: "Faturado anualmente",
-    perYear: "ano",
+    perYear: "/ano",
+    worksOut: (v) => `Equivale a €${v}/mês`,
     patient: {
       name: "Utente",
       desc: "Acesso completo à app Vivara. Histórico, wearables, mensagens com a equipa e resumos de cada consulta.",
@@ -41,11 +41,13 @@ const T = {
     ],
     doctorsBadge: "Para médicos e clínicas",
     perDoctorMonth: "/médico/mês",
+    perDoctorYear: "/médico/ano",
     custom: "Sob consulta",
     doctorPlans: [
       {
         name: "Individual",
-        monthly: 29,
+        monthly: 29.99,
+        annual: 320,
         desc: "Para médicos a trabalhar de forma independente.",
         features: ["Portal clínico completo", "Análises, exames e notas numa só linha do tempo", "Alertas de valores fora do intervalo de referência", "Funciona com ou sem app do utente", "Suporte por email"],
       },
@@ -84,11 +86,11 @@ const T = {
       desc: "Separate plans for those who provide care and those who receive it. Patient access is independent from the clinic's.",
     },
     monthly: "Monthly",
-    annual: "Annual — 1 month free",
+    annual: "Annual",
     patientsBadge: "For patients",
     perMonth: "/month",
-    billedAnnually: "Billed annually",
-    perYear: "year",
+    perYear: "/year",
+    worksOut: (v) => `Works out at €${v}/month`,
     patient: {
       name: "Patient",
       desc: "Full access to the Vivara app. Record, wearables, messages with your team and a summary after every appointment.",
@@ -110,11 +112,13 @@ const T = {
     ],
     doctorsBadge: "For doctors and clinics",
     perDoctorMonth: "/doctor/month",
+    perDoctorYear: "/doctor/year",
     custom: "Custom pricing",
     doctorPlans: [
       {
         name: "Individual",
-        monthly: 29,
+        monthly: 29.99,
+        annual: 320,
         desc: "For doctors working independently.",
         features: ["Full clinical portal", "Lab results, exams and notes on a single timeline", "Alerts for values outside the reference range", "Works with or without the patient app", "Email support"],
       },
@@ -148,29 +152,21 @@ const T = {
   },
 };
 
-const PATIENT_MONTHLY = 6.99;
-// Plano anual: 12 meses ao preço de 11.
-const ANNUAL_FACTOR = 11 / 12;
+// Preços fixos (IVA incluído). O anual não é calculado: é um preço próprio.
+const PATIENT = { monthly: 6.99, annual: 79 };
 
 export default function Precos() {
   const { lang } = useLang();
   const t = useT();
   const L = t(T);
   const [billing, setBilling] = useState("mensal");
+  const yearly = billing === "anual";
 
-  const formatYear = (monthly) =>
-    (monthly * 11).toLocaleString(lang === "pt" ? "pt-PT" : "en-IE", {
-      minimumFractionDigits: 2,
+  const fmt = (n) =>
+    n.toLocaleString(lang === "pt" ? "pt-PT" : "en-IE", {
+      minimumFractionDigits: Number.isInteger(n) ? 0 : 2,
       maximumFractionDigits: 2,
     });
-
-  const formatPrice = (monthly) => {
-    const price = billing === "anual" ? monthly * ANNUAL_FACTOR : monthly;
-    return price.toLocaleString(lang === "pt" ? "pt-PT" : "en-IE", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
 
   return (
     <>
@@ -203,9 +199,9 @@ export default function Precos() {
                 <h3 className="font-serif text-2xl mb-2">{L.patient.name}</h3>
                 <p className="text-sm text-white/70 mb-6">{L.patient.desc}</p>
                 <div className="mb-6">
-                  <span className="font-serif text-4xl">€{formatPrice(PATIENT_MONTHLY)}</span>
-                  <span className="text-white/60 text-sm">{L.perMonth}</span>
-                  {billing === "anual" && <p className="text-xs text-brand-lime mt-1">{L.billedAnnually} · €{formatYear(PATIENT_MONTHLY)}/{L.perYear}</p>}
+                  <span className="font-serif text-4xl">€{fmt(yearly ? PATIENT.annual : PATIENT.monthly)}</span>
+                  <span className="text-white/60 text-sm">{yearly ? L.perYear : L.perMonth}</span>
+                  {yearly && <p className="text-xs text-brand-lime mt-1">{L.worksOut(fmt(Math.round((PATIENT.annual / 12) * 100) / 100))}</p>}
                 </div>
                 <ul className="space-y-3 mb-8 text-sm">
                   {L.patient.features.map((f) => (
@@ -258,11 +254,11 @@ export default function Precos() {
                   <div className="mb-6">
                     {p.monthly ? (
                       <>
-                        <span className="font-serif text-4xl">€{formatPrice(p.monthly)}</span>
-                        <span className={`text-sm ${p.featured ? "text-white/60" : "text-brand-muted/60"}`}>{L.perDoctorMonth}</span>
-                        {billing === "anual" && (
+                        <span className="font-serif text-4xl">€{fmt(yearly ? p.annual : p.monthly)}</span>
+                        <span className={`text-sm ${p.featured ? "text-white/60" : "text-brand-muted/60"}`}>{yearly ? L.perDoctorYear : L.perDoctorMonth}</span>
+                        {yearly && (
                           <p className={`text-xs mt-1 ${p.featured ? "text-brand-lime" : "text-brand-green-dark"}`}>
-                            {L.billedAnnually} · €{formatYear(p.monthly)}/{L.perYear}
+                            {L.worksOut(fmt(Math.round((p.annual / 12) * 100) / 100))}
                           </p>
                         )}
                       </>
