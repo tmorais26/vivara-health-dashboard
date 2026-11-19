@@ -14,7 +14,32 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      patient_profiles: {
+        Row: { user_id: string; full_name: string; invite_code: string | null; created_at: string }
+        Insert: { user_id: string; full_name: string; invite_code?: string | null; created_at?: string }
+        Update: { user_id?: string; full_name?: string; invite_code?: string | null; created_at?: string }
+        Relationships: []
+      }
+      consent_events: {
+        Row: {
+          id: number; user_id: string; consent_type: string; action: "granted" | "withdrawn"
+          doc_version: string | null; checkbox_id: string | null; text_hash: string | null
+          lang: string | null; ip: unknown; user_agent: string | null; created_at: string
+        }
+        Insert: {
+          id?: never; user_id: string; consent_type: string; action: "granted" | "withdrawn"
+          doc_version?: string | null; checkbox_id?: string | null; text_hash?: string | null
+          lang?: string | null; ip?: string | null; user_agent?: string | null; created_at?: string
+        }
+        Update: { [_ in never]: never }
+        Relationships: []
+      }
+      account_closures: {
+        Row: { id: number; user_id: string; reason: string; requested_at: string; export_until: string; deleted_at: string | null }
+        Insert: { id?: never; user_id: string; reason: string; requested_at?: string; export_until?: string; deleted_at?: string | null }
+        Update: { deleted_at?: string | null }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

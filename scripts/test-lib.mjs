@@ -19,6 +19,8 @@ const { phenoAge } = await bundle("src/lib/bioage.ts", "bioage.mjs");
 const { answer } = await bundle("src/lib/assistant-rules.ts", "assistant.mjs");
 const { searchConditions, CONDITION_LIST } = await bundle("src/lib/conditions.ts", "conditions.mjs");
 const { monthGrid, dayKey, shiftMonth } = await bundle("src/lib/calendar.ts", "calendar.mjs");
+const { validateSignup } = await bundle("src/lib/consent.validate.ts", "consent-validate.mjs");
+const { SIGNUP_CHECKBOXES, DOC_VERSIONS } = await bundle("src/lib/consent.config.ts", "consent-config.mjs");
 
 let passed = 0;
 const test = (name, fn) => {
@@ -163,5 +165,45 @@ test("grelha do mês tem 42 dias e começa à segunda", () => {
 });
 test("chave do dia não depende do fuso", () => assert.equal(dayKey(new Date(2026, 4, 12, 23, 59)), "2026-05-12"));
 test("mudar de mês passa o ano", () => assert.deepEqual(shiftMonth(2026, 11, 1), { year: 2027, month: 0 }));
+
+// ── Criar conta e consentimentos ──
+const okSignup = {
+  name: "Ana Teste", email: "Ana@Example.com ", password: "palavra-passe", invite: "",
+  checks: { "signup-age": true, "signup-legal": true, "signup-health": true, "signup-marketing": false }, lang: "pt",
+};
+test("registo válido passa e normaliza o email", () => {
+  const { input, errors } = validateSignup(okSignup);
+  assert.deepEqual(errors, {});
+  assert.equal(input.email, "ana@example.com");
+});
+test("as três caixas obrigatórias são exigidas, a de novidades não", () => {
+  for (const id of ["signup-age", "signup-legal", "signup-health"]) {
+    const { errors } = validateSignup({ ...okSignup, checks: { ...okSignup.checks, [id]: false } });
+    assert.equal(errors[id], "required", id);
+  }
+  assert.deepEqual(validateSignup({ ...okSignup, checks: { ...okSignup.checks, "signup-marketing": true } }).errors, {});
+});
+test("caixas só contam se forem exatamente true", () => {
+  const { errors } = validateSignup({ ...okSignup, checks: { "signup-age": "true", "signup-legal": 1, "signup-health": true } });
+  assert.equal(errors["signup-age"], "required");
+  assert.equal(errors["signup-legal"], "required");
+});
+test("email inválido, palavra-passe curta e nome vazio dão erro no campo", () => {
+  const { errors } = validateSignup({ ...okSignup, name: "  ", email: "nao-e-email", password: "1234567" });
+  assert.deepEqual(errors, { name: "required", email: "invalid", password: "too_short" });
+});
+test("código de convite só aceita letras, números e hífenes", () => {
+  assert.equal(validateSignup({ ...okSignup, invite: "<script>" }).errors.invite, "invalid");
+  assert.deepEqual(validateSignup({ ...okSignup, invite: "VIVARA-2026" }).errors, {});
+});
+test("texto das caixas é o aprovado (PT)", () => {
+  const pt = Object.fromEntries(SIGNUP_CHECKBOXES.map((c) => [c.id, c.text.pt]));
+  assert.equal(pt["signup-age"], "Tenho 18 anos ou mais.");
+  assert.equal(pt["signup-legal"], "Li e aceito os Termos de Serviço e tomei conhecimento da Política de Privacidade.");
+  assert.equal(pt["signup-health"], "Dou o meu consentimento explícito para a Vivara tratar os meus dados de saúde (análises, exames e registos que carregar) para me prestar o serviço. Posso retirar o consentimento a qualquer momento.");
+  assert.equal(pt["signup-marketing"], "Quero receber novidades da Vivara por email.");
+  assert.deepEqual(SIGNUP_CHECKBOXES.map((c) => c.required), [true, true, true, false]);
+  assert.deepEqual(DOC_VERSIONS, { terms: "termos-v1", privacy: "privacidade-v1" });
+});
 
 console.log(`\n${passed} testes passaram${process.exitCode ? " — HÁ FALHAS" : ""}`);

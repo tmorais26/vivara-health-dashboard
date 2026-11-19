@@ -6,4 +6,11 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig();
+// Na Vercel, as funções de servidor correm em Frankfurt (fra1), na UE, ao lado
+// do Supabase (eu-central-1). Os pedidos com dados de saúde, consentimentos e IP
+// não devem sair da UE. Só se aplica ao preset "vercel"; os outros ignoram.
+// O tipo do defineConfig só declara algumas opções do nitro; as restantes
+// (como `vercel`) passam tal e qual para o nitro.
+const nitro = { vercel: { functions: { regions: ["fra1"] } } } as unknown as { preset?: string };
+
+export default defineConfig({ nitro });

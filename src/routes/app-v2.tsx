@@ -13,6 +13,15 @@ import {
   loadReminders, addReminder, removeReminder, loadConditions, saveCondition, removeCondition, loadRead, markRead,
   type Reminder, type PatientCondition, type ConditionStatus,
 } from "@/lib/patient.store";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  signUpPatient, getConsentStatus, recordConsent, closeAccount, exportServerData, type ConsentStatus,
+} from "@/lib/consent.functions";
+import { validateSignup, type SignupField } from "@/lib/consent.validate";
+import {
+  LEGAL_URLS, LEGAL_LINK_PARTS, SIGNUP_CHECKBOXES, RECONSENT_CHECKBOX, EXPORT_WINDOW_DAYS, wearablePrompt,
+  type SignupCheckboxId,
+} from "@/lib/consent.config";
 import "../app-v2.css";
 
 export const Route = createFileRoute("/app-v2")({
@@ -664,6 +673,7 @@ function HomeScreenV2() {
   const { go } = useNav();
   const { t, L } = useLang();
   const { status: whoop } = useWhoopStatus();
+  const { firstName } = useAccount();
   const unreadCount = useNotifications().unread.length;
   const wm = whoop?.connected ? whoop.metrics : null;
 
@@ -693,7 +703,7 @@ function HomeScreenV2() {
 
       <div className="rv-home-greet">
         <div className="rv-home-greet-text">
-          <div className="rv-home-greet-hi">{t("home.hi")}, {PATIENT_FIRST_NAME}</div>
+          <div className="rv-home-greet-hi">{t("home.hi")}, {firstName}</div>
           <div className="rv-home-greet-name">{t("home.title")}</div>
         </div>
         <div className="rv-home-greet-actions">
@@ -4075,10 +4085,16 @@ function WhoopCard({ onRequestReplace }: { onRequestReplace: (proceed: () => voi
   const doDisconnect = useServerFn(whoopDisconnect);
   const { status, refresh } = useWhoopStatus();
   const [busy, setBusy] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const recordConsentFor = useRecordConsent();
 
-  // Com outro wearable ligado, a Whoop só entra se o utente aceitar
-  // substituí-lo — um de cada vez.
-  const connect = () => {
+  // Primeiro pergunta-se se autoriza; depois, com outro wearable ligado, a
+  // Whoop só entra se o utente aceitar substituí-lo — um de cada vez.
+  const connect = () => setAsking(true);
+  const afterConsent = async () => {
+    setAsking(false);
+    const ok = await recordConsentFor({ kind: "wearable", id: "whoop", name: "Whoop", granted: true });
+    if (!ok) { showToast(L("Não foi possível guardar a autorização","Couldn't save the authorisation")); return; }
     const other = WEARABLE_IDS.find((id) => id !== "whoop" && devices[id as DeviceId]?.connected);
     if (other) onRequestReplace(startOAuth);
     else startOAuth();
@@ -4104,6 +4120,7 @@ function WhoopCard({ onRequestReplace }: { onRequestReplace: (proceed: () => voi
     setBusy(true);
     try {
       await doDisconnect();
+      await recordConsentFor({ kind: "wearable", id: "whoop", name: "Whoop", granted: false });
       showToast(L("Whoop desligado","Whoop disconnected"));
     } finally {
       setBusy(false);
@@ -4155,6 +4172,10 @@ function WhoopCard({ onRequestReplace }: { onRequestReplace: (proceed: () => voi
             <button className="rv-device-btn" data-tone="ghost" disabled={busy} onClick={disconnect}>{L("Desligar","Disconnect")}</button>
           </div>
         </>
+      )}
+      {asking && (
+        <WearableConsentModal name="Whoop" metrics={L("Recovery · strain · sono · HRV","Recovery · strain · sleep · HRV")} tint="#f5f6f7" initials="W"
+          onCancel={() => setAsking(false)} onConfirm={() => void afterConsent()}/>
       )}
     </div>
   );
@@ -4297,7 +4318,8 @@ function DispositivosScreen() {
   const active = activeWearable(devices, !!whoopStatusNow?.connected);
   const [whoopKey, setWhoopKey] = useState(0); // força o cartão Whoop a reler o estado
   const [authorizing, setAuthorizing] = useState<DeviceId | null>(null);
-  const [authStep, setAuthStep] = useState<"redirect" | "authorize">("redirect");
+  const [asking, setAsking] = useState<DeviceId | null>(null);
+  const recordConsentFor = useRecordConsent();
   // Substituição pendente: quem sai, e o que fazer depois de o utente aceitar.
   const [replacing, setReplacing] = useState<{ from: WearableId; proceed: () => void } | null>(null);
 
@@ -4312,13 +4334,22 @@ function DispositivosScreen() {
     return next;
   }
 
+  // Simula a passagem pela conta do fabricante e conclui a ligação.
   function beginAuthorize(id: DeviceId) {
-    setAuthStep("redirect");
     setAuthorizing(id);
-    setTimeout(() => setAuthStep("authorize"), 900);
+    setTimeout(() => confirmAuthorize(id), 900);
   }
 
+  // Primeiro: «Autoriza a Vivara a receber os dados do […]?»
   function startConnect(id: DeviceId) {
+    setAsking(id);
+  }
+
+  async function afterConsent(id: DeviceId) {
+    setAsking(null);
+    const def = DEVICES.find((d) => d.id === id)!;
+    const ok = await recordConsentFor({ kind: "wearable", id, name: def.name, granted: true });
+    if (!ok) { showToast(L("Não foi possível guardar a autorização","Couldn't save the authorisation")); return; }
     // O CGM não concorre com os wearables; os restantes só entram um de cada vez.
     if (isWearable(id) && active && active !== id) {
       setReplacing({ from: active, proceed: () => beginAuthorize(id) });
@@ -4339,10 +4370,9 @@ function DispositivosScreen() {
     proceed();
   }
 
-  function confirmAuthorize() {
-    if (!authorizing) return;
-    const id = authorizing;
-    const base = isWearable(id) ? allWearablesOff(devices) : devices;
+  function confirmAuthorize(id: DeviceId) {
+    const cur = loadDevices();
+    const base = isWearable(id) ? allWearablesOff(cur) : cur;
     persist({ ...base, [id]: { connected: true, lastSync: Date.now() } });
     setAuthorizing(null);
     showToast(L("Dispositivo ligado","Device connected"));
@@ -4350,6 +4380,8 @@ function DispositivosScreen() {
 
   function disconnect(id: DeviceId) {
     persist({ ...devices, [id]: { connected: false, lastSync: null } });
+    const def = DEVICES.find((d) => d.id === id)!;
+    void recordConsentFor({ kind: "wearable", id, name: def.name, granted: false });
     showToast(L("Dispositivo desligado","Device disconnected"));
   }
 
@@ -4459,34 +4491,18 @@ function DispositivosScreen() {
         </div>
       )}
 
+      {asking && (() => {
+        const d = DEVICES.find((x) => x.id === asking)!;
+        return <WearableConsentModal name={d.name} metrics={d.metrics} tint={d.tint} initials={d.initials || undefined}
+          onCancel={() => setAsking(null)} onConfirm={() => void afterConsent(d.id)}/>;
+      })()}
+
       {authorizing && authorizingDef && (
-        <div className="rv-overlay" role="dialog" aria-modal="true">
+        <div className="rv-overlay" role="dialog" aria-modal="true" aria-live="polite">
           <div className="rv-modal">
-            {authStep === "redirect" ? (
-              <>
-                <div className="rv-modal-spinner"/>
-                <div className="rv-modal-title">{L("A abrir","Opening")} {authorizingDef.vendor}…</div>
-                <div className="rv-modal-text">{L("A redirecionar para autorizar o acesso.","Redirecting to authorise access.")}</div>
-              </>
-            ) : (
-              <>
-                <div className="rv-modal-logo" style={{background: authorizingDef.tint, color: "#0b0d0f"}}>
-                  {authorizingDef.initials || "•"}
-                </div>
-                <div className="rv-modal-title">{L("Autorizar Vivara Health","Authorise Vivara Health")}</div>
-                <div className="rv-modal-text">
-                  {L("A Vivara Health vai ter acesso a:","Vivara Health will have access to:")}<br/>
-                  <span style={{color: "var(--fg-70)"}}>{authorizingDef.metrics}</span>
-                </div>
-                <div className="rv-modal-actions">
-                  <button className="rv-device-btn" data-tone="ghost" onClick={() => setAuthorizing(null)}>{L("Cancelar","Cancel")}</button>
-                  <button className="rv-device-btn" data-tone="primary" onClick={confirmAuthorize}>{L("Autorizar","Authorise")}</button>
-                </div>
-                <div className="rv-modal-fineprint">
-                  {L("Está a entrar com a sua conta","You are signing in with your")} {authorizingDef.vendor}{L(". Os dados são partilhados de forma segura.", " account. Data is shared securely.")}
-                </div>
-              </>
-            )}
+            <div className="rv-modal-spinner"/>
+            <div className="rv-modal-title">{L("A abrir","Opening")} {authorizingDef.vendor}…</div>
+            <div className="rv-modal-text">{L("A ligar com a sua conta","Connecting with your")} {authorizingDef.vendor}{L(".", " account.")}</div>
           </div>
         </div>
       )}
@@ -4761,30 +4777,100 @@ function NotificacoesScreen() {
 
 // ─── Privacidade ─────────────────────────────────────
 function PrivacidadeScreen() {
-  const { go, showToast } = useNav();
-  const { L } = useLang();
+  const { go, showToast, logout } = useNav();
+  const { L, lang } = useLang();
+  const { mode, status, refresh } = useAccount();
+  const record = useRecordConsent();
+  const doClose = useServerFn(closeAccount);
+  const [marketing, setMarketing] = useState(false);
+  const [confirm, setConfirm] = useState<null | "health" | "delete">(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { if (status) setMarketing(status.marketing); }, [status]);
+
+  const demoNote = () => showToast(L("Na conta de demonstração isto não é gravado", "Not saved on the demo account"));
+
+  const toggleMarketing = async () => {
+    const next = !marketing;
+    setMarketing(next);
+    if (mode !== "real") { demoNote(); return; }
+    const ok = await record({ kind: "marketing", granted: next });
+    if (!ok) { setMarketing(!next); showToast(L("Não foi possível guardar", "Couldn't save")); return; }
+    showToast(next ? L("Vai receber novidades por email", "You'll receive news by email") : L("Deixa de receber novidades", "You'll no longer receive news"));
+  };
+
+  const closeIt = async (reason: "health_consent_withdrawn" | "user_request") => {
+    if (mode !== "real") { setConfirm(null); demoNote(); return; }
+    setBusy(true);
+    try {
+      await doClose({ data: { reason, lang } });
+      setConfirm(null);
+      await refresh();
+    } catch {
+      showToast(L("Não foi possível concluir. Tente de novo.", "Couldn't complete. Please try again."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <SubScreen title={L("Privacidade e dados","Privacy & data")} onBack={() => go("profile")}>
-      <div className="rv-sub-section-head">{L("Consentimentos ativos","Active consents")}</div>
-      <div className="rv-toggle-list">
-        <ToggleRow label={L("Partilha com o médico responsável","Share with responsible doctor")} sub={L("Equipa clínica","Clinical team")} defaultOn />
-        <ToggleRow label={L("Partilha com nutricionista","Share with nutritionist")} sub={L("Equipa alargada","Extended team")} defaultOn />
-        <ToggleRow label={L("Investigação anonimizada","Anonymised research")} sub={L("Dados sem identificação","De-identified data")} defaultOn />
-        <ToggleRow label={L("Marketing personalizado","Personalised marketing")} />
+      <div className="rv-sub-section-head">{L("Consentimentos","Consents")}</div>
+      <div className="rv-list">
+        <div className="rv-list-row">
+          <div className="rv-list-icon">{Icon.shield}</div>
+          <div className="rv-list-text">
+            <span className="rv-list-name">{L("Dados de saúde","Health data")}</span>
+            <span className="rv-list-sub">{L("Consentimento dado ao criar conta. Sem ele não podemos prestar o serviço.","Consent given when you created your account. Without it we can't provide the service.")}</span>
+          </div>
+        </div>
       </div>
+      <div className="rv-toggle-list">
+        <button type="button" className="rv-toggle-row" role="switch" aria-checked={marketing} onClick={toggleMarketing}>
+          <div className="rv-toggle-meta">
+            <div className="rv-toggle-label">{L("Novidades da Vivara por email","Vivara news by email")}</div>
+            <div className="rv-toggle-sub">{L("Opcional. Pode mudar quando quiser.","Optional. You can change this at any time.")}</div>
+          </div>
+          <div className="rv-toggle-switch" data-on={marketing}><span/></div>
+        </button>
+      </div>
+      <div className="rv-src-note" style={{margin: "10px 20px 0"}}>
+        {L("A partilha com médicos e os dispositivos ligados gerem-se em Equipa clínica e em Dispositivos.","Sharing with doctors and connected devices are managed in Clinical team and Devices.")}
+      </div>
+
       <div className="rv-sub-section-head">{L("Os seus dados","Your data")}</div>
       <div className="rv-list">
-        <a className="rv-list-row" style={{cursor: "pointer"}} onClick={() => go("exportar")}>
+        <button type="button" className="rv-list-row" onClick={() => go("exportar")}>
           <div className="rv-list-icon">{Icon.upload}</div>
-          <div className="rv-list-text"><span className="rv-list-name">{L("Exportar todos os dados","Export all data")}</span><span className="rv-list-sub">JSON · PDF</span></div>
+          <div className="rv-list-text"><span className="rv-list-name">{L("Exportar todos os dados","Export all data")}</span><span className="rv-list-sub">{L("Ficheiro JSON, formato aberto","JSON file, open format")}</span></div>
           <span className="rv-chev">{Icon.chev}</span>
-        </a>
-        <a className="rv-list-row" style={{cursor: "pointer", color: "var(--alert)"}} onClick={() => showToast(L("Pedido enviado. Receberá confirmação por email.","Request sent. You will receive email confirmation."))}>
+        </button>
+        <button type="button" className="rv-list-row" style={{color: "var(--alert)"}} onClick={() => setConfirm("health")}>
           <div className="rv-list-icon" style={{color: "var(--alert)"}}>{Icon.shield}</div>
-          <div className="rv-list-text"><span className="rv-list-name">{L("Apagar conta e dados","Delete account and data")}</span><span className="rv-list-sub">{L("Irreversível · até 30 dias","Irreversible · up to 30 days")}</span></div>
+          <div className="rv-list-text"><span className="rv-list-name">{L("Retirar consentimento de dados de saúde","Withdraw health data consent")}</span><span className="rv-list-sub">{L("Encerra a conta","Closes your account")}</span></div>
           <span className="rv-chev">{Icon.chev}</span>
-        </a>
+        </button>
+        <button type="button" className="rv-list-row" style={{color: "var(--alert)"}} onClick={() => setConfirm("delete")}>
+          <div className="rv-list-icon" style={{color: "var(--alert)"}}>{Icon.shield}</div>
+          <div className="rv-list-text"><span className="rv-list-name">{L("Apagar conta e dados","Delete account and data")}</span><span className="rv-list-sub">{L(`Exportação disponível durante ${EXPORT_WINDOW_DAYS} dias`,`Export available for ${EXPORT_WINDOW_DAYS} days`)}</span></div>
+          <span className="rv-chev">{Icon.chev}</span>
+        </button>
       </div>
+
+      {confirm === "health" && (
+        <ConfirmDialog title={L("Retirar o consentimento de dados de saúde?","Withdraw health data consent?")} danger busy={busy}
+          confirmLabel={L("Retirar e encerrar conta","Withdraw and close account")} onCancel={() => setConfirm(null)} onConfirm={() => closeIt("health_consent_withdrawn")}>
+          {L(`Sem este consentimento não podemos tratar os seus dados de saúde, por isso a conta é encerrada. Pode exportar os seus dados durante ${EXPORT_WINDOW_DAYS} dias; depois disso são apagados. Esta ação não se desfaz.`,
+             `Without this consent we can't process your health data, so your account will be closed. You can export your data for ${EXPORT_WINDOW_DAYS} days; after that it is deleted. This can't be undone.`)}
+        </ConfirmDialog>
+      )}
+      {confirm === "delete" && (
+        <ConfirmDialog title={L("Apagar a conta?","Delete your account?")} danger busy={busy}
+          confirmLabel={L("Apagar conta","Delete account")} onCancel={() => setConfirm(null)} onConfirm={() => closeIt("user_request")}>
+          {L(`A conta fica encerrada já. Pode exportar os seus dados durante ${EXPORT_WINDOW_DAYS} dias; depois disso a conta e os dados são apagados. Esta ação não se desfaz.`,
+             `Your account is closed straight away. You can export your data for ${EXPORT_WINDOW_DAYS} days; after that the account and data are deleted. This can't be undone.`)}
+        </ConfirmDialog>
+      )}
+      {mode === "demo" && <div className="rv-src-note" style={{margin: "14px 20px 0"}}>{L("Está na conta de demonstração: estas escolhas não são gravadas.","You're on the demo account: these choices aren't saved.")}<button type="button" className="rv-link-btn" style={{marginLeft: 6}} onClick={logout}>{L("Sair","Sign out")}</button></div>}
     </SubScreen>
   );
 }
@@ -4893,22 +4979,32 @@ function FarmaciaScreen() {
 function ExportarScreen() {
   const { go, showToast } = useNav();
   const { L } = useLang();
+  const { mode } = useAccount();
+  const getServer = useServerFn(exportServerData);
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    setBusy(true);
+    try {
+      downloadExport(mode === "real" ? await getServer() : null);
+      showToast(L("Ficheiro transferido","File downloaded"));
+    } catch {
+      showToast(L("Não foi possível exportar agora","Couldn't export right now"));
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
-    <SubScreen title={L("Exportar histórico","Export history")} onBack={() => go("profile")}>
+    <SubScreen title={L("Exportar dados","Export data")} onBack={() => go("privacidade")}>
       <div style={{padding: "0 20px", color: "var(--fg-60)", fontSize: 13, lineHeight: 1.5, marginBottom: 16}}>
-        {L("Recebe um ficheiro com biomarcadores, planos, consultas e sintomas registados. Útil para segunda opinião ou portabilidade.","You receive a file with biomarkers, plans, appointments and logged symptoms. Useful for a second opinion or portability.")}
+        {L("Transfere um ficheiro JSON (formato aberto) com tudo o que a app guarda: valores das análises, lembretes, condições, diário, preferências e o registo dos seus consentimentos. Os documentos originais abrem-se um a um a partir de cada análise.",
+           "Downloads a JSON file (open format) with everything the app stores: lab values, reminders, conditions, diary, preferences and your consent record. Original documents open one by one from each result.")}
       </div>
       <div className="rv-list">
-        <a className="rv-list-row" style={{cursor: "pointer"}} onClick={() => showToast(L("Exportação JSON enviada por email","JSON export sent by email"))}>
+        <button type="button" className="rv-list-row" onClick={run} disabled={busy}>
           <div className="rv-list-icon">{Icon.doc}</div>
-          <div className="rv-list-text"><span className="rv-list-name">{L("JSON completo","Full JSON")}</span><span className="rv-list-sub">{L("Dados estruturados · ~ 84 KB","Structured data · ~ 84 KB")}</span></div>
+          <div className="rv-list-text"><span className="rv-list-name">{busy ? L("A preparar…","Preparing…") : L("Transferir JSON","Download JSON")}</span><span className="rv-list-sub">{L("Fica guardado no seu dispositivo","Saved to your device")}</span></div>
           <span className="rv-chev">{Icon.chev}</span>
-        </a>
-        <a className="rv-list-row" style={{cursor: "pointer"}} onClick={() => showToast(L("Relatório PDF enviado por email","PDF report sent by email"))}>
-          <div className="rv-list-icon">{Icon.doc}</div>
-          <div className="rv-list-text"><span className="rv-list-name">{L("Relatório PDF","PDF report")}</span><span className="rv-list-sub">{L("Resumo clínico · 12 páginas","Clinical summary · 12 pages")}</span></div>
-          <span className="rv-chev">{Icon.chev}</span>
-        </a>
+        </button>
       </div>
     </SubScreen>
   );
@@ -4965,6 +5061,365 @@ function AssistantFAB() {
   );
 }
 
+// ─── Conta e consentimentos ──────────────────────────
+// Duas formas de entrar: a conta de demonstração (dados fictícios, nada vai
+// para o servidor) e uma conta real no Supabase. Só a real grava consentimentos.
+
+type AccountMode = "demo" | "real";
+interface AccountCtxValue {
+  mode: AccountMode;
+  firstName: string;
+  status: ConsentStatus | null;
+  refresh: () => Promise<void>;
+}
+const AccountCtx = createContext<AccountCtxValue>({ mode: "demo", firstName: PATIENT_FIRST_NAME, status: null, refresh: async () => {} });
+const useAccount = () => useContext(AccountCtx);
+
+/** Grava uma decisão de consentimento, mas só numa conta real. */
+function useRecordConsent() {
+  const { mode, refresh } = useAccount();
+  const { lang } = useLang();
+  const record = useServerFn(recordConsent);
+  return useCallback(async (input: { kind: "reconsent" } | { kind: "marketing"; granted: boolean } | { kind: "wearable"; id: string; name: string; granted: boolean }) => {
+    if (mode !== "real") return true;
+    try {
+      await record({ data: { ...input, lang } });
+      await refresh();
+      return true;
+    } catch {
+      return false;
+    }
+  }, [mode, lang, record, refresh]);
+}
+
+function LegalLinks({ lang }: { lang: Lang }) {
+  const p = LEGAL_LINK_PARTS[lang];
+  return (
+    <>
+      {p.before}
+      <a href={LEGAL_URLS.terms} target="_blank" rel="noopener noreferrer">{p.terms}</a>
+      {p.middle}
+      <a href={LEGAL_URLS.privacy} target="_blank" rel="noopener noreferrer">{p.privacy}</a>
+      {p.after}
+    </>
+  );
+}
+
+function ConsentCheck({ id, checked, onChange, error, children }: {
+  id: string; checked: boolean; onChange: (v: boolean) => void; error?: string; children: ReactNode;
+}) {
+  const errId = `${id}-err`;
+  return (
+    <div className="rv-check-wrap">
+      <div className="rv-check">
+        <input id={id} type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)}
+          aria-invalid={error ? true : undefined} aria-describedby={error ? errId : undefined}/>
+        <label htmlFor={id}>{children}</label>
+      </div>
+      {error && <div id={errId} className="rv-field-error">{error}</div>}
+    </div>
+  );
+}
+
+function SignupScreen({ onBack, onDone }: { onBack: () => void; onDone: (session: { access_token: string; refresh_token: string } | null, email: string) => void }) {
+  const { L, lang } = useLang();
+  const signUp = useServerFn(signUpPatient);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [invite, setInvite] = useState("");
+  const [checks, setChecks] = useState<Record<SignupCheckboxId, boolean>>({
+    "signup-age": false, "signup-legal": false, "signup-health": false, "signup-marketing": false,
+  });
+  const [errors, setErrors] = useState<Partial<Record<SignupField, string>>>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const requiredOk = SIGNUP_CHECKBOXES.every((c) => !c.required || checks[c.id]);
+  const setCheck = (id: SignupCheckboxId) => (v: boolean) => {
+    setChecks((c) => ({ ...c, [id]: v }));
+    if (v) setErrors((e) => ({ ...e, [id]: undefined }));
+  };
+
+  const msg = (field: SignupField, code: string | undefined): string | undefined => {
+    if (!code) return undefined;
+    if (field === "name") return code === "too_long" ? L("O nome é demasiado longo.", "The name is too long.") : L("Escreva o seu nome.", "Enter your name.");
+    if (field === "email") return code === "required" ? L("Escreva o seu email.", "Enter your email.") : L("Este email não parece válido. Confirme se está bem escrito.", "This email doesn't look valid. Check it is spelt correctly.");
+    if (field === "password") return code === "too_long" ? L("A palavra-passe tem de ter no máximo 72 caracteres.", "The password must be at most 72 characters.") : L("A palavra-passe tem de ter pelo menos 8 caracteres.", "The password must be at least 8 characters.");
+    if (field === "invite") return L("O código só pode ter letras, números e hífenes.", "The code can only contain letters, numbers and hyphens.");
+    return L("Esta caixa é obrigatória para criar conta.", "This box is required to create an account.");
+  };
+
+  const focusFirstError = (errs: Partial<Record<SignupField, string>>) => {
+    const order: SignupField[] = ["name", "email", "password", "invite", "signup-age", "signup-legal", "signup-health"];
+    const first = order.find((f) => errs[f]);
+    if (!first) return;
+    const el = formRef.current?.querySelector<HTMLInputElement>(`#${first === "name" || first === "email" || first === "password" || first === "invite" ? `rv-su-${first}` : first}`);
+    el?.focus();
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    const { errors: errs } = validateSignup({ name, email, password: pass, invite, checks, lang });
+    setErrors(errs);
+    setFormError(null);
+    if (Object.keys(errs).length) { focusFirstError(errs); return; }
+    setBusy(true);
+    try {
+      const r = await signUp({ data: { name, email, password: pass, invite, checks, lang } });
+      if (r.ok) { onDone(r.session, email.trim()); return; }
+      if (r.fieldErrors) { setErrors(r.fieldErrors); focusFirstError(r.fieldErrors); }
+      else if (r.error === "weak_password") { setErrors({ password: "too_short" }); setFormError(L("Escolha uma palavra-passe mais difícil de adivinhar.", "Choose a password that is harder to guess.")); }
+      else if (r.error === "not_configured") setFormError(L("A criação de contas ainda não está ativa neste servidor.", "Account creation is not active on this server yet."));
+      else setFormError(L("Não foi possível criar a conta agora. Tente de novo dentro de momentos.", "We couldn't create the account right now. Please try again shortly."));
+    } catch {
+      setFormError(L("Sem ligação ao servidor. Verifique a internet e tente de novo.", "No connection to the server. Check your internet and try again."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const fieldProps = (field: "name" | "email" | "password" | "invite") => ({
+    id: `rv-su-${field}`,
+    "aria-invalid": errors[field] ? true : undefined,
+    "aria-describedby": errors[field] ? `rv-su-${field}-err` : undefined,
+  });
+
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <header className="rv-header">
+        <button className="rv-header-btn" type="button" onClick={onBack} aria-label={L("Voltar", "Back")}>{Icon.back}</button>
+        <div className="rv-header-title">{L("Criar conta", "Create account")}</div>
+        <LangToggle />
+      </header>
+      <div className="rv-body">
+        <form ref={formRef} className="rv-signup" onSubmit={submit} noValidate>
+          <div className="rv-field">
+            <label className="rv-field-label" htmlFor="rv-su-name">{L("Nome", "Name")}</label>
+            <input className="rv-field-input" type="text" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} {...fieldProps("name")}/>
+            {errors.name && <div id="rv-su-name-err" className="rv-field-error">{msg("name", errors.name)}</div>}
+          </div>
+          <div className="rv-field">
+            <label className="rv-field-label" htmlFor="rv-su-email">Email</label>
+            <input className="rv-field-input" type="email" autoComplete="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} {...fieldProps("email")}/>
+            {errors.email && <div id="rv-su-email-err" className="rv-field-error">{msg("email", errors.email)}</div>}
+          </div>
+          <div className="rv-field">
+            <label className="rv-field-label" htmlFor="rv-su-password">{L("Palavra-passe", "Password")}</label>
+            <div className="rv-login-passwrap" style={{marginBottom: 0}}>
+              <input className="rv-field-input" style={{paddingRight: 44}} type={showPass ? "text" : "password"} autoComplete="new-password" value={pass} onChange={(e) => setPass(e.target.value)} {...fieldProps("password")}/>
+              <button type="button" className="rv-login-eye" onClick={() => setShowPass((v) => !v)}
+                aria-label={showPass ? L("Ocultar palavra-passe", "Hide password") : L("Mostrar palavra-passe", "Show password")} aria-pressed={showPass}>
+                <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 9 s2.5-4.5 7-4.5 S16 9 16 9 s-2.5 4.5-7 4.5 S2 9 2 9z" stroke="currentColor" strokeWidth="1.4" fill="none"/><circle cx="9" cy="9" r="2" stroke="currentColor" strokeWidth="1.4" fill="none"/>{!showPass && <path d="M3 3 L15 15" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>}</svg>
+              </button>
+            </div>
+            {errors.password
+              ? <div id="rv-su-password-err" className="rv-field-error">{msg("password", errors.password)}</div>
+              : <div className="rv-field-hint">{L("Pelo menos 8 caracteres.", "At least 8 characters.")}</div>}
+          </div>
+          <div className="rv-field">
+            <label className="rv-field-label" htmlFor="rv-su-invite">{L("Código de convite (opcional)", "Invite code (optional)")}</label>
+            <input className="rv-field-input" type="text" autoComplete="off" autoCapitalize="characters" value={invite} onChange={(e) => setInvite(e.target.value)} {...fieldProps("invite")}/>
+            {errors.invite
+              ? <div id="rv-su-invite-err" className="rv-field-error">{msg("invite", errors.invite)}</div>
+              : <div className="rv-field-hint">{L("Se tiver um código, ganha o primeiro mês grátis.", "If you have a code, you get the first month free.")}</div>}
+          </div>
+
+          <fieldset className="rv-checks">
+            <legend className="rv-sr-only">{L("Aceitações", "Acceptances")}</legend>
+            <ConsentCheck id="signup-age" checked={checks["signup-age"]} onChange={setCheck("signup-age")} error={msg("signup-age", errors["signup-age"])}>
+              {SIGNUP_CHECKBOXES[0].text[lang]}
+            </ConsentCheck>
+            <ConsentCheck id="signup-legal" checked={checks["signup-legal"]} onChange={setCheck("signup-legal")} error={msg("signup-legal", errors["signup-legal"])}>
+              <LegalLinks lang={lang}/>
+            </ConsentCheck>
+          </fieldset>
+
+          <fieldset className="rv-checks rv-checks--health">
+            <legend className="rv-checks-legend">{L("Dados de saúde", "Health data")}</legend>
+            <ConsentCheck id="signup-health" checked={checks["signup-health"]} onChange={setCheck("signup-health")} error={msg("signup-health", errors["signup-health"])}>
+              {SIGNUP_CHECKBOXES[2].text[lang]}
+            </ConsentCheck>
+          </fieldset>
+
+          <fieldset className="rv-checks">
+            <legend className="rv-sr-only">{L("Opcional", "Optional")}</legend>
+            <ConsentCheck id="signup-marketing" checked={checks["signup-marketing"]} onChange={setCheck("signup-marketing")}>
+              {SIGNUP_CHECKBOXES[3].text[lang]}
+            </ConsentCheck>
+          </fieldset>
+
+          {formError && <div className="rv-login-error rv-signup-error" role="alert">{formError}</div>}
+
+          <div className="rv-signup-actions">
+            <button className="rv-cta-primary rv-login-btn" type="submit" disabled={!requiredOk || busy} aria-describedby={!requiredOk ? "rv-su-req" : undefined}>
+              {busy ? L("A criar conta…", "Creating account…") : L("Criar conta", "Create account")}
+            </button>
+            {!requiredOk && <div id="rv-su-req" className="rv-field-hint" style={{textAlign: "center"}}>{L("Marque as três caixas obrigatórias para continuar.", "Tick the three required boxes to continue.")}</div>}
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function SignupDoneScreen({ email, onLogin }: { email: string; onLogin: () => void }) {
+  const { L } = useLang();
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <div className="rv-login">
+        <div className="rv-login-mark">V</div>
+        <div className="rv-login-title" role="status">{L("Confirme o seu email", "Confirm your email")}</div>
+        <p className="rv-login-sub" style={{maxWidth: 300, lineHeight: 1.5}}>
+          {L(`Se o endereço ${email} ainda não tiver conta, enviámos-lhe um email com um link para a ativar. Depois de confirmar, entre com o email e a palavra-passe.`,
+             `If ${email} doesn't have an account yet, we've sent you an email with a link to activate it. Once confirmed, sign in with your email and password.`)}
+        </p>
+        <button className="rv-cta-primary rv-login-btn" style={{maxWidth: 320, marginTop: 24}} type="button" onClick={onLogin}>{L("Ir para entrar", "Go to sign in")}</button>
+      </div>
+    </div>
+  );
+}
+
+function ReconsentScreen({ onAccepted, onLogout }: { onAccepted: () => void; onLogout: () => void }) {
+  const { L, lang } = useLang();
+  const record = useRecordConsent();
+  const [checked, setChecked] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const accept = async () => {
+    setBusy(true); setError(null);
+    const ok = await record({ kind: "reconsent" });
+    setBusy(false);
+    if (ok) onAccepted();
+    else setError(L("Não foi possível guardar. Tente de novo.", "Couldn't save. Please try again."));
+  };
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <div className="rv-login-top"><LangToggle /></div>
+      <div className="rv-body" style={{padding: "12px 0"}}>
+        <h1 className="rv-reconsent-title">{L("Atualizámos os nossos documentos", "We've updated our documents")}</h1>
+        <p className="rv-reconsent-text">
+          {L("Os Termos de Serviço ou a Política de Privacidade mudaram desde a última vez que os aceitou. Leia as novas versões antes de continuar.",
+             "The Terms of Service or the Privacy Policy have changed since you last accepted them. Please read the new versions before continuing.")}
+        </p>
+        <div style={{margin: "0 20px"}}>
+          <ConsentCheck id={RECONSENT_CHECKBOX.id} checked={checked} onChange={setChecked}>
+            <LegalLinks lang={lang}/>
+          </ConsentCheck>
+        </div>
+        {error && <div className="rv-login-error" role="alert" style={{margin: "0 20px 10px"}}>{error}</div>}
+        <div className="rv-stack">
+          <button className="rv-cta-primary" type="button" disabled={!checked || busy} onClick={accept}>{busy ? L("A guardar…", "Saving…") : L("Continuar", "Continue")}</button>
+          <button className="rv-cta-ghost" type="button" onClick={onLogout}>{L("Sair", "Sign out")}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClosedAccountScreen({ exportUntil, onLogout }: { exportUntil: string; onLogout: () => void }) {
+  const { L, lang } = useLang();
+  const getServer = useServerFn(exportServerData);
+  const [busy, setBusy] = useState(false);
+  const until = fmtDay(exportUntil.slice(0, 10), lang, true);
+  const doExport = async () => {
+    setBusy(true);
+    try { downloadExport(await getServer()); } finally { setBusy(false); }
+  };
+  return (
+    <div className="rv-screen">
+      <StatusBar />
+      <div className="rv-body" style={{padding: "24px 0"}}>
+        <h1 className="rv-reconsent-title">{L("A sua conta está encerrada", "Your account is closed")}</h1>
+        <p className="rv-reconsent-text">
+          {L(`Já não tratamos os seus dados de saúde. Pode exportar os seus dados até ${until}. Depois dessa data, a conta e os dados são apagados.`,
+             `We no longer process your health data. You can export your data until ${until}. After that date, the account and data are deleted.`)}
+        </p>
+        <div className="rv-stack">
+          <button className="rv-cta-primary" type="button" disabled={busy} onClick={doExport}>{busy ? L("A preparar…", "Preparing…") : L("Exportar os meus dados (JSON)", "Export my data (JSON)")}</button>
+          <button className="rv-cta-ghost" type="button" onClick={onLogout}>{L("Sair", "Sign out")}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Junta os dados guardados neste dispositivo (e os do servidor, se houver) num ficheiro JSON. */
+function downloadExport(server: unknown) {
+  const device: Record<string, unknown> = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith("rv-")) continue;
+      const v = localStorage.getItem(k);
+      try { device[k] = v == null ? null : JSON.parse(v); } catch { device[k] = v; }
+    }
+  } catch { /* modo privado */ }
+  const payload = {
+    format: "vivara-export-v1",
+    exportedAt: new Date().toISOString(),
+    note: "Os documentos originais (PDF e fotografias) abrem-se um a um na app, a partir de cada análise.",
+    device,
+    server: server ?? null,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `vivara-dados-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function ConfirmDialog({ title, children, confirmLabel, danger, busy, onCancel, onConfirm }: {
+  title: string; children: ReactNode; confirmLabel: string; danger?: boolean; busy?: boolean;
+  onCancel: () => void; onConfirm: () => void;
+}) {
+  const { L } = useLang();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    cancelRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+  return (
+    <div className="rv-overlay" role="dialog" aria-modal="true" aria-labelledby="rv-confirm-title">
+      <div className="rv-modal">
+        <div className="rv-modal-title" id="rv-confirm-title">{title}</div>
+        <div className="rv-modal-text">{children}</div>
+        <div className="rv-modal-actions">
+          <button ref={cancelRef} className="rv-device-btn" data-tone="ghost" type="button" onClick={onCancel}>{L("Cancelar", "Cancel")}</button>
+          <button className="rv-device-btn" data-tone={danger ? "danger" : "primary"} type="button" disabled={busy} onClick={onConfirm}>{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Pergunta antes de ligar um wearable: «Autoriza a Vivara a receber os dados do […]?» */
+function WearableConsentModal({ name, metrics, tint, initials, onCancel, onConfirm }: {
+  name: string; metrics: string; tint: string; initials?: string; onCancel: () => void; onConfirm: () => void;
+}) {
+  const { L, lang } = useLang();
+  return (
+    <ConfirmDialog title={wearablePrompt(name, lang)} confirmLabel={L("Autorizar", "Authorise")} onCancel={onCancel} onConfirm={onConfirm}>
+      <span className="rv-modal-logo" style={{background: tint, color: "#0b0d0f", margin: "6px auto 10px"}} aria-hidden="true">{initials || "•"}</span>
+      {L("Dados que passam a chegar à Vivara:", "Data Vivara will receive:")}<br/>
+      <span style={{color: "var(--fg-70)"}}>{metrics}</span><br/>
+      <span style={{display: "block", marginTop: 8}}>{L("Pode desligar quando quiser, em Perfil › Dispositivos.", "You can disconnect at any time in Profile › Devices.")}</span>
+    </ConfirmDialog>
+  );
+}
+
 // ─── Login ───────────────────────────────────────────
 const LOGIN_EMAIL = "maria@vivara.health";
 const LOGIN_PASS = "+Vivara2024";
@@ -4980,27 +5435,38 @@ function LangToggle({ className = "" }: { className?: string }) {
   );
 }
 
-function LoginScreen({ onLogin }: { onLogin: () => void }) {
-  const { t } = useLang();
+function LoginScreen({ onDemo, onReal, onSignup }: { onDemo: () => void; onReal: () => void; onSignup: () => void }) {
+  const { t, L } = useLang();
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    setTimeout(() => {
-      if (email.trim().toLowerCase() === LOGIN_EMAIL && pass === LOGIN_PASS) {
-        try { sessionStorage.setItem(LOGIN_STORAGE_KEY, "1"); } catch { /* privado */ }
-        onLogin();
-      } else {
-        setError(t("login.error"));
+    // Conta de demonstração: dados fictícios, nada vai para o servidor.
+    if (email.trim().toLowerCase() === LOGIN_EMAIL && pass === LOGIN_PASS) {
+      try { sessionStorage.setItem(LOGIN_STORAGE_KEY, "1"); } catch { /* privado */ }
+      onDemo();
+      return;
+    }
+    try {
+      const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password: pass });
+      if (err) {
+        setError(/confirm/i.test(err.message)
+          ? L("Ainda não confirmou o email. Abra o link que lhe enviámos.", "You haven't confirmed your email yet. Open the link we sent you.")
+          : t("login.error"));
         setBusy(false);
+        return;
       }
-    }, 350);
+      onReal();
+    } catch {
+      setError(L("Sem ligação ao servidor. Tente de novo.", "No connection to the server. Please try again."));
+      setBusy(false);
+    }
   };
 
   return (
@@ -5033,6 +5499,10 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
           </button>
         </form>
 
+        <div className="rv-login-signup">
+          {L("Ainda não tem conta?", "Don't have an account?")}{" "}
+          <button type="button" className="rv-link-btn" onClick={onSignup}>{L("Criar conta", "Create account")}</button>
+        </div>
         <div className="rv-login-foot">{t("login.foot")}</div>
       </div>
     </div>
@@ -5041,7 +5511,13 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
 function AppV2Page() {
   const [route, setRoute] = useState<NavRoute>("home");
-  const [authed, setAuthed] = useState(false);
+  // "none": ainda não entrou; "demo": conta de demonstração; "real": Supabase.
+  const [mode, setMode] = useState<"none" | AccountMode>("none");
+  const [authView, setAuthView] = useState<"login" | "signup" | "signup-done">("login");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [account, setAccount] = useState<ConsentStatus | null>(null);
+  const [accountState, setAccountState] = useState<"idle" | "loading" | "error">("idle");
+  const fetchStatus = useServerFn(getConsentStatus);
   const [lang, setLangState] = useState<Lang>("pt");
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -5049,7 +5525,7 @@ function AppV2Page() {
 
   useEffect(() => {
     try {
-      if (sessionStorage.getItem(LOGIN_STORAGE_KEY) === "1") setAuthed(true);
+      if (sessionStorage.getItem(LOGIN_STORAGE_KEY) === "1") setMode("demo");
       const savedLang = localStorage.getItem(LANG_STORAGE_KEY);
       if (savedLang === "pt" || savedLang === "en") setLangState(savedLang);
     } catch { /* modo privado */ }
@@ -5108,11 +5584,84 @@ function AppV2Page() {
     toastTimer.current = setTimeout(() => setToastMsg(null), 1800);
   }, []);
 
+  const refreshAccount = useCallback(async () => {
+    try {
+      setAccount(await fetchStatus());
+      setAccountState("idle");
+    } catch {
+      setAccountState("error");
+    }
+  }, [fetchStatus]);
+
+  const enterReal = useCallback(async () => {
+    setMode("real");
+    setAccountState("loading");
+    try {
+      setAccount(await fetchStatus());
+      setAccountState("idle");
+    } catch {
+      setAccountState("error");
+    }
+  }, [fetchStatus]);
+
+  // Sessão real guardada pelo Supabase (inclui o regresso do link de confirmação do email).
+  useEffect(() => {
+    let alive = true;
+    try { if (sessionStorage.getItem(LOGIN_STORAGE_KEY) === "1") return; } catch { /* privado */ }
+    supabase.auth.getSession().then(({ data }) => { if (alive && data.session) void enterReal(); }).catch(() => {});
+    return () => { alive = false; };
+  }, [enterReal]);
+
   const logout = useCallback(() => {
     try { sessionStorage.removeItem(LOGIN_STORAGE_KEY); } catch { /* modo privado */ }
-    setAuthed(false);
+    if (mode === "real") void supabase.auth.signOut().catch(() => {});
+    setMode("none");
+    setAccount(null);
+    setAuthView("login");
     setRoute("home");
-  }, []);
+  }, [mode]);
+
+  const firstName = mode === "real" ? (account?.name?.trim().split(/\s+/)[0] || "") : PATIENT_FIRST_NAME;
+  const accountValue: AccountCtxValue = {
+    mode: mode === "real" ? "real" : "demo",
+    firstName,
+    status: account,
+    refresh: refreshAccount,
+  };
+
+  const gate = (): ReactNode => {
+    if (mode === "none") {
+      if (authView === "signup") return (
+        <SignupScreen onBack={() => setAuthView("login")} onDone={async (session, email) => {
+          if (session) {
+            await supabase.auth.setSession(session).catch(() => {});
+            void enterReal();
+            return;
+          }
+          setSignupEmail(email);
+          setAuthView("signup-done");
+        }}/>
+      );
+      if (authView === "signup-done") return <SignupDoneScreen email={signupEmail} onLogin={() => setAuthView("login")}/>;
+      return <LoginScreen onDemo={() => setMode("demo")} onReal={() => void enterReal()} onSignup={() => setAuthView("signup")}/>;
+    }
+    if (mode === "real") {
+      if (accountState === "error") return (
+        <div className="rv-screen"><StatusBar/>
+          <div className="rv-login">
+            <div className="rv-login-title" role="alert">{L("Não foi possível carregar a sua conta", "Couldn't load your account")}</div>
+            <div className="rv-login-sub" style={{maxWidth: 300}}>{L("Verifique a ligação e tente de novo.", "Check your connection and try again.")}</div>
+            <button className="rv-cta-primary rv-login-btn" style={{maxWidth: 320, marginTop: 20}} type="button" onClick={() => void enterReal()}>{L("Tentar de novo", "Try again")}</button>
+            <button className="rv-cta-ghost" style={{maxWidth: 320, width: "100%", marginTop: 10}} type="button" onClick={logout}>{L("Sair", "Sign out")}</button>
+          </div>
+        </div>
+      );
+      if (!account) return <div className="rv-screen"><StatusBar/><div className="rv-login"><div className="rv-modal-spinner" role="status" aria-label={L("A carregar", "Loading")}/></div></div>;
+      if (account.closure || !account.health) return <ClosedAccountScreen exportUntil={account.closure?.exportUntil ?? new Date().toISOString()} onLogout={logout}/>;
+      if (account.needsReconsent) return <ReconsentScreen onAccepted={() => void refreshAccount()} onLogout={logout}/>;
+    }
+    return null;
+  };
 
   // Dispositivos e fontes vivem aqui em cima porque são lidos em vários ecrãs
   // (Dispositivos escreve, home e Dados leem). Arrancam do valor por omissão
@@ -5133,17 +5682,17 @@ function AppV2Page() {
       <LangCtx.Provider value={{ lang, setLang, t, L }}>
         <NavCtx.Provider value={{ go: setRoute, current: route, showToast, logout }}>
         <DevicesCtx.Provider value={{ devices, setDevices }}>
+        <AccountCtx.Provider value={accountValue}>
           <div className="rv-phone-shell">
-            {authed ? (
+            {gate() ?? (
               <>
                 {renderScreen(route)}
                 {toastMsg && <div className="rv-toast" role="status" aria-live="polite">{toastMsg}</div>}
                 <AssistantFAB />
               </>
-            ) : (
-              <LoginScreen onLogin={() => setAuthed(true)} />
             )}
           </div>
+        </AccountCtx.Provider>
         </DevicesCtx.Provider>
         </NavCtx.Provider>
       </LangCtx.Provider>

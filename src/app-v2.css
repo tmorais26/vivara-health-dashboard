@@ -1905,3 +1905,51 @@ textarea.rv-field-input{resize:vertical;min-height:72px;}
   padding:7px 12px;font:inherit;font-size:12px;cursor:pointer;
 }
 .rv-asst-chip:focus-visible{outline:2px solid var(--lime);outline-offset:1px;}
+
+/* ── Conta: criar conta, consentimentos, privacidade ── */
+button.rv-list-row,button.rv-toggle-row{
+  width:100%;border-left:none;border-right:none;border-bottom:none;
+  background:transparent;font:inherit;text-align:left;
+}
+button.rv-toggle-row{background:var(--bg);border-top:none;color:inherit;}
+button.rv-list-row:disabled{opacity:.6;cursor:progress;}
+button.rv-list-row:focus-visible,button.rv-toggle-row:focus-visible{outline:2px solid var(--lime);outline-offset:-2px;}
+
+.rv-link-btn{
+  background:none;border:none;padding:0;font:inherit;cursor:pointer;
+  color:var(--lime);font-weight:600;text-decoration:underline;text-underline-offset:3px;
+}
+.rv-link-btn:focus-visible{outline:2px solid var(--lime);outline-offset:2px;border-radius:4px;}
+.rv-login-signup{font-size:13px;color:var(--fg-70);margin-top:20px;}
+
+.rv-signup{padding:4px 0 32px;}
+.rv-checks{border:none;margin:6px 20px 10px;padding:0;min-width:0;}
+.rv-checks--health{
+  margin-top:14px;padding:12px 14px 4px;border-radius:14px;
+  background:var(--bg-elev-2);border:1px solid var(--line-strong);
+}
+.rv-checks-legend{
+  float:left;width:100%;padding:0;margin:0 0 6px;
+  font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;color:var(--fg-50);
+}
+.rv-checks-legend + *{clear:both;}
+.rv-check-wrap{padding:6px 0 8px;}
+.rv-check{display:flex;align-items:flex-start;gap:12px;}
+.rv-check input{
+  flex-shrink:0;width:20px;height:20px;margin:1px 0 0;accent-color:var(--lime);cursor:pointer;
+}
+.rv-check input:focus-visible{outline:2px solid var(--lime);outline-offset:2px;}
+.rv-check input[aria-invalid="true"]{outline:2px solid var(--alert);outline-offset:2px;}
+.rv-check label{font-size:13.5px;line-height:1.45;color:var(--fg-90);cursor:pointer;}
+.rv-check label a{color:var(--lime);text-decoration:underline;text-underline-offset:2px;}
+.rv-check-wrap .rv-field-error{margin-left:32px;}
+.rv-signup-error{margin:0 20px 10px;}
+.rv-signup-actions{margin:14px 20px 0;display:flex;flex-direction:column;gap:8px;}
+.rv-signup-actions .rv-login-btn{margin:0;}
+.rv-cta-primary:disabled{opacity:.45;cursor:not-allowed;}
+
+.rv-reconsent-title{font-size:22px;font-weight:700;letter-spacing:-0.02em;margin:24px 20px 10px;}
+.rv-reconsent-text{font-size:14px;line-height:1.5;color:var(--fg-70);margin:0 20px 18px;}
+.rv-stack{margin:8px 20px;display:flex;flex-direction:column;gap:10px;}
+.rv-stack .rv-cta-primary,.rv-stack .rv-cta-ghost{margin:0;width:100%;}
+button.rv-toggle-row .rv-toggle-sub{color:var(--fg-50);}
