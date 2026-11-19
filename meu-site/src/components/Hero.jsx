@@ -6,7 +6,7 @@ import heroPhoto from "../assets/hero-photo.jpg";
 
 const T = {
   pt: {
-    badge: "Plataforma de saúde",
+    badge: "Para utentes e médicos · Uma só plataforma",
     title: (
       <>
         A sua saúde,
@@ -14,11 +14,11 @@ const T = {
         <em>sempre acompanhada.</em>
       </>
     ),
-    desc: "Um lugar seguro para exames, resultados, sintomas e registos médicos. Para que cada consulta médica valha a pena.",
+    desc: "Uma só plataforma, duas vistas: o utente tem a sua saúde num só lugar, o médico tem o historial completo. O mesmo registo para ambos, para que cada consulta valha a pena.",
     cta: "Ver como funciona",
   },
   en: {
-    badge: "Health platform",
+    badge: "For patients and doctors · One platform",
     title: (
       <>
         Your health,
@@ -26,7 +26,7 @@ const T = {
         <em>always looked after.</em>
       </>
     ),
-    desc: "A safe place for exams, results, symptoms and medical records. So that every doctor's appointment counts.",
+    desc: "One platform, two views: patients have their health in one place, doctors have the complete record. The same record for both, so that every appointment counts.",
     cta: "See how it works",
   },
 };

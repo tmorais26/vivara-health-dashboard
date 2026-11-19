@@ -16,7 +16,7 @@ const T = {
         title: "Wearables",
         desc: <>Ligue Apple Health, Oura ou Whoop. Sono e atividade <Highlight>ao lado do seu historial clínico</Highlight>, sem trocar de aplicação.</>,
       },
-      { title: "Plano diário e mensagens", desc: "Plano diário, mensagens com a equipa clínica e lembretes de consultas." },
+      { title: "Plano do dia e mensagens", desc: "O que tomar e como tomar, que exames fazer e como os fazer. Mais mensagens com a equipa clínica e lembretes de consultas." },
     ],
     planBadge: "Plano de utente",
     price: "€9,99",
@@ -26,14 +26,6 @@ const T = {
     planNote: "O seu médico ainda não usa a Vivara? Pode começar sozinho — o seu historial fica pronto para partilhar assim que ele se juntar.",
     noAppNote: "Prefere não usar a app? Se o seu médico usa a Vivara, basta reencaminhar-lhe por email as análises que recebe.",
     planCta: "Ver planos",
-    includedTitle: "O que está incluído",
-    plan: [
-      "Resumo da saúde e histórico unificado",
-      "Plano diário, mensagens com a equipa e consultas",
-      "Carregar análises e ligar wearables",
-      "Lembretes e resumos de cada consulta",
-      <Highlight key="export">Os seus dados, sempre seus — exportação completa</Highlight>,
-    ],
     dataTitle: "Os seus dados, sempre seus.",
     dataDesc: "Pode exportar tudo a qualquer momento. Os seus dados só são vistos por si e pela equipa clínica que escolheu — nunca por mais ninguém.",
     featuresBadge: "Incluído",
@@ -48,8 +40,8 @@ const T = {
         desc: "Apple Health, Oura e Whoop, com sono e atividade ao lado dos dados clínicos.",
       },
       {
-        title: "Lembretes e planos diários",
-        desc: "O plano do dia e os lembretes de consulta sempre à mão.",
+        title: "Plano do dia e lembretes",
+        desc: "O que tomar e como tomar, que exames fazer e como os fazer — e os lembretes de consulta sempre à mão.",
       },
       {
         title: "Mensagens com a equipa",
@@ -77,7 +69,7 @@ const T = {
         title: "Wearables",
         desc: <>Connect Apple Health, Oura or Whoop. Sleep and activity <Highlight>next to your clinical record</Highlight>, without switching apps.</>,
       },
-      { title: "Daily plan and messages", desc: "A daily plan, messages with your care team and appointment reminders." },
+      { title: "Daily plan and messages", desc: "What to take and how to take it, which exams to do and how to do them. Plus messages with your care team and appointment reminders." },
     ],
     planBadge: "Patient plan",
     price: "€9.99",
@@ -87,14 +79,6 @@ const T = {
     planNote: "Your doctor doesn't use Vivara yet? You can start on your own — your record will be ready to share as soon as they join.",
     noAppNote: "Rather not use the app? If your doctor uses Vivara, just forward them the lab results you receive by email.",
     planCta: "See plans",
-    includedTitle: "What's included",
-    plan: [
-      "Health summary and unified record",
-      "Daily plan, messages with the team and appointments",
-      "Upload lab results and connect wearables",
-      "Reminders and summaries after every appointment",
-      <Highlight key="export">Your data, always yours — full export</Highlight>,
-    ],
     dataTitle: "Your data, always yours.",
     dataDesc: "You can export everything at any time. Your data is seen only by you and the care team you chose — never by anyone else.",
     featuresBadge: "Included",
@@ -109,8 +93,8 @@ const T = {
         desc: "Apple Health, Oura and Whoop, with sleep and activity next to the clinical data.",
       },
       {
-        title: "Daily plans and reminders",
-        desc: "Your plan for the day and appointment reminders, always at hand.",
+        title: "Daily plan and reminders",
+        desc: "What to take and how to take it, which exams to do and how to do them — and appointment reminders, always at hand.",
       },
       {
         title: "Messages with your team",
@@ -154,7 +138,7 @@ export default function Utentes() {
       </section>
 
       <section className="bg-white py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-6 grid md:grid-cols-2 gap-10 items-center">
+        <div className="mx-auto max-w-3xl px-6">
           <Reveal>
             <SectionBadge>{L.planBadge}</SectionBadge>
             <h2 className="font-serif font-light text-4xl md:text-5xl mt-5">
@@ -165,19 +149,6 @@ export default function Utentes() {
             <p className="mt-3 text-sm text-brand-muted/70 leading-relaxed">{L.planNote}</p>
             <p className="mt-2 text-sm text-brand-muted/70 leading-relaxed">{L.noAppNote}</p>
             <Link to="/precos"><CTAButton className="mt-8">{L.planCta}</CTAButton></Link>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <div className="rounded-3xl border border-black/10 bg-brand-beige p-8">
-              <h3 className="font-serif text-2xl mb-5">{L.includedTitle}</h3>
-              <ul className="space-y-3 text-sm">
-                {L.plan.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <Check className="size-4 mt-0.5 shrink-0 text-brand-green-dark" />
-                    <span className="text-brand-muted/85">{f}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
           </Reveal>
         </div>
       </section>

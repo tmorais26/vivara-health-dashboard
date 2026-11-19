@@ -8,7 +8,7 @@ const T = {
     badge: "FAQ",
     title: (
       <>
-        Perguntas que <em>realmente fazem.</em>
+        Tudo o que quer saber, <em>antes de começar.</em>
       </>
     ),
     items: [
@@ -18,7 +18,7 @@ const T = {
       },
       {
         q: "Quem vê os meus dados?",
-        a: "Apenas você e a equipa clínica que escolheu. Os dados são privados por defeito, encriptados e alojados na União Europeia. Nunca vendemos dados.",
+        a: "Apenas a pessoa a quem os dados pertencem e os profissionais de saúde que ela escolher. Os dados são privados por defeito, encriptados e alojados na União Europeia. Nunca vendemos dados.",
       },
       {
         q: "A Vivara é uma ferramenta de diagnóstico?",
@@ -62,7 +62,7 @@ const T = {
     badge: "FAQ",
     title: (
       <>
-        Questions people <em>actually ask.</em>
+        Everything you'd want to know, <em>before you start.</em>
       </>
     ),
     items: [
@@ -72,7 +72,7 @@ const T = {
       },
       {
         q: "Who can see my data?",
-        a: "Only you and the care team you choose. Data is private by default, encrypted and hosted in the European Union. We never sell data.",
+        a: "Only the person the data belongs to and the healthcare professionals they choose. Data is private by default, encrypted and hosted in the European Union. We never sell data.",
       },
       {
         q: "Is Vivara a diagnostic tool?",

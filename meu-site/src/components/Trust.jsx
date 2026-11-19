@@ -12,11 +12,11 @@ const T = {
     principles: [
       {
         title: "Privacidade total",
-        desc: "Os seus dados são visíveis só a si e ao médico que escolher. Nunca a mais ninguém.",
+        desc: "Os dados de saúde são visíveis só à pessoa a quem pertencem e aos profissionais que ela escolher. Nunca a mais ninguém.",
       },
       {
-        title: "Medido vs. inferido",
-        desc: "A Vivara distingue sempre o que é medido — as suas análises — do que é inferido pelos wearables.",
+        title: "Cada dado, com a sua origem",
+        desc: "Ao lado de cada valor vê de onde vem: uma análise de laboratório, um registo seu ou um wearable. Nunca se misturam.",
       },
       {
         title: "A tecnologia apoia, não diagnostica",
@@ -34,11 +34,11 @@ const T = {
     principles: [
       {
         title: "Total privacy",
-        desc: "Your data is visible only to you and the doctor you choose. Never to anyone else.",
+        desc: "Health data is visible only to the person it belongs to and the professionals they choose. Never to anyone else.",
       },
       {
-        title: "Measured vs. inferred",
-        desc: "Vivara always distinguishes what is measured — your lab results — from what is inferred by wearables.",
+        title: "Every data point, with its source",
+        desc: "Next to every value you can see where it comes from: a lab result, an entry of your own or a wearable. They are never mixed.",
       },
       {
         title: "Technology supports, it doesn't diagnose",

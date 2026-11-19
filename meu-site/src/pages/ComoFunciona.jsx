@@ -67,7 +67,7 @@ const T = {
         title: "App",
         items: [
           "Resumo da saúde e histórico unificado",
-          "Plano diário, mensagens com a equipa e consultas",
+          "Plano do dia (o que tomar e que exames fazer), mensagens com a equipa e consultas",
           "Carregar análises e ligar wearables",
           "Lembretes e resumos de cada consulta",
           "Os seus dados, sempre seus — exportação completa",
@@ -77,8 +77,8 @@ const T = {
     principlesBadge: "Princípios",
     principlesTitle: "O que nos guia.",
     principles: [
-      ["Privacidade total", "Dados visíveis só ao utente e ao médico escolhido."],
-      ["Medido vs. inferido", "Distingue sempre o que é medido do que é inferido pelos wearables."],
+      ["Privacidade total", "Dados visíveis só à pessoa a quem pertencem e a quem ela escolher."],
+      ["Cada dado, com a sua origem", "Cada valor mostra se vem de uma análise, de um registo ou de um wearable. Nunca se misturam."],
       ["A tecnologia apoia, não diagnostica", "A plataforma organiza, visualiza e avisa; as decisões são sempre do médico."],
     ],
   },
@@ -147,7 +147,7 @@ const T = {
         title: "App",
         items: [
           "Health summary and unified record",
-          "Daily plan, messages with the team and appointments",
+          "Daily plan (what to take and which exams to do), messages with the team and appointments",
           "Upload lab results and connect wearables",
           "Reminders and summaries after every appointment",
           "Your data, always yours — full export",
@@ -157,8 +157,8 @@ const T = {
     principlesBadge: "Principles",
     principlesTitle: "What guides us.",
     principles: [
-      ["Total privacy", "Data visible only to the patient and the chosen doctor."],
-      ["Measured vs. inferred", "Always distinguishes what is measured from what is inferred by wearables."],
+      ["Total privacy", "Data visible only to the person it belongs to and whoever they choose."],
+      ["Every data point, with its source", "Each value shows whether it comes from a lab result, an entry or a wearable. They are never mixed."],
       ["Technology supports, it doesn't diagnose", "The platform organises, visualises and alerts; decisions always belong to the doctor."],
     ],
   },

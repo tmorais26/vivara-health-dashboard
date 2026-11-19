@@ -25,7 +25,7 @@ const T = {
       desc: "Acesso completo à app Vivara. Histórico, wearables, mensagens com a equipa e resumos de cada consulta.",
       features: [
         "Resumo da saúde e histórico unificado",
-        "Plano diário, mensagens com a equipa e consultas",
+        "Plano do dia (o que tomar e que exames fazer), mensagens com a equipa e consultas",
         "Carregar análises e ligar wearables",
         "Lembretes e resumos de cada consulta",
         "Os seus dados, sempre seus — exportação completa",
@@ -94,7 +94,7 @@ const T = {
       desc: "Full access to the Vivara app. Record, wearables, messages with your team and a summary after every appointment.",
       features: [
         "Health summary and unified record",
-        "Daily plan, messages with the team and appointments",
+        "Daily plan (what to take and which exams to do), messages with the team and appointments",
         "Upload lab results and connect wearables",
         "Reminders and summaries after every appointment",
         "Your data, always yours — full export",
