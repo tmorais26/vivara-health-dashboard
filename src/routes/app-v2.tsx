@@ -2778,7 +2778,7 @@ function MensagensScreen() {
           <div className="rv-msg-time">09:48</div>
         </div>
 
-        <div className="rv-msg rv-msg--user">
+        <div className="rv-msg rv-msg--doc">
           <div className="rv-msg-attach">
             <div className="rv-msg-attach-icon">{Icon.flask}</div>
             <div className="rv-msg-attach-meta">
@@ -4952,7 +4952,7 @@ function AssistantFAB() {
   const currentRoute = typeof current === "string" ? current : current.route;
   // Ecrãs com o seu próprio FAB local (mesma posição) escondem o FAB global,
   // caso contrário o assistente fica por cima e bloqueia o botão do ecrã.
-  if (currentRoute === "assistente" || currentRoute === "data" || currentRoute === "sintomas") return null;
+  if (currentRoute === "assistente" || currentRoute === "messages" || currentRoute === "data" || currentRoute === "sintomas") return null;
   return (
     <button className="rv-fab-global" onClick={() => go("assistente")} aria-label="Assistente Vivara">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
