@@ -60,16 +60,6 @@ const T = {
     ctaStart: "Começar",
     ctaTalk: "Falar connosco",
     footnote: "Sem custos de setup. Cancela quando quiser. IVA não incluído. Os planos de médicos e utentes são independentes.",
-    compareTitle: "Compara os planos.",
-    compareRows: [
-      ["Médicos", "1", "2+"],
-      ["Utentes activos", "Até 200", "Ilimitados"],
-      ["Portal clínico", "✦", "✦"],
-      ["Wearables", "✦", "✦"],
-      ["Equipa multidisciplinar", "◦", "✦"],
-      ["Onboarding", "Self-serve", "Assistido"],
-      ["Suporte", "Email", "Prioritário"],
-    ],
   },
   en: {
     header: {
@@ -123,16 +113,6 @@ const T = {
     ctaStart: "Get started",
     ctaTalk: "Talk to us",
     footnote: "No setup costs. Cancel anytime. VAT not included. Doctor and patient plans are independent.",
-    compareTitle: "Compare the plans.",
-    compareRows: [
-      ["Doctors", "1", "2+"],
-      ["Active patients", "Up to 200", "Unlimited"],
-      ["Clinical portal", "✦", "✦"],
-      ["Wearables", "✦", "✦"],
-      ["Multidisciplinary team", "◦", "✦"],
-      ["Onboarding", "Self-serve", "Assisted"],
-      ["Support", "Email", "Priority"],
-    ],
   },
 };
 
@@ -173,7 +153,6 @@ export default function Precos() {
           </div>
         </div>
       </section>
-
       {/* Utente */}
       <section className="bg-brand-beige pb-16">
         <div className="mx-auto max-w-6xl px-6">
@@ -218,9 +197,8 @@ export default function Precos() {
           </div>
         </div>
       </section>
-
       {/* Médicos */}
-      <section className="bg-brand-beige pb-16">
+      <section className="bg-brand-beige pb-24">
         <div className="mx-auto max-w-6xl px-6">
           <SectionBadge>{L.doctorsBadge}</SectionBadge>
           <div className="mt-6 mx-auto grid max-w-4xl md:grid-cols-2 gap-6">
@@ -268,86 +246,6 @@ export default function Precos() {
             ))}
           </div>
           <p className="mt-8 text-center text-sm text-brand-muted/60">{L.footnote}</p>
-        </div>
-      </section>
-
-      {/* Comparison table */}
-      <section className="bg-brand-beige pb-24">
-        <div className="mx-auto max-w-6xl px-6">
-          <Reveal>
-            <h2 className="font-serif font-light text-3xl md:text-4xl mb-6">{L.compareTitle}</h2>
-
-            {/* Mobile: um card por plano, sem scroll horizontal */}
-            <div className="space-y-4 md:hidden">
-              {L.doctorPlans.map((p, planIdx) => (
-                <div key={p.name} className="rounded-3xl border border-black/10 bg-white p-6">
-                  <h3 className="font-serif text-2xl">{p.name}</h3>
-                  <p className="mt-1">
-                    {p.monthly ? (
-                      <>
-                        <span className="font-serif text-3xl">€{formatPrice(p.monthly)}</span>
-                        <span className="text-sm text-brand-muted/60">{L.perDoctorMonth}</span>
-                      </>
-                    ) : (
-                      <span className="font-serif text-3xl">{L.custom}</span>
-                    )}
-                  </p>
-                  <ul className="mt-5 space-y-2.5 border-t border-black/10 pt-5 text-sm">
-                    {L.compareRows.map((row) => {
-                      const value = row[planIdx + 1];
-                      const included = value === "✦";
-                      const excluded = value === "◦";
-                      return (
-                        <li
-                          key={row[0]}
-                          className={`flex items-start gap-2 ${
-                            excluded ? "text-brand-muted/40" : "text-brand-muted"
-                          }`}
-                        >
-                          {excluded ? (
-                            <span aria-hidden="true" className="mt-0.5 w-4 shrink-0 text-center">
-                              —
-                            </span>
-                          ) : (
-                            <Check />
-                          )}
-                          <span>
-                            {row[0]}
-                            {!included && !excluded && (
-                              <span className="text-brand-muted/60"> · {value}</span>
-                            )}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
-            </div>
-
-            {/* Tablet/desktop: tabela */}
-            <div className="hidden overflow-x-auto rounded-3xl border border-black/10 bg-white md:block">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-black/10">
-                    <th className="text-left font-medium text-brand-muted/60 px-4 py-4 lg:px-6">&nbsp;</th>
-                    {L.doctorPlans.map((p) => (
-                      <th key={p.name} className="text-left font-serif text-lg px-4 py-4 lg:px-6">{p.name}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {L.compareRows.map(([label, ind, team], i) => (
-                    <tr key={label} className={i < L.compareRows.length - 1 ? "border-b border-black/5" : ""}>
-                      <td className="px-4 py-3 text-brand-muted lg:px-6">{label}</td>
-                      <td className="px-4 py-3 lg:px-6">{ind}</td>
-                      <td className="px-4 py-3 lg:px-6">{team}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Reveal>
         </div>
       </section>
     </>
