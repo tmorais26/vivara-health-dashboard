@@ -2744,7 +2744,7 @@ function MensagensScreen() {
 
         <div className="rv-msg rv-msg--doc">
           <div className="rv-msg-bubble">
-            Bom dia Maria. Vi os resultados do Synlab que carregaste ontem — quero pedir-te para repetir o Estradiol antes da nossa consulta de 12 de maio.
+            Bom dia, Maria. Vi os resultados do Synlab que carregou ontem — peço-lhe que repita o Estradiol antes da nossa consulta de 12 de maio.
           </div>
           <div className="rv-msg-time">09:14</div>
         </div>
@@ -2773,7 +2773,7 @@ function MensagensScreen() {
 
         <div className="rv-msg rv-msg--doc">
           <div className="rv-msg-bubble">
-            Sim, perfeito. Aproveita para fazer também FSH e LH — já te enviei o pedido. Como te tens sentido com os afrontamentos?
+            Sim, perfeito. Aproveite para fazer também FSH e LH — já lhe enviei o pedido. Como se tem sentido com os afrontamentos?
           </div>
           <div className="rv-msg-time">09:48</div>
         </div>
