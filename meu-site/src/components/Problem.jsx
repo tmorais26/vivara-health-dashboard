@@ -4,9 +4,12 @@ import { useT } from "../i18n";
 // A história de um ano normal, mês a mês. Cada passo leva por baixo um dado
 // oficial, discreto, com fonte. Números confirmados nos originais:
 // Perfil de Saúde do País 2025: Portugal (OCDE e Observatório Europeu) e
-// Prior A et al., BMC Medicine 2023.
+// Prior A et al., BMC Medicine 2023; Overhage & McCallie, Ann Intern Med 2020;
+// Adler-Milstein & Wang, JAMIA 2020.
 const CHP = "https://eurohealthobservatory.who.int/publications/m/portugal-country-health-profile-2025";
 const PRIOR = "https://doi.org/10.1186/s12916-023-03021-3";
+const ANNALS = "https://doi.org/10.7326/M18-3684";
+const JAMIA = "https://doi.org/10.1093/jamia/ocaa006";
 
 const T = {
   pt: {
@@ -46,11 +49,24 @@ const T = {
         when: "Setembro",
         title: "De volta ao seu médico",
         text: "«Trouxe as análises?» A consulta começa à procura do que já foi feito.",
+        fact: "Os médicos passam, em média, 16 minutos por consulta no registo clínico — um terço desse tempo a rever o historial.",
+        source: "Annals of Internal Medicine, 2020 · 100 milhões de consultas",
+        url: ANNALS,
       },
     ],
     closing: "Com a Vivara, cada resultado vai para o mesmo historial — e o seu médico vê o ano inteiro antes de a consulta começar.",
-    closingFact: "40% dos adultos em Portugal já consultam o seu registo de saúde online, acima da média europeia de 28%.",
-    closingSource: "OCDE e Observatório Europeu, 2025",
+    closingFacts: [
+      {
+        fact: "Quando os resultados de outros hospitais deixaram de estar num separador à parte e passaram a aparecer junto dos restantes, os médicos passaram a abri-los mais 22 920 vezes por semana.",
+        source: "JAMIA, 2020 · Universidade da Califórnia, São Francisco",
+        url: JAMIA,
+      },
+      {
+        fact: "40% dos adultos em Portugal já consultam o seu registo de saúde online, acima da média europeia de 28%.",
+        source: "OCDE e Observatório Europeu, 2025",
+        url: CHP,
+      },
+    ],
   },
   en: {
     badge: "The problem",
@@ -89,11 +105,24 @@ const T = {
         when: "September",
         title: "Back to your doctor",
         text: "\"Did you bring your results?\" The appointment starts by searching for what has already been done.",
+        fact: "Doctors spend an average of 16 minutes per appointment in the health record — a third of it reviewing the patient's history.",
+        source: "Annals of Internal Medicine, 2020 · 100 million appointments",
+        url: ANNALS,
       },
     ],
     closing: "With Vivara, every result goes into the same record — and your doctor sees the whole year before the appointment begins.",
-    closingFact: "40% of adults in Portugal already access their health record online, above the EU average of 28%.",
-    closingSource: "OECD & European Observatory, 2025",
+    closingFacts: [
+      {
+        fact: "When results from other hospitals stopped sitting in a separate tab and appeared alongside the rest, doctors opened them 22,920 more times a week.",
+        source: "JAMIA, 2020 · University of California, San Francisco",
+        url: JAMIA,
+      },
+      {
+        fact: "40% of adults in Portugal already access their health record online, above the EU average of 28%.",
+        source: "OECD & European Observatory, 2025",
+        url: CHP,
+      },
+    ],
   },
 };
 
@@ -148,7 +177,9 @@ export default function Problem() {
         <Reveal delay={0.1}>
           <div className="mt-16 rounded-3xl bg-brand-dark px-8 py-10 text-white md:px-12">
             <p className="font-serif text-2xl md:text-3xl leading-snug max-w-3xl">{L.closing}</p>
-            <Source fact={L.closingFact} source={L.closingSource} url={CHP} dark />
+            {L.closingFacts.map((f) => (
+              <Source key={f.source} fact={f.fact} source={f.source} url={f.url} dark />
+            ))}
           </div>
         </Reveal>
       </div>
