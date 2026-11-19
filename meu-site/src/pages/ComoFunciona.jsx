@@ -1,77 +1,63 @@
-import { PageHeader, SectionBadge, Reveal, Check, Highlight } from "../components/ui";
+import { Link } from "react-router-dom";
+import { PageHeader, SectionBadge, Reveal } from "../components/ui";
 import { useT } from "../i18n";
 
+// Cada passo mostra sempre as duas vistas: a do utente e a do médico.
 const T = {
   pt: {
     header: {
       badge: "Como funciona",
-      title: <>A sua saúde, <em>organizada entre consultas.</em></>,
-      desc: "Um lugar seguro para exames, resultados, sintomas e registos médicos — para que cada consulta valha a pena.",
+      title: <>O mesmo historial, <em>cada um com a sua vista.</em></>,
+      desc: "Uma só plataforma para utentes e médicos. Os resultados chegam de vários laboratórios e ficam num só sítio: o utente vê a sua saúde, o médico vê o historial completo.",
     },
     stepsBadge: "Três passos",
+    patient: "Utente",
+    doctor: "Médico",
     steps: [
       {
-        title: "Reúna os seus dados",
-        desc: (
-          <>
-            Recebeu as análises por email? Carregue o PDF na app, venha do laboratório ou da
-            clínica que vier. Se não o fizer, o seu médico também pode acrescentar o que recebe.
-            Tudo fica num <Highlight>cofre encriptado</Highlight>, organizado por data — sem
-            pastas, sem PDFs perdidos na caixa de correio.
-          </>
-        ),
+        title: "Os resultados entram num só sítio",
+        patient:
+          "Recebeu as análises por email? Carregue o PDF (ou uma fotografia) na app, venha do laboratório ou da clínica que vier. Fica num cofre encriptado, organizado por data.",
+        doctor:
+          "Crie a sua conta e registe o utente. Se ele não usar a app, basta reencaminhar-lhe o email com os resultados e você acrescenta-os ao historial.",
       },
       {
-        title: "Acompanhe a evolução",
-        desc: (
-          <>
-            O seu historial fica visível em linha do tempo, com <Highlight>insights claros</Highlight>{" "}
-            mês a mês: o que mudou, o que se mantém e o que precisa de atenção. Vê padrões que um
-            único exame nunca mostraria sozinho.
-          </>
-        ),
+        title: "A evolução fica visível",
+        patient:
+          "O historial aparece em linha do tempo, com o que mudou, o que se mantém e o que precisa de atenção. Com wearables ligados, sono e atividade ficam ao lado das análises.",
+        doctor:
+          "Vê a mesma linha do tempo entre consultas, com alertas de valores fora do alvo. Os wearables aparecem quando o utente usa a app, e nunca se misturam com as análises.",
       },
       {
-        title: "Decida com a sua equipa",
-        desc: (
-          <>
-            O seu médico vê exatamente a mesma história — sem ter de resumir tudo de novo em cada
-            consulta. As decisões são tomadas com <Highlight>contexto completo</Highlight>, e
-            continuam a ser sempre dele.
-          </>
-        ),
+        title: "A consulta começa com contexto",
+        patient:
+          "Leva o historial completo para a consulta e sai com um resumo por escrito do que foi decidido, o plano do dia (o que tomar e que exames fazer) e lembretes.",
+        doctor:
+          "Chega com tudo num só ecrã, sem começar por «trouxe as análises?». A decisão clínica é sempre sua, e as notas internas da equipa nunca são partilhadas com o utente.",
       },
     ],
-    viewsBadge: "Duas vistas",
-    viewsTitle: (
+    startBadge: "Por onde começar",
+    startTitle: (
       <>
-        A mesma história, <em>dois pontos de vista.</em>
+        Cada um começa <em>no seu lado.</em>
       </>
     ),
-    viewsDesc:
-      "Não é medicina de longevidade nem wellness — é gestão do historial clínico contínuo entre consultas. O médico e o utente veem a mesma informação, cada um com o acesso que faz sentido para si.",
-    views: [
+    startDesc:
+      "Os dois acessos são independentes e funcionam em conjunto: o utente pode começar sem o médico, e o médico sem a app do utente.",
+    starts: [
       {
-        who: "Para o médico",
-        title: "Portal clínico",
-        items: [
-          "Análises, exames e notas organizados cronologicamente",
-          "Wearables, sono e atividade ao lado dos dados clínicos",
-          "Planos, prescrições, consultas e documentos num só sítio",
-          "Diário clínico privado da equipa",
-          "Setup rápido: convida o utente por email",
-        ],
+        who: "Utente",
+        title: "Carregue o primeiro resultado",
+        desc: "Abra a conta, carregue uma análise e veja o historial a crescer. Convide o seu médico quando quiser.",
+        cta: "Ver a vista do utente",
+        to: "/utentes",
       },
       {
-        who: "Para o utente",
-        title: "App",
-        items: [
-          "Resumo da saúde e histórico unificado",
-          "Plano do dia (o que tomar e que exames fazer), mensagens com a equipa e consultas",
-          "Carregar análises e ligar wearables",
-          "Lembretes e resumos de cada consulta",
-          "Os seus dados, sempre seus — exportação completa",
-        ],
+        who: "Médico",
+        title: "Crie a conta e registe o primeiro utente",
+        desc: "Abra a sua conta de profissional, registe o utente e acrescente os resultados que ele lhe reencaminhar. Convide-o para a app se ele quiser.",
+        cta: "Ver a vista do médico",
+        to: "/medicos",
       },
     ],
     principlesBadge: "Princípios",
@@ -85,73 +71,57 @@ const T = {
   en: {
     header: {
       badge: "How it works",
-      title: <>Your health, <em>organised between appointments.</em></>,
-      desc: "A safe place for exams, results, symptoms and medical records — so that every appointment counts.",
+      title: <>The same record, <em>each with their own view.</em></>,
+      desc: "One platform for patients and doctors. Results arrive from many labs and end up in one place: patients see their health, doctors see the complete record.",
     },
     stepsBadge: "Three steps",
+    patient: "Patient",
+    doctor: "Doctor",
     steps: [
       {
-        title: "Gather your data",
-        desc: (
-          <>
-            Got your lab results by email? Upload the PDF to the app, whichever lab or clinic it
-            came from. If you don't, your doctor can add what they receive too. Everything is kept
-            in an <Highlight>encrypted vault</Highlight>, organised by date — no folders, no PDFs
-            lost in your inbox.
-          </>
-        ),
+        title: "Results come together in one place",
+        patient:
+          "Got your lab results by email? Upload the PDF (or a photo) to the app, whichever lab or clinic it came from. It is kept in an encrypted vault, organised by date.",
+        doctor:
+          "Create your account and register the patient. If they don't use the app, they simply forward you the email with their results and you add them to the record.",
       },
       {
-        title: "Follow the trend",
-        desc: (
-          <>
-            Your record becomes a timeline, with <Highlight>clear insights</Highlight> month by
-            month: what changed, what's holding steady and what needs attention. You see patterns
-            a single exam could never show on its own.
-          </>
-        ),
+        title: "The trend becomes visible",
+        patient:
+          "The record appears as a timeline, showing what changed, what's holding steady and what needs attention. With wearables connected, sleep and activity sit next to the lab results.",
+        doctor:
+          "You see the same timeline between appointments, with alerts for out-of-range values. Wearables appear when the patient uses the app, and are never mixed with lab results.",
       },
       {
-        title: "Decide with your team",
-        desc: (
-          <>
-            Your doctor sees exactly the same story — without you having to re-summarise everything
-            at every appointment. Decisions are made with <Highlight>full context</Highlight>, and
-            they always remain the doctor's.
-          </>
-        ),
+        title: "The appointment starts with context",
+        patient:
+          "You take the full record to the appointment and leave with a written summary of what was decided, your daily plan (what to take and which exams to do) and reminders.",
+        doctor:
+          "You arrive with everything on one screen, without starting from “did you bring your results?”. The clinical decision is always yours, and the team's internal notes are never shared with the patient.",
       },
     ],
-    viewsBadge: "Two views",
-    viewsTitle: (
+    startBadge: "Where to start",
+    startTitle: (
       <>
-        The same story, <em>two points of view.</em>
+        Everyone starts <em>on their own side.</em>
       </>
     ),
-    viewsDesc:
-      "This isn't longevity medicine or wellness — it's continuous clinical record management between appointments. Doctor and patient see the same information, each with the access that makes sense for them.",
-    views: [
+    startDesc:
+      "The two accesses are independent and work together: patients can start without their doctor, and doctors without the patient's app.",
+    starts: [
       {
-        who: "For the doctor",
-        title: "Clinical portal",
-        items: [
-          "Lab results, exams and notes organised chronologically",
-          "Wearables, sleep and activity next to the clinical data",
-          "Plans, prescriptions, appointments and documents in one place",
-          "Private clinical journal for the team",
-          "Quick setup: invite the patient by email",
-        ],
+        who: "Patient",
+        title: "Upload your first result",
+        desc: "Open an account, upload a lab result and watch your record grow. Invite your doctor whenever you like.",
+        cta: "See the patient view",
+        to: "/utentes",
       },
       {
-        who: "For the patient",
-        title: "App",
-        items: [
-          "Health summary and unified record",
-          "Daily plan (what to take and which exams to do), messages with the team and appointments",
-          "Upload lab results and connect wearables",
-          "Reminders and summaries after every appointment",
-          "Your data, always yours — full export",
-        ],
+        who: "Doctor",
+        title: "Create your account and register your first patient",
+        desc: "Open your professional account, register the patient and add the results they forward to you. Invite them to the app if they want.",
+        cta: "See the doctor view",
+        to: "/medicos",
       },
     ],
     principlesBadge: "Principles",
@@ -177,10 +147,20 @@ export default function ComoFunciona() {
           <div className="mt-10 grid md:grid-cols-3 gap-6">
             {L.steps.map((s, i) => (
               <Reveal key={s.title} delay={i * 0.1}>
-                <div className="rounded-3xl bg-white border border-black/10 p-8 h-full">
+                <div className="rounded-3xl bg-white border border-black/10 p-8 h-full flex flex-col">
                   <span className="text-sm text-brand-muted/50">0{i + 1}</span>
-                  <h3 className="font-serif text-2xl mt-2 mb-3">{s.title}</h3>
-                  <p className="text-brand-muted/80 leading-relaxed">{s.desc}</p>
+                  <h3 className="font-serif text-2xl mt-2 mb-5">{s.title}</h3>
+                  <div className="space-y-5">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-brand-muted/50 mb-1.5">{L.patient}</p>
+                      <p className="text-brand-muted/85 leading-relaxed">{s.patient}</p>
+                    </div>
+                    <hr className="border-black/10" />
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-brand-muted/50 mb-1.5">{L.doctor}</p>
+                      <p className="text-brand-muted/85 leading-relaxed">{s.doctor}</p>
+                    </div>
+                  </div>
                 </div>
               </Reveal>
             ))}
@@ -191,28 +171,24 @@ export default function ComoFunciona() {
       <section className="bg-brand-beige py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6">
           <Reveal>
-            <SectionBadge>{L.viewsBadge}</SectionBadge>
+            <SectionBadge>{L.startBadge}</SectionBadge>
             <h2 className="font-serif font-light text-4xl md:text-5xl mt-5 max-w-2xl">
-              {L.viewsTitle}
+              {L.startTitle}
             </h2>
             <p className="mt-4 text-lg text-brand-muted/80 max-w-2xl leading-relaxed">
-              {L.viewsDesc}
+              {L.startDesc}
             </p>
           </Reveal>
           <div className="mt-10 grid md:grid-cols-2 gap-6">
-            {L.views.map((v, i) => (
-              <Reveal key={v.who} delay={i * 0.1}>
-                <div className="rounded-3xl bg-white border border-black/10 p-8 h-full">
-                  <p className="text-xs uppercase tracking-[0.18em] text-brand-muted/50">{v.who}</p>
-                  <h3 className="font-serif text-2xl mt-1 mb-5">{v.title}</h3>
-                  <ul className="space-y-3">
-                    {v.items.map((it) => (
-                      <li key={it} className="flex items-start gap-2 text-sm">
-                        <Check className="size-4 mt-0.5 shrink-0 text-brand-green-dark" />
-                        <span className="text-brand-muted/85">{it}</span>
-                      </li>
-                    ))}
-                  </ul>
+            {L.starts.map((c, i) => (
+              <Reveal key={c.who} delay={i * 0.1}>
+                <div className="rounded-3xl bg-white border border-black/10 p-8 h-full flex flex-col">
+                  <p className="text-xs uppercase tracking-[0.18em] text-brand-muted/50">{c.who}</p>
+                  <h3 className="font-serif text-2xl mt-1 mb-3">{c.title}</h3>
+                  <p className="text-brand-muted/80 leading-relaxed mb-6">{c.desc}</p>
+                  <Link to={c.to} className="mt-auto text-sm font-medium underline underline-offset-4">
+                    {c.cta} →
+                  </Link>
                 </div>
               </Reveal>
             ))}
