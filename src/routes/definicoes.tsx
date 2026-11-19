@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ShieldCheck, Bell, KeyRound, Globe, BellRing, Languages } from "lucide-react";
-import { useState } from "react";
+import { ShieldCheck, Bell, KeyRound, Globe, BellRing, Languages, Mail } from "lucide-react";
+import { useEffect, useState } from "react";
+import { definirMarketing, estadoConsentimento } from "@/lib/consent.functions";
+import { formatarData } from "@/data/mock-utente";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
 import { setIdioma, useIdioma, useT, type Idioma } from "@/lib/i18n";
 
@@ -27,6 +29,7 @@ function DefinicoesPage() {
         <div className="space-y-4">
           <IdiomaCard />
           <NotificacoesGlobais />
+          <MarketingCard />
 
           <Card icon={<ShieldCheck className="h-4 w-4" />} title={t.definicoes.seguranca} sub={t.definicoes.segurancaSub}>
             <Row label={t.definicoes.mfa} value="TOTP · Authenticator" status="ok" />
@@ -55,6 +58,64 @@ function DefinicoesPage() {
       </main>
       <MobileNavTabs />
     </PortalShell>
+  );
+}
+
+function MarketingCard() {
+  const t = useT();
+  const [estado, setEstado] = useState<{ aceite: boolean; desde: string | null } | null>(null);
+  const [aGuardar, setAGuardar] = useState(false);
+  const [erro, setErro] = useState(false);
+
+  useEffect(() => {
+    estadoConsentimento()
+      .then((r) => setEstado({ aceite: r.marketing, desde: r.marketingDesde }))
+      .catch(() => setErro(true));
+  }, []);
+
+  async function alterar(aceite: boolean) {
+    setAGuardar(true);
+    setErro(false);
+    try {
+      await definirMarketing({ data: { aceite, texto: aceite ? t.consent.marketing : undefined } });
+      setEstado({ aceite, desde: new Date().toISOString() });
+    } catch {
+      setErro(true);
+    } finally {
+      setAGuardar(false);
+    }
+  }
+
+  return (
+    <Card icon={<Mail className="h-4 w-4" />} title={t.consent.mkTitulo} sub={t.consent.mkSub}>
+      <div className="flex items-center justify-between gap-4 px-5 py-4">
+        <div>
+          <p className="text-sm text-foreground">
+            {estado?.aceite ? t.consent.mkAtivo : t.consent.mkInativo}
+          </p>
+          {estado?.desde && (
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              {t.consent.mkDesde(formatarData(estado.desde.slice(0, 10)))}
+            </p>
+          )}
+          {erro && (
+            <p role="alert" className="mt-1 text-xs text-state-alert">
+              {t.conta.erroGenerico}
+            </p>
+          )}
+        </div>
+        {estado && (
+          <button
+            type="button"
+            disabled={aGuardar}
+            onClick={() => alterar(!estado.aceite)}
+            className="shrink-0 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground hover:bg-accent disabled:opacity-50"
+          >
+            {estado.aceite ? t.consent.mkRetirar : t.consent.mkAceitar}
+          </button>
+        )}
+      </div>
+    </Card>
   );
 }
 

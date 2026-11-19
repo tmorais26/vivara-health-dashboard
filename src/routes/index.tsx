@@ -5,6 +5,7 @@ import { resumosUtentes as resumosUtentesIniciais, type ResumoUtente } from "@/d
 import { formatarData } from "@/data/mock-utente";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
 import { useT } from "@/lib/i18n";
+import { FundamentoLegalDialog } from "@/components/dashboard/FundamentoLegalDialog";
 import {
   Field,
   ModalActions,
@@ -142,6 +143,7 @@ function NovoUtenteModal({
   const [sexo, setSexo] = useState<"F" | "M">("F");
   const [cidade, setCidade] = useState("");
   const [plano, setPlano] = useState("Essencial");
+  const [pendente, setPendente] = useState<ResumoUtente | null>(null);
 
   function reset() {
     setNome("");
@@ -166,7 +168,7 @@ function NovoUtenteModal({
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`;
-    onCreate({
+    setPendente({
       id,
       nome: nome.trim(),
       iniciais,
@@ -180,6 +182,12 @@ function NovoUtenteModal({
       ultimaConsulta: new Date().toISOString().slice(0, 10),
       acessivel: false,
     });
+  }
+
+  function confirmarFundamento() {
+    if (!pendente) return;
+    onCreate(pendente);
+    setPendente(null);
     reset();
     onClose();
   }
@@ -261,6 +269,12 @@ function NovoUtenteModal({
         </SecondaryButton>
         <PrimaryButton onClick={criar}>Criar utente</PrimaryButton>
       </ModalActions>
+      <FundamentoLegalDialog
+        open={pendente !== null}
+        utenteRef={pendente?.id ?? ""}
+        onConfirm={confirmarFundamento}
+        onCancel={() => setPendente(null)}
+      />
     </SimpleModal>
   );
 }
