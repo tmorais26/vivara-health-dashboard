@@ -108,9 +108,9 @@ console.log("Assistente (sem modelo de linguagem)");
 const facts = {
   today: "2026-04-27",
   appts: [
-    { id: "c1", iso: "2026-05-12T14:30:00", titlePt: "Discussão sobre TRH", titleEn: "HRT discussion", by: "medico" },
-    { id: "c2", iso: "2026-05-20T10:00:00", titlePt: "Colheita de sangue", titleEn: "Blood draw", by: "administrativa" },
-    { id: "c0", iso: "2026-04-22T10:00:00", titlePt: "Revisão trimestral", titleEn: "Quarterly review", by: "medico" },
+    { id: "c1", iso: "2026-05-12T14:30:00", titlePt: "Discussão sobre TRH", titleEn: "HRT discussion" },
+    { id: "c2", iso: "2026-05-20T10:00:00", titlePt: "Colheita de sangue", titleEn: "Blood draw" },
+    { id: "c0", iso: "2026-04-22T10:00:00", titlePt: "Revisão trimestral", titleEn: "Quarterly review" },
   ],
   reminders: [{ day: "2026-05-12", time: null, text: "levar a lista de medicação" }],
   docs: [
@@ -124,7 +124,7 @@ const facts = {
 const ask = (q, lang = "pt") => answer(q, facts, lang);
 test("próxima consulta diz quem marcou", () => {
   const r = ask("Quando é a minha próxima consulta?");
-  assert.match(r.text, /12 mai 2026 às 14:30/); assert.match(r.text, /marcada pelo médico/); assert.match(r.text, /marcada pela administrativa/);
+  assert.match(r.text, /12 mai 2026 às 14:30/); assert.match(r.text, /marcada pelo médico/); assert.doesNotMatch(r.text, /administrativ/);
 });
 test("última consulta", () => assert.match(ask("qual foi a última consulta").text, /22 abr 2026/));
 test("exame de um ano sem documentos diz que não há e mostra os que há", () => {

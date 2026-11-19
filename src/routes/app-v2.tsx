@@ -1753,7 +1753,7 @@ const CONSULTA_ENTRIES: RecordEntry[] = [
   { id: "c-2026-05-20", type: "consulta", origin: "clinic", iso: "2026-05-20T09:00:00", go: "calendario",
     sourcePt: "Clínica Lumiar", sourceEn: "Lumiar Clinic",
     titlePt: "Colheita de sangue", titleEn: "Blood draw",
-    subPt: "Agendada · 09:00 · marcada pela administrativa", subEn: "Scheduled · 09:00 · booked by the administrator" },
+    subPt: "Agendada · 09:00 · marcada pelo médico", subEn: "Scheduled · 09:00 · booked by the doctor" },
   { id: "c-2026-04-22", type: "consulta", origin: "clinic", iso: "2026-04-22T10:00:00", go: "summary",
     sourcePt: "Clínica Lumiar", sourceEn: "Lumiar Clinic",
     titlePt: "Revisão trimestral",                 titleEn: "Quarterly review",
@@ -2859,27 +2859,25 @@ function MensagensScreen() {
 }
 
 // ─── Consultas da clínica, notificações e dados do utente ──
-// Consultas: marcadas pelo médico ou pela administrativa, o utente só as vê.
+// Consultas: marcadas pela clínica (aparecem sempre como «marcada pelo médico»); o utente só as vê.
 // Lembretes: do próprio utente, privados, nunca chegam à clínica.
 interface ClinicAppt {
   id: string;
   iso: string; // "2026-05-12T14:30:00"
   titlePt: string; titleEn: string;
   placePt: string; placeEn: string;
-  by: "medico" | "administrativa";
 }
 
 const CLINIC_APPTS: ClinicAppt[] = [
-  { id: "c-2026-05-12", iso: "2026-05-12T14:30:00", titlePt: "Discussão sobre TRH personalizada", titleEn: "Personalised HRT discussion", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic", by: "medico" },
-  { id: "c-2026-05-20", iso: "2026-05-20T09:00:00", titlePt: "Colheita de sangue", titleEn: "Blood draw", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic", by: "administrativa" },
-  { id: "c-2026-04-22", iso: "2026-04-22T10:00:00", titlePt: "Revisão trimestral", titleEn: "Quarterly review", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic", by: "medico" },
-  { id: "c-2026-02-03", iso: "2026-02-03T10:00:00", titlePt: "Revisão de resultados", titleEn: "Results review", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic", by: "medico" },
-  { id: "c-2025-12-10", iso: "2025-12-10T10:00:00", titlePt: "Primeira consulta", titleEn: "First appointment", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic", by: "medico" },
+  { id: "c-2026-05-12", iso: "2026-05-12T14:30:00", titlePt: "Discussão sobre TRH personalizada", titleEn: "Personalised HRT discussion", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic" },
+  { id: "c-2026-05-20", iso: "2026-05-20T09:00:00", titlePt: "Colheita de sangue", titleEn: "Blood draw", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic" },
+  { id: "c-2026-04-22", iso: "2026-04-22T10:00:00", titlePt: "Revisão trimestral", titleEn: "Quarterly review", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic" },
+  { id: "c-2026-02-03", iso: "2026-02-03T10:00:00", titlePt: "Revisão de resultados", titleEn: "Results review", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic" },
+  { id: "c-2025-12-10", iso: "2025-12-10T10:00:00", titlePt: "Primeira consulta", titleEn: "First appointment", placePt: "Clínica Lumiar", placeEn: "Lumiar Clinic" },
 ];
 
 // A etiqueta diz quem marcou — pelo papel, não pelo nome.
-const apptByLabel = (by: ClinicAppt["by"], L: (pt: string, en: string) => string) =>
-  by === "medico" ? L("Marcada pelo médico", "Booked by the doctor") : L("Marcada pela administrativa", "Booked by the administrator");
+const apptByLabel = (L: (pt: string, en: string) => string) => L("Marcada pelo médico", "Booked by the doctor");
 
 const hhmm = (iso: string) => (iso.slice(11, 16) && iso.slice(11, 16) !== "00:00" ? iso.slice(11, 16) : "");
 
@@ -2899,7 +2897,7 @@ const APP_NOTIFS: AppNotif[] = [
   { id: "n-pedido", iso: "2026-04-27T09:18:00", kind: "pedido", titlePt: "Pedido da equipa clínica", titleEn: "Request from the clinical team",
     bodyPt: "Há um pedido novo para si.", bodyEn: "There's a new request for you.", to: "consultas" },
   { id: "n-appt-20", iso: "2026-04-27T08:40:00", kind: "consulta", titlePt: "Consulta marcada", titleEn: "Appointment booked",
-    bodyPt: "20 mai · 09:00 · marcada pela administrativa", bodyEn: "20 May · 09:00 · booked by the administrator", to: "calendario" },
+    bodyPt: "20 mai · 09:00 · marcada pelo médico", bodyEn: "20 May · 09:00 · booked by the doctor", to: "calendario" },
   { id: "n-appt-12", iso: "2026-04-24T11:02:00", kind: "consulta", titlePt: "Consulta marcada", titleEn: "Appointment booked",
     bodyPt: "12 mai · 14:30 · marcada pelo médico", bodyEn: "12 May · 14:30 · booked by the doctor", to: "calendario" },
   { id: "n-resumo", iso: "2026-04-22T18:05:00", kind: "resumo", titlePt: "Resumo da consulta disponível", titleEn: "Appointment summary available",
@@ -3025,7 +3023,7 @@ function CalendarioScreen() {
 
         {selAppts.map((a) => (
           <div key={a.id} className="rv-cal-item" data-kind="clinic">
-            <span className="rv-cal-item-tag" data-kind="clinic">{apptByLabel(a.by, L)}</span>
+            <span className="rv-cal-item-tag" data-kind="clinic">{apptByLabel(L)}</span>
             <div className="rv-cal-item-title">{hhmm(a.iso) && <span className="rv-cal-item-time">{hhmm(a.iso)}</span>}{L(a.titlePt, a.titleEn)}</div>
             <div className="rv-cal-item-sub">{L(a.placePt, a.placeEn)}</div>
           </div>
@@ -3232,7 +3230,7 @@ function useAssistantFacts(): AsstFacts {
   const notifs = useNotifications();
   return {
     today: dayKey(APP_TODAY),
-    appts: CLINIC_APPTS.map((a) => ({ id: a.id, iso: a.iso, titlePt: a.titlePt, titleEn: a.titleEn, by: a.by })),
+    appts: CLINIC_APPTS.map((a) => ({ id: a.id, iso: a.iso, titlePt: a.titlePt, titleEn: a.titleEn })),
     reminders: reminders.list.map((r) => ({ day: r.day, time: r.time, text: r.text })),
     docs: [
       ...LAB_DOCS.map((d) => ({ id: d.id, iso: d.iso, lab: d.lab, titlePt: d.titlePt, titleEn: d.titleEn, markers: d.rows.map((r) => r.marker).filter((m): m is string => !!m) })),

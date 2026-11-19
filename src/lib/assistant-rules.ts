@@ -12,7 +12,7 @@
 export type Lang = "pt" | "en";
 export type Target = string | { route: "documento"; docId: string };
 
-export interface AsstAppt { id: string; iso: string; titlePt: string; titleEn: string; by: "medico" | "administrativa" }
+export interface AsstAppt { id: string; iso: string; titlePt: string; titleEn: string }
 export interface AsstReminder { day: string; time: string | null; text: string }
 export interface AsstDoc { id: string; iso: string; lab: string; titlePt: string; titleEn: string; markers: string[] }
 export interface AsstNotif { titlePt: string; titleEn: string }
@@ -64,12 +64,11 @@ const REFUSE_WORDS = [
 
 const T = (lang: Lang, pt: string, en: string) => (lang === "pt" ? pt : en);
 
-const byLabel = (by: AsstAppt["by"], lang: Lang) =>
-  by === "medico" ? T(lang, "marcada pelo médico", "booked by the doctor") : T(lang, "marcada pela administrativa", "booked by the administrator");
+const byLabel = (lang: Lang) => T(lang, "marcada pelo médico", "booked by the doctor");
 
 function apptLine(a: AsstAppt, lang: Lang): string {
   const t = fmtTime(a.iso);
-  return `${fmtDate(a.iso, lang)}${t ? ` ${T(lang, "às", "at")} ${t}` : ""} · ${T(lang, a.titlePt, a.titleEn)} (${byLabel(a.by, lang)})`;
+  return `${fmtDate(a.iso, lang)}${t ? ` ${T(lang, "às", "at")} ${t}` : ""} · ${T(lang, a.titlePt, a.titleEn)} (${byLabel(lang)})`;
 }
 
 const HELP = (lang: Lang): Reply => ({
