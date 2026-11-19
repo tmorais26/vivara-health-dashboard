@@ -1,7 +1,7 @@
 import { SectionBadge, Reveal } from "./ui";
 import { useT } from "../i18n";
 
-// Números retirados dos resumos originais (verificados na Europe PMC).
+// Números confirmados nas fontes originais (PDF oficial e resumos na Europe PMC).
 const T = {
   pt: {
     badge: "A evidência",
@@ -12,25 +12,24 @@ const T = {
     ),
     items: [
       {
-        value: "13,6%",
-        text: "das consultas de cuidados primários decorreram sem informação clínica importante. Em mais de metade dos casos, ela existia — mas estava fora do sistema da clínica.",
-        source: "Smith PC et al., JAMA, 2005",
-        url: "https://doi.org/10.1001/jama.293.5.565",
+        value: "29%",
+        text: "da despesa em saúde em Portugal é paga diretamente pelas famílias — o dobro da média da UE. Os cuidados repartem-se entre SNS, subsistemas, seguros e privados.",
+        source: "OCDE e Observatório Europeu dos Sistemas de Saúde · Perfil de Saúde de Portugal, 2023",
+        url: "https://eurohealthobservatory.who.int/publications/m/portugal-country-health-profile-2023",
       },
       {
-        value: "7,1%",
-        text: "dos resultados de análises alterados não foram comunicados ao doente, ou não ficou registo de o terem sido.",
-        source: "Casalino LP et al., Arch Intern Med, 2009",
-        url: "https://doi.org/10.1001/archinternmed.2009.130",
+        value: "6,9",
+        text: "prestadores diferentes, em média, num ano, para quem tem seis doenças crónicas. Cuidados mais fragmentados estão associados a mais medicação inadequada e a maior mortalidade.",
+        source: "Prior A et al. · BMC Medicine, 2023 · 4,7 milhões de adultos na Dinamarca",
+        url: "https://doi.org/10.1186/s12916-023-03021-3",
       },
       {
-        value: "8% → 5%",
-        text: "dos exames de imagem repetidos em 90 dias, quando o médico passou a consultar o historial partilhado do doente.",
-        source: "Vest JR et al., Am J Manag Care, 2014",
-        url: "https://pubmed.ncbi.nlm.nih.gov/25811815/",
+        value: "7 de 7",
+        text: "estudos com o desenho mais rigoroso concluíram que partilhar informação entre prestadores traz benefícios: menos procedimentos duplicados, menos exames de imagem, custos mais baixos e mais segurança.",
+        source: "Menachemi N et al. · JAMIA, 2018 · revisão sistemática",
+        url: "https://doi.org/10.1093/jamia/ocy035",
       },
     ],
-    note: "Estudos realizados nos EUA, em cuidados primários e ambulatórios.",
   },
   en: {
     badge: "The evidence",
@@ -41,25 +40,24 @@ const T = {
     ),
     items: [
       {
-        value: "13.6%",
-        text: "of primary care visits took place without important clinical information. In more than half of those cases, it existed — but sat outside the clinic's own system.",
-        source: "Smith PC et al., JAMA, 2005",
-        url: "https://doi.org/10.1001/jama.293.5.565",
+        value: "29%",
+        text: "of health spending in Portugal is paid directly by households — twice the EU average. Care is split between the national health service, subsystems, insurers and private providers.",
+        source: "OECD & European Observatory on Health Systems · Portugal Country Health Profile, 2023",
+        url: "https://eurohealthobservatory.who.int/publications/m/portugal-country-health-profile-2023",
       },
       {
-        value: "7.1%",
-        text: "of abnormal lab results were not communicated to the patient, or there was no record that they had been.",
-        source: "Casalino LP et al., Arch Intern Med, 2009",
-        url: "https://doi.org/10.1001/archinternmed.2009.130",
+        value: "6.9",
+        text: "different providers in a year, on average, for people with six chronic conditions. More fragmented care is associated with more inappropriate medication and higher mortality.",
+        source: "Prior A et al. · BMC Medicine, 2023 · 4.7 million adults in Denmark",
+        url: "https://doi.org/10.1186/s12916-023-03021-3",
       },
       {
-        value: "8% → 5%",
-        text: "of imaging tests were repeated within 90 days once the doctor accessed the patient's shared record.",
-        source: "Vest JR et al., Am J Manag Care, 2014",
-        url: "https://pubmed.ncbi.nlm.nih.gov/25811815/",
+        value: "7 of 7",
+        text: "studies with the most rigorous designs found that sharing information between providers brings benefits: fewer duplicated procedures, less imaging, lower costs and better safety.",
+        source: "Menachemi N et al. · JAMIA, 2018 · systematic review",
+        url: "https://doi.org/10.1093/jamia/ocy035",
       },
     ],
-    note: "Studies conducted in the US, in primary and ambulatory care.",
   },
 };
 
@@ -96,8 +94,6 @@ export default function Evidence() {
             </Reveal>
           ))}
         </div>
-
-        <p className="mt-12 text-xs text-white/40">{L.note}</p>
       </div>
     </section>
   );
