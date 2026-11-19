@@ -59,6 +59,22 @@ const T = {
     ],
     ctaStart: "Começar",
     ctaTalk: "Falar connosco",
+    referral: {
+      badge: "Recomendar a Vivara",
+      title: <>Recomende e <em>ganhe um mês grátis.</em></>,
+      desc: "Quem recomenda e quem chega ganham um mês grátis — entre utentes, entre médicos, e de utente para médico.",
+      rules: [
+        { who: "Utente → utente", text: "Os dois ganham um mês grátis." },
+        { who: "Médico → médico", text: "Os dois ganham um mês grátis." },
+        { who: "Utente → o seu médico", text: "O utente ganha um mês grátis e o médico começa com o primeiro mês grátis." },
+        { who: "Médico → utente", text: "O utente começa com o primeiro mês grátis. O médico não recebe nada em troca: a recomendação de um médico nunca deve depender de um benefício próprio." },
+      ],
+      fine: [
+        "O mês grátis de quem recomenda é atribuído quando a pessoa convidada paga a primeira mensalidade.",
+        "Até 12 meses grátis por ano. Nos planos anuais, a subscrição é prolongada por um mês.",
+        "Planos de clínica: condições a combinar.",
+      ],
+    },
     footnote: "Sem custos de setup. Cancela quando quiser. IVA não incluído. Os planos de médicos e utentes são independentes.",
   },
   en: {
@@ -112,6 +128,22 @@ const T = {
     ],
     ctaStart: "Get started",
     ctaTalk: "Talk to us",
+    referral: {
+      badge: "Recommend Vivara",
+      title: <>Recommend us and <em>get a month free.</em></>,
+      desc: "Whoever recommends and whoever joins get a free month — between patients, between doctors, and from patient to doctor.",
+      rules: [
+        { who: "Patient → patient", text: "Both get a free month." },
+        { who: "Doctor → doctor", text: "Both get a free month." },
+        { who: "Patient → their doctor", text: "The patient gets a free month and the doctor starts with their first month free." },
+        { who: "Doctor → patient", text: "The patient starts with their first month free. The doctor receives nothing in return: a doctor's recommendation should never depend on a personal benefit." },
+      ],
+      fine: [
+        "The recommender's free month is granted once the invited person pays their first monthly fee.",
+        "Up to 12 free months a year. On annual plans, the subscription is extended by one month.",
+        "Clinic plans: terms to be agreed.",
+      ],
+    },
     footnote: "No setup costs. Cancel anytime. VAT not included. Doctor and patient plans are independent.",
   },
 };
@@ -246,6 +278,34 @@ export default function Precos() {
             ))}
           </div>
           <p className="mt-8 text-center text-sm text-brand-muted/60">{L.footnote}</p>
+        </div>
+      </section>
+
+      {/* Referenciação */}
+      <section className="bg-white py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-6">
+          <Reveal>
+            <SectionBadge>{L.referral.badge}</SectionBadge>
+            <h2 className="font-serif font-light tracking-tight text-4xl md:text-5xl mt-5 max-w-2xl">
+              {L.referral.title}
+            </h2>
+            <p className="mt-4 text-lg text-brand-muted/80 max-w-2xl leading-relaxed">{L.referral.desc}</p>
+          </Reveal>
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            {L.referral.rules.map((r, i) => (
+              <Reveal key={r.who} delay={i * 0.06}>
+                <div className="h-full rounded-2xl border border-black/10 bg-brand-beige p-6">
+                  <p className="font-serif text-xl">{r.who}</p>
+                  <p className="mt-2 text-sm text-brand-muted/80 leading-relaxed">{r.text}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+          <ul className="mt-8 space-y-1.5 text-xs text-brand-muted/60">
+            {L.referral.fine.map((f) => (
+              <li key={f}>{f}</li>
+            ))}
+          </ul>
         </div>
       </section>
     </>

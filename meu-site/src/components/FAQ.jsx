@@ -41,6 +41,10 @@ const T = {
         a: "Não. O portal serve por si só para organizar o historial: se o utente lhe reencaminhar as análises por email, você acrescenta-as. Com a app, o utente carrega os resultados diretamente e vê o mesmo historial.",
       },
       {
+        q: "Há vantagens em recomendar a Vivara?",
+        a: "Sim. Quando um utente ou um médico recomenda a Vivara, quem recomenda e quem chega ganham um mês grátis. Quando é um médico a recomendar a um utente, só o utente beneficia. Os detalhes estão na página de Preços.",
+      },
+      {
         q: "Posso cancelar a qualquer momento?",
         a: "Sim, sem período de fidelização. Depois de cancelar, os seus dados ficam disponíveis para exportação durante 90 dias.",
       },
@@ -89,6 +93,10 @@ const T = {
       {
         q: "Does my patient have to have the app?",
         a: "No. The portal works on its own to organise the record: if the patient forwards you their lab results by email, you add them. With the app, the patient uploads results directly and sees the same record.",
+      },
+      {
+        q: "Are there benefits to recommending Vivara?",
+        a: "Yes. When a patient or a doctor recommends Vivara, both the recommender and the newcomer get a free month. When a doctor recommends Vivara to a patient, only the patient benefits. Details are on the Pricing page.",
       },
       {
         q: "Can I cancel at any time?",

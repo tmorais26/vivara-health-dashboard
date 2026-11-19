@@ -1,7 +1,8 @@
 import { SectionBadge, Reveal } from "./ui";
 import { useT } from "../i18n";
 
-// Números confirmados nas fontes originais (PDF oficial e resumos na Europe PMC).
+// Números confirmados nas fontes originais: Perfil de Saúde do País 2025
+// (OCDE e Observatório Europeu, PDF oficial em PT e EN) e Prior et al. 2023.
 const T = {
   pt: {
     badge: "A evidência",
@@ -12,22 +13,28 @@ const T = {
     ),
     items: [
       {
-        value: "29%",
-        text: "da despesa em saúde em Portugal é paga diretamente pelas famílias — o dobro da média da UE. Os cuidados repartem-se entre SNS, subsistemas, seguros e privados.",
-        source: "OCDE e Observatório Europeu dos Sistemas de Saúde · Perfil de Saúde de Portugal, 2023",
-        url: "https://eurohealthobservatory.who.int/publications/m/portugal-country-health-profile-2023",
+        value: "85–100%",
+        text: "das análises clínicas e dos exames de radiologia em Portugal são feitos por prestadores privados — incluindo muitos dos que são pedidos pelo SNS.",
+        source: "OCDE e Observatório Europeu dos Sistemas e Políticas de Saúde · Perfil de Saúde do País 2025: Portugal",
+        url: "https://eurohealthobservatory.who.int/publications/m/portugal-country-health-profile-2025",
+      },
+      {
+        value: "3,7 milhões",
+        text: "de pessoas — um terço da população — têm seguro de saúde. E o recurso a privados quando se está doente duplicou desde 2013.",
+        source: "OCDE e Observatório Europeu dos Sistemas e Políticas de Saúde · Perfil de Saúde do País 2025: Portugal",
+        url: "https://eurohealthobservatory.who.int/publications/m/portugal-country-health-profile-2025",
+      },
+      {
+        value: "40%",
+        text: "dos adultos em Portugal já consultam o seu registo de saúde online — acima da média europeia, de 28%.",
+        source: "OCDE e Observatório Europeu dos Sistemas e Políticas de Saúde · Perfil de Saúde do País 2025: Portugal",
+        url: "https://eurohealthobservatory.who.int/publications/m/portugal-country-health-profile-2025",
       },
       {
         value: "6,9",
-        text: "prestadores diferentes, em média, num ano, para quem tem seis doenças crónicas. Cuidados mais fragmentados estão associados a mais medicação inadequada e a maior mortalidade.",
+        text: "prestadores diferentes num ano, em média, para quem tem seis doenças crónicas. Cuidados mais fragmentados estão associados a mais medicação inadequada e a maior mortalidade.",
         source: "Prior A et al. · BMC Medicine, 2023 · 4,7 milhões de adultos na Dinamarca",
         url: "https://doi.org/10.1186/s12916-023-03021-3",
-      },
-      {
-        value: "7 de 7",
-        text: "estudos com o desenho mais rigoroso concluíram que partilhar informação entre prestadores traz benefícios: menos procedimentos duplicados, menos exames de imagem, custos mais baixos e mais segurança.",
-        source: "Menachemi N et al. · JAMIA, 2018 · revisão sistemática",
-        url: "https://doi.org/10.1093/jamia/ocy035",
       },
     ],
   },
@@ -40,22 +47,28 @@ const T = {
     ),
     items: [
       {
-        value: "29%",
-        text: "of health spending in Portugal is paid directly by households — twice the EU average. Care is split between the national health service, subsystems, insurers and private providers.",
-        source: "OECD & European Observatory on Health Systems · Portugal Country Health Profile, 2023",
-        url: "https://eurohealthobservatory.who.int/publications/m/portugal-country-health-profile-2023",
+        value: "85–100%",
+        text: "of laboratory and radiology tests in Portugal are performed by private providers — including many ordered by the national health service.",
+        source: "OECD & European Observatory on Health Systems and Policies · Country Health Profile 2025: Portugal",
+        url: "https://eurohealthobservatory.who.int/publications/m/portugal-country-health-profile-2025",
+      },
+      {
+        value: "3.7 million",
+        text: "people — a third of the population — have private health insurance. And turning to private providers when ill has doubled since 2013.",
+        source: "OECD & European Observatory on Health Systems and Policies · Country Health Profile 2025: Portugal",
+        url: "https://eurohealthobservatory.who.int/publications/m/portugal-country-health-profile-2025",
+      },
+      {
+        value: "40%",
+        text: "of adults in Portugal already access their health record online — above the EU average of 28%.",
+        source: "OECD & European Observatory on Health Systems and Policies · Country Health Profile 2025: Portugal",
+        url: "https://eurohealthobservatory.who.int/publications/m/portugal-country-health-profile-2025",
       },
       {
         value: "6.9",
         text: "different providers in a year, on average, for people with six chronic conditions. More fragmented care is associated with more inappropriate medication and higher mortality.",
         source: "Prior A et al. · BMC Medicine, 2023 · 4.7 million adults in Denmark",
         url: "https://doi.org/10.1186/s12916-023-03021-3",
-      },
-      {
-        value: "7 of 7",
-        text: "studies with the most rigorous designs found that sharing information between providers brings benefits: fewer duplicated procedures, less imaging, lower costs and better safety.",
-        source: "Menachemi N et al. · JAMIA, 2018 · systematic review",
-        url: "https://doi.org/10.1093/jamia/ocy035",
       },
     ],
   },
@@ -74,7 +87,7 @@ export default function Evidence() {
           </h2>
         </Reveal>
 
-        <div className="mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
+        <div className="mt-14 grid gap-10 md:grid-cols-2 md:gap-x-12 md:gap-y-12">
           {L.items.map((it, i) => (
             <Reveal key={it.source} delay={i * 0.1}>
               <div className="h-full border-l-2 border-brand-lime pl-6">
