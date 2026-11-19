@@ -1,12 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowRight, Bell, ChevronDown, Plus, Search, Sparkles } from "lucide-react";
-import { resumosUtentes as resumosUtentesIniciais, type ResumoUtente } from "@/data/mock-portal";
+import { ArrowRight, Bell, Building2, ChevronDown, Plus, Search, Sparkles, Upload } from "lucide-react";
+import type { ResumoUtente } from "@/data/mock-portal";
 import { formatarData } from "@/data/mock-utente";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
 import { useT } from "@/lib/i18n";
 import { FundamentoLegalDialog } from "@/components/dashboard/FundamentoLegalDialog";
 import { chatAcoes } from "@/lib/chat-store";
+import { adicionarUtentes, useUtentes } from "@/lib/utentes-store";
+import { definirClinica, useClinicaUtente, useClinicasConhecidas } from "@/lib/utente-clinica";
+import { ImportarUtentesModal } from "@/components/portal/ImportarUtentesModal";
 import {
   Field,
   ModalActions,
@@ -36,12 +39,14 @@ function Index() {
   const t = useT();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("alertas");
-  const [resumosUtentes, setResumosUtentes] = useState<ResumoUtente[]>(resumosUtentesIniciais);
+  const resumosUtentes = useUtentes();
   const [novoUtenteOpen, setNovoUtenteOpen] = useState(false);
+  const [importarOpen, setImportarOpen] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
 
   const filtrados = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let lista = q
+    const lista = q
       ? resumosUtentes.filter((u) => u.nome.toLowerCase().includes(q) || u.cidade.toLowerCase().includes(q))
       : [...resumosUtentes];
     lista.sort((a, b) => {
@@ -72,6 +77,15 @@ function Index() {
               {t.lista.subtitulo(resumosUtentes.length)}
             </p>
           </div>
+          <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setImportarOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-raised px-3.5 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <Upload className="h-3.5 w-3.5" />
+            {t.dados.importar}
+          </button>
           <button
             type="button"
             onClick={() => setNovoUtenteOpen(true)}
@@ -80,7 +94,13 @@ function Index() {
             <Plus className="h-3.5 w-3.5" />
             {t.lista.novoUtente}
           </button>
+          </div>
         </div>
+        {aviso && (
+          <div role="status" className="mb-4 rounded-xl border border-border bg-surface-raised px-4 py-2.5 text-sm text-foreground">
+            {aviso}
+          </div>
+        )}
 
         {/* Search + sort */}
         <div className="mb-5 flex flex-wrap items-center gap-3">
@@ -123,7 +143,12 @@ function Index() {
       <NovoUtenteModal
         open={novoUtenteOpen}
         onClose={() => setNovoUtenteOpen(false)}
-        onCreate={(u) => setResumosUtentes((prev) => [u, ...prev])}
+        onCreate={(u) => adicionarUtentes([u])}
+      />
+      <ImportarUtentesModal
+        open={importarOpen}
+        onClose={() => setImportarOpen(false)}
+        onImportados={(n) => setAviso(t.dados.importados(n))}
       />
     </PortalShell>
   );
@@ -146,6 +171,8 @@ function NovoUtenteModal({
   const [plano, setPlano] = useState("Essencial");
   const [pendente, setPendente] = useState<ResumoUtente | null>(null);
   const [chatAtivo, setChatAtivo] = useState(false);
+  const [clinica, setClinica] = useState("");
+  const clinicasConhecidas = useClinicasConhecidas();
 
   function reset() {
     setNome("");
@@ -154,6 +181,7 @@ function NovoUtenteModal({
     setCidade("");
     setPlano("Essencial");
     setChatAtivo(false);
+    setClinica("");
   }
 
   function criar() {
@@ -191,6 +219,7 @@ function NovoUtenteModal({
     if (!pendente) return;
     onCreate(pendente);
     if (chatAtivo) chatAcoes.definirEstado(pendente.id, "ativo");
+    if (clinica.trim()) definirClinica(pendente.id, clinica);
     setPendente(null);
     reset();
     onClose();
@@ -261,6 +290,20 @@ function NovoUtenteModal({
             <option>Longevidade+</option>
           </select>
         </Field>
+        <Field label={t.clinicaUtente.label}>
+          <input
+            className={inputClass}
+            value={clinica}
+            onChange={(e) => setClinica(e.target.value)}
+            placeholder={t.clinicaUtente.placeholder}
+            list="novo-utente-clinicas"
+          />
+          <datalist id="novo-utente-clinicas">
+            {clinicasConhecidas.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+        </Field>
         <div className="flex items-start gap-2.5 rounded-xl border border-border bg-background px-3 py-2.5">
           <input
             id="novo-utente-chat"
@@ -288,7 +331,7 @@ function NovoUtenteModal({
       </ModalActions>
       <FundamentoLegalDialog
         open={pendente !== null}
-        utenteRef={pendente?.id ?? ""}
+        utenteRefs={pendente ? [pendente.id] : []}
         onConfirm={confirmarFundamento}
         onCancel={() => setPendente(null)}
       />
@@ -341,6 +384,7 @@ function SortDropdown({ sort, onChange }: { sort: SortKey; onChange: (s: SortKey
 
 function UtenteCard({ u }: { u: ResumoUtente }) {
   const t = useT();
+  const clinica = useClinicaUtente(u.id);
   const conteudo = (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
       <div className="flex items-center gap-4">
@@ -367,6 +411,15 @@ function UtenteCard({ u }: { u: ResumoUtente }) {
             <span>{u.cidade}</span>
             <span>·</span>
             <span>{t.lista.plano} {u.plano}</span>
+            {clinica?.atual && (
+              <>
+                <span>·</span>
+                <span className="inline-flex items-center gap-1">
+                  <Building2 className="h-3 w-3" />
+                  {clinica.atual}
+                </span>
+              </>
+            )}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
             <span>{t.lista.ultima}: {formatarData(u.ultimaConsulta)}</span>

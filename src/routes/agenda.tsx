@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { definirUsarAgenda, usePrefsMedico } from "@/lib/medico-prefs";
 import {
   Calendar,
   Video,
@@ -46,6 +47,25 @@ function AgendaPage() {
     return acc;
   }, {});
   const dias = Object.keys(porDia).sort();
+  const { usarAgenda } = usePrefsMedico();
+
+  if (!usarAgenda) {
+    return (
+      <PortalShell>
+        <main className="mx-auto max-w-[640px] px-4 py-16 text-center">
+          <p className="text-sm text-foreground">{t.agendaPref.desligada}</p>
+          <button
+            type="button"
+            onClick={() => definirUsarAgenda(true)}
+            className="mt-4 rounded-full bg-foreground px-4 py-2 text-xs font-medium text-background hover:opacity-90"
+          >
+            {t.agendaPref.ligar}
+          </button>
+        </main>
+        <MobileNavTabs />
+      </PortalShell>
+    );
+  }
 
   return (
     <PortalShell>

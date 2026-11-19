@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ShieldCheck, Bell, KeyRound, Globe, BellRing, Languages, Mail } from "lucide-react";
+import { ShieldCheck, Bell, KeyRound, Globe, BellRing, Languages, Mail, Calendar, Database, Download, Upload } from "lucide-react";
+import { definirUsarAgenda, usePrefsMedico } from "@/lib/medico-prefs";
+import { exportarTudo } from "@/lib/exportacao";
+import { ImportarUtentesModal } from "@/components/portal/ImportarUtentesModal";
 import { useEffect, useState } from "react";
 import { definirMarketing, estadoConsentimento } from "@/lib/consent.functions";
 import { formatarData } from "@/data/mock-utente";
@@ -30,6 +33,8 @@ function DefinicoesPage() {
           <IdiomaCard />
           <NotificacoesGlobais />
           <MarketingCard />
+          <AgendaCard />
+          <DadosCard />
 
           <Card icon={<ShieldCheck className="h-4 w-4" />} title={t.definicoes.seguranca} sub={t.definicoes.segurancaSub}>
             <Row label={t.definicoes.mfa} value="TOTP · Authenticator" status="ok" />
@@ -58,6 +63,69 @@ function DefinicoesPage() {
       </main>
       <MobileNavTabs />
     </PortalShell>
+  );
+}
+
+function AgendaCard() {
+  const t = useT().agendaPref;
+  const { usarAgenda } = usePrefsMedico();
+  return (
+    <Card icon={<Calendar className="h-4 w-4" />} title={t.titulo} sub={t.sub}>
+      <div className="flex items-center justify-between gap-4 px-5 py-4">
+        <div>
+          <p id="pref-agenda" className="text-sm text-foreground">{t.usar}</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{t.ajuda}</p>
+        </div>
+        <Toggle checked={usarAgenda} onChange={definirUsarAgenda} labelledBy="pref-agenda" />
+      </div>
+    </Card>
+  );
+}
+
+function DadosCard() {
+  const t = useT().dados;
+  const [importarOpen, setImportarOpen] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+  return (
+    <Card icon={<Database className="h-4 w-4" />} title={t.titulo} sub={t.sub}>
+      <div className="px-5 py-4">
+        <p className="text-[12px] text-muted-foreground">{t.nota}</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={exportarTudo}
+            className="flex items-start gap-2.5 rounded-xl border border-border bg-background px-4 py-3 text-left hover:bg-accent"
+          >
+            <Download className="mt-0.5 h-4 w-4 text-muted-foreground" />
+            <span>
+              <span className="block text-sm text-foreground">{t.exportarTudo}</span>
+              <span className="block text-[11px] text-muted-foreground">{t.exportarTudoAjuda}</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setImportarOpen(true)}
+            className="flex items-start gap-2.5 rounded-xl border border-border bg-background px-4 py-3 text-left hover:bg-accent"
+          >
+            <Upload className="mt-0.5 h-4 w-4 text-muted-foreground" />
+            <span>
+              <span className="block text-sm text-foreground">{t.importar}</span>
+              <span className="block text-[11px] text-muted-foreground">{t.importarAjuda}</span>
+            </span>
+          </button>
+        </div>
+        {aviso && (
+          <p role="status" className="mt-3 text-xs text-foreground">
+            {aviso}
+          </p>
+        )}
+      </div>
+      <ImportarUtentesModal
+        open={importarOpen}
+        onClose={() => setImportarOpen(false)}
+        onImportados={(n) => setAviso(t.importados(n))}
+      />
+    </Card>
   );
 }
 
@@ -214,15 +282,18 @@ function NotificacoesGlobais() {
 function Toggle({
   checked,
   onChange,
+  labelledBy,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
+  labelledBy?: string;
 }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-labelledby={labelledBy}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
         checked ? "bg-foreground" : "bg-muted"

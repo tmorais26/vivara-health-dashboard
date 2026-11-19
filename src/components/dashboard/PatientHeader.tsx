@@ -23,6 +23,9 @@ import { LanguageToggle } from "@/components/portal/LanguageToggle";
 import { ALERTA_VS_ALVO_EXPLICACAO } from "@/data/mock-portal";
 import { InfoHint } from "@/components/portal/InfoHint";
 import { ChatModal } from "@/components/portal/ChatModal";
+import { ClinicaUtenteChip } from "@/components/portal/ClinicaUtente";
+import { exportarMarcadoresCsv, exportarUtenteJson } from "@/lib/exportacao";
+import { useT } from "@/lib/i18n";
 import {
   Field,
   ModalActions,
@@ -49,6 +52,7 @@ export function PatientHeader({
   const [novaNotaOpen, setNovaNotaOpen] = useState(false);
   const [novoAlertaOpen, setNovoAlertaOpen] = useState(false);
   const [msgOpen, setMsgOpen] = useState(false);
+  const t = useT();
   const [previewOpen, setPreviewOpen] = useState(false);
 
   // Sessão countdown — começa a 14:32
@@ -122,6 +126,8 @@ export function PatientHeader({
                 <span>F · 67 kg · 1.65 m</span>
                 <span>·</span>
                 <span>{utente.cidade}</span>
+                <span>·</span>
+                <ClinicaUtenteChip utenteId={utente.id} utenteNome={utente.nome} />
                 <span>·</span>
                 <span>Plano {utente.plano}</span>
                 <span>·</span>
@@ -223,9 +229,22 @@ export function PatientHeader({
               </button>
               {exportOpen && (
                 <div className="absolute right-0 z-30 mt-1.5 w-64 overflow-hidden rounded-xl border border-border bg-surface-raised shadow-lg">
-                  <ExportItem label="PDF · Resumo clínico" hint="Para utente ou outro médico" />
-                  <ExportItem label="CSV · Marcadores tabulares" hint="Para análise externa" />
-                  <ExportItem label="HL7 FHIR · Bundle" hint="Interoperabilidade clínica" />
+                  <ExportItem
+                    label={t.dados.exportarUtenteJson}
+                    hint={t.dados.exportarUtenteJsonAjuda}
+                    onClick={() => {
+                      exportarUtenteJson(utente);
+                      setExportOpen(false);
+                    }}
+                  />
+                  <ExportItem
+                    label={t.dados.exportarCsv}
+                    hint={t.dados.exportarCsvAjuda}
+                    onClick={() => {
+                      exportarMarcadoresCsv(utente);
+                      setExportOpen(false);
+                    }}
+                  />
                 </div>
               )}
             </div>
@@ -297,10 +316,11 @@ export function PatientHeader({
   );
 }
 
-function ExportItem({ label, hint }: { label: string; hint: string }) {
+function ExportItem({ label, hint, onClick }: { label: string; hint: string; onClick: () => void }) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className="block w-full px-3 py-2.5 text-left hover:bg-accent"
     >
       <div className="text-xs font-medium text-foreground">{label}</div>
