@@ -15,16 +15,21 @@ const T = {
     steps: [
       {
         n: "01",
+        title: "Crie a sua conta",
+        desc: "Abra a sua conta de profissional em minutos, com a sua cédula profissional. É o seu acesso ao portal: não precisa de instalar nada nem de depender do sistema da clínica.",
+      },
+      {
+        n: "02",
         title: "Registe o utente",
         desc: "Comece em minutos. Se o utente quiser, convide-o por email para a app. Se preferir não usar a app, basta ele reencaminhar-lhe os resultados que recebe — e você acrescenta-os ao historial.",
       },
       {
-        n: "02",
+        n: "03",
         title: "Acompanhe entre consultas",
         desc: "Análises, exames e notas numa só linha do tempo, venham de onde vierem. Com a app do utente, também wearables, sono e atividade ao lado dos dados clínicos. Veja a evolução muito antes de ele voltar à consulta.",
       },
       {
-        n: "03",
+        n: "04",
         title: "Chegue preparado à consulta",
         desc: "Todo o contexto reunido num só ecrã — alertas de valores fora do alvo, notas da última visita, adesão ao plano. A decisão clínica continua a ser sempre sua.",
       },
@@ -69,7 +74,7 @@ const T = {
       },
       {
         title: "Setup rápido",
-        desc: <>Registe o utente em minutos, <Highlight>sem importações manuais</Highlight> nem onboarding complicado.</>,
+        desc: <>Abra a conta e registe o utente em minutos, <Highlight>sem importações manuais</Highlight> nem onboarding complicado.</>,
       },
       {
         title: "Com ou sem app do utente",
@@ -98,16 +103,21 @@ const T = {
     steps: [
       {
         n: "01",
+        title: "Create your account",
+        desc: "Open your professional account in minutes, with your professional licence number. It's your access to the portal: nothing to install, and no dependence on the clinic's system.",
+      },
+      {
+        n: "02",
         title: "Register the patient",
         desc: "Start in minutes. If the patient wants, invite them to the app by email. If they'd rather not use the app, they can simply forward you the results they receive — and you add them to the record.",
       },
       {
-        n: "02",
+        n: "03",
         title: "Follow between appointments",
         desc: "Lab results, exams and notes on a single timeline, wherever they come from. With the patient's app, also wearables, sleep and activity next to the clinical data. See how they're doing long before they return to the clinic.",
       },
       {
-        n: "03",
+        n: "04",
         title: "Arrive at the appointment prepared",
         desc: "All the context on a single screen — alerts for out-of-range values, notes from the last visit, plan adherence. The clinical decision is always yours.",
       },
@@ -152,7 +162,7 @@ const T = {
       },
       {
         title: "Quick setup",
-        desc: <>Register the patient in minutes, <Highlight>no manual imports</Highlight> and no complicated onboarding.</>,
+        desc: <>Open your account and register a patient in minutes, <Highlight>no manual imports</Highlight> and no complicated onboarding.</>,
       },
       {
         title: "With or without the patient app",
@@ -183,7 +193,7 @@ export default function Medicos() {
       <section className="bg-brand-beige py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6">
           <Reveal><SectionBadge>{L.howBadge}</SectionBadge></Reveal>
-          <div className="mt-10 grid md:grid-cols-3 gap-8">
+          <div className="mt-10 grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {L.steps.map((s, i) => (
               <Reveal key={s.n} delay={i * 0.1}>
                 <p className="font-serif text-5xl md:text-6xl opacity-20 text-brand-olive mb-4">{s.n}</p>
