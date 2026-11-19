@@ -1,7 +1,6 @@
 import Hero from "../components/Hero";
 import Overview from "../components/Overview";
 import Problem from "../components/Problem";
-import Evidence from "../components/Evidence";
 import { Timeline, Vault, Insights, Sharing } from "../components/Solutions";
 import Trust from "../components/Trust";
 import Story from "../components/Story";
@@ -14,7 +13,6 @@ export default function Home() {
     <>
       <Hero />
       <Problem />
-      <Evidence />
       <Overview />
       <Timeline />
       <Vault />
