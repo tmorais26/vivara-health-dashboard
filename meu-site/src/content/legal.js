@@ -5,8 +5,8 @@
 // Formato de cada secção: { id, h, body: [...] }, em que cada elemento de
 // body é um parágrafo (string), { list: [...] } ou { rows: [[rótulo, texto]] }.
 
-const UPDATED_PT = "Última atualização: novembro de 2026 · Em vigor a partir de: [data de lançamento]";
-const UPDATED_EN = "Last updated: November 2026 · Effective from: [launch date]";
+const UPDATED_PT = "Última atualização: novembro de 2026 · Em vigor a partir de: dezembro de 2026";
+const UPDATED_EN = "Last updated: November 2026 · Effective from: December 2026";
 
 export const LEGAL = {
   pt: {
@@ -112,18 +112,14 @@ export const LEGAL = {
           id: "subcontratantes",
           h: "Subcontratantes",
           body: [
-            "Empresas que tratam dados por nossa conta. Atualizamos esta lista antes de acrescentar um novo subcontratante.",
+            "Recorremos a prestadores de serviços — por exemplo, de alojamento, pagamentos e envio de emails — que tratam dados apenas por nossa conta, segundo as nossas instruções e com contrato que os obriga a protegê-los. Os que usamos atualmente são:",
             {
               rows: [
-                ["Alojamento e base de dados", "[fornecedor a definir] · União Europeia"],
-                ["Pagamentos", "[fornecedor a definir]"],
-                ["Envio de emails", "[fornecedor a definir]"],
-                ["Leitura automática de documentos", "[fornecedor a definir, se aplicável]"],
-                ["Estatísticas do site (só com consentimento)", "[fornecedor a definir]"],
                 ["Alojamento deste site", "Vercel Inc. · EUA. Não recebe dados de saúde."],
                 ["Formulário de contacto", "Web3Forms. Recebe apenas o que escreve no formulário."],
               ],
             },
+            "Mantemos esta lista atualizada e acrescentamos cada novo prestador antes de ele começar a tratar dados.",
           ],
         },
         {
@@ -147,7 +143,6 @@ export const LEGAL = {
                 "os valores lidos podem ter erros — confirme-os sempre no documento original.",
               ],
             },
-            "Fornecedor: [a definir].",
           ],
         },
         {
@@ -157,10 +152,10 @@ export const LEGAL = {
             {
               list: [
                 "Enquanto a sua conta estiver ativa.",
-                "Depois de cancelar, os dados ficam disponíveis para exportação durante 90 dias e depois são apagados. As cópias de segurança são apagadas em [prazo a definir].",
-                "Pode pedir que apaguemos tudo de imediato.",
+                "Depois de cancelar, os dados ficam disponíveis para exportação durante 90 dias e depois são apagados. As cópias de segurança são apagadas nos 90 dias seguintes.",
+                "Pode pedir que apaguemos tudo de imediato; as cópias de segurança são apagadas nos 90 dias seguintes.",
                 "Faturas: 10 anos, como exige a lei fiscal.",
-                "Mensagens do formulário de contacto: [prazo a definir].",
+                "Mensagens do formulário de contacto: até 12 meses depois do último contacto.",
                 "Dados que um médico registou no seu processo clínico seguem as regras de conservação a que ele está obrigado.",
               ],
             },
@@ -186,14 +181,14 @@ export const LEGAL = {
           id: "idade",
           h: "Idade mínima",
           body: [
-            "A Vivara destina-se a maiores de 18 anos. [Contas de menores geridas por um responsável parental: a definir.]",
+            "A Vivara destina-se apenas a maiores de 18 anos. Não criamos contas para menores e, se soubermos que uma conta pertence a um menor, encerramo-la e apagamos os dados.",
           ],
         },
         {
           id: "cookies",
           h: "Cookies",
           body: [
-            "Usamos cookies essenciais para o site funcionar. Cookies de estatística só com o seu consentimento, dado na barra que aparece na primeira visita. [Forma de alterar a escolha mais tarde: a definir.]",
+            "Usamos cookies essenciais para o site funcionar. Cookies de estatística só com o seu consentimento, dado na barra que aparece na primeira visita. Pode mudar a escolha a qualquer momento em «Preferências de cookies», no rodapé do site.",
           ],
         },
         {
@@ -283,7 +278,7 @@ export const LEGAL = {
                 ["Clínica (2 ou mais profissionais)", "Sob consulta."],
               ],
             },
-            "[IVA: a confirmar se incluído nos preços.] O pagamento é feito no início de cada período e o plano renova automaticamente. Pagamentos tratados por [fornecedor a definir].",
+            "Os preços incluem IVA à taxa legal em vigor. O pagamento é feito no início de cada período, através de um prestador de serviços de pagamento, e o plano renova automaticamente.",
             "Se alterarmos um preço, avisamos pelo menos 30 dias antes; pode cancelar antes de a alteração produzir efeito. Se um pagamento falhar, avisamos e podemos suspender o acesso até à regularização — os seus dados não são apagados por isso.",
           ],
         },
@@ -374,7 +369,7 @@ export const LEGAL = {
           h: "Lei aplicável e litígios",
           body: [
             "Estes termos regem-se pela lei portuguesa. Se for consumidor, mantém a proteção das normas imperativas do seu país de residência.",
-            "Em caso de litígio de consumo, pode recorrer a [entidade de resolução alternativa de litígios a definir]. Mais informação no Portal do Consumidor (www.consumidor.gov.pt). Dispomos de Livro de Reclamações Eletrónico (www.livroreclamacoes.pt).",
+            "Em caso de litígio de consumo, pode recorrer ao CNIACC — Centro Nacional de Informação e Arbitragem de Conflitos de Consumo (www.cniacc.pt) ou ao centro de arbitragem de consumo da sua área de residência. Mais informação no Portal do Consumidor (www.consumidor.gov.pt). Dispomos de Livro de Reclamações Eletrónico (www.livroreclamacoes.pt).",
             "Para profissionais, é competente o tribunal da comarca da sede da Vivara.",
           ],
         },
@@ -490,18 +485,14 @@ export const LEGAL = {
           id: "subcontratantes",
           h: "Processors",
           body: [
-            "Companies that process data on our behalf. We update this list before adding a new processor.",
+            "We use service providers — for example for hosting, payments and email delivery — that process data only on our behalf, following our instructions and under contracts that require them to protect it. The ones we currently use are:",
             {
               rows: [
-                ["Hosting and database", "[provider to be defined] · European Union"],
-                ["Payments", "[provider to be defined]"],
-                ["Email delivery", "[provider to be defined]"],
-                ["Automatic document reading", "[provider to be defined, if applicable]"],
-                ["Website analytics (consent only)", "[provider to be defined]"],
                 ["Hosting of this website", "Vercel Inc. · USA. Receives no health data."],
                 ["Contact form", "Web3Forms. Receives only what you write in the form."],
               ],
             },
+            "We keep this list up to date and add each new provider before it starts processing data.",
           ],
         },
         {
@@ -525,7 +516,6 @@ export const LEGAL = {
                 "the values read may contain errors — always check them against the original document.",
               ],
             },
-            "Provider: [to be defined].",
           ],
         },
         {
@@ -535,10 +525,10 @@ export const LEGAL = {
             {
               list: [
                 "For as long as your account is active.",
-                "After you cancel, data remains available for export for 90 days and is then deleted. Backups are deleted within [period to be defined].",
-                "You can ask us to delete everything immediately.",
+                "After you cancel, data remains available for export for 90 days and is then deleted. Backups are deleted within the following 90 days.",
+                "You can ask us to delete everything immediately; backups are deleted within the following 90 days.",
                 "Invoices: 10 years, as required by tax law.",
-                "Contact form messages: [period to be defined].",
+                "Contact form messages: up to 12 months after the last contact.",
                 "Data a doctor recorded in their clinical file follows the retention rules that apply to them.",
               ],
             },
@@ -564,14 +554,14 @@ export const LEGAL = {
           id: "idade",
           h: "Minimum age",
           body: [
-            "Vivara is intended for people aged 18 or over. [Accounts for minors managed by a parent or guardian: to be defined.]",
+            "Vivara is intended only for people aged 18 or over. We don't create accounts for minors and, if we learn that an account belongs to a minor, we close it and delete the data.",
           ],
         },
         {
           id: "cookies",
           h: "Cookies",
           body: [
-            "We use essential cookies for the website to work. Analytics cookies only with your consent, given in the bar shown on your first visit. [How to change your choice later: to be defined.]",
+            "We use essential cookies for the website to work. Analytics cookies only with your consent, given in the bar shown on your first visit. You can change your choice at any time under \"Cookie preferences\" in the website footer.",
           ],
         },
         {
@@ -661,7 +651,7 @@ export const LEGAL = {
                 ["Clinic (2 or more professionals)", "On request."],
               ],
             },
-            "[VAT: to confirm whether included in prices.] Payment is made at the start of each period and the plan renews automatically. Payments handled by [provider to be defined].",
+            "Prices include VAT at the applicable rate. Payment is made at the start of each period, through a payment service provider, and the plan renews automatically.",
             "If we change a price, we notify you at least 30 days in advance; you can cancel before the change takes effect. If a payment fails, we let you know and may suspend access until it is settled — your data is not deleted because of it.",
           ],
         },
@@ -752,7 +742,7 @@ export const LEGAL = {
           h: "Governing law and disputes",
           body: [
             "These terms are governed by Portuguese law. If you are a consumer, you keep the protection of the mandatory rules of your country of residence.",
-            "For consumer disputes, you can turn to [alternative dispute resolution body to be defined]. More information on the Portuguese Consumer Portal (www.consumidor.gov.pt). We have an Electronic Complaints Book (www.livroreclamacoes.pt).",
+            "For consumer disputes, you can turn to CNIACC — the Portuguese National Centre for Consumer Arbitration (www.cniacc.pt) — or to the consumer arbitration centre for your area of residence. More information on the Portuguese Consumer Portal (www.consumidor.gov.pt). We have an Electronic Complaints Book (www.livroreclamacoes.pt).",
             "For professionals, the court of the district of Vivara's registered office has jurisdiction.",
           ],
         },

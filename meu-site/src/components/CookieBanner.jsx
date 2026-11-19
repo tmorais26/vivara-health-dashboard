@@ -22,11 +22,25 @@ export default function CookieBanner() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem("vivara_cookies")) setShow(true);
+    let stored = null;
+    try {
+      stored = localStorage.getItem("vivara_cookies");
+    } catch {
+      /* sem acesso ao armazenamento: perguntar sempre */
+    }
+    if (!stored) setShow(true);
+    // «Preferências de cookies» no rodapé volta a abrir a barra.
+    const reopen = () => setShow(true);
+    window.addEventListener("vivara:cookie-preferences", reopen);
+    return () => window.removeEventListener("vivara:cookie-preferences", reopen);
   }, []);
 
   const decide = (v) => {
-    localStorage.setItem("vivara_cookies", v);
+    try {
+      localStorage.setItem("vivara_cookies", v);
+    } catch {
+      /* ignorar */
+    }
     setShow(false);
   };
 

@@ -32,6 +32,7 @@ const T = {
           ["Privacidade", "/privacidade"],
           ["Termos e condições", "/termos"],
         ],
+        cookies: "Preferências de cookies",
       },
     ],
   },
@@ -65,6 +66,7 @@ const T = {
           ["Privacy", "/privacidade"],
           ["Terms and conditions", "/termos"],
         ],
+        cookies: "Cookie preferences",
       },
     ],
   },
@@ -121,6 +123,17 @@ export default function Footer() {
                     <Link to={to} className="hover:text-brand-text">{label}</Link>
                   </li>
                 ))}
+                {col.cookies && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new Event("vivara:cookie-preferences"))}
+                      className="hover:text-brand-text"
+                    >
+                      {col.cookies}
+                    </button>
+                  </li>
+                )}
               </ul>
             </div>
           ))}
