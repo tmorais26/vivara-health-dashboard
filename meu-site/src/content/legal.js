@@ -273,8 +273,8 @@ export const LEGAL = {
           body: [
             {
               rows: [
-                ["Utente", "€9,99 por mês ou €95,90 por ano."],
-                ["Médico individual", "€20 por mês."],
+                ["Utente", "€6,99 por mês ou €69,90 por ano."],
+                ["Médico individual", "€29 por mês. Preço de lançamento de €20 por mês para os primeiros médicos, mantido enquanto forem clientes."],
                 ["Clínica (2 ou mais profissionais)", "Sob consulta."],
               ],
             },
@@ -770,8 +770,8 @@ export const LEGAL = {
           body: [
             {
               rows: [
-                ["Patient", "€9.99 per month or €95.90 per year."],
-                ["Individual doctor", "€20 per month."],
+                ["Patient", "€6.99 per month or €69.90 per year."],
+                ["Individual doctor", "€29 per month. Launch price of €20 per month for the first doctors, kept for as long as they remain customers."],
                 ["Clinic (2 or more professionals)", "On request."],
               ],
             },

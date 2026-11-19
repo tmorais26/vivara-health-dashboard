@@ -15,7 +15,7 @@ const T = {
       desc: "Planos separados para quem acompanha e quem é acompanhado. O acesso do utente é independente do da clínica.",
     },
     monthly: "Mensal",
-    annual: "Anual — poupa 20%",
+    annual: "Anual — 2 meses grátis",
     patientsBadge: "Para utentes",
     perMonth: "/mês",
     billedAnnually: "Faturado anualmente",
@@ -42,10 +42,12 @@ const T = {
     doctorsBadge: "Para médicos e clínicas",
     perDoctorMonth: "/médico/mês",
     custom: "Sob consulta",
+    launch: "Preço de lançamento: €20/médico/mês para os primeiros médicos, mantido enquanto forem clientes.",
     doctorPlans: [
       {
         name: "Individual",
-        monthly: 20,
+        monthly: 29,
+        launch: true,
         desc: "Para médicos a trabalhar de forma independente.",
         features: ["Até 200 utentes", "Portal clínico completo", "Funciona com ou sem app do utente", "Integrações com wearables", "Suporte por email"],
       },
@@ -84,7 +86,7 @@ const T = {
       desc: "Separate plans for those who provide care and those who receive it. Patient access is independent from the clinic's.",
     },
     monthly: "Monthly",
-    annual: "Annual — save 20%",
+    annual: "Annual — 2 months free",
     patientsBadge: "For patients",
     perMonth: "/month",
     billedAnnually: "Billed annually",
@@ -111,10 +113,12 @@ const T = {
     doctorsBadge: "For doctors and clinics",
     perDoctorMonth: "/doctor/month",
     custom: "Custom pricing",
+    launch: "Launch price: €20/doctor/month for the first doctors, kept for as long as they remain customers.",
     doctorPlans: [
       {
         name: "Individual",
-        monthly: 20,
+        monthly: 29,
+        launch: true,
         desc: "For doctors working independently.",
         features: ["Up to 200 patients", "Full clinical portal", "Works with or without the patient app", "Wearable integrations", "Email support"],
       },
@@ -148,7 +152,9 @@ const T = {
   },
 };
 
-const PATIENT_MONTHLY = 9.99;
+const PATIENT_MONTHLY = 6.99;
+// Plano anual: 12 meses ao preço de 10.
+const ANNUAL_FACTOR = 10 / 12;
 
 export default function Precos() {
   const { lang } = useLang();
@@ -157,7 +163,7 @@ export default function Precos() {
   const [billing, setBilling] = useState("mensal");
 
   const formatPrice = (monthly) => {
-    const price = billing === "anual" ? monthly * 0.8 : monthly;
+    const price = billing === "anual" ? monthly * ANNUAL_FACTOR : monthly;
     return price.toLocaleString(lang === "pt" ? "pt-PT" : "en-IE", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -197,7 +203,7 @@ export default function Precos() {
                 <div className="mb-6">
                   <span className="font-serif text-4xl">€{formatPrice(PATIENT_MONTHLY)}</span>
                   <span className="text-white/60 text-sm">{L.perMonth}</span>
-                  {billing === "anual" && <p className="text-xs text-brand-lime mt-1">{L.billedAnnually} · €{formatPrice(PATIENT_MONTHLY * 12)}/{L.perYear}</p>}
+                  {billing === "anual" && <p className="text-xs text-brand-lime mt-1">{L.billedAnnually} · €{(PATIENT_MONTHLY * 10).toLocaleString(lang === "pt" ? "pt-PT" : "en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{L.perYear}</p>}
                 </div>
                 <ul className="space-y-3 mb-8 text-sm">
                   {L.patient.features.map((f) => (
@@ -255,6 +261,11 @@ export default function Precos() {
                       </>
                     ) : (
                       <span className="font-serif text-4xl">{L.custom}</span>
+                    )}
+                    {p.launch && (
+                      <p className="mt-2 rounded-xl bg-brand-lime/40 px-3 py-2 text-xs leading-relaxed text-brand-dark">
+                        {L.launch}
+                      </p>
                     )}
                   </div>
                   <ul className="space-y-3 mb-8 text-sm">
