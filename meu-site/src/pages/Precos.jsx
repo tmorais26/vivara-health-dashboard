@@ -158,6 +158,12 @@ export default function Precos() {
   const L = t(T);
   const [billing, setBilling] = useState("mensal");
 
+  const formatYear = (monthly) =>
+    (monthly * 11).toLocaleString(lang === "pt" ? "pt-PT" : "en-IE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
   const formatPrice = (monthly) => {
     const price = billing === "anual" ? monthly * ANNUAL_FACTOR : monthly;
     return price.toLocaleString(lang === "pt" ? "pt-PT" : "en-IE", {
@@ -199,7 +205,7 @@ export default function Precos() {
                 <div className="mb-6">
                   <span className="font-serif text-4xl">€{formatPrice(PATIENT_MONTHLY)}</span>
                   <span className="text-white/60 text-sm">{L.perMonth}</span>
-                  {billing === "anual" && <p className="text-xs text-brand-lime mt-1">{L.billedAnnually} · €{(PATIENT_MONTHLY * 11).toLocaleString(lang === "pt" ? "pt-PT" : "en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{L.perYear}</p>}
+                  {billing === "anual" && <p className="text-xs text-brand-lime mt-1">{L.billedAnnually} · €{formatYear(PATIENT_MONTHLY)}/{L.perYear}</p>}
                 </div>
                 <ul className="space-y-3 mb-8 text-sm">
                   {L.patient.features.map((f) => (
@@ -254,6 +260,11 @@ export default function Precos() {
                       <>
                         <span className="font-serif text-4xl">€{formatPrice(p.monthly)}</span>
                         <span className={`text-sm ${p.featured ? "text-white/60" : "text-brand-muted/60"}`}>{L.perDoctorMonth}</span>
+                        {billing === "anual" && (
+                          <p className={`text-xs mt-1 ${p.featured ? "text-brand-lime" : "text-brand-green-dark"}`}>
+                            {L.billedAnnually} · €{formatYear(p.monthly)}/{L.perYear}
+                          </p>
+                        )}
                       </>
                     ) : (
                       <span className="font-serif text-4xl">{L.custom}</span>
