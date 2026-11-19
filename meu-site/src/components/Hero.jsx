@@ -6,7 +6,7 @@ import heroPhoto from "../assets/hero-photo.jpg";
 
 const T = {
   pt: {
-    badge: "Para utentes e médicos · Uma só plataforma",
+    badge: "Utentes desde €6,99/mês · Médicos desde €29/mês",
     title: (
       <>
         A sua saúde,
@@ -18,7 +18,7 @@ const T = {
     cta: "Ver como funciona",
   },
   en: {
-    badge: "For patients and doctors · One platform",
+    badge: "Patients from €6.99/month · Doctors from €29/month",
     title: (
       <>
         Your health,
@@ -54,8 +54,12 @@ export default function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-white/80"
+          className="inline-flex items-center gap-2.5 text-sm sm:text-base text-white/90"
         >
+          <svg viewBox="0 0 24 24" className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <circle cx="12" cy="12" r="9.5" />
+            <path d="m8 12.3 2.8 2.8L16 9.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           {L.badge}
         </motion.span>
 
