@@ -260,7 +260,7 @@ export const LEGAL = {
               list: [
                 "Declara estar legalmente habilitado para exercer e inscrito na respetiva ordem profissional.",
                 "Só regista utentes e carrega os seus dados quando tem fundamento legal para isso, e mantém o sigilo profissional.",
-                "É o responsável pelo tratamento dos dados que regista. A Vivara atua como sua subcontratante, nos termos do acordo de tratamento de dados, que faz parte destes termos. [Acordo de tratamento de dados: a disponibilizar.]",
+                "É o responsável pelo tratamento dos dados que regista. A Vivara atua como sua subcontratante, nos termos do /acordo-medicos, que faz parte destes termos.",
                 "O plano Individual é para um profissional. Para clínicas com 2 ou mais profissionais, as condições são acordadas por escrito.",
                 "Cada profissional tem o seu próprio acesso. Não partilhe credenciais.",
               ],
@@ -377,6 +377,130 @@ export const LEGAL = {
           id: "contacto",
           h: "Contacto",
           body: ["equipa@vivara.health · [morada a definir], Portugal."],
+        },
+      ],
+    },
+    acordo: {
+      badge: "Legal",
+      title: ["Acordo de Tratamento ", "de Dados."],
+      updated: UPDATED_PT,
+      summary: [
+        "Este acordo aplica-se a médicos e clínicas que usam o portal da Vivara. O profissional é o responsável pelos dados dos seus utentes; a Vivara trata-os apenas por conta dele.",
+        "Só usamos os dados para prestar o serviço. Nunca para fins próprios, publicidade ou treino de modelos de inteligência artificial.",
+        "Aceita este acordo ao criar a conta. Faz parte dos Termos de Serviço.",
+      ],
+      sections: [
+        {
+          id: "partes",
+          h: "Partes e objeto",
+          body: [
+            "Este acordo é celebrado entre o profissional de saúde ou clínica que cria a conta no portal («Responsável pelo tratamento» ou «Profissional») e a Vivara, explorada pela [denominação social a definir] («Subcontratante»), ao abrigo do artigo 28.º do Regulamento Geral sobre a Proteção de Dados (RGPD).",
+            "Define como a Vivara trata, por conta do Profissional, os dados pessoais dos utentes que ele regista e acompanha no portal.",
+          ],
+        },
+        {
+          id: "tratamento",
+          h: "Que dados e para quê",
+          body: [
+            {
+              rows: [
+                ["Finalidade", "Organizar o historial clínico dos utentes do Profissional: guardar resultados, exames e registos, mostrá-los em linha do tempo e disponibilizá-los ao Profissional."],
+                ["Operações", "Alojamento, armazenamento, consulta, organização, leitura de documentos carregados, exportação e apagamento."],
+                ["Categorias de dados", "Identificação e contacto do utente; dados de saúde (resultados de análises e exames, notas, sintomas, medicação e, se o utente os ligar, dados de wearables)."],
+                ["Titulares", "Os utentes do Profissional."],
+                ["Duração", "Enquanto a conta do Profissional estiver ativa e até ao fim do prazo de devolução e apagamento (ver «Fim do acordo»)."],
+              ],
+            },
+          ],
+        },
+        {
+          id: "instrucoes",
+          h: "Instruções do Profissional",
+          body: [
+            "A Vivara trata os dados apenas segundo as instruções documentadas do Profissional, que são este acordo e o uso normal do portal. Não os usa para fins próprios, publicidade, nem para treinar modelos de inteligência artificial.",
+            "Se a Vivara considerar que uma instrução viola a lei, avisa o Profissional.",
+            "O Profissional garante que tem fundamento legal para registar os dados dos seus utentes e que mantém o sigilo profissional a que está obrigado.",
+          ],
+        },
+        {
+          id: "confidencialidade",
+          h: "Confidencialidade",
+          body: [
+            "Só tem acesso aos dados quem precisa deles para prestar o serviço, e todas essas pessoas estão obrigadas a confidencialidade.",
+          ],
+        },
+        {
+          id: "seguranca",
+          h: "Segurança",
+          body: [
+            "A Vivara aplica medidas técnicas e organizativas adequadas ao risco, incluindo:",
+            {
+              list: [
+                "encriptação dos dados em trânsito e em repouso;",
+                "controlo, registo e revisão dos acessos;",
+                "autenticação segura;",
+                "cópias de segurança;",
+                "alojamento dos dados de saúde na União Europeia.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "subcontratantes",
+          h: "Outros prestadores",
+          body: [
+            "O Profissional autoriza a Vivara a recorrer a outros prestadores (por exemplo, alojamento, pagamentos ou envio de emails). A Vivara impõe-lhes obrigações de proteção de dados equivalentes às deste acordo e continua responsável perante o Profissional.",
+            "A lista atual está na Política de Privacidade. Antes de acrescentar um novo prestador que trate dados dos utentes, a Vivara avisa o Profissional, que pode opor-se; se a oposição for fundamentada e não houver alternativa, o Profissional pode cessar o acordo.",
+          ],
+        },
+        {
+          id: "transferencias",
+          h: "Transferências para fora da UE",
+          body: [
+            "Os dados de saúde ficam na União Europeia. Qualquer transferência para fora do Espaço Económico Europeu só se faz com garantias previstas no RGPD, como uma decisão de adequação ou cláusulas contratuais-tipo.",
+          ],
+        },
+        {
+          id: "direitos",
+          h: "Direitos dos utentes",
+          body: [
+            "Se um utente pedir à Vivara o acesso, a retificação, o apagamento ou outro direito sobre dados que o Profissional registou, a Vivara encaminha o pedido ao Profissional sem demora. A Vivara ajuda o Profissional a responder, dentro do que o portal permite (por exemplo, exportar ou apagar os dados de um utente).",
+          ],
+        },
+        {
+          id: "violacoes",
+          h: "Violações de dados",
+          body: [
+            "Se a Vivara souber de uma violação de dados que afete os utentes do Profissional, avisa-o sem demora injustificada e, sempre que possível, nas 48 horas seguintes. Indica o que aconteceu, que dados estão em causa e o que está a ser feito, para o Profissional poder cumprir os seus deveres, incluindo notificar a CNPD no prazo de 72 horas quando for obrigatório.",
+          ],
+        },
+        {
+          id: "ajuda",
+          h: "Outra ajuda ao Profissional",
+          body: [
+            "A Vivara ajuda o Profissional a cumprir as obrigações de segurança, de avaliação de impacto sobre a proteção de dados e de consulta prévia à CNPD, na medida do que o serviço permite e da informação de que dispõe.",
+          ],
+        },
+        {
+          id: "provas",
+          h: "Provas e auditorias",
+          body: [
+            "A Vivara disponibiliza ao Profissional a informação necessária para demonstrar o cumprimento deste acordo e permite verificações razoáveis, com aviso prévio, por si ou por um auditor que o Profissional indique. Estas verificações não podem pôr em risco os dados de outros clientes.",
+          ],
+        },
+        {
+          id: "fim",
+          h: "Fim do acordo",
+          body: [
+            "Quando a conta do Profissional termina, a Vivara devolve-lhe os dados num formato aberto, disponível para exportação durante 90 dias. Depois disso, apaga-os, incluindo as cópias de segurança nos 90 dias seguintes, salvo se a lei exigir a sua conservação.",
+          ],
+        },
+        {
+          id: "lei",
+          h: "Lei aplicável",
+          body: [
+            "Este acordo rege-se pela lei portuguesa e faz parte dos Termos de Serviço. Em caso de contradição sobre o tratamento de dados pessoais, prevalece este acordo.",
+          ],
         },
       ],
     },
@@ -633,7 +757,7 @@ export const LEGAL = {
               list: [
                 "You confirm you are legally qualified to practise and registered with the relevant professional body.",
                 "You only register patients and upload their data when you have a legal basis to do so, and you keep professional secrecy.",
-                "You are the controller of the data you record. Vivara acts as your processor under the data processing agreement, which forms part of these terms. [Data processing agreement: to be provided.]",
+                "You are the controller of the data you record. Vivara acts as your processor under the /acordo-medicos, which forms part of these terms.",
                 "The Individual plan is for one professional. For clinics with 2 or more professionals, terms are agreed in writing.",
                 "Each professional has their own access. Don't share credentials.",
               ],
@@ -750,6 +874,130 @@ export const LEGAL = {
           id: "contacto",
           h: "Contact",
           body: ["equipa@vivara.health · [address to be defined], Portugal."],
+        },
+      ],
+    },
+    acordo: {
+      badge: "Legal",
+      title: ["Data Processing ", "Agreement."],
+      updated: UPDATED_EN,
+      summary: [
+        "This agreement applies to doctors and clinics using the Vivara portal. The professional is the controller of their patients' data; Vivara processes it only on their behalf.",
+        "We use the data only to provide the service. Never for our own purposes, advertising or training artificial intelligence models.",
+        "You accept this agreement when you create your account. It forms part of the Terms of Service.",
+      ],
+      sections: [
+        {
+          id: "partes",
+          h: "Parties and subject matter",
+          body: [
+            "This agreement is between the healthcare professional or clinic that creates an account on the portal (the \"Controller\" or \"Professional\") and Vivara, operated by [company name to be defined] (the \"Processor\"), under Article 28 of the General Data Protection Regulation (GDPR).",
+            "It sets out how Vivara processes, on the Professional's behalf, the personal data of patients that the Professional registers and follows in the portal.",
+          ],
+        },
+        {
+          id: "tratamento",
+          h: "What data and for what purpose",
+          body: [
+            {
+              rows: [
+                ["Purpose", "Organising the clinical history of the Professional's patients: storing results, exams and records, showing them on a timeline and making them available to the Professional."],
+                ["Operations", "Hosting, storage, retrieval, organisation, reading of uploaded documents, export and deletion."],
+                ["Categories of data", "Patient identification and contact details; health data (lab and exam results, notes, symptoms, medication and, if the patient connects them, wearable data)."],
+                ["Data subjects", "The Professional's patients."],
+                ["Duration", "While the Professional's account is active and until the end of the return and deletion period (see \"End of the agreement\")."],
+              ],
+            },
+          ],
+        },
+        {
+          id: "instrucoes",
+          h: "The Professional's instructions",
+          body: [
+            "Vivara processes the data only on the Professional's documented instructions, which are this agreement and normal use of the portal. It does not use the data for its own purposes, advertising or to train artificial intelligence models.",
+            "If Vivara believes an instruction infringes the law, it will tell the Professional.",
+            "The Professional confirms they have a legal basis to record their patients' data and that they keep the professional secrecy they are bound by.",
+          ],
+        },
+        {
+          id: "confidencialidade",
+          h: "Confidentiality",
+          body: [
+            "Only people who need the data to provide the service can access it, and all of them are bound by confidentiality.",
+          ],
+        },
+        {
+          id: "seguranca",
+          h: "Security",
+          body: [
+            "Vivara applies technical and organisational measures appropriate to the risk, including:",
+            {
+              list: [
+                "encryption of data in transit and at rest;",
+                "access control, logging and review;",
+                "secure authentication;",
+                "backups;",
+                "hosting of health data in the European Union.",
+              ],
+            },
+          ],
+        },
+        {
+          id: "subcontratantes",
+          h: "Other providers",
+          body: [
+            "The Professional authorises Vivara to use other providers (for example for hosting, payments or email delivery). Vivara imposes on them data protection obligations equivalent to those in this agreement and remains responsible to the Professional.",
+            "The current list is in the Privacy Policy. Before adding a new provider that processes patient data, Vivara tells the Professional, who may object; if the objection is well founded and there is no alternative, the Professional may end the agreement.",
+          ],
+        },
+        {
+          id: "transferencias",
+          h: "Transfers outside the EU",
+          body: [
+            "Health data stays in the European Union. Any transfer outside the European Economic Area is made only with safeguards provided by the GDPR, such as an adequacy decision or standard contractual clauses.",
+          ],
+        },
+        {
+          id: "direitos",
+          h: "Patients' rights",
+          body: [
+            "If a patient asks Vivara for access, rectification, erasure or another right over data the Professional recorded, Vivara passes the request to the Professional without delay. Vivara helps the Professional respond, within what the portal allows (for example by exporting or deleting a patient's data).",
+          ],
+        },
+        {
+          id: "violacoes",
+          h: "Data breaches",
+          body: [
+            "If Vivara becomes aware of a data breach affecting the Professional's patients, it tells the Professional without undue delay and, where possible, within 48 hours. It says what happened, what data is involved and what is being done, so the Professional can meet their duties, including notifying the Portuguese data protection authority (CNPD) within 72 hours when required.",
+          ],
+        },
+        {
+          id: "ajuda",
+          h: "Other assistance to the Professional",
+          body: [
+            "Vivara helps the Professional comply with obligations on security, data protection impact assessments and prior consultation with the CNPD, to the extent the service allows and with the information it holds.",
+          ],
+        },
+        {
+          id: "provas",
+          h: "Evidence and audits",
+          body: [
+            "Vivara makes available to the Professional the information needed to show compliance with this agreement and allows reasonable checks, with prior notice, by the Professional or an auditor they appoint. These checks may not put other customers' data at risk.",
+          ],
+        },
+        {
+          id: "fim",
+          h: "End of the agreement",
+          body: [
+            "When the Professional's account ends, Vivara returns the data in an open format, available for export for 90 days. After that it deletes it, including backups within the following 90 days, unless the law requires it to be kept.",
+          ],
+        },
+        {
+          id: "lei",
+          h: "Governing law",
+          body: [
+            "This agreement is governed by Portuguese law and forms part of the Terms of Service. If there is a conflict over the processing of personal data, this agreement prevails.",
+          ],
         },
       ],
     },

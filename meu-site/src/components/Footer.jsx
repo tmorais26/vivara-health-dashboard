@@ -31,6 +31,7 @@ const T = {
         links: [
           ["Privacidade", "/privacidade"],
           ["Termos e condições", "/termos"],
+          ["Acordo para médicos", "/acordo-medicos"],
         ],
         cookies: "Preferências de cookies",
       },
@@ -65,6 +66,7 @@ const T = {
         links: [
           ["Privacy", "/privacidade"],
           ["Terms and conditions", "/termos"],
+          ["Doctors' data agreement", "/acordo-medicos"],
         ],
         cookies: "Cookie preferences",
       },

@@ -1,15 +1,25 @@
+import { Link } from "react-router-dom";
 import { PageHeader, Reveal } from "../components/ui";
 import { useT } from "../i18n";
 import { LEGAL } from "../content/legal";
 
 // Destaca o que ainda está por definir ([ … ]) e torna os sites citados clicáveis.
 function Rich({ text }) {
-  return text.split(/(\[[^\]]+\]|www\.[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s)]*)?)/gi).map((part, i) => {
+  const t = useT();
+  const agreement = t({ pt: "Acordo de Tratamento de Dados", en: "Data Processing Agreement" });
+  return text.split(/(\[[^\]]+\]|\/acordo-medicos|www\.[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s)]*)?)/gi).map((part, i) => {
     if (part.startsWith("[")) {
       return (
         <mark key={i} className="rounded bg-black/[0.06] px-1 text-brand-muted">
           {part}
         </mark>
+      );
+    }
+    if (part === "/acordo-medicos") {
+      return (
+        <Link key={i} to={part} className="underline underline-offset-2">
+          {agreement}
+        </Link>
       );
     }
     if (/^www\./i.test(part)) {

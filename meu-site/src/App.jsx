@@ -26,6 +26,7 @@ export default function App() {
         <Route path="/sobre" element={<Sobre />} />
         <Route path="/privacidade" element={<Legal kind="privacidade" />} />
         <Route path="/termos" element={<Legal kind="termos" />} />
+        <Route path="/acordo-medicos" element={<Legal kind="acordo" />} />
         <Route path="*" element={<Home />} />
       </Route>
     </Routes>
