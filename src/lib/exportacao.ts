@@ -106,7 +106,7 @@ function dividirCsv(linha: string, sep: string): string[] {
 }
 
 export function interpretarImportacao(texto: string, nomeFicheiro: string): ResultadoImportacao {
-  const conteudo = texto.replace(/^﻿/, "");
+  const conteudo = texto.replace(/^\uFEFF/, "");
   if (nomeFicheiro.toLowerCase().endsWith(".json")) {
     try {
       const dados = JSON.parse(conteudo) as { formato?: string; utentes?: unknown };
