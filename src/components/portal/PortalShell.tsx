@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
+  Bell,
   Calendar,
   LogOut,
   Settings,
@@ -13,10 +14,11 @@ import { LanguageToggle } from "./LanguageToggle";
 import { SessionTimeoutBanner } from "./SessionTimeoutBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
+import { useNaoLidas } from "@/lib/notificacoes-store";
 
 type NavItem = {
   label: string;
-  to: "/" | "/agenda" | "/definicoes";
+  to: "/" | "/agenda" | "/notificacoes" | "/definicoes";
   icon: typeof Users;
   match?: (pathname: string) => boolean;
   badge?: number;
@@ -24,6 +26,7 @@ type NavItem = {
 
 function useNavItems(): NavItem[] {
   const t = useT();
+  const naoLidas = useNaoLidas();
   return [
     {
       label: t.nav.utentes,
@@ -32,6 +35,7 @@ function useNavItems(): NavItem[] {
       match: (p) => p === "/" || p.startsWith("/utentes"),
     },
     { label: t.nav.agenda, to: "/agenda", icon: Calendar, badge: 5 },
+    { label: t.notificacoes.nav, to: "/notificacoes", icon: Bell, badge: naoLidas },
     { label: t.nav.definicoes, to: "/definicoes", icon: Settings },
   ];
 }

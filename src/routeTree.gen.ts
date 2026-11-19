@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReconsentimentoRouteImport } from './routes/reconsentimento'
+import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as DefinicoesRouteImport } from './routes/definicoes'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppV2RouteImport } from './routes/app-v2'
@@ -22,6 +23,11 @@ import { Route as ConsultaEventoIdRouteImport } from './routes/consulta.$eventoI
 const ReconsentimentoRoute = ReconsentimentoRouteImport.update({
   id: '/reconsentimento',
   path: '/reconsentimento',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificacoesRoute = NotificacoesRouteImport.update({
+  id: '/notificacoes',
+  path: '/notificacoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DefinicoesRoute = DefinicoesRouteImport.update({
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
+  '/notificacoes': typeof NotificacoesRoute
   '/reconsentimento': typeof ReconsentimentoRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
+  '/notificacoes': typeof NotificacoesRoute
   '/reconsentimento': typeof ReconsentimentoRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
+  '/notificacoes': typeof NotificacoesRoute
   '/reconsentimento': typeof ReconsentimentoRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/app-v2'
     | '/auth'
     | '/definicoes'
+    | '/notificacoes'
     | '/reconsentimento'
     | '/consulta/$eventoId'
     | '/utentes/$utenteId'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/app-v2'
     | '/auth'
     | '/definicoes'
+    | '/notificacoes'
     | '/reconsentimento'
     | '/consulta/$eventoId'
     | '/utentes/$utenteId'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/app-v2'
     | '/auth'
     | '/definicoes'
+    | '/notificacoes'
     | '/reconsentimento'
     | '/consulta/$eventoId'
     | '/utentes/$utenteId'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   AppV2Route: typeof AppV2Route
   AuthRoute: typeof AuthRoute
   DefinicoesRoute: typeof DefinicoesRoute
+  NotificacoesRoute: typeof NotificacoesRoute
   ReconsentimentoRoute: typeof ReconsentimentoRoute
   ConsultaEventoIdRoute: typeof ConsultaEventoIdRoute
   UtentesUtenteIdRoute: typeof UtentesUtenteIdRoute
@@ -154,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: '/reconsentimento'
       fullPath: '/reconsentimento'
       preLoaderRoute: typeof ReconsentimentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notificacoes': {
+      id: '/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof NotificacoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/definicoes': {
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppV2Route: AppV2Route,
   AuthRoute: AuthRoute,
   DefinicoesRoute: DefinicoesRoute,
+  NotificacoesRoute: NotificacoesRoute,
   ReconsentimentoRoute: ReconsentimentoRoute,
   ConsultaEventoIdRoute: ConsultaEventoIdRoute,
   UtentesUtenteIdRoute: UtentesUtenteIdRoute,
