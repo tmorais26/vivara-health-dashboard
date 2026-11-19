@@ -5,12 +5,12 @@ import { registarFundamentoUtente } from "@/lib/consent.functions";
 
 export function FundamentoLegalDialog({
   open,
-  utenteRef,
+  utenteRefs,
   onConfirm,
   onCancel,
 }: {
   open: boolean;
-  utenteRef: string;
+  utenteRefs: string[];
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -22,7 +22,11 @@ export function FundamentoLegalDialog({
     setLoading(true);
     setErro(null);
     try {
-      await registarFundamentoUtente({ data: { utenteRef, texto: t.consent.fundamento } });
+      await Promise.all(
+        utenteRefs.map((utenteRef) =>
+          registarFundamentoUtente({ data: { utenteRef, texto: t.consent.fundamento } }),
+        ),
+      );
       onConfirm();
     } catch {
       setErro(t.conta.erroGenerico);

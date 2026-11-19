@@ -29,6 +29,7 @@ import { calcularEstado, formatarData, formatarValor } from "@/data/mock-utente"
 import { ALERTA_VS_ALVO_EXPLICACAO } from "@/data/mock-portal";
 import { InfoHint } from "@/components/portal/InfoHint";
 import { ChatModal } from "@/components/portal/ChatModal";
+import { ClinicaUtenteChip } from "@/components/portal/ClinicaUtente";
 import { useT } from "@/lib/i18n";
 
 /**
@@ -151,6 +152,10 @@ export function PatientMobileView({
           <div className="mt-2 space-y-2 rounded-xl border border-border bg-background p-3 text-[12px]">
             <Row label={t.mobile.demografia} value="F · 67 kg · 1.65 m" />
             <Row label={t.mobile.medica} value={utente.medicaResponsavel} />
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">{t.clinicaUtente.label}</span>
+              <ClinicaUtenteChip utenteId={utente.id} utenteNome={utente.nome} />
+            </div>
             <Row label={t.mobile.contacto} value="+351 91 000 0000" icon={<Phone className="h-3 w-3" />} />
           </div>
         )}

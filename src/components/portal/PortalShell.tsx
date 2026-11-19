@@ -15,6 +15,7 @@ import { SessionTimeoutBanner } from "./SessionTimeoutBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
 import { useNaoLidas } from "@/lib/notificacoes-store";
+import { usePrefsMedico } from "@/lib/medico-prefs";
 
 type NavItem = {
   label: string;
@@ -27,7 +28,8 @@ type NavItem = {
 function useNavItems(): NavItem[] {
   const t = useT();
   const naoLidas = useNaoLidas();
-  return [
+  const { usarAgenda } = usePrefsMedico();
+  const items: NavItem[] = [
     {
       label: t.nav.utentes,
       to: "/",
@@ -38,6 +40,7 @@ function useNavItems(): NavItem[] {
     { label: t.notificacoes.nav, to: "/notificacoes", icon: Bell, badge: naoLidas },
     { label: t.nav.definicoes, to: "/definicoes", icon: Settings },
   ];
+  return usarAgenda ? items : items.filter((i) => i.to !== "/agenda");
 }
 
 export function PortalShell({
@@ -172,7 +175,7 @@ export function MobileNavTabs() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items = useNavItems();
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-surface-raised lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-30 grid auto-cols-fr grid-flow-col border-t border-border bg-surface-raised lg:hidden">
       {items.map((it) => {
         const active = it.match ? it.match(pathname) : pathname === it.to;
         return (
