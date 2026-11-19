@@ -4,6 +4,7 @@ import Problem from "../components/Problem";
 import { Timeline, Vault, Insights, Sharing } from "../components/Solutions";
 import Trust from "../components/Trust";
 import Story from "../components/Story";
+import TrustSecurity from "../components/TrustSecurity";
 import FAQ from "../components/FAQ";
 import FooterCTA from "../components/FooterCTA";
 
@@ -19,6 +20,7 @@ export default function Home() {
       <Sharing />
       <Trust />
       <Story />
+      <TrustSecurity />
       <FAQ />
       <FooterCTA />
     </>

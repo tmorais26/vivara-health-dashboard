@@ -1,60 +1,135 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SectionBadge, Reveal } from "./ui";
+import { useT } from "../i18n";
 
-const ITEMS = [
-  {
-    q: "Para quem é a Vivara?",
-    a: "Para médicos e clínicas que querem acompanhar utentes entre consultas, e para utentes que querem ter os seus exames, resultados e registos médicos num só lugar. Uma plataforma, dois acessos.",
+const T = {
+  pt: {
+    badge: "FAQ",
+    title: (
+      <>
+        Tudo o que quer saber, <em>antes de começar.</em>
+      </>
+    ),
+    items: [
+      {
+        q: "Para quem é a Vivara?",
+        a: "Para médicos e clínicas que querem acompanhar utentes entre consultas, e para utentes que querem ter os seus exames, resultados e registos médicos num só lugar. Uma plataforma, dois acessos.",
+      },
+      {
+        q: "Quem vê os meus dados?",
+        a: "Apenas a pessoa a quem os dados pertencem e os profissionais de saúde que ela escolher. Os dados são privados por defeito, encriptados e alojados na União Europeia. Nunca vendemos dados.",
+      },
+      {
+        q: "A Vivara é uma ferramenta de diagnóstico?",
+        a: "Não. A plataforma organiza, visualiza e avisa. As decisões clínicas são sempre do médico.",
+      },
+      {
+        q: "Que wearables são suportados?",
+        a: "Apple Health, Oura e Whoop. Os dados dos wearables são sempre distinguidos das análises medidas em laboratório.",
+      },
+      {
+        q: "Os utentes pagam?",
+        a: "Os médicos e clínicas têm os seus planos; o utente tem um plano próprio com acesso completo à app. Os acessos são independentes.",
+      },
+      {
+        q: "E se o meu médico ainda não usar a Vivara?",
+        a: "Pode começar sozinho como utente. O seu historial fica organizado e pronto para partilhar com a sua equipa clínica assim que ela se juntar à Vivara.",
+      },
+      {
+        q: "O meu utente tem de ter a app?",
+        a: "Não. O portal serve por si só para organizar o historial: se o utente lhe reencaminhar as análises por email, você acrescenta-as. Com a app, o utente carrega os resultados diretamente e vê o mesmo historial.",
+      },
+      {
+        q: "Há vantagens em recomendar a Vivara?",
+        a: "Sim. Quando um utente ou um médico recomenda a Vivara, quem recomenda e quem chega ganham um mês grátis. Quando é um médico a recomendar a um utente, só o utente beneficia. Os detalhes estão na página de Preços.",
+      },
+      {
+        q: "Posso cancelar a qualquer momento?",
+        a: "Sim, sem período de fidelização. Depois de cancelar, os seus dados ficam disponíveis para exportação durante 90 dias.",
+      },
+      {
+        q: "O que acontece aos meus dados se sair da Vivara?",
+        a: "Pode exportar tudo — histórico, análises e documentos — num formato aberto a qualquer momento, mesmo depois de cancelar.",
+      },
+      {
+        q: "Como funciona o suporte?",
+        a: "Por email para todos os planos, com suporte prioritário no plano Equipa. Respondemos em 1-2 dias úteis.",
+      },
+    ],
   },
-  {
-    q: "Quem vê os meus dados?",
-    a: "Apenas você e a equipa clínica que escolheu. Os dados são privados por defeito, encriptados e alojados na União Europeia. Nunca vendemos dados.",
+  en: {
+    badge: "FAQ",
+    title: (
+      <>
+        Everything you'd want to know, <em>before you start.</em>
+      </>
+    ),
+    items: [
+      {
+        q: "Who is Vivara for?",
+        a: "For doctors and clinics who want to follow patients between appointments, and for patients who want their exams, results and medical records in one place. One platform, two kinds of access.",
+      },
+      {
+        q: "Who can see my data?",
+        a: "Only the person the data belongs to and the healthcare professionals they choose. Data is private by default, encrypted and hosted in the European Union. We never sell data.",
+      },
+      {
+        q: "Is Vivara a diagnostic tool?",
+        a: "No. The platform organises, visualises and alerts. Clinical decisions always belong to the doctor.",
+      },
+      {
+        q: "Which wearables are supported?",
+        a: "Apple Health, Oura and Whoop. Wearable data is always kept distinct from lab-measured results.",
+      },
+      {
+        q: "Do patients pay?",
+        a: "Doctors and clinics have their own plans; patients have their own plan with full access to the app. The two are independent.",
+      },
+      {
+        q: "What if my doctor doesn't use Vivara yet?",
+        a: "You can start on your own as a patient. Your record stays organised and ready to share with your care team as soon as they join Vivara.",
+      },
+      {
+        q: "Does my patient have to have the app?",
+        a: "No. The portal works on its own to organise the record: if the patient forwards you their lab results by email, you add them. With the app, the patient uploads results directly and sees the same record.",
+      },
+      {
+        q: "Are there benefits to recommending Vivara?",
+        a: "Yes. When a patient or a doctor recommends Vivara, both the recommender and the newcomer get a free month. When a doctor recommends Vivara to a patient, only the patient benefits. Details are on the Pricing page.",
+      },
+      {
+        q: "Can I cancel at any time?",
+        a: "Yes, with no lock-in period. After cancelling, your data remains available for export for 90 days.",
+      },
+      {
+        q: "What happens to my data if I leave Vivara?",
+        a: "You can export everything — history, lab results and documents — in an open format at any time, even after cancelling.",
+      },
+      {
+        q: "How does support work?",
+        a: "By email on all plans, with priority support on the Team plan. We reply within 1-2 business days.",
+      },
+    ],
   },
-  {
-    q: "A Vivara é uma ferramenta de diagnóstico?",
-    a: "Não. A plataforma organiza, visualiza e avisa. As decisões clínicas são sempre do médico.",
-  },
-  {
-    q: "Que wearables são suportados?",
-    a: "Apple Health, Oura e Whoop. Os dados dos wearables são sempre distinguidos das análises medidas em laboratório.",
-  },
-  {
-    q: "Os utentes pagam?",
-    a: "Os médicos e clínicas têm os seus planos; o utente tem um plano próprio com acesso completo à app. Os acessos são independentes.",
-  },
-  {
-    q: "E se o meu médico ainda não usar a Vivara?",
-    a: "Pode começar sozinho como utente. O seu historial fica organizado e pronto para partilhar com a sua equipa clínica assim que ela se juntar à Vivara.",
-  },
-  {
-    q: "Posso cancelar a qualquer momento?",
-    a: "Sim, sem período de fidelização. Depois de cancelar, os seus dados ficam disponíveis para exportação durante 90 dias.",
-  },
-  {
-    q: "O que acontece aos meus dados se sair da Vivara?",
-    a: "Pode exportar tudo — histórico, análises e documentos — num formato aberto a qualquer momento, mesmo depois de cancelar.",
-  },
-  {
-    q: "Como funciona o suporte?",
-    a: "Por email para todos os planos, com suporte prioritário nos planos Equipa e Instituição. Respondemos em 1-2 dias úteis.",
-  },
-];
+};
 
 export default function FAQ() {
+  const t = useT();
+  const L = t(T);
   const [open, setOpen] = useState(0);
   return (
     <section id="faq" className="bg-white py-24 md:py-32">
       <div className="mx-auto max-w-3xl px-6">
         <Reveal>
-          <SectionBadge>FAQ</SectionBadge>
+          <SectionBadge>{L.badge}</SectionBadge>
           <h2 className="font-serif font-light tracking-tight text-4xl md:text-5xl mt-5">
-            Perguntas que <em>realmente fazem.</em>
+            {L.title}
           </h2>
         </Reveal>
 
         <div className="mt-12 divide-y divide-black/10">
-          {ITEMS.map((it, i) => (
+          {L.items.map((it, i) => (
             <div key={it.q}>
               <button
                 onClick={() => setOpen(open === i ? -1 : i)}

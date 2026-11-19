@@ -1,9 +1,37 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { CTAButton } from "./ui";
+import { useT } from "../i18n";
 import heroPhoto from "../assets/hero-photo.jpg";
 
+const T = {
+  pt: {
+    title: (
+      <>
+        A sua saúde,
+        <br />
+        <em>sempre acompanhada.</em>
+      </>
+    ),
+    desc: "Uma só plataforma, duas vistas: o utente tem a sua saúde num só lugar, o médico tem o historial completo. O mesmo registo para ambos, para que cada consulta valha a pena.",
+    cta: "Ver como funciona",
+  },
+  en: {
+    title: (
+      <>
+        Your health,
+        <br />
+        <em>always looked after.</em>
+      </>
+    ),
+    desc: "One platform, two views: patients have their health in one place, doctors have the complete record. The same record for both, so that every appointment counts.",
+    cta: "See how it works",
+  },
+};
+
 export default function Hero() {
+  const t = useT();
+  const L = t(T);
   return (
     <section id="top" className="relative min-h-screen flex items-end overflow-hidden bg-brand-dark">
       <img
@@ -20,24 +48,13 @@ export default function Hero() {
       />
 
       <div className="relative z-10 mx-auto max-w-6xl w-full px-6 pb-20 pt-32">
-        <motion.span
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-white/80"
-        >
-          Plataforma de saúde
-        </motion.span>
-
         <motion.h1
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1 }}
-          className="font-serif font-light text-white mt-8 leading-[0.98] tracking-tight text-5xl sm:text-7xl lg:text-8xl"
+          className="font-serif font-light text-white leading-[0.98] tracking-tight text-5xl sm:text-7xl lg:text-8xl"
         >
-          A sua saúde,
-          <br />
-          <em>sempre acompanhada.</em>
+          {L.title}
         </motion.h1>
 
         <motion.p
@@ -46,8 +63,7 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.25 }}
           className="mt-6 max-w-xl text-base md:text-lg text-white/85 leading-relaxed"
         >
-          Um lugar seguro para exames, resultados, sintomas e registos médicos. Para que cada
-          consulta médica valha a pena.
+          {L.desc}
         </motion.p>
 
         <motion.div
@@ -57,9 +73,10 @@ export default function Hero() {
           className="mt-10"
         >
           <Link to="/como-funciona">
-            <CTAButton>Ver como funciona</CTAButton>
+            <CTAButton>{L.cta}</CTAButton>
           </Link>
         </motion.div>
+
       </div>
     </section>
   );
