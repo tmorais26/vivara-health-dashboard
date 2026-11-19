@@ -15,7 +15,7 @@ const T = {
       desc: "Planos separados para quem acompanha e quem é acompanhado. O acesso do utente é independente do da clínica.",
     },
     monthly: "Mensal",
-    annual: "Anual — 2 meses grátis",
+    annual: "Anual — 1 mês grátis",
     patientsBadge: "Para utentes",
     perMonth: "/mês",
     billedAnnually: "Faturado anualmente",
@@ -84,7 +84,7 @@ const T = {
       desc: "Separate plans for those who provide care and those who receive it. Patient access is independent from the clinic's.",
     },
     monthly: "Monthly",
-    annual: "Annual — 2 months free",
+    annual: "Annual — 1 month free",
     patientsBadge: "For patients",
     perMonth: "/month",
     billedAnnually: "Billed annually",
@@ -149,8 +149,8 @@ const T = {
 };
 
 const PATIENT_MONTHLY = 6.99;
-// Plano anual: 12 meses ao preço de 10.
-const ANNUAL_FACTOR = 10 / 12;
+// Plano anual: 12 meses ao preço de 11.
+const ANNUAL_FACTOR = 11 / 12;
 
 export default function Precos() {
   const { lang } = useLang();
@@ -199,7 +199,7 @@ export default function Precos() {
                 <div className="mb-6">
                   <span className="font-serif text-4xl">€{formatPrice(PATIENT_MONTHLY)}</span>
                   <span className="text-white/60 text-sm">{L.perMonth}</span>
-                  {billing === "anual" && <p className="text-xs text-brand-lime mt-1">{L.billedAnnually} · €{(PATIENT_MONTHLY * 10).toLocaleString(lang === "pt" ? "pt-PT" : "en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{L.perYear}</p>}
+                  {billing === "anual" && <p className="text-xs text-brand-lime mt-1">{L.billedAnnually} · €{(PATIENT_MONTHLY * 11).toLocaleString(lang === "pt" ? "pt-PT" : "en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{L.perYear}</p>}
                 </div>
                 <ul className="space-y-3 mb-8 text-sm">
                   {L.patient.features.map((f) => (
