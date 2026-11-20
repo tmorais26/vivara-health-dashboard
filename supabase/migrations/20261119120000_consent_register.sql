@@ -8,14 +8,13 @@
 --    pela função de servidor, nunca do browser.
 --  * O utente pode ler os seus próprios registos (RLS); não pode escrever.
 --
--- Executar no Supabase: SQL Editor › colar este ficheiro › Run.
+-- Aplicada ao projeto ehyrelugnhtkdgrscxrm (eu-central-1).
 
-create table if not exists public.patient_profiles (
-  user_id      uuid primary key references auth.users(id) on delete cascade,
-  full_name    text not null check (char_length(full_name) between 1 and 200),
-  invite_code  text check (invite_code is null or char_length(invite_code) <= 64),
-  created_at   timestamptz not null default now()
-);
+-- O perfil do utente é a tabela public.profiles que já existe (id, role,
+-- full_name), preenchida pelo trigger on_auth_user_created. Só se acrescenta o
+-- código de convite, que é opcional.
+alter table public.profiles add column if not exists invite_code text
+  check (invite_code is null or char_length(invite_code) <= 64);
 
 create table if not exists public.consent_events (
   id             bigint generated always as identity primary key,
@@ -35,7 +34,7 @@ create table if not exists public.consent_events (
 create index if not exists consent_events_user_idx on public.consent_events (user_id, consent_type, created_at desc);
 
 create or replace function public.consent_events_immutable() returns trigger
-language plpgsql as $$
+language plpgsql set search_path = '' as $$
 begin
   raise exception 'consent_events é só de acréscimo: não se edita nem se apaga';
 end $$;
@@ -56,12 +55,8 @@ create table if not exists public.account_closures (
 create index if not exists account_closures_user_idx on public.account_closures (user_id);
 
 -- RLS: leitura só do próprio; sem políticas de escrita (só o service role escreve).
-alter table public.patient_profiles enable row level security;
 alter table public.consent_events   enable row level security;
 alter table public.account_closures enable row level security;
-
-drop policy if exists "own profile" on public.patient_profiles;
-create policy "own profile" on public.patient_profiles for select to authenticated using (user_id = auth.uid());
 
 drop policy if exists "own consents" on public.consent_events;
 create policy "own consents" on public.consent_events for select to authenticated using (user_id = auth.uid());
@@ -70,7 +65,6 @@ drop policy if exists "own closures" on public.account_closures;
 create policy "own closures" on public.account_closures for select to authenticated using (user_id = auth.uid());
 
 revoke insert, update, delete on public.consent_events   from anon, authenticated;
-revoke insert, update, delete on public.patient_profiles from anon, authenticated;
 revoke insert, update, delete on public.account_closures from anon, authenticated;
 
 -- Apagamento depois da janela de exportação (90 dias). Apaga o utilizador do

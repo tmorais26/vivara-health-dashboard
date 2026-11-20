@@ -105,9 +105,11 @@ export const signUpPatient = createServerFn({ method: "POST" })
     }
 
     try {
-      const { error: pErr } = await supabaseAdmin.from("patient_profiles")
-        .insert({ user_id: user.id, full_name: input.name, invite_code: input.invite || null });
-      if (pErr) throw new Error(`patient_profiles: ${pErr.message}`);
+      // O trigger on_auth_user_created já criou o perfil; confirma-se aqui o
+      // papel de utente e guarda-se o código de convite.
+      const { error: pErr } = await supabaseAdmin.from("profiles")
+        .upsert({ id: user.id, role: "patient", full_name: input.name, invite_code: input.invite || null }, { onConflict: "id" });
+      if (pErr) throw new Error(`profiles: ${pErr.message}`);
       await insertEvents(rows);
     } catch (e) {
       // Sem registo de consentimento não pode haver conta: desfaz-se.
@@ -139,7 +141,7 @@ export const getConsentStatus = createServerFn({ method: "GET" })
     const uid = context.userId;
     const [{ data: events }, { data: profile }, { data: closures }] = await Promise.all([
       supabaseAdmin.from("consent_events").select("consent_type, action, doc_version, created_at").eq("user_id", uid).order("created_at", { ascending: true }).order("id", { ascending: true }),
-      supabaseAdmin.from("patient_profiles").select("full_name").eq("user_id", uid).maybeSingle(),
+      supabaseAdmin.from("profiles").select("full_name").eq("id", uid).maybeSingle(),
       supabaseAdmin.from("account_closures").select("requested_at, export_until, reason").eq("user_id", uid).order("requested_at", { ascending: false }).limit(1),
     ]);
     const latest = new Map<string, { action: string; doc_version: string | null }>();
@@ -237,7 +239,7 @@ export const exportServerData = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const uid = context.userId;
     const [{ data: profile }, { data: consents }, { data: closures }] = await Promise.all([
-      supabaseAdmin.from("patient_profiles").select("full_name, invite_code, created_at").eq("user_id", uid).maybeSingle(),
+      supabaseAdmin.from("profiles").select("full_name, invite_code, created_at").eq("id", uid).maybeSingle(),
       supabaseAdmin.from("consent_events").select("consent_type, action, doc_version, checkbox_id, lang, ip, created_at").eq("user_id", uid).order("created_at"),
       supabaseAdmin.from("account_closures").select("reason, requested_at, export_until").eq("user_id", uid),
     ]);

@@ -14,10 +14,10 @@ export type Database = {
   }
   public: {
     Tables: {
-      patient_profiles: {
-        Row: { user_id: string; full_name: string; invite_code: string | null; created_at: string }
-        Insert: { user_id: string; full_name: string; invite_code?: string | null; created_at?: string }
-        Update: { user_id?: string; full_name?: string; invite_code?: string | null; created_at?: string }
+      profiles: {
+        Row: { id: string; role: "physician" | "patient"; full_name: string | null; invite_code: string | null; created_at: string }
+        Insert: { id: string; role?: "physician" | "patient"; full_name?: string | null; invite_code?: string | null; created_at?: string }
+        Update: { id?: string; role?: "physician" | "patient"; full_name?: string | null; invite_code?: string | null; created_at?: string }
         Relationships: []
       }
       consent_events: {
