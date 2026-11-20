@@ -117,6 +117,8 @@ function AuthPage() {
           options: {
             emailRedirectTo: `${window.location.origin}/`,
             data: {
+              role: "physician",
+              full_name: nome.trim(),
               nome: nome.trim(),
               especialidade: especialidade.trim(),
               cedula: cedula.trim(),
