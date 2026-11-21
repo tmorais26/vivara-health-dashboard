@@ -110,13 +110,15 @@ begin
   -- Escrita de diários
   r := pg_temp.tentar(u_psi, format('insert into public.diarios (espaco_id, utente_id, autor_id, texto) values (%L, %L, %L, %L)', c, ut, m_psi, 'x'));
   return query select 'psicólogo não escreve diário de utente que não segue', 'erro', split_part(r, ':', 1);
+  r := pg_temp.tentar(u_medico, format('insert into public.diarios (espaco_id, utente_id, autor_id, texto) values (%L, %L, %L, %L) returning id', c, ut, m_medico, 'via API'));
+  return query select 'médico grava diário com returning (correção 403)', 'ok', r;
   r := pg_temp.tentar(u_nutri, format('update public.diarios set texto = %L where id = %L', 'alterado', d1));
   return query select 'nutricionista não altera diário de outro (0 linhas)', '0',
     pg_temp.contar(u_medico, format('select count(*) from public.diarios where id = %L and texto = %L', d1, 'alterado'))::text;
 
   -- Psicólogo passa a seguir quando tem consulta marcada
   insert into public.consultas (espaco_id, utente_id, profissional_id, inicio, criado_por) values (c, ut, m_psi, now() + interval '3 days', m_admin);
-  return query select 'psicólogo com consulta vê D1 + D3', '2', pg_temp.contar(u_psi, 'select count(*) from public.diarios')::text;
+  return query select 'psicólogo com consulta vê D1 + D3 + via API', '3', pg_temp.contar(u_psi, 'select count(*) from public.diarios')::text;
   return query select 'psicólogo com consulta vê ficha clínica', '1', pg_temp.contar(u_psi, 'select count(*) from public.registos_clinicos')::text;
 
   -- Bloqueio
@@ -132,17 +134,22 @@ begin
   r := pg_temp.tentar(u_manager, format('select public.definir_manager(%L, true)', m_admin));
   return query select 'manager não nomeia managers', 'erro', split_part(r, ':', 1);
 
+  r := pg_temp.tentar(u_admin, format('update public.utentes set chat_estado = %L where id = %L', 'ativo', ut));
+  return query select 'administrativa não ativa o chat', 'erro', split_part(r, ':', 1);
+
   -- Exportação com aprovação
   perform pg_temp.como(u_medico);
   pedido := public.pedir_exportacao(c, 'utente', ut, 'Mudança de clínica');
   execute 'reset role';
   return query select 'pedido de exportação na clínica fica pendente', 'pendente', (select estado from public.pedidos_exportacao where id = pedido);
+  return query select 'administração foi notificada do pedido', '2', (select count(*) from public.notificacoes where ref_id = pedido and tipo = 'exportacao_pedido')::text;
   r := pg_temp.tentar(u_medico, format('select public.usar_exportacao(%L)', pedido));
   return query select 'não exporta sem aprovação', 'erro', split_part(r, ':', 1);
   r := pg_temp.tentar(u_admin, format('select public.decidir_exportacao(%L, true)', pedido));
   return query select 'administrativa não aprova', 'erro', split_part(r, ':', 1);
   r := pg_temp.tentar(u_manager, format('select public.decidir_exportacao(%L, true)', pedido));
   return query select 'manager aprova', 'ok', r;
+  return query select 'médico foi notificado da decisão', '1', (select count(*) from public.notificacoes where ref_id = pedido and tipo = 'exportacao_decisao')::text;
   r := pg_temp.tentar(u_medico, format('select public.usar_exportacao(%L)', pedido));
   return query select 'médico exporta depois de aprovado', 'ok', r;
   r := pg_temp.tentar(u_medico, format('select public.usar_exportacao(%L)', pedido));
@@ -158,6 +165,8 @@ begin
   return query select 'administrativa envia mensagem ao médico', 'ok', r;
   return query select 'médico vê a mensagem', '1', pg_temp.contar(u_medico, 'select count(*) from public.canal_mensagens')::text;
   return query select 'psicólogo não vê mensagem privada', '0', pg_temp.contar(u_psi, 'select count(*) from public.canal_mensagens')::text;
+  return query select 'notificação de mensagem só para o destinatário', '0', pg_temp.contar(u_psi, 'select count(*) from public.notificacoes where tipo = ''mensagem''')::text;
+  return query select 'destinatário recebe a notificação', '1', pg_temp.contar(u_medico, 'select count(*) from public.notificacoes where tipo = ''mensagem''')::text;
   r := pg_temp.tentar(u_fora, format('insert into public.canal_mensagens (espaco_id, autor_id, texto) values (%L, %L, %L)', c, m_admin, 'intruso'));
   return query select 'quem não é membro não escreve no canal', 'erro', split_part(r, ':', 1);
 

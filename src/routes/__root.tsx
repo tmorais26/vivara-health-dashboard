@@ -12,6 +12,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { estadoConsentimento } from "@/lib/consent.functions";
 import { SessaoProvider, useSessao } from "@/lib/sessao";
+import { NotificacoesProvider } from "@/lib/notificacoes";
 
 import appCss from "../styles.css?url";
 
@@ -161,7 +162,9 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   return (
     <SessaoProvider user={session.user}>
-      <EspacoGate>{children}</EspacoGate>
+      <NotificacoesProvider>
+        <EspacoGate>{children}</EspacoGate>
+      </NotificacoesProvider>
     </SessaoProvider>
   );
 }

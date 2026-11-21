@@ -4,6 +4,8 @@ import {
   Activity,
   Bell,
   Calendar,
+  MessagesSquare,
+  UsersRound,
   LogOut,
   Settings,
   ShieldCheck,
@@ -13,13 +15,14 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageToggle } from "./LanguageToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
-import { useNaoLidas } from "@/lib/notificacoes-store";
+import { useNotificacoesDb } from "@/lib/notificacoes";
 import { usePrefsMedico } from "@/lib/medico-prefs";
 import { iniciais, nomeAtual, useSessaoOpcional } from "@/lib/sessao";
 
 type NavItem = {
   label: string;
-  to: "/" | "/agenda" | "/notificacoes" | "/definicoes";
+  to: "/" | "/agenda" | "/mensagens" | "/notificacoes" | "/equipa" | "/definicoes";
+  soDesktop?: boolean;
   icon: typeof Users;
   match?: (pathname: string) => boolean;
   badge?: number;
@@ -27,8 +30,10 @@ type NavItem = {
 
 function useNavItems(): NavItem[] {
   const t = useT();
-  const naoLidas = useNaoLidas();
+  const { naoLidas } = useNotificacoesDb();
   const { usarAgenda } = usePrefsMedico();
+  const sessao = useSessaoOpcional();
+  const clinica = sessao?.atual?.espaco.tipo === "clinica";
   const items: NavItem[] = [
     {
       label: t.nav.utentes,
@@ -37,7 +42,9 @@ function useNavItems(): NavItem[] {
       match: (p) => p === "/" || p.startsWith("/utentes"),
     },
     { label: t.nav.agenda, to: "/agenda", icon: Calendar },
-    { label: t.notificacoes.nav, to: "/notificacoes", icon: Bell, badge: naoLidas },
+    ...(clinica ? [{ label: t.mensagens.nav, to: "/mensagens" as const, icon: MessagesSquare }] : []),
+    { label: t.notifDb.titulo, to: "/notificacoes", icon: Bell, badge: naoLidas },
+    ...(clinica ? [{ label: t.equipa.nav, to: "/equipa" as const, icon: UsersRound, soDesktop: true }] : []),
     { label: t.nav.definicoes, to: "/definicoes", icon: Settings },
   ];
   return usarAgenda ? items : items.filter((i) => i.to !== "/agenda");
@@ -164,7 +171,7 @@ export function PortalShell({
 export function MobileNavTabs() {
   // Bottom tabs para viewports estreitos (<lg). Manter visível abaixo da sidebar fixa.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const items = useNavItems();
+  const items = useNavItems().filter((i) => !i.soDesktop);
   return (
     <div className="fixed inset-x-0 bottom-0 z-30 grid auto-cols-fr grid-flow-col border-t border-border bg-surface-raised lg:hidden">
       {items.map((it) => {

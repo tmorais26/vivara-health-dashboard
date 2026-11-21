@@ -16,6 +16,8 @@ import { Route as AppV2RouteImport } from './routes/app-v2'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ComecarRouteImport } from './routes/comecar'
 import { Route as DefinicoesRouteImport } from './routes/definicoes'
+import { Route as EquipaRouteImport } from './routes/equipa'
+import { Route as MensagensRouteImport } from './routes/mensagens'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as NovaPalavraPasseRouteImport } from './routes/nova-palavra-passe'
 import { Route as ReconsentimentoRouteImport } from './routes/reconsentimento'
@@ -57,6 +59,16 @@ const DefinicoesRoute = DefinicoesRouteImport.update({
   path: '/definicoes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EquipaRoute = EquipaRouteImport.update({
+  id: '/equipa',
+  path: '/equipa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MensagensRoute = MensagensRouteImport.update({
+  id: '/mensagens',
+  path: '/mensagens',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NotificacoesRoute = NotificacoesRouteImport.update({
   id: '/notificacoes',
   path: '/notificacoes',
@@ -91,6 +103,8 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/comecar': typeof ComecarRoute
   '/definicoes': typeof DefinicoesRoute
+  '/equipa': typeof EquipaRoute
+  '/mensagens': typeof MensagensRoute
   '/notificacoes': typeof NotificacoesRoute
   '/nova-palavra-passe': typeof NovaPalavraPasseRoute
   '/reconsentimento': typeof ReconsentimentoRoute
@@ -105,6 +119,8 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/comecar': typeof ComecarRoute
   '/definicoes': typeof DefinicoesRoute
+  '/equipa': typeof EquipaRoute
+  '/mensagens': typeof MensagensRoute
   '/notificacoes': typeof NotificacoesRoute
   '/nova-palavra-passe': typeof NovaPalavraPasseRoute
   '/reconsentimento': typeof ReconsentimentoRoute
@@ -120,6 +136,8 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/comecar': typeof ComecarRoute
   '/definicoes': typeof DefinicoesRoute
+  '/equipa': typeof EquipaRoute
+  '/mensagens': typeof MensagensRoute
   '/notificacoes': typeof NotificacoesRoute
   '/nova-palavra-passe': typeof NovaPalavraPasseRoute
   '/reconsentimento': typeof ReconsentimentoRoute
@@ -136,6 +154,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/comecar'
     | '/definicoes'
+    | '/equipa'
+    | '/mensagens'
     | '/notificacoes'
     | '/nova-palavra-passe'
     | '/reconsentimento'
@@ -150,6 +170,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/comecar'
     | '/definicoes'
+    | '/equipa'
+    | '/mensagens'
     | '/notificacoes'
     | '/nova-palavra-passe'
     | '/reconsentimento'
@@ -164,6 +186,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/comecar'
     | '/definicoes'
+    | '/equipa'
+    | '/mensagens'
     | '/notificacoes'
     | '/nova-palavra-passe'
     | '/reconsentimento'
@@ -179,6 +203,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ComecarRoute: typeof ComecarRoute
   DefinicoesRoute: typeof DefinicoesRoute
+  EquipaRoute: typeof EquipaRoute
+  MensagensRoute: typeof MensagensRoute
   NotificacoesRoute: typeof NotificacoesRoute
   NovaPalavraPasseRoute: typeof NovaPalavraPasseRoute
   ReconsentimentoRoute: typeof ReconsentimentoRoute
@@ -237,6 +263,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DefinicoesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/equipa': {
+      id: '/equipa'
+      path: '/equipa'
+      fullPath: '/equipa'
+      preLoaderRoute: typeof EquipaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mensagens': {
+      id: '/mensagens'
+      path: '/mensagens'
+      fullPath: '/mensagens'
+      preLoaderRoute: typeof MensagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/notificacoes': {
       id: '/notificacoes'
       path: '/notificacoes'
@@ -283,6 +323,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ComecarRoute: ComecarRoute,
   DefinicoesRoute: DefinicoesRoute,
+  EquipaRoute: EquipaRoute,
+  MensagensRoute: MensagensRoute,
   NotificacoesRoute: NotificacoesRoute,
   NovaPalavraPasseRoute: NovaPalavraPasseRoute,
   ReconsentimentoRoute: ReconsentimentoRoute,
