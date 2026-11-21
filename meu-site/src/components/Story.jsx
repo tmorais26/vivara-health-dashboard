@@ -14,15 +14,15 @@ const T = {
     pillars: [
       {
         title: "Médicos no desenho",
-        desc: "Cada ecrã validado por clínicos que o usam em consulta.",
+        desc: "Cada ecrã validado por uma médica em prática ativa.",
       },
       {
         title: "Utentes no centro",
-        desc: "Co-criada com pessoas que querem acompanhar a sua saúde.",
+        desc: "Pensada para quem quer acompanhar a sua saúde.",
       },
       {
-        title: "Tudo integrado",
-        desc: "Um único histórico, partilhado só entre utente e equipa.",
+        title: "Um só historial",
+        desc: "Um único historial, partilhado só entre utente e profissionais.",
       },
     ],
     link: "Conhecer a nossa história",
@@ -38,15 +38,15 @@ const T = {
     pillars: [
       {
         title: "Doctors in the design",
-        desc: "Every screen validated by clinicians who use it in practice.",
+        desc: "Every screen validated by a doctor in active practice.",
       },
       {
         title: "Patients at the centre",
-        desc: "Co-created with people who want to stay on top of their health.",
+        desc: "Built for people who want to stay on top of their health.",
       },
       {
-        title: "Everything integrated",
-        desc: "One single record, shared only between patient and care team.",
+        title: "One record",
+        desc: "One single record, shared only between patient and professionals.",
       },
     ],
     link: "Read our story",

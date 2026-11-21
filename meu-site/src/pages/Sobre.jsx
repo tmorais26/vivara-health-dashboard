@@ -39,15 +39,15 @@ const T = {
     pillars: [
       {
         title: "Médicos no desenho",
-        desc: "Cada ecrã validado por clínicos que o usam em consulta — não desenhado numa sala isolada da prática real.",
+        desc: "Cada ecrã validado por uma médica em prática ativa — não desenhado numa sala isolada da prática real.",
       },
       {
         title: "Utentes no centro",
-        desc: "Co-criada com pessoas que querem entender e acompanhar a sua própria saúde, não só ver números.",
+        desc: "Pensada para quem quer entender e acompanhar a sua própria saúde, não só ver números.",
       },
       {
-        title: "Tudo integrado",
-        desc: "Um único histórico, partilhado só entre o utente e a equipa que ele escolher — nunca fragmentado.",
+        title: "Um só historial",
+        desc: "Um único historial, partilhado só entre o utente e os profissionais que ele escolher — nunca fragmentado.",
       },
     ],
     buildBadge: "Como construímos",
@@ -56,23 +56,23 @@ const T = {
       {
         n: "01",
         title: "Falámos com quem vive o problema",
-        desc: "Antes de desenhar um único ecrã, ouvimos médicos a explicar o que perdem entre consultas, e utentes a descrever o que gostariam de ter à mão.",
+        desc: "Antes de desenhar um único ecrã, ouvimos uma médica a explicar o que se perde entre consultas, e utentes a descrever o que gostariam de ter à mão.",
       },
       {
         n: "02",
-        title: "Desenhámos com médicos reais",
-        desc: "Cada funcionalidade passou por clínicos em prática ativa, não só por designers a imaginar um fluxo ideal.",
+        title: "Desenhámos com uma médica em prática",
+        desc: "Cada funcionalidade foi validada por uma médica em prática ativa, não só por designers a imaginar um fluxo ideal.",
       },
       {
         n: "03",
-        title: "Testámos com utentes reais",
-        desc: "Antes de lançar, pessoas comuns usaram a app para o seu dia a dia — não só num laboratório de testes.",
+        title: "Vamos testar com utentes antes de lançar",
+        desc: "Antes de abrir a toda a gente, vamos pôr pessoas comuns a usar a app no dia a dia — não só num laboratório de testes.",
       },
     ],
     clearBadge: "Para ser claro",
     clearTitle: "O que a Vivara não é.",
     not: [
-      "Não é medicina de longevidade nem wellness.",
+      "Indicadores como a idade biológica são estimativas de acompanhamento, nunca um diagnóstico.",
       "Não substitui o seu médico nem faz diagnósticos.",
       "Não vende os seus dados — nunca.",
     ],
@@ -114,15 +114,15 @@ const T = {
     pillars: [
       {
         title: "Doctors in the design",
-        desc: "Every screen validated by clinicians who use it in practice — not designed in a room detached from real care.",
+        desc: "Every screen validated by a doctor in active practice — not designed in a room detached from real care.",
       },
       {
         title: "Patients at the centre",
-        desc: "Co-created with people who want to understand and follow their own health, not just look at numbers.",
+        desc: "Built for people who want to understand and follow their own health, not just look at numbers.",
       },
       {
-        title: "Everything integrated",
-        desc: "One single record, shared only between the patient and the team they choose — never fragmented.",
+        title: "One record",
+        desc: "One single record, shared only between the patient and the professionals they choose — never fragmented.",
       },
     ],
     buildBadge: "How we build",
@@ -131,23 +131,23 @@ const T = {
       {
         n: "01",
         title: "We talked to the people living the problem",
-        desc: "Before designing a single screen, we listened to doctors explain what they lose between appointments, and to patients describe what they wished they had at hand.",
+        desc: "Before designing a single screen, we listened to a doctor explain what gets lost between appointments, and to patients describe what they wished they had at hand.",
       },
       {
         n: "02",
-        title: "We designed with real doctors",
-        desc: "Every feature was reviewed by clinicians in active practice, not just by designers imagining an ideal flow.",
+        title: "We designed with a practising doctor",
+        desc: "Every feature was validated by a doctor in active practice, not just by designers imagining an ideal flow.",
       },
       {
         n: "03",
-        title: "We tested with real patients",
-        desc: "Before launching, ordinary people used the app in their daily lives — not just in a testing lab.",
+        title: "We will test with patients before launch",
+        desc: "Before opening to everyone, we will have ordinary people use the app in their daily lives — not just in a testing lab.",
       },
     ],
     clearBadge: "To be clear",
     clearTitle: "What Vivara is not.",
     not: [
-      "It's not longevity medicine or wellness.",
+      "Indicators such as biological age are tracking estimates, never a diagnosis.",
       "It doesn't replace your doctor or make diagnoses.",
       "It doesn't sell your data — ever.",
     ],

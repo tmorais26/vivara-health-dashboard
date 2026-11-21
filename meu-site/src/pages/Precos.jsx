@@ -49,7 +49,7 @@ const T = {
         monthly: 29.99,
         annual: 320,
         desc: "Para médicos a trabalhar de forma independente.",
-        features: ["Portal clínico completo", "Análises, exames e notas numa só linha do tempo", "Alertas de valores fora do intervalo de referência", "Funciona com ou sem app do utente", "Suporte por email"],
+        features: ["Portal clínico completo", "Análises, exames e notas numa só linha do tempo", "Alertas de valores fora do alvo", "Funciona com ou sem app do utente", "Suporte por email"],
       },
       {
         name: "Equipa",
@@ -77,7 +77,7 @@ const T = {
         "Planos de clínica: condições a combinar.",
       ],
     },
-    footnote: "Sem custos de setup. Cancela quando quiser. IVA não incluído. Os planos de médicos e utentes são independentes.",
+    footnote: "Sem custos de setup. Cancela quando quiser. IVA incluído. Os planos de médicos e utentes são independentes.",
   },
   en: {
     header: {
@@ -120,7 +120,7 @@ const T = {
         monthly: 29.99,
         annual: 320,
         desc: "For doctors working independently.",
-        features: ["Full clinical portal", "Lab results, exams and notes on a single timeline", "Alerts for values outside the reference range", "Works with or without the patient app", "Email support"],
+        features: ["Full clinical portal", "Lab results, exams and notes on a single timeline", "Alerts for values outside the target", "Works with or without the patient app", "Email support"],
       },
       {
         name: "Team",
@@ -148,7 +148,7 @@ const T = {
         "Clinic plans: terms to be agreed.",
       ],
     },
-    footnote: "No setup costs. Cancel anytime. VAT not included. Doctor and patient plans are independent.",
+    footnote: "No setup costs. Cancel anytime. VAT included. Doctor and patient plans are independent.",
   },
 };
 

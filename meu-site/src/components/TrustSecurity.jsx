@@ -11,8 +11,8 @@ const T = {
     ),
     items: [
       "Os seus dados são seus — exportáveis a qualquer momento",
-      "Só o médico que escolher tem acesso",
-      "Cumprimos o RGPD, incluindo o Artigo 9.º para dados de saúde",
+      "Só os profissionais que escolher têm acesso",
+      "Tratamos os dados de saúde segundo o RGPD, incluindo o Artigo 9.º",
       "Nunca vendemos os seus dados a terceiros",
     ],
   },
@@ -25,8 +25,8 @@ const T = {
     ),
     items: [
       "Your data is yours — exportable at any time",
-      "Only the doctor you choose has access",
-      "We comply with the GDPR, including Article 9 for health data",
+      "Only the professionals you choose have access",
+      "We process health data under the GDPR, including Article 9",
       "We never sell your data to third parties",
     ],
   },

@@ -31,7 +31,7 @@ const T = {
       {
         n: "04",
         title: "Chegue preparado à consulta",
-        desc: "Todo o contexto reunido num só ecrã — alertas de valores fora do alvo, notas da última visita, adesão ao plano. A decisão clínica continua a ser sempre sua.",
+        desc: "Todo o contexto reunido num só ecrã — alertas de valores fora do alvo e notas da última visita. A decisão clínica continua a ser sempre sua.",
       },
     ],
     audienceBadge: "Para quem é",
@@ -66,7 +66,7 @@ const T = {
       },
       {
         title: "Planos e documentos num só sítio",
-        desc: <>Planos de cuidado, prescrições, consultas agendadas e documentos, <Highlight>sem andar a procurar em pastas</Highlight>.</>,
+        desc: <>O plano do dia do utente (o que tomar, que exames fazer) e os documentos, <Highlight>sem andar a procurar em pastas</Highlight>.</>,
       },
       {
         title: "Diário clínico privado",
@@ -119,7 +119,7 @@ const T = {
       {
         n: "04",
         title: "Arrive at the appointment prepared",
-        desc: "All the context on a single screen — alerts for out-of-range values, notes from the last visit, plan adherence. The clinical decision is always yours.",
+        desc: "All the context on a single screen — alerts for out-of-range values and notes from the last visit. The clinical decision is always yours.",
       },
     ],
     audienceBadge: "Who it's for",
@@ -154,7 +154,7 @@ const T = {
       },
       {
         title: "Plans and documents in one place",
-        desc: <>Care plans, prescriptions, scheduled appointments and documents, <Highlight>without hunting through folders</Highlight>.</>,
+        desc: <>The patient's daily plan (what to take, which exams to do) and documents, <Highlight>without hunting through folders</Highlight>.</>,
       },
       {
         title: "Private clinical journal",

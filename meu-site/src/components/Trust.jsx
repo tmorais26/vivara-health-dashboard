@@ -20,7 +20,7 @@ const T = {
       },
       {
         title: "A decisão clínica é sempre do médico",
-        desc: "A Vivara organiza, mostra e avisa quando um valor sai do intervalo de referência. Não faz diagnósticos nem sugere tratamentos.",
+        desc: "A Vivara organiza, mostra e avisa quando um valor sai do intervalo de referência ou do alvo definido. Não faz diagnósticos nem sugere tratamentos.",
       },
     ],
   },
@@ -42,7 +42,7 @@ const T = {
       },
       {
         title: "Clinical decisions always belong to the doctor",
-        desc: "Vivara organises, shows and alerts you when a value falls outside its reference range. It does not diagnose or suggest treatments.",
+        desc: "Vivara organises, shows and alerts you when a value falls outside its reference range or the target set. It does not diagnose or suggest treatments.",
       },
     ],
   },

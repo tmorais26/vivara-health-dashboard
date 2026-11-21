@@ -5,18 +5,18 @@ const T = {
     header: "3 alertas clínicos",
     sub: "11 fora do alvo",
     alerts: [
-      { label: "LDL-C acima do alvo funcional", value: "142 mg/dL", meta: "alvo ≤100 · 4ª subida consecutiva", tone: "red" },
-      { label: "Vitamina D em queda sustentada", value: "24 ng/mL", meta: "alvo 50–80 · −37% em 9 meses", tone: "red" },
-      { label: "HRV abaixo da linha de base", value: "42 ms", meta: "linha de base 55 ms · −24% em 6 meses", tone: "amber" },
+      { label: "LDL-C acima do alvo funcional", value: "142 mg/dL", meta: "alvo ≤100 · 4ª subida consecutiva", source: "Análise", tone: "red" },
+      { label: "Vitamina D em queda sustentada", value: "24 ng/mL", meta: "alvo 50–80 · −37% em 9 meses", source: "Análise", tone: "red" },
+      { label: "HRV abaixo da linha de base", value: "42 ms", meta: "linha de base 55 ms · −24% em 6 meses", source: "Wearable", tone: "amber" },
     ],
   },
   en: {
     header: "3 clinical alerts",
     sub: "11 out of range",
     alerts: [
-      { label: "LDL-C above functional target", value: "142 mg/dL", meta: "target ≤100 · 4th consecutive rise", tone: "red" },
-      { label: "Vitamin D in sustained decline", value: "24 ng/mL", meta: "target 50–80 · −37% in 9 months", tone: "red" },
-      { label: "HRV below baseline", value: "42 ms", meta: "baseline 55 ms · −24% in 6 months", tone: "amber" },
+      { label: "LDL-C above functional target", value: "142 mg/dL", meta: "target ≤100 · 4th consecutive rise", source: "Lab result", tone: "red" },
+      { label: "Vitamin D in sustained decline", value: "24 ng/mL", meta: "target 50–80 · −37% in 9 months", source: "Lab result", tone: "red" },
+      { label: "HRV below baseline", value: "42 ms", meta: "baseline 55 ms · −24% in 6 months", source: "Wearable", tone: "amber" },
     ],
   },
 };
@@ -42,7 +42,10 @@ export default function ClinicalAlerts() {
               <p className="text-sm font-medium">{a.label}</p>
               <span className="font-serif text-lg shrink-0">{a.value}</span>
             </div>
-            <p className="text-xs opacity-70 mt-0.5">{a.meta}</p>
+            <p className="text-xs opacity-70 mt-0.5">
+              <span className="mr-1.5 rounded-full border border-current/30 px-1.5 py-px text-[10px] uppercase tracking-wide opacity-90">{a.source}</span>
+              {a.meta}
+            </p>
           </div>
         ))}
       </div>
