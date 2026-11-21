@@ -8,6 +8,7 @@ import Funcionalidades from "./pages/Funcionalidades";
 import Precos from "./pages/Precos";
 import FaqPage from "./pages/FaqPage";
 import Contacto from "./pages/Contacto";
+import Comecar from "./pages/Comecar";
 import Sobre from "./pages/Sobre";
 import Legal from "./pages/Legal";
 
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/funcionalidades" element={<Funcionalidades />} />
         <Route path="/precos" element={<Precos />} />
         <Route path="/faq" element={<FaqPage />} />
+        <Route path="/comecar" element={<Comecar />} />
         <Route path="/contacto" element={<Contacto />} />
         <Route path="/sobre" element={<Sobre />} />
         <Route path="/privacidade" element={<Legal kind="privacidade" />} />

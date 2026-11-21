@@ -7,21 +7,21 @@ const T = {
   pt: {
     title: (
       <>
-        Pronto para acompanhar a sua <em>saúde de perto?</em>
+        Pronto para <em>começar?</em>
       </>
     ),
     desc: "Um lugar seguro para exames, resultados e registos médicos — para médicos e utentes.",
-    cta: "Pedir acesso",
+    cta: "Começar",
     tagline: "Para que cada consulta médica valha a pena.",
   },
   en: {
     title: (
       <>
-        Ready to follow your <em>health closely?</em>
+        Ready to <em>get started?</em>
       </>
     ),
     desc: "A safe place for exams, results and medical records — for doctors and patients.",
-    cta: "Request access",
+    cta: "Get started",
     tagline: "So that every doctor's appointment counts.",
   },
 };
@@ -42,7 +42,7 @@ export default function FooterCTA() {
           <h2 className="font-serif font-light tracking-tight text-5xl md:text-7xl">{L.title}</h2>
           <p className="mt-6 text-lg text-brand-muted">{L.desc}</p>
           <div className="mt-10">
-            <Link to="/contacto"><CTAButton>{L.cta}</CTAButton></Link>
+            <Link to="/comecar"><CTAButton>{L.cta}</CTAButton></Link>
           </div>
           <p className="mt-8 font-serif italic text-xl text-brand-muted">{L.tagline}</p>
         </Reveal>

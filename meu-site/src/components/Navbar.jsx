@@ -23,8 +23,8 @@ const LINKS = {
 };
 
 const T = {
-  pt: { cta: "Pedir acesso", openMenu: "Abrir menu", closeMenu: "Fechar menu" },
-  en: { cta: "Request access", openMenu: "Open menu", closeMenu: "Close menu" },
+  pt: { cta: "Começar", openMenu: "Abrir menu", closeMenu: "Fechar menu" },
+  en: { cta: "Get started", openMenu: "Open menu", closeMenu: "Close menu" },
 };
 
 function LangToggle({ className = "" }) {
@@ -98,7 +98,7 @@ export default function Navbar() {
 
           {/* Ação principal: sempre visível, também em mobile (antes do hamburger) */}
           <Link
-            to="/contacto"
+            to="/comecar"
             className="inline-flex shrink-0 rounded-full bg-brand-olive hover:bg-brand-olive-hover text-white px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors lg:px-5 lg:py-2.5 lg:text-sm"
           >
             {labels.cta}
@@ -146,7 +146,7 @@ export default function Navbar() {
               <LangToggle />
             </div>
             <Link
-              to="/contacto"
+              to="/comecar"
               className="mt-3 flex items-center justify-center rounded-full bg-brand-olive text-white px-5 py-3 text-sm font-medium"
             >
               {labels.cta}

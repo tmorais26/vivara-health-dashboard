@@ -78,7 +78,7 @@ const T = {
     ],
     moreTitle: "Quer saber mais?",
     moreDesc: "Fale connosco — respondemos em 1-2 dias úteis.",
-    moreCta: "Pedir acesso",
+    moreCta: "Começar",
   },
   en: {
     header: {
@@ -153,7 +153,7 @@ const T = {
     ],
     moreTitle: "Want to know more?",
     moreDesc: "Talk to us — we reply within 1-2 business days.",
-    moreCta: "Request access",
+    moreCta: "Get started",
   },
 };
 
@@ -243,7 +243,7 @@ export default function Sobre() {
           <Reveal>
             <h2 className="font-serif font-light text-3xl md:text-5xl">{L.moreTitle}</h2>
             <p className="mt-4 text-brand-muted/80">{L.moreDesc}</p>
-            <Link to="/contacto">
+            <Link to="/comecar">
               <CTAButton className="mt-8">{L.moreCta}</CTAButton>
             </Link>
           </Reveal>

@@ -2,6 +2,7 @@ import Hero from "../components/Hero";
 import Overview from "../components/Overview";
 import Problem from "../components/Problem";
 import { Timeline, Vault, Insights, Sharing } from "../components/Solutions";
+import PricingTeaser from "../components/PricingTeaser";
 import Trust from "../components/Trust";
 import Story from "../components/Story";
 import TrustSecurity from "../components/TrustSecurity";
@@ -18,6 +19,7 @@ export default function Home() {
       <Vault />
       <Insights />
       <Sharing />
+      <PricingTeaser />
       <Trust />
       <Story />
       <TrustSecurity />

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader, Reveal } from "../components/ui";
 import { useT } from "../i18n";
 
@@ -87,7 +87,9 @@ export default function Contacto() {
       setStatus("error");
     }
   }
-  const [role, setRole] = useState(0);
+  const [params] = useSearchParams();
+  const perfil = params.get("perfil");
+  const [role, setRole] = useState(perfil === "utente" ? 1 : 0);
   return (
     <>
       <PageHeader badge={L.header.badge} title={L.header.title} desc={L.header.desc} />

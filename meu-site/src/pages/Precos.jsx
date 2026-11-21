@@ -212,7 +212,7 @@ export default function Precos() {
                   ))}
                 </ul>
                 <Link
-                  to="/contacto"
+                  to="/comecar?perfil=utente"
                   className="mt-auto inline-flex items-center justify-center rounded-full bg-brand-lime text-brand-text px-5 py-3 text-sm font-medium"
                 >
                   {L.patient.cta}
@@ -275,7 +275,7 @@ export default function Precos() {
                     ))}
                   </ul>
                   <Link
-                    to="/contacto"
+                    to={p.monthly ? "/comecar?perfil=medico" : "/contacto"}
                     className={`mt-auto inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium ${
                       p.featured ? "bg-brand-lime text-brand-text" : "bg-brand-olive text-white hover:bg-brand-olive-hover"
                     }`}
