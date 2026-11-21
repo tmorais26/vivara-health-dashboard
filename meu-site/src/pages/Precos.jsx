@@ -20,6 +20,7 @@ const T = {
     perMonth: "/mês",
     perYear: "/ano",
     worksOut: (v) => `Equivale a €${v}/mês`,
+    perDay: (v) => `Cerca de €${v} por dia`,
     patient: {
       name: "Utente",
       desc: "Acesso completo à app Vivara. Histórico, wearables, mensagens com a equipa e resumos de cada consulta.",
@@ -91,6 +92,7 @@ const T = {
     perMonth: "/month",
     perYear: "/year",
     worksOut: (v) => `Works out at €${v}/month`,
+    perDay: (v) => `About €${v} a day`,
     patient: {
       name: "Patient",
       desc: "Full access to the Vivara app. Record, wearables, messages with your team and a summary after every appointment.",
@@ -154,6 +156,8 @@ const T = {
 
 // Preços fixos (IVA incluído). O anual não é calculado: é um preço próprio.
 const PATIENT = { monthly: 6.99, annual: 79 };
+// Preço por dia, arredondado aos cêntimos (ex.: €29,99/mês ≈ €1 por dia).
+const perDay = (v) => Math.round(v * 100) / 100;
 
 export default function Precos() {
   const { lang } = useLang();
@@ -201,6 +205,7 @@ export default function Precos() {
                 <div className="mb-6">
                   <span className="font-serif text-4xl">€{fmt(yearly ? PATIENT.annual : PATIENT.monthly)}</span>
                   <span className="text-white/60 text-sm">{yearly ? L.perYear : L.perMonth}</span>
+                  <p className="text-xs text-white/70 mt-1">{L.perDay(fmt(perDay(yearly ? PATIENT.annual / 365 : PATIENT.monthly / 30)))}</p>
                   {yearly && <p className="text-xs text-brand-lime mt-1">{L.worksOut(fmt(Math.round((PATIENT.annual / 12) * 100) / 100))}</p>}
                 </div>
                 <ul className="space-y-3 mb-8 text-sm">
@@ -256,6 +261,9 @@ export default function Precos() {
                       <>
                         <span className="font-serif text-4xl">€{fmt(yearly ? p.annual : p.monthly)}</span>
                         <span className={`text-sm ${p.featured ? "text-white/60" : "text-brand-muted/60"}`}>{yearly ? L.perDoctorYear : L.perDoctorMonth}</span>
+                        <p className={`text-xs mt-1 ${p.featured ? "text-white/70" : "text-brand-muted/70"}`}>
+                          {L.perDay(fmt(perDay(yearly ? p.annual / 365 : p.monthly / 30)))}
+                        </p>
                         {yearly && (
                           <p className={`text-xs mt-1 ${p.featured ? "text-brand-lime" : "text-brand-green-dark"}`}>
                             {L.worksOut(fmt(Math.round((p.annual / 12) * 100) / 100))}

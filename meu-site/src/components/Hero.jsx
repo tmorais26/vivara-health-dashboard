@@ -15,6 +15,11 @@ const T = {
     ),
     desc: "Uma só plataforma, duas vistas: o utente tem a sua saúde num só lugar, o médico tem o historial completo. O mesmo registo para ambos, para que cada consulta valha a pena.",
     cta: "Ver como funciona",
+    facts: [
+      { big: "Qualquer laboratório", text: "PDF ou fotografia" },
+      { big: "Médico e utente", text: "O mesmo historial" },
+      { big: "16 min", text: "por consulta no registo clínico", source: "Annals of Internal Medicine, 2020", url: "https://doi.org/10.7326/M18-3684" },
+    ],
   },
   en: {
     title: (
@@ -26,6 +31,11 @@ const T = {
     ),
     desc: "One platform, two views: patients have their health in one place, doctors have the complete record. The same record for both, so that every appointment counts.",
     cta: "See how it works",
+    facts: [
+      { big: "Any lab", text: "PDF or photo" },
+      { big: "Doctor and patient", text: "The same record" },
+      { big: "16 min", text: "per appointment in the health record", source: "Annals of Internal Medicine, 2020", url: "https://doi.org/10.7326/M18-3684" },
+    ],
   },
 };
 
@@ -76,6 +86,30 @@ export default function Hero() {
           <Link to="/como-funciona">
             <CTAButton>{L.cta}</CTAButton>
           </Link>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.55 }}
+          className="mt-12 grid max-w-3xl grid-cols-3 gap-4 border-t border-white/20 pt-6 md:gap-10"
+        >
+          {L.facts.map((f) => (
+            <div key={f.big}>
+              <p className="font-serif text-lg leading-tight text-white md:text-2xl">{f.big}</p>
+              <p className="mt-1 text-[11px] leading-snug text-white/75 md:text-sm">{f.text}</p>
+              {f.source && (
+                <a
+                  href={f.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 hidden text-xs text-white/55 underline underline-offset-2 hover:text-white/80 md:block"
+                >
+                  {f.source}
+                </a>
+              )}
+            </div>
+          ))}
         </motion.div>
 
       </div>

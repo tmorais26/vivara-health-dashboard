@@ -13,6 +13,7 @@ const T = {
     ),
     desc: "Preços com IVA incluído. Cancela quando quiser.",
     perMonth: "/mês",
+    perDay: (v) => `Cerca de €${v} por dia`,
     cards: [
       { key: "utente", who: "Utente", note: "ou €{annual} por ano", text: "A app completa, com o seu historial sempre consigo." },
       { key: "medico", who: "Médico individual", note: "ou €{annual} por ano", text: "O portal clínico, com ou sem a app do utente." },
@@ -30,6 +31,7 @@ const T = {
     ),
     desc: "VAT included. Cancel anytime.",
     perMonth: "/month",
+    perDay: (v) => `About €${v} a day`,
     cards: [
       { key: "utente", who: "Patient", note: "or €{annual} a year", text: "The full app, with your record always with you." },
       { key: "medico", who: "Individual doctor", note: "or €{annual} a year", text: "The clinical portal, with or without the patient's app." },
@@ -38,6 +40,12 @@ const T = {
     clinicNote: "Custom pricing",
     cta: "See all pricing",
   },
+};
+
+// €/dia a partir do preço mensal ("29,99" → "1"; "6,99" → "0,23").
+const day = (monthly) => {
+  const v = Math.round((parseFloat(monthly.replace(",", ".")) / 30) * 100) / 100;
+  return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(".", ",");
 };
 
 export default function PricingTeaser() {
@@ -63,6 +71,7 @@ export default function PricingTeaser() {
                   <span className="text-brand-muted/60">{L.perMonth}</span>
                 </p>
                 <p className="mt-1 text-sm text-brand-muted/60">{c.note.replace("{annual}", euro(PRICES[c.key].annual))}</p>
+                <p className="mt-3 inline-block rounded-full bg-white px-3 py-1 text-sm text-brand-green-dark">{L.perDay(euro(day(PRICES[c.key].monthly)))}</p>
                 <p className="mt-5 text-brand-muted/85 leading-relaxed">{c.text}</p>
               </div>
             </Reveal>
