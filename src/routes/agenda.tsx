@@ -1,64 +1,83 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { definirUsarAgenda, usePrefsMedico } from "@/lib/medico-prefs";
-import {
-  Calendar,
-  Video,
-  Sparkles,
-  AlertTriangle,
-  FileText,
-  Activity,
-  HeartPulse,
-  Pill,
-  Scissors,
-  Users,
-  ClipboardList,
-  Play,
-} from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { CalendarDays, CalendarPlus, Video } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
-import { useT } from "@/lib/i18n";
-import { agendaSemana } from "@/data/mock-portal";
-import { formatarData, utente as mariaMock } from "@/data/mock-utente";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+import { MarcarConsultaModal } from "@/components/portal/MarcarConsultaModal";
+import { definirUsarAgenda, usePrefsMedico } from "@/lib/medico-prefs";
+import { useIdioma, useT } from "@/lib/i18n";
+import { e_clinico, iniciais, useSessao } from "@/lib/sessao";
+import { membrosDoEspaco, rotuloMembro, soData, type ConsultaDb, type MembroDb } from "@/lib/dados";
 
 export const Route = createFileRoute("/agenda")({
-  head: () => ({
-    meta: [
-      { title: "Agenda — Vivara Health" },
-      { name: "description", content: "Consultas agendadas da semana no portal Vivara Health." },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Agenda — Vivara Health" }] }),
   component: AgendaPage,
 });
 
+type Item = ConsultaDb & { utenteNome: string };
+
 function AgendaPage() {
   const t = useT();
-  const [prepararId, setPrepararId] = useState<string | null>(null);
-  const evento = agendaSemana.find((e) => e.id === prepararId) ?? null;
-  // Agrupa por dia.
-  const porDia = agendaSemana.reduce<Record<string, typeof agendaSemana>>((acc, e) => {
-    (acc[e.data] ??= []).push(e);
-    return acc;
-  }, {});
-  const dias = Object.keys(porDia).sort();
+  const ta = t.agendaDb;
+  const idioma = useIdioma();
   const { usarAgenda } = usePrefsMedico();
+  const { atual } = useSessao();
+  const clinica = atual?.espaco.tipo === "clinica";
+  const [quem, setQuem] = useState<"minhas" | "todas">(e_clinico(atual) ? "minhas" : "todas");
+  const [quando, setQuando] = useState<"proximas" | "anteriores">("proximas");
+  const [itens, setItens] = useState<Item[] | null>(null);
+  const [membros, setMembros] = useState<MembroDb[]>([]);
+  const [marcarOpen, setMarcarOpen] = useState(false);
+
+  const carregar = useCallback(async () => {
+    if (!atual) return;
+    const agora = new Date();
+    const inicioDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate()).toISOString();
+    let q = supabase.from("consultas").select("*").eq("espaco_id", atual.espaco_id);
+    q = quando === "proximas" ? q.gte("inicio", inicioDia).order("inicio") : q.lt("inicio", inicioDia).order("inicio", { ascending: false });
+    if (quem === "minhas") q = q.eq("profissional_id", atual.id);
+    const { data } = await q.limit(200);
+    const ids = [...new Set((data ?? []).map((c) => c.utente_id))];
+    const { data: us } = ids.length ? await supabase.from("utentes").select("id, nome").in("id", ids) : { data: [] };
+    const nomes = new Map((us ?? []).map((u) => [u.id, u.nome]));
+    setItens((data ?? []).map((c) => ({ ...c, utenteNome: nomes.get(c.utente_id) ?? "—" })));
+  }, [atual, quem, quando]);
+
+  useEffect(() => {
+    void carregar();
+  }, [carregar]);
+
+  useEffect(() => {
+    if (atual) void membrosDoEspaco(atual.espaco_id).then(setMembros);
+  }, [atual]);
+
+  const porDia = useMemo(() => {
+    const m = new Map<string, Item[]>();
+    for (const c of itens ?? []) {
+      const d = new Date(c.inicio);
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      (m.get(k) ?? m.set(k, []).get(k)!).push(c);
+    }
+    return [...m.entries()];
+  }, [itens]);
+
+  const nomeDe = (id: string) => {
+    const m = membros.find((x) => x.id === id);
+    return m ? rotuloMembro(m, { medico: t.ficha.medico, administrativo: t.ficha.administrativo }) : "";
+  };
+
+  async function cancelar(id: string) {
+    if (!window.confirm(ta.confirmarCancelar)) return;
+    await supabase.from("consultas").update({ estado: "cancelada" }).eq("id", id);
+    void carregar();
+  }
 
   if (!usarAgenda) {
     return (
       <PortalShell>
         <main className="mx-auto max-w-[640px] px-4 py-16 text-center">
           <p className="text-sm text-foreground">{t.agendaPref.desligada}</p>
-          <button
-            type="button"
-            onClick={() => definirUsarAgenda(true)}
-            className="mt-4 rounded-full bg-foreground px-4 py-2 text-xs font-medium text-background hover:opacity-90"
-          >
+          <button type="button" onClick={() => definirUsarAgenda(true)} className="mt-4 rounded-full bg-foreground px-4 py-2 text-xs font-medium text-background hover:opacity-90">
             {t.agendaPref.ligar}
           </button>
         </main>
@@ -67,335 +86,108 @@ function AgendaPage() {
     );
   }
 
+  const hojeK = new Date().toDateString();
+  const segmento = "rounded-full px-3 py-1.5";
+
   return (
     <PortalShell>
       <main className="mx-auto max-w-[1100px] px-4 py-6 pb-24 sm:px-6 sm:py-10 lg:pb-10">
-        <div className="mb-6 sm:mb-8">
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{t.comum.portal}</div>
-          <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">{t.agenda.titulo}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{t.agenda.subtitulo}</p>
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{atual?.espaco.nome}</div>
+            <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">{ta.titulo}</h1>
+          </div>
+          <button type="button" onClick={() => setMarcarOpen(true)} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground hover:opacity-90">
+            <CalendarPlus className="h-3.5 w-3.5" />
+            {t.marcar.titulo}
+          </button>
         </div>
 
-        <div className="space-y-4 sm:space-y-6">
-          {dias.map((dia) => (
-            <section key={dia} className="rounded-2xl border border-border bg-surface-raised">
-              <div className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-5">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">{formatarData(dia)}</span>
-                </div>
-                <span className="tabular text-[11px] text-muted-foreground">
-                  {porDia[dia].length} {porDia[dia].length === 1 ? t.agenda.consulta : t.agenda.consultas}
-                </span>
-              </div>
-              <ul className="divide-y divide-border">
-                {porDia[dia]
-                  .sort((a, b) => a.hora.localeCompare(b.hora))
-                  .map((e) => (
-                    <li key={e.id}>
-                      <div className="flex items-center gap-2.5 px-3 py-3 transition-colors hover:bg-accent/40 sm:gap-3 sm:px-4 lg:gap-4 lg:px-5">
-                        <div className="tabular w-11 shrink-0 text-[13px] font-medium text-foreground sm:w-14 sm:text-sm lg:w-16">
-                          {e.hora}
+        <div className="mb-5 flex flex-wrap items-center gap-3 text-xs">
+          <div role="group" className="flex rounded-full border border-border bg-surface-raised p-0.5">
+            {(["proximas", "anteriores"] as const).map((v) => (
+              <button key={v} type="button" aria-pressed={quando === v} onClick={() => setQuando(v)} className={`${segmento} ${quando === v ? "bg-foreground text-background" : "text-muted-foreground"}`}>
+                {ta[v]}
+              </button>
+            ))}
+          </div>
+          {clinica && (
+            <div role="group" className="flex rounded-full border border-border bg-surface-raised p-0.5">
+              {(["minhas", "todas"] as const).map((v) => (
+                <button key={v} type="button" aria-pressed={quem === v} onClick={() => setQuem(v)} className={`${segmento} ${quem === v ? "bg-foreground text-background" : "text-muted-foreground"}`}>
+                  {ta[v]}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {itens === null ? (
+          <div className="h-24 animate-pulse rounded-2xl border border-border bg-surface-raised" />
+        ) : porDia.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-border bg-surface-raised px-6 py-12 text-center text-sm text-muted-foreground">
+            {quando === "proximas" ? ta.vazia : ta.vaziaAnteriores}
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {porDia.map(([dia, cs]) => (
+              <section key={dia} className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
+                <header className="flex items-center justify-between border-b border-border px-5 py-3">
+                  <h2 className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                    {new Date(cs[0].inicio).toDateString() === hojeK ? `${ta.hoje} · ` : ""}
+                    {soData(cs[0].inicio, idioma)}
+                  </h2>
+                  <span className="text-[11px] text-muted-foreground">{ta.nConsultas(cs.length)}</span>
+                </header>
+                <ul className="divide-y divide-border">
+                  {cs.map((c) => (
+                    <li key={c.id} className={`flex flex-wrap items-center gap-4 px-5 py-3 ${c.estado === "cancelada" ? "opacity-50" : ""}`}>
+                      <span className="tabular w-12 text-sm text-foreground">
+                        {new Date(c.inicio).toLocaleTimeString(idioma === "pt" ? "pt-PT" : "en-GB", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-[11px] font-medium text-foreground">{iniciais(c.utenteNome)}</span>
+                      <div className="min-w-0 flex-1">
+                        <Link to="/utentes/$utenteId" params={{ utenteId: c.utente_id }} className="text-sm text-foreground hover:underline">
+                          {c.utenteNome}
+                        </Link>
+                        <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground">
+                          {c.tipo === "video" && <Video className="h-3 w-3" />}
+                          <span>
+                            {t.ficha.duracao(c.duracao_min)} · {c.tipo === "video" ? t.ficha.video : t.ficha.presencial}
+                          </span>
+                          {(quem === "todas" || !e_clinico(atual)) && <span>· {nomeDe(c.profissional_id)}</span>}
+                          {c.motivo && <span>· {c.motivo}</span>}
+                          {c.estado !== "agendada" && <span className="rounded-full bg-accent px-1.5 text-foreground">{t.ficha.estado[c.estado]}</span>}
                         </div>
-                        <Link
-                          to="/utentes/$utenteId"
-                          params={{ utenteId: e.utenteId }}
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[10.5px] font-medium text-foreground hover:bg-accent/70 sm:h-9 sm:w-9 sm:text-[11px]"
-                        >
-                          {e.iniciais}
-                        </Link>
-                        <Link
-                          to="/utentes/$utenteId"
-                          params={{ utenteId: e.utenteId }}
-                          className="min-w-0 flex-1"
-                        >
-                          <div className="truncate text-[13px] font-medium leading-tight text-foreground hover:underline sm:text-sm">
-                            {e.utenteNome}
-                          </div>
-                          <div className="mt-0.5 flex items-center gap-1.5 truncate text-[10.5px] leading-tight text-muted-foreground sm:text-[11px]">
-                            {e.tipo === "video" ? <Video className="h-3 w-3 shrink-0" /> : null}
-                            <span className="truncate">{e.duracao} · {e.tipo}</span>
-                          </div>
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => setPrepararId(e.id)}
-                          aria-label={t.agenda.prepararConsulta}
-                          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-2 text-[11px] font-medium text-foreground transition-colors hover:bg-accent lg:h-auto lg:px-3 lg:py-1.5"
-                        >
-                          <Sparkles className="h-3 w-3" />
-                          <span className="hidden lg:inline">{t.agenda.preparar}</span>
-                        </button>
-                        <Link
-                          to="/consulta/$eventoId"
-                          params={{ eventoId: e.id }}
-                          aria-label={t.agenda.iniciarConsulta}
-                          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full bg-foreground px-2.5 text-[11px] font-medium text-background transition-opacity hover:opacity-90 lg:h-auto lg:px-3 lg:py-1.5"
-                        >
-                          <Play className="h-3 w-3" />
-                          <span className="hidden lg:inline">{t.agenda.iniciar}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {c.estado === "agendada" && quando === "proximas" && (
+                          <button type="button" onClick={() => cancelar(c.id)} className="rounded-full px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground">
+                            {ta.cancelar}
+                          </button>
+                        )}
+                        <Link to="/consulta/$eventoId" params={{ eventoId: c.id }} className="rounded-full bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90">
+                          {ta.abrir}
                         </Link>
                       </div>
                     </li>
                   ))}
-              </ul>
-            </section>
-          ))}
-        </div>
-
-        <Sheet open={!!prepararId} onOpenChange={(o) => !o && setPrepararId(null)}>
-          <SheetContent side="right" className="w-full overflow-y-auto p-4 sm:max-w-md sm:p-6">
-            {evento && (
-              <PreparoConsulta evento={evento} onClose={() => setPrepararId(null)} />
-            )}
-          </SheetContent>
-        </Sheet>
+                </ul>
+              </section>
+            ))}
+          </div>
+        )}
       </main>
       <MobileNavTabs />
+      <MarcarConsultaModal
+        open={marcarOpen}
+        onClose={() => setMarcarOpen(false)}
+        onMarcada={() => {
+          setMarcarOpen(false);
+          void carregar();
+        }}
+      />
     </PortalShell>
-  );
-}
-
-function PreparoConsulta({
-  evento,
-  onClose,
-}: {
-  evento: (typeof agendaSemana)[number];
-  onClose: () => void;
-}) {
-  // Mock: para Maria mostramos dados reais; para os restantes, conteúdo plausível.
-  const t = useT();
-  const isMaria = evento.utenteId === mariaMock.id;
-  const alertas = isMaria
-    ? mariaMock.alertas
-    : [
-        { id: "a-1", titulo: "Marcador fora do alvo", detalhe: "Acima do intervalo funcional", estado: "atencao" as const },
-      ];
-  const ultimaNota = isMaria
-    ? [...mariaMock.notasMedicas].sort((a, b) => b.data.localeCompare(a.data))[0]
-    : null;
-  const adesao = [
-    { titulo: "Vitamina D3 5000 UI", taxa: 30, dias: "2 de 7" },
-    { titulo: "Berberina 500 mg", taxa: 71, dias: "5 de 7" },
-    { titulo: "Magnésio bisglicinato", taxa: 100, dias: "7 de 7" },
-  ];
-  const ficha = isMaria ? mariaMock.fichaClinica : null;
-
-  return (
-    <div className="flex h-full flex-col gap-5">
-      <SheetHeader>
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-          {t.agenda.prepararConsulta}
-        </div>
-        <SheetTitle className="font-serif text-2xl">{evento.utenteNome}</SheetTitle>
-        <SheetDescription>
-          {formatarData(evento.data)} · {evento.hora} · {evento.duracao} · {evento.tipo}
-        </SheetDescription>
-        <div className="mt-1 text-xs text-muted-foreground">{evento.motivo}</div>
-      </SheetHeader>
-
-      {/* Alertas */}
-      <section className="rounded-2xl border border-border bg-surface-raised p-4">
-        <div className="mb-2 flex items-center gap-1.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
-          <AlertTriangle className="h-3 w-3" />
-          {t.agenda.alertasClinicos} · {alertas.length}
-        </div>
-        <ul className="space-y-2">
-          {alertas.map((a) => {
-            const tone =
-              a.estado === "alerta"
-                ? "border-state-alert/30 bg-state-alert-soft text-state-alert"
-                : "border-state-warn/30 bg-state-warn-soft text-state-warn";
-            return (
-              <li key={a.id} className={`rounded-xl border px-3 py-2 text-[12px] ${tone}`}>
-                <div className="font-medium">{a.titulo}</div>
-                <div className="opacity-70">{a.detalhe}</div>
-              </li>
-            );
-          })}
-          {alertas.length === 0 && (
-            <li className="text-[12px] text-muted-foreground">{t.agenda.semAlertas}</li>
-          )}
-        </ul>
-      </section>
-
-      {/* Anamnese resumida */}
-      {ficha && (
-        <section className="rounded-2xl border border-border bg-surface-raised p-4">
-          <div className="mb-3 flex items-center gap-1.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
-            <ClipboardList className="h-3 w-3" />
-            {t.agenda.anamneseResumo}
-          </div>
-          <div className="flex flex-col gap-3">
-            <AnamneseBlock
-              icon={<AlertTriangle className="h-3 w-3 text-state-alert" />}
-              title={t.agenda.alergias}
-              empty={t.agenda.semAlergias}
-              items={ficha.alergiasMedicamentos.map(
-                (a) => `${a.substancia} · ${a.reacao} (${a.gravidade})`,
-              )}
-              accent
-            />
-            <AnamneseBlock
-              icon={<HeartPulse className="h-3 w-3" />}
-              title={t.agenda.antPessoais}
-              items={ficha.antecedentesPessoais}
-            />
-            <AnamneseBlock
-              icon={<Pill className="h-3 w-3" />}
-              title={t.agenda.medicacao}
-              items={ficha.medicacaoHabitual.map((m) => `${m.nome} · ${m.posologia}`)}
-            />
-            <AnamneseBlock
-              icon={<Sparkles className="h-3 w-3" />}
-              title={t.agenda.suplementacao}
-              items={ficha.suplementacao.map((s) => `${s.nome} · ${s.posologia}`)}
-            />
-            <AnamneseBlock
-              icon={<Scissors className="h-3 w-3" />}
-              title={t.agenda.antCirurgicos}
-              items={ficha.antecedentesCirurgicos.map(
-                (c) => `${c.intervencao} (${c.ano})`,
-              )}
-            />
-            <AnamneseBlock
-              icon={<Users className="h-3 w-3" />}
-              title={t.agenda.antFamiliares}
-              items={ficha.antecedentesFamiliares.map(
-                (af) =>
-                  `${af.condicao} · ${af.familiar}${af.idadeDiagnostico ? ` (${af.idadeDiagnostico} anos)` : ""}`,
-              )}
-            />
-          </div>
-          <Link
-            to="/utentes/$utenteId"
-            params={{ utenteId: evento.utenteId }}
-            className="mt-3 inline-block text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-          >
-            {t.agenda.verFichaCompleta}
-          </Link>
-        </section>
-      )}
-
-      {/* Última nota */}
-      <section className="rounded-2xl border border-border bg-surface-raised p-4">
-        <div className="mb-2 flex items-center gap-1.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
-          <FileText className="h-3 w-3" />
-          {t.agenda.ultimaNota}
-        </div>
-        {ultimaNota ? (
-          <div className="space-y-2 text-[12.5px] text-foreground">
-            <div className="text-[11px] text-muted-foreground">
-              {formatarData(ultimaNota.data)} · {ultimaNota.autor}
-            </div>
-            {ultimaNota.avaliacao && (
-              <p>
-                <span className="text-[10.5px] uppercase tracking-wider text-muted-foreground">A · </span>
-                {ultimaNota.avaliacao}
-              </p>
-            )}
-            {ultimaNota.plano && (
-              <p>
-                <span className="text-[10.5px] uppercase tracking-wider text-muted-foreground">P · </span>
-                {ultimaNota.plano}
-              </p>
-            )}
-          </div>
-        ) : (
-          <p className="text-[12px] text-muted-foreground">
-            {t.agenda.semNotas}
-          </p>
-        )}
-      </section>
-
-      {/* Adesão últimos 7 dias */}
-      <section className="rounded-2xl border border-border bg-surface-raised p-4">
-        <div className="mb-2 flex items-center gap-1.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
-          <Activity className="h-3 w-3" />
-          {t.agenda.adesao}
-        </div>
-        <ul className="space-y-2">
-          {adesao.map((a) => {
-            const bar =
-              a.taxa < 50 ? "bg-state-alert" : a.taxa < 80 ? "bg-state-warn" : "bg-state-ok";
-            return (
-              <li key={a.titulo}>
-                <div className="flex items-center justify-between text-[12px] text-foreground">
-                  <span className="truncate">{a.titulo}</span>
-                  <span className="tabular text-[11px] text-muted-foreground">{a.dias}</span>
-                </div>
-                <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted">
-                  <div className={`h-full ${bar}`} style={{ width: `${a.taxa}%` }} />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      <div className="mt-auto flex items-center gap-2 pt-2">
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-full border border-border bg-background px-4 py-2 text-xs font-medium text-foreground hover:bg-accent"
-        >
-          {t.comum.fechar}
-        </button>
-        <Link
-          to="/utentes/$utenteId"
-          params={{ utenteId: evento.utenteId }}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-xs font-medium text-background hover:opacity-90"
-        >
-          {t.agenda.abrirPerfil}
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function AnamneseBlock({
-  icon,
-  title,
-  items,
-  empty,
-  accent,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  items: string[];
-  empty?: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-xl border px-3 py-2.5 ${
-        accent ? "border-state-alert/30 bg-state-alert-soft/30" : "border-border bg-background"
-      }`}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-[10.5px] uppercase tracking-wider text-muted-foreground">
-          {icon}
-          {title}
-        </div>
-        <span className="tabular text-[10.5px] text-muted-foreground">{items.length}</span>
-      </div>
-      {items.length === 0 ? (
-        <p className="mt-1.5 text-[12px] text-muted-foreground">
-          {empty ?? "—"}
-        </p>
-      ) : (
-        <ul className="mt-1.5 flex flex-col gap-1">
-          {items.map((it, i) => (
-            <li
-              key={i}
-              className="flex items-start gap-1.5 text-[12px] leading-snug text-foreground"
-            >
-              <span className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full bg-muted-foreground/60" />
-              <span className="min-w-0">{it}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
   );
 }

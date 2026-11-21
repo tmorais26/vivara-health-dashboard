@@ -356,7 +356,7 @@ function ListaConsultas({ consultas, nomeDe, idioma }: { consultas: ConsultaDb[]
 
 type Registo = (DiarioDb | ObservacaoDb) & { autor_id: string };
 
-function ListaRegistos({
+export function ListaRegistos({
   itens,
   partilhas,
   nomeDe,
@@ -419,13 +419,15 @@ function ListaRegistos({
   );
 }
 
-function Editor({
+export function Editor({
   tipo,
   utente,
   elegiveis,
   consultas,
   rot,
   onGuardado,
+  consultaFixaId,
+  soap,
 }: {
   tipo: "diario" | "observacao";
   utente: UtenteDb;
@@ -433,11 +435,25 @@ function Editor({
   consultas: ConsultaDb[];
   rot: { medico: string; administrativo: string };
   onGuardado: () => void;
+  consultaFixaId?: string;
+  soap?: boolean;
 }) {
   const t = useT();
   const tf = t.ficha;
+  const tc = t.consultaDb;
   const { atual } = useSessao();
-  const [texto, setTexto] = useState("");
+  const [textoLivre, setTextoLivre] = useState("");
+  const [partes, setPartes] = useState({ s: "", o: "", a: "", p: "" });
+  const texto = soap
+    ? (["s", "o", "a", "p"] as const)
+        .filter((k) => partes[k].trim())
+        .map((k) => `${tc[k]}\n${partes[k].trim()}`)
+        .join("\n\n")
+    : textoLivre;
+  const setTexto = (v: string) => {
+    setTextoLivre(v);
+    if (!v) setPartes({ s: "", o: "", a: "", p: "" });
+  };
   const [vis, setVis] = useState<"publico" | "privado">("publico");
   const [escolhidos, setEscolhidos] = useState<string[]>([]);
   const [consultaId, setConsultaId] = useState("");
@@ -457,7 +473,7 @@ function Editor({
       autor_id: atual.id,
       texto: texto.trim(),
       visibilidade: vis,
-      consulta_id: consultaId || null,
+      consulta_id: consultaFixaId ?? (consultaId || null),
     };
     const res =
       tipo === "diario"
@@ -491,16 +507,39 @@ function Editor({
 
   return (
     <form onSubmit={guardar} className="rounded-2xl border border-border bg-surface-raised p-4">
-      <label htmlFor={id} className="text-[11px] uppercase tracking-wider text-muted-foreground">
-        {tipo === "diario" ? tf.novoDiario : tf.novaObservacao}
-      </label>
-      <textarea
-        id={id}
-        value={texto}
-        onChange={(e) => setTexto(e.target.value)}
-        placeholder={tipo === "diario" ? tf.escreverDiario : tf.escreverObservacao}
-        className="mt-2 min-h-[110px] w-full resize-y rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-      />
+      {soap ? (
+        <>
+          <h2 className="text-sm font-medium text-foreground">{tc.soap}</h2>
+          <p className="text-[11px] text-muted-foreground">{tc.soapAjuda}</p>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            {(["s", "o", "a", "p"] as const).map((k) => (
+              <label key={k} className="block">
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{tc[k]}</span>
+                <span className="block text-[11px] text-muted-foreground">{tc[`${k}Ajuda` as "sAjuda"]}</span>
+                <textarea
+                  value={partes[k]}
+                  onChange={(e) => setPartes((x) => ({ ...x, [k]: e.target.value }))}
+                  placeholder={tc.escreva}
+                  className="mt-1 min-h-[110px] w-full resize-y rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </label>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <label htmlFor={id} className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            {tipo === "diario" ? tf.novoDiario : tf.novaObservacao}
+          </label>
+          <textarea
+            id={id}
+            value={textoLivre}
+            onChange={(e) => setTextoLivre(e.target.value)}
+            placeholder={tipo === "diario" ? tf.escreverDiario : tf.escreverObservacao}
+            className="mt-2 min-h-[110px] w-full resize-y rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+        </>
+      )}
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <div role="radiogroup" aria-label={tf.publico + " / " + tf.privado} className="flex rounded-full border border-border p-0.5 text-xs">
           {(["publico", "privado"] as const).map((v) => (
@@ -516,7 +555,7 @@ function Editor({
             </button>
           ))}
         </div>
-        {consultas.length > 0 && (
+        {!consultaFixaId && consultas.length > 0 && (
           <select
             value={consultaId}
             onChange={(e) => setConsultaId(e.target.value)}
@@ -562,7 +601,7 @@ function Editor({
           </span>
         )}
         <button type="submit" disabled={aGuardar || !texto.trim()} className="rounded-full bg-foreground px-4 py-1.5 text-xs font-medium text-background disabled:opacity-50">
-          {aGuardar ? t.conta.aProcessar : tf.guardar}
+          {aGuardar ? t.conta.aProcessar : soap ? tc.guardarDiario : tf.guardar}
         </button>
       </div>
     </form>

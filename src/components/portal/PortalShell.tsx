@@ -36,7 +36,7 @@ function useNavItems(): NavItem[] {
       icon: Users,
       match: (p) => p === "/" || p.startsWith("/utentes"),
     },
-    { label: t.nav.agenda, to: "/agenda", icon: Calendar, badge: 5 },
+    { label: t.nav.agenda, to: "/agenda", icon: Calendar },
     { label: t.notificacoes.nav, to: "/notificacoes", icon: Bell, badge: naoLidas },
     { label: t.nav.definicoes, to: "/definicoes", icon: Settings },
   ];
