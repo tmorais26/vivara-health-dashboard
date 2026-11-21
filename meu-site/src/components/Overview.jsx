@@ -10,14 +10,21 @@ import phonePhoto from "../assets/hero-photo.jpg";
 // Para trocar uma fotografia, substitua o ficheiro em src/assets e ajuste
 // `image` / `position` abaixo. O texto fica na esquerda; o assunto da imagem
 // deve ficar do lado direito.
-// Quando uma cena ainda não tem fotografia, usa-se um fundo da marca (`bg`).
-const SCENE_IMAGES = [
-  { image: doctorPhoto, position: "50% 28%" },
-  { image: notebookPhoto, position: "60% 55%" },
-  { bg: "radial-gradient(circle at 78% 30%, #3f7a45 0%, #1a4d25 45%, #121c15 100%)" },
-  { image: phonePhoto, position: "55% 40%" },
-  { bg: "radial-gradient(circle at 78% 35%, #7d6f55 0%, #4a4337 50%, #1a1814 100%)" },
+// Fotografias próprias: basta guardar o ficheiro em src/assets/scenes/ com o
+// nome da cena (ver LEIA-ME.txt). Sem ficheiro, usa-se a fotografia ou o fundo
+// da marca indicado abaixo.
+const found = import.meta.glob("../assets/scenes/*.{jpg,jpeg,webp,png}", { eager: true, import: "default" });
+const own = Object.fromEntries(Object.entries(found).map(([path, url]) => [path.split("/").pop().replace(/\.\w+$/, ""), url]));
+const SCENES_BASE = [
+  { file: "antes-consulta", image: doctorPhoto, position: "50% 28%" },
+  { file: "resultados", image: notebookPhoto, position: "60% 55%" },
+  { file: "entre-consultas", bg: "radial-gradient(circle at 78% 30%, #3f7a45 0%, #1a4d25 45%, #121c15 100%)" },
+  { file: "sono", image: phonePhoto, position: "55% 40%" },
+  { file: "historia", bg: "radial-gradient(circle at 78% 35%, #7d6f55 0%, #4a4337 50%, #1a1814 100%)" },
 ];
+const SCENE_IMAGES = SCENES_BASE.map((s) =>
+  own[s.file] ? { image: own[s.file], position: "68% 40%" } : s
+);
 const KINDS = ["timeline", "upload", "trend", "sleep", "age"];
 
 const T = {
