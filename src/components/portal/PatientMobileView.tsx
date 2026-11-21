@@ -116,9 +116,7 @@ export function PatientMobileView({
             <div className="min-w-0 flex-1">
               <h1 className="font-serif text-2xl text-foreground">
                 {utente.nome}
-                <span className="ml-1.5 text-base text-muted-foreground">
-                  , {utente.idade}
-                </span>
+                <span className="text-base text-muted-foreground">, {utente.idade}</span>
               </h1>
               <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
                 <span>F · {utente.cidade}</span>
@@ -232,7 +230,7 @@ export function PatientMobileView({
                 <p className="text-muted-foreground">{t.mobile.foraDoAlvoTexto}</p>
               </InfoHint>
             </span>
-            <span>11 {t.mobile.foraDoAlvoN}</span>
+            <span>{utente.marcadores.filter((m) => calcularEstado(m) !== "ok").length} {t.mobile.foraDoAlvoN}</span>
           </div>
           <ul className="space-y-2">
             {utente.alertas.map((a) => {
@@ -495,7 +493,7 @@ export function PatientMobileView({
         </ul>
       </section>
 
-      {/* Acções rápidas */}
+      {/* Ações rápidas */}
       <section className="px-4 py-5">
         {/* Carregar documento — usa input nativo, abre câmara/galeria/ficheiros do SO */}
         <div className="rounded-xl border border-border bg-surface-raised p-3">

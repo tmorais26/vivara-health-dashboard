@@ -9,8 +9,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { calcularEstado, formatarData, type Marcador } from "@/data/mock-utente";
+import { calcularEstado, formatarData, type Fonte, type Marcador } from "@/data/mock-utente";
 import { FileText } from "lucide-react";
+import { eixoY } from "@/lib/eixo";
 
 const ranges = [
   { id: "3m", label: "3M", dias: 90 },
@@ -20,6 +21,14 @@ const ranges = [
 ] as const;
 
 type RangeId = (typeof ranges)[number]["id"];
+
+const FONTES: Record<Fonte, string> = {
+  laboratorio: "laboratório",
+  wearable: "wearable",
+  balanca: "balança",
+  manual: "registo manual",
+};
+
 
 export function LongitudinalChart({ marcador }: { marcador: Marcador }) {
   const [range, setRange] = useState<RangeId>("tudo");
@@ -37,9 +46,11 @@ export function LongitudinalChart({ marcador }: { marcador: Marcador }) {
   const [alvoMin, alvoMax] = marcador.alvoFuncional;
 
   const valores = data.map((d) => d.valor);
-  const dataMin = Math.min(...valores, labMin, alvoMin);
-  const dataMax = Math.max(...valores, labMax, alvoMax);
-  const pad = (dataMax - dataMin) * 0.1 || 1;
+  const { dominio, ticks } = eixoY(
+    Math.min(...valores, labMin, alvoMin),
+    Math.max(...valores, labMax, alvoMax),
+    valores.every((v) => v >= 0) && labMin >= 0 && alvoMin >= 0,
+  );
 
   const stroke =
     estado === "ok"
@@ -56,7 +67,7 @@ export function LongitudinalChart({ marcador }: { marcador: Marcador }) {
             Histórico longitudinal
           </div>
           <div className="mt-0.5 text-sm text-foreground">
-            {data.length} medições · fonte {marcador.serie[0].fonte}
+            {data.length} medições · fonte: {FONTES[marcador.serie[0].fonte]}
           </div>
         </div>
         <div className="flex items-center gap-1 rounded-full bg-muted p-1">
@@ -87,7 +98,6 @@ export function LongitudinalChart({ marcador }: { marcador: Marcador }) {
               y2={labMax}
               fill="var(--muted)"
               fillOpacity={0.5}
-              ifOverflow="extendDomain"
             />
             {/* alvo funcional — banda da médica */}
             <ReferenceArea
@@ -112,7 +122,9 @@ export function LongitudinalChart({ marcador }: { marcador: Marcador }) {
               axisLine={{ stroke: "var(--border)" }}
             />
             <YAxis
-              domain={[dataMin - pad, dataMax + pad]}
+              domain={dominio}
+              ticks={ticks}
+              tickFormatter={(v: number) => v.toLocaleString("pt-PT", { maximumFractionDigits: 2 })}
               stroke="var(--muted-foreground)"
               tick={{ fontSize: 11 }}
               tickLine={false}

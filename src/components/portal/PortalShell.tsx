@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageToggle } from "./LanguageToggle";
-import { SessionTimeoutBanner } from "./SessionTimeoutBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
 import { useNaoLidas } from "@/lib/notificacoes-store";
@@ -115,7 +114,6 @@ export function PortalShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <SessionTimeoutBanner />
         {/* Mobile top bar — sempre visível em <lg, mesmo nas rotas com header próprio */}
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-surface-raised px-4 py-2.5 lg:hidden">
           <Link to="/" className="flex items-center gap-2">
@@ -123,10 +121,6 @@ export function PortalShell({
             <span className="font-serif text-sm text-foreground">Vivara Health</span>
           </Link>
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1 rounded-full border border-state-ok/30 bg-state-ok-soft/60 px-2 py-0.5 text-[10px] font-medium text-state-ok">
-              <ShieldCheck className="h-2.5 w-2.5" />
-              MFA
-            </span>
             <LanguageToggle />
             <ThemeToggle />
             <button
@@ -150,10 +144,6 @@ export function PortalShell({
                 <span className="font-serif text-sm text-foreground">Vivara Health</span>
               </div>
               <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="hidden items-center gap-1.5 rounded-full border border-state-ok/30 bg-state-ok-soft/60 px-2.5 py-1 text-[10.5px] font-medium text-state-ok sm:inline-flex">
-                  <ShieldCheck className="h-3 w-3" />
-                  {t.nav.mfaActivo}
-                </span>
                 <LanguageToggle />
                 <ThemeToggle />
                 <span>Dra. Sofia Cardoso</span>

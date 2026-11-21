@@ -449,7 +449,7 @@ const marcadores: Marcador[] = [
     serie: serieAnalise(29, 38, 24, -10, 3),
     explicacaoSimples:
       "Hormona-vitamina ligada à imunidade, ossos e humor. Em Portugual baixa muito no inverno.",
-    porqueImporta: "Níveis baixos sustentados associam-se a fadiga, dor muscular e maior infecção.",
+    porqueImporta: "Níveis baixos sustentados associam-se a fadiga, dor muscular e maior suscetibilidade a infeções.",
     percentilPares: 18,
     coorteDescricao: "mulheres 45–50 anos",
   },
@@ -658,26 +658,40 @@ const marcadores: Marcador[] = [
   },
 ];
 
+// Os detalhes dos alertas derivam da série, para nunca divergirem do valor mostrado.
+function evolucao(id: string) {
+  const m = marcadores.find((x) => x.id === id)!;
+  const primeiro = m.serie[0].valor;
+  const ultimo = m.serie[m.serie.length - 1].valor;
+  const pct = Math.round(((ultimo - primeiro) / primeiro) * 100);
+  const fmt = (v: number) => (Math.abs(v) >= 100 ? Math.round(v) : Math.round(v * 10) / 10).toLocaleString("pt-PT");
+  return { ultimo: fmt(ultimo), primeiro: fmt(primeiro), pct: `${pct > 0 ? "+" : ""}${pct}%`, unidade: m.unidade };
+}
+
+const ldl = evolucao("ldl");
+const vitd = evolucao("vitd");
+const hrv = evolucao("hrv");
+
 const alertas: Alerta[] = [
   {
     id: "a1",
     marcadorId: "ldl",
     titulo: "LDL-C acima do alvo funcional",
-    detalhe: "142 mg/dL · alvo ≤100 · 4ª subida consecutiva",
+    detalhe: `${ldl.ultimo} ${ldl.unidade} · alvo ≤100 · ${ldl.pct} em 18 meses`,
     estado: "alerta",
   },
   {
     id: "a2",
     marcadorId: "vitd",
     titulo: "Vitamina D em queda sustentada",
-    detalhe: "24 ng/mL · alvo 50–80 · –37% em 9 meses",
+    detalhe: `${vitd.ultimo} ${vitd.unidade} · alvo 50–80 · ${vitd.pct} em 18 meses`,
     estado: "alerta",
   },
   {
     id: "a3",
     marcadorId: "hrv",
     titulo: "HRV abaixo da linha de base",
-    detalhe: "42 ms · linha de base 55 ms · –24% em 6 meses",
+    detalhe: `${hrv.ultimo} ${hrv.unidade} · linha de base ${hrv.primeiro} ${hrv.unidade} · ${hrv.pct}`,
     estado: "atencao",
   },
 ];
@@ -976,7 +990,7 @@ export const utente: Utente = {
       severidade: "info",
       titulo: "Resumo da consulta",
       detalhe:
-        "Plano actualizado. Manter Metformina 500mg 2×/dia. Aumentar Magnésio para 400mg ao deitar. Pedir painel hormonal completo em 6 semanas.",
+        "Plano atualizado. Manter Metformina 500mg 2×/dia. Aumentar Magnésio para 400mg ao deitar. Pedir painel hormonal completo em 6 semanas.",
       quando: "2026-04-29T18:42:00",
       consultaId: "k2",
       lida: false,
@@ -1096,7 +1110,7 @@ export const utente: Utente = {
       objetivo:
         "TA 118/76, FC 68, IMC 23.4. Tiroide sem nódulos palpáveis. Restante exame sem alterações.",
       avaliacao:
-        "Perfil de risco moderado (ApoB elevada, LDL 142). Hipotiroidismo bem controlado. Sinais precoces de perimenopausa.",
+        "Perfil de risco moderado (ApoB elevada, LDL acima do alvo). Hipotiroidismo bem controlado. Sinais precoces de perimenopausa.",
       plano:
         "Painel completo (lipidograma avançado, hormonal, metabólico). DEXA. CGM 14 dias. Reavaliar em 8 semanas.",
       proximaRevisao: "2024-12-10",

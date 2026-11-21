@@ -233,7 +233,7 @@ function NovoUtenteModal({
         onClose();
       }}
       title={t.lista.novoUtente}
-      description="Cria a ficha do utente. Dados clínicos completos são preenchidos na primeira consulta."
+      description="Crie a ficha do utente. Dados clínicos completos são preenchidos na primeira consulta."
       width="md"
     >
       <div className="space-y-4">

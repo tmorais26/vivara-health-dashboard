@@ -210,7 +210,7 @@ export function DocumentosPanel({ utente }: { utente: Utente }) {
         >
           <Upload className="h-5 w-5 text-muted-foreground" />
           <div className="text-sm text-foreground">
-            Arrasta ficheiros para aqui
+            Arraste ficheiros para aqui
           </div>
           <div className="text-[11px] text-muted-foreground">
             PDF, JPG, PNG, HEIC, CSV, XLSX · até 25 MB cada
