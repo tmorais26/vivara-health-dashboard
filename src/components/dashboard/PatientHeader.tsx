@@ -24,6 +24,7 @@ import { ChatModal } from "@/components/portal/ChatModal";
 import { ClinicaUtenteChip } from "@/components/portal/ClinicaUtente";
 import { exportarMarcadoresCsv, exportarUtenteJson } from "@/lib/exportacao";
 import { useT } from "@/lib/i18n";
+import { iniciais as iniciaisDe, nomeAtual, useSessaoOpcional } from "@/lib/sessao";
 import {
   Field,
   ModalActions,
@@ -50,6 +51,8 @@ export function PatientHeader({
   const [novaNotaOpen, setNovaNotaOpen] = useState(false);
   const [novoAlertaOpen, setNovoAlertaOpen] = useState(false);
   const [msgOpen, setMsgOpen] = useState(false);
+  const sessao = useSessaoOpcional();
+  const nomeUtilizador = sessao ? nomeAtual(sessao) : utente.medicaResponsavel;
   const t = useT();
   const [previewOpen, setPreviewOpen] = useState(false);
 
@@ -81,9 +84,9 @@ export function PatientHeader({
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <LanguageToggle />
           <ThemeToggle />
-          <span>{utente.medicaResponsavel}</span>
+          <span>{nomeUtilizador}</span>
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
-            SC
+            {iniciaisDe(nomeUtilizador)}
           </div>
         </div>
       </div>

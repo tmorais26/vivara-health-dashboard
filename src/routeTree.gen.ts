@@ -14,8 +14,10 @@ import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AppV2RouteImport } from './routes/app-v2'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ComecarRouteImport } from './routes/comecar'
 import { Route as DefinicoesRouteImport } from './routes/definicoes'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
+import { Route as NovaPalavraPasseRouteImport } from './routes/nova-palavra-passe'
 import { Route as ReconsentimentoRouteImport } from './routes/reconsentimento'
 import { Route as ConsultaEventoIdRouteImport } from './routes/consulta.$eventoId'
 import { Route as UtentesUtenteIdRouteImport } from './routes/utentes.$utenteId'
@@ -45,6 +47,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComecarRoute = ComecarRouteImport.update({
+  id: '/comecar',
+  path: '/comecar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DefinicoesRoute = DefinicoesRouteImport.update({
   id: '/definicoes',
   path: '/definicoes',
@@ -53,6 +60,11 @@ const DefinicoesRoute = DefinicoesRouteImport.update({
 const NotificacoesRoute = NotificacoesRouteImport.update({
   id: '/notificacoes',
   path: '/notificacoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovaPalavraPasseRoute = NovaPalavraPasseRouteImport.update({
+  id: '/nova-palavra-passe',
+  path: '/nova-palavra-passe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReconsentimentoRoute = ReconsentimentoRouteImport.update({
@@ -77,8 +89,10 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRoute
   '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
+  '/comecar': typeof ComecarRoute
   '/definicoes': typeof DefinicoesRoute
   '/notificacoes': typeof NotificacoesRoute
+  '/nova-palavra-passe': typeof NovaPalavraPasseRoute
   '/reconsentimento': typeof ReconsentimentoRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
@@ -89,8 +103,10 @@ export interface FileRoutesByTo {
   '/app': typeof AppRoute
   '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
+  '/comecar': typeof ComecarRoute
   '/definicoes': typeof DefinicoesRoute
   '/notificacoes': typeof NotificacoesRoute
+  '/nova-palavra-passe': typeof NovaPalavraPasseRoute
   '/reconsentimento': typeof ReconsentimentoRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
@@ -102,8 +118,10 @@ export interface FileRoutesById {
   '/app': typeof AppRoute
   '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
+  '/comecar': typeof ComecarRoute
   '/definicoes': typeof DefinicoesRoute
   '/notificacoes': typeof NotificacoesRoute
+  '/nova-palavra-passe': typeof NovaPalavraPasseRoute
   '/reconsentimento': typeof ReconsentimentoRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
@@ -116,8 +134,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/app-v2'
     | '/auth'
+    | '/comecar'
     | '/definicoes'
     | '/notificacoes'
+    | '/nova-palavra-passe'
     | '/reconsentimento'
     | '/consulta/$eventoId'
     | '/utentes/$utenteId'
@@ -128,8 +148,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/app-v2'
     | '/auth'
+    | '/comecar'
     | '/definicoes'
     | '/notificacoes'
+    | '/nova-palavra-passe'
     | '/reconsentimento'
     | '/consulta/$eventoId'
     | '/utentes/$utenteId'
@@ -140,8 +162,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/app-v2'
     | '/auth'
+    | '/comecar'
     | '/definicoes'
     | '/notificacoes'
+    | '/nova-palavra-passe'
     | '/reconsentimento'
     | '/consulta/$eventoId'
     | '/utentes/$utenteId'
@@ -153,8 +177,10 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRoute
   AppV2Route: typeof AppV2Route
   AuthRoute: typeof AuthRoute
+  ComecarRoute: typeof ComecarRoute
   DefinicoesRoute: typeof DefinicoesRoute
   NotificacoesRoute: typeof NotificacoesRoute
+  NovaPalavraPasseRoute: typeof NovaPalavraPasseRoute
   ReconsentimentoRoute: typeof ReconsentimentoRoute
   ConsultaEventoIdRoute: typeof ConsultaEventoIdRoute
   UtentesUtenteIdRoute: typeof UtentesUtenteIdRoute
@@ -197,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/comecar': {
+      id: '/comecar'
+      path: '/comecar'
+      fullPath: '/comecar'
+      preLoaderRoute: typeof ComecarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/definicoes': {
       id: '/definicoes'
       path: '/definicoes'
@@ -209,6 +242,13 @@ declare module '@tanstack/react-router' {
       path: '/notificacoes'
       fullPath: '/notificacoes'
       preLoaderRoute: typeof NotificacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nova-palavra-passe': {
+      id: '/nova-palavra-passe'
+      path: '/nova-palavra-passe'
+      fullPath: '/nova-palavra-passe'
+      preLoaderRoute: typeof NovaPalavraPasseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reconsentimento': {
@@ -241,8 +281,10 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRoute,
   AppV2Route: AppV2Route,
   AuthRoute: AuthRoute,
+  ComecarRoute: ComecarRoute,
   DefinicoesRoute: DefinicoesRoute,
   NotificacoesRoute: NotificacoesRoute,
+  NovaPalavraPasseRoute: NovaPalavraPasseRoute,
   ReconsentimentoRoute: ReconsentimentoRoute,
   ConsultaEventoIdRoute: ConsultaEventoIdRoute,
   UtentesUtenteIdRoute: UtentesUtenteIdRoute,

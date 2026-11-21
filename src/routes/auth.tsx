@@ -77,7 +77,7 @@ function AuthPage() {
   const idioma = useIdioma();
   const textos = useConsentTextos();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "recuperar">("login");
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -167,7 +167,7 @@ function AuthPage() {
     }
   }
 
-  function trocarModo(m: "login" | "signup") {
+  function trocarModo(m: "login" | "signup" | "recuperar") {
     setMode(m);
     setError(null);
     setErros({});
@@ -203,12 +203,16 @@ function AuthPage() {
 
         <div className="rounded-2xl border border-border bg-surface-raised p-6 shadow-sm">
           <h1 className="font-serif text-2xl text-foreground">
-            {mode === "login" ? t.conta.entrar : t.conta.criarConta}
+            {mode === "login" ? t.conta.entrar : mode === "signup" ? t.conta.criarConta : t.conta.recuperarTitulo}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "login" ? t.conta.subEntrar : t.conta.subCriar}
+            {mode === "login" ? t.conta.subEntrar : mode === "signup" ? t.conta.subCriar : t.conta.recuperarSub}
           </p>
 
+          {mode === "recuperar" ? (
+            <RecuperarPalavraPasse emailInicial={email} onVoltar={() => trocarModo("login")} />
+          ) : (
+          <>
           <form onSubmit={handleSubmit} noValidate className="mt-5 space-y-3">
             {mode === "signup" && (
               <TextField label={t.conta.nome} value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" error={erros.nome} />
@@ -230,6 +234,17 @@ function AuthPage() {
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               error={erros.palavraPasse}
             />
+            {mode === "login" && (
+              <div className="-mt-1 text-right">
+                <button
+                  type="button"
+                  onClick={() => trocarModo("recuperar")}
+                  className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                >
+                  {t.conta.esqueci}
+                </button>
+              </div>
+            )}
             {mode === "signup" && (
               <>
                 <TextField
@@ -290,6 +305,8 @@ function AuthPage() {
               </>
             )}
           </div>
+          </>
+          )}
         </div>
 
         <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
@@ -298,5 +315,61 @@ function AuthPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function RecuperarPalavraPasse({ emailInicial, onVoltar }: { emailInicial: string; onVoltar: () => void }) {
+  const t = useT();
+  const [email, setEmail] = useState(emailInicial);
+  const [erro, setErro] = useState<string | null>(null);
+  const [enviado, setEnviado] = useState(false);
+  const [aEnviar, setAEnviar] = useState(false);
+
+  async function enviar(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setErro(t.conta.erroEmail);
+      return;
+    }
+    setErro(null);
+    setAEnviar(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/nova-palavra-passe`,
+    });
+    setAEnviar(false);
+    // Por privacidade, a mensagem é a mesma exista ou não conta com este email.
+    if (error && (error.status === 429 || error.code?.startsWith("over_"))) setErro(t.conta.erroDemasiadasTentativas);
+    else setEnviado(true);
+  }
+
+  return (
+    <form onSubmit={enviar} noValidate className="mt-5 space-y-3">
+      {enviado ? (
+        <p role="status" className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground">
+          {t.conta.recuperarEnviado}
+        </p>
+      ) : (
+        <>
+          <TextField
+            label={t.conta.email}
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            error={erro}
+          />
+          <button
+            type="submit"
+            disabled={aEnviar}
+            className="w-full rounded-full bg-foreground px-4 py-2.5 text-sm font-medium text-background hover:opacity-90 disabled:opacity-50"
+          >
+            {aEnviar ? t.conta.aProcessar : t.conta.recuperarEnviar}
+          </button>
+        </>
+      )}
+      <button type="button" onClick={onVoltar} className="block w-full text-center text-xs text-muted-foreground hover:text-foreground">
+        {t.conta.voltarEntrar}
+      </button>
+    </form>
   );
 }
