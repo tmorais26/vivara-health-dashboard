@@ -3,7 +3,6 @@ import PhotoHeader from "../components/PhotoHeader";
 import windowPhoto from "../assets/scenes/historia.jpg";
 import { SectionBadge, Reveal, CTAButton, Highlight } from "../components/ui";
 import { useT } from "../i18n";
-import sobrePhoto from "../assets/sobre-photo.jpg";
 
 const T = {
   pt: {
@@ -166,16 +165,14 @@ export default function Sobre() {
     <>
       <PhotoHeader name="sobre" fallback={windowPhoto} position="60% 45%" badge={L.header.badge} title={L.header.title} desc={L.header.desc} />
 
-      <section className="bg-brand-beige pb-16 md:pb-24">
-        <div className="mx-auto max-w-6xl px-6 grid md:grid-cols-2 gap-12 items-center">
+      <section className="bg-brand-beige py-16 md:py-24">
+        <div className="mx-auto max-w-3xl px-6">
           <Reveal>
-            <div className="rounded-3xl overflow-hidden aspect-[4/5]">
-              <img src={sobrePhoto} alt="" className="w-full h-full object-cover" />
-            </div>
+            <p className="font-serif text-3xl leading-snug md:text-4xl">{L.story[0]}</p>
           </Reveal>
-          <Reveal delay={0.15}>
-            <div className="space-y-5 text-lg text-brand-muted/85 leading-relaxed">
-              {L.story.map((p, i) => (
+          <Reveal delay={0.1}>
+            <div className="mt-8 space-y-5 text-lg text-brand-muted/85 leading-relaxed">
+              {L.story.slice(1).map((p, i) => (
                 <p key={i}>{p}</p>
               ))}
             </div>
