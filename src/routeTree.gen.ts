@@ -9,45 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ReconsentimentoRouteImport } from './routes/reconsentimento'
-import { Route as NotificacoesRouteImport } from './routes/notificacoes'
-import { Route as DefinicoesRouteImport } from './routes/definicoes'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AppV2RouteImport } from './routes/app-v2'
-import { Route as AppRouteImport } from './routes/app'
-import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as UtentesUtenteIdRouteImport } from './routes/utentes.$utenteId'
+import { Route as AgendaRouteImport } from './routes/agenda'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as AppV2RouteImport } from './routes/app-v2'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DefinicoesRouteImport } from './routes/definicoes'
+import { Route as NotificacoesRouteImport } from './routes/notificacoes'
+import { Route as ReconsentimentoRouteImport } from './routes/reconsentimento'
 import { Route as ConsultaEventoIdRouteImport } from './routes/consulta.$eventoId'
+import { Route as UtentesUtenteIdRouteImport } from './routes/utentes.$utenteId'
 
-const ReconsentimentoRoute = ReconsentimentoRouteImport.update({
-  id: '/reconsentimento',
-  path: '/reconsentimento',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotificacoesRoute = NotificacoesRouteImport.update({
-  id: '/notificacoes',
-  path: '/notificacoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DefinicoesRoute = DefinicoesRouteImport.update({
-  id: '/definicoes',
-  path: '/definicoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppV2Route = AppV2RouteImport.update({
-  id: '/app-v2',
-  path: '/app-v2',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgendaRoute = AgendaRouteImport.update({
@@ -55,19 +30,44 @@ const AgendaRoute = AgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UtentesUtenteIdRoute = UtentesUtenteIdRouteImport.update({
-  id: '/utentes/$utenteId',
-  path: '/utentes/$utenteId',
+const AppV2Route = AppV2RouteImport.update({
+  id: '/app-v2',
+  path: '/app-v2',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DefinicoesRoute = DefinicoesRouteImport.update({
+  id: '/definicoes',
+  path: '/definicoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificacoesRoute = NotificacoesRouteImport.update({
+  id: '/notificacoes',
+  path: '/notificacoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReconsentimentoRoute = ReconsentimentoRouteImport.update({
+  id: '/reconsentimento',
+  path: '/reconsentimento',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConsultaEventoIdRoute = ConsultaEventoIdRouteImport.update({
   id: '/consulta/$eventoId',
   path: '/consulta/$eventoId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UtentesUtenteIdRoute = UtentesUtenteIdRouteImport.update({
+  id: '/utentes/$utenteId',
+  path: '/utentes/$utenteId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -162,46 +162,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reconsentimento': {
-      id: '/reconsentimento'
-      path: '/reconsentimento'
-      fullPath: '/reconsentimento'
-      preLoaderRoute: typeof ReconsentimentoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notificacoes': {
-      id: '/notificacoes'
-      path: '/notificacoes'
-      fullPath: '/notificacoes'
-      preLoaderRoute: typeof NotificacoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/definicoes': {
-      id: '/definicoes'
-      path: '/definicoes'
-      fullPath: '/definicoes'
-      preLoaderRoute: typeof DefinicoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app-v2': {
-      id: '/app-v2'
-      path: '/app-v2'
-      fullPath: '/app-v2'
-      preLoaderRoute: typeof AppV2RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/agenda': {
@@ -211,18 +176,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgendaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/utentes/$utenteId': {
-      id: '/utentes/$utenteId'
-      path: '/utentes/$utenteId'
-      fullPath: '/utentes/$utenteId'
-      preLoaderRoute: typeof UtentesUtenteIdRouteImport
+    '/app-v2': {
+      id: '/app-v2'
+      path: '/app-v2'
+      fullPath: '/app-v2'
+      preLoaderRoute: typeof AppV2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/definicoes': {
+      id: '/definicoes'
+      path: '/definicoes'
+      fullPath: '/definicoes'
+      preLoaderRoute: typeof DefinicoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notificacoes': {
+      id: '/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof NotificacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reconsentimento': {
+      id: '/reconsentimento'
+      path: '/reconsentimento'
+      fullPath: '/reconsentimento'
+      preLoaderRoute: typeof ReconsentimentoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/consulta/$eventoId': {
@@ -230,6 +223,13 @@ declare module '@tanstack/react-router' {
       path: '/consulta/$eventoId'
       fullPath: '/consulta/$eventoId'
       preLoaderRoute: typeof ConsultaEventoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/utentes/$utenteId': {
+      id: '/utentes/$utenteId'
+      path: '/utentes/$utenteId'
+      fullPath: '/utentes/$utenteId'
+      preLoaderRoute: typeof UtentesUtenteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
