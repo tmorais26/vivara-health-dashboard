@@ -52,7 +52,7 @@ alter table public.medico_consentimento_marketing enable row level security;
 alter table public.medico_utente_fundamento enable row level security;
 
 -- O médico só lê as suas próprias linhas; não há políticas de escrita (só service role).
-create policy "ler proprio perfil" on public.medico_perfis for select using (user_id = auth.uid());
-create policy "ler proprios consentimentos" on public.medico_consentimentos for select using (user_id = auth.uid());
-create policy "ler proprio marketing" on public.medico_consentimento_marketing for select using (user_id = auth.uid());
-create policy "ler proprios fundamentos" on public.medico_utente_fundamento for select using (user_id = auth.uid());
+create policy "ler proprio perfil" on public.medico_perfis for select to authenticated using (user_id = (select auth.uid()));
+create policy "ler proprios consentimentos" on public.medico_consentimentos for select to authenticated using (user_id = (select auth.uid()));
+create policy "ler proprio marketing" on public.medico_consentimento_marketing for select to authenticated using (user_id = (select auth.uid()));
+create policy "ler proprios fundamentos" on public.medico_utente_fundamento for select to authenticated using (user_id = (select auth.uid()));
