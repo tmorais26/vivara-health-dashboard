@@ -20,6 +20,7 @@ const { answer } = await bundle("src/lib/assistant-rules.ts", "assistant.mjs");
 const { searchConditions, CONDITION_LIST } = await bundle("src/lib/conditions.ts", "conditions.mjs");
 const { monthGrid, dayKey, shiftMonth } = await bundle("src/lib/calendar.ts", "calendar.mjs");
 const { validateSignup } = await bundle("src/lib/consent.validate.ts", "consent-validate.mjs");
+const { normalizeCode, normalizeEmail, referralLink, codeFromSearch, isCodeFormat } = await bundle("src/lib/referral.ts", "referral.mjs");
 const { SIGNUP_CHECKBOXES, DOC_VERSIONS } = await bundle("src/lib/consent.config.ts", "consent-config.mjs");
 
 let passed = 0;
@@ -192,9 +193,14 @@ test("email inválido, palavra-passe curta e nome vazio dão erro no campo", () 
   const { errors } = validateSignup({ ...okSignup, name: "  ", email: "nao-e-email", password: "1234567" });
   assert.deepEqual(errors, { name: "required", email: "invalid", password: "too_short" });
 });
-test("código de convite só aceita letras, números e hífenes", () => {
+test("código de convite: só o formato VIV-XXXX-XXXX passa, e fica normalizado", () => {
   assert.equal(validateSignup({ ...okSignup, invite: "<script>" }).errors.invite, "invalid");
-  assert.deepEqual(validateSignup({ ...okSignup, invite: "VIVARA-2026" }).errors, {});
+  assert.equal(validateSignup({ ...okSignup, invite: "VIVARA-2026" }).errors.invite, "invalid");
+  assert.equal(validateSignup({ ...okSignup, invite: "VIV-K7M2-9QX0" }).errors.invite, "invalid"); // 0 não existe no alfabeto
+  const ok = validateSignup({ ...okSignup, invite: " viv k7m2 9qxa " });
+  assert.deepEqual(ok.errors, {});
+  assert.equal(ok.input.invite, "VIV-K7M2-9QXA");
+  assert.deepEqual(validateSignup({ ...okSignup, invite: "" }).errors, {});
 });
 test("texto das caixas é o aprovado (PT)", () => {
   const pt = Object.fromEntries(SIGNUP_CHECKBOXES.map((c) => [c.id, c.text.pt]));
@@ -204,6 +210,26 @@ test("texto das caixas é o aprovado (PT)", () => {
   assert.equal(pt["signup-marketing"], "Quero receber novidades da Vivara por email.");
   assert.deepEqual(SIGNUP_CHECKBOXES.map((c) => c.required), [true, true, true, false]);
   assert.deepEqual(DOC_VERSIONS, { terms: "termos-v1", privacy: "privacidade-v1" });
+});
+
+// ── Programa de recomendação (partes puras) ──
+test("normalizeCode aceita minúsculas, espaços e sem hífenes; recusa caracteres ambíguos", () => {
+  assert.equal(normalizeCode("viv-k7m2-9qxa"), "VIV-K7M2-9QXA");
+  assert.equal(normalizeCode("VIVK7M29QXA"), "VIV-K7M2-9QXA");
+  for (const bad of ["", "VIV-K7M2-9QXO", "VIV-K7M2-9QX1", "VIV-K7M2-9QXI", "VIV-K7M2-9QXL", "VIV-K7M2-9QX", "VIV-K7M2-9QXAA", "ABC-K7M2-9QXA"]) assert.equal(normalizeCode(bad), "", bad);
+  assert.ok(isCodeFormat("VIV-K7M2-9QXA")); assert.ok(!isCodeFormat("viv-k7m2-9qxa"));
+});
+test("normalizeEmail apanha +etiquetas e pontos do Gmail, sem tocar noutros domínios", () => {
+  assert.equal(normalizeEmail("Maria.Antunes+vivara@gmail.com"), "mariaantunes@gmail.com");
+  assert.equal(normalizeEmail("maria.antunes@googlemail.com"), "mariaantunes@gmail.com");
+  assert.equal(normalizeEmail("maria.antunes+x@empresa.pt"), "maria.antunes@empresa.pt");
+});
+test("ligação de convite leva o código; ?ref= volta a dar o código", () => {
+  const link = referralLink("https://app.vivara.pt/app-v2", "VIV-K7M2-9QXA");
+  assert.equal(link, "https://app.vivara.pt/app-v2?ref=VIV-K7M2-9QXA");
+  assert.equal(codeFromSearch(new URL(link).search), "VIV-K7M2-9QXA");
+  assert.equal(codeFromSearch("?ref=lixo"), "");
+  assert.equal(codeFromSearch(""), "");
 });
 
 console.log(`\n${passed} testes passaram${process.exitCode ? " — HÁ FALHAS" : ""}`);

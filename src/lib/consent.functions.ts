@@ -6,7 +6,9 @@
 // e o servidor junta a versão em vigor e o hash do texto que estava no ecrã.
 
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest, getRequestUrl } from "@tanstack/react-start/server";
+import { getRequestUrl } from "@tanstack/react-start/server";
+import { clientIp, userAgent, sha256 } from "./request-info.server";
+import { ensureReferral, usableCodeFor } from "./referral.server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
@@ -26,30 +28,8 @@ type ConsentInsert = Database["public"]["Tables"]["consent_events"]["Insert"];
 
 const asLang = (v: unknown): ConsentLang => (v === "en" ? "en" : "pt");
 
-async function sha256(text: string): Promise<string> {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 const checkboxText = (id: SignupCheckboxId, lang: ConsentLang) =>
   SIGNUP_CHECKBOXES.find((c) => c.id === id)!.text[lang];
-
-/** IP do cliente, tal como chega ao servidor (a Vercel põe-no nestes cabeçalhos). */
-function clientIp(): string | null {
-  const h = getRequest()?.headers;
-  if (!h) return null;
-  const raw = h.get("x-vercel-forwarded-for") || h.get("x-real-ip") || h.get("x-forwarded-for") || "";
-  const ip = raw.split(",")[0].trim();
-  if (!ip || ip.length > 45) return null;
-  const v4 = /^(\d{1,3})(\.\d{1,3}){3}$/.test(ip);
-  const v6 = /^[0-9a-fA-F:]+$/.test(ip) && ip.includes(":");
-  return v4 || v6 ? ip : null;
-}
-
-function userAgent(): string | null {
-  const ua = getRequest()?.headers.get("user-agent");
-  return ua ? ua.slice(0, 500) : null;
-}
 
 function isConfigured() {
   return !!(process.env.SUPABASE_URL && process.env.SUPABASE_PUBLISHABLE_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -68,6 +48,20 @@ export const signUpPatient = createServerFn({ method: "POST" })
     const { input, errors } = validateSignup(data);
     if (Object.keys(errors).length) return { ok: false, fieldErrors: errors };
     if (!isConfigured()) return { ok: false, error: "not_configured" };
+
+    // Código de convite: tem de existir e não pode ser o da própria pessoa.
+    // Código mal escrito ou desconhecido bloqueia o registo com erro no campo;
+    // assim ninguém se regista a achar que o código foi aplicado.
+    let usedCode: string | null = null;
+    if (input.invite) {
+      try {
+        usedCode = (await usableCodeFor(input.invite, input.email))?.code ?? null;
+      } catch (e) {
+        console.error("[signup] referral", e instanceof Error ? e.message : e);
+        return { ok: false, error: "server" };
+      }
+      if (!usedCode) return { ok: false, fieldErrors: { invite: "invalid" } };
+    }
 
     const anon = createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
       auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
@@ -110,9 +104,13 @@ export const signUpPatient = createServerFn({ method: "POST" })
       // O trigger on_auth_user_created já criou o perfil; confirma-se aqui o
       // papel de utente e guarda-se o código de convite.
       const { error: pErr } = await supabaseAdmin.from("profiles")
-        .upsert({ id: user.id, role: "patient", full_name: input.name, invite_code: input.invite || null }, { onConflict: "id" });
+        .upsert({ id: user.id, role: "patient", full_name: input.name, invite_code: usedCode }, { onConflict: "id" });
       if (pErr) throw new Error(`profiles: ${pErr.message}`);
       await insertEvents(rows);
+      // O seu código pessoal e, se usou um, o registo da recomendação («pendente»).
+      // Uma recomendação recusada (mesma pessoa, conta repetida) não bloqueia o registo.
+      const ref = await ensureReferral(user.id, input.email, usedCode);
+      if (usedCode && ref.registered !== "ok") console.warn("[signup] recomendação não registada:", ref.registered);
     } catch (e) {
       // Sem registo de consentimento não pode haver conta: desfaz-se.
       console.error("[signup]", e instanceof Error ? e.message : e);

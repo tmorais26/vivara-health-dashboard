@@ -22,6 +22,8 @@ import {
   LEGAL_URLS, LEGAL_LINK_PARTS, SIGNUP_CHECKBOXES, RECONSENT_CHECKBOX, EXPORT_WINDOW_DAYS, wearablePrompt,
   type SignupCheckboxId,
 } from "@/lib/consent.config";
+import { getMyReferral, checkReferralCode, type MyReferral } from "@/lib/referral.functions";
+import { normalizeCode, referralLink, codeFromSearch, MAX_FREE_MONTHS_PER_YEAR, type CodeCheck } from "@/lib/referral";
 import "../app-v2.css";
 
 export const Route = createFileRoute("/app-v2")({
@@ -38,7 +40,7 @@ export const Route = createFileRoute("/app-v2")({
 type RouteId =
   | "home" | "data" | "upload" | "messages" | "alerts"
   | "diary" | "consultas" | "profile" | "marker" | "summary" | "schedule" | "devices" | "assistente"
-  | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar"
+  | "recomendar" | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar"
   | "sintomas" | "nutricao" | "registos" | "documento" | "guardadas" | "calendario" | "condicoes";
 
 type NavRoute =
@@ -3761,6 +3763,14 @@ function PerfilScreen() {
             </div>
             <span className="rv-chev">{Icon.chev}</span>
           </a>
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("recomendar"); }}>
+            <div className="rv-list-icon">{Icon.share}</div>
+            <div className="rv-list-text">
+              <span className="rv-list-name">{L("Recomendar a Vivara","Recommend Vivara")}</span>
+              <span className="rv-list-sub">{L("O seu código e os meses grátis","Your code and free months")}</span>
+            </div>
+            <span className="rv-chev">{Icon.chev}</span>
+          </a>
           <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("nutricao"); }}>
             <div className="rv-list-icon">{Icon.pill}</div>
             <div className="rv-list-text">
@@ -5042,6 +5052,7 @@ function renderScreen(route: NavRoute): ReactNode {
     case "guardadas":    return <AnalisesGuardadasScreen />;
     case "calendario":   return <CalendarioScreen />;
     case "condicoes":    return <CondicoesScreen />;
+    case "recomendar":   return <RecomendarScreen />;
     default:          return <HomeScreenV2 />;
   }
 }
@@ -5121,14 +5132,30 @@ function ConsentCheck({ id, checked, onChange, error, children }: {
   );
 }
 
-function SignupScreen({ onBack, onDone }: { onBack: () => void; onDone: (session: { access_token: string; refresh_token: string } | null, email: string) => void }) {
+function SignupScreen({ onBack, onDone, initialInvite = "" }: { onBack: () => void; initialInvite?: string; onDone: (session: { access_token: string; refresh_token: string } | null, email: string) => void }) {
   const { L, lang } = useLang();
   const signUp = useServerFn(signUpPatient);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [invite, setInvite] = useState("");
+  const [invite, setInvite] = useState(initialInvite);
+  const checkCodeFn = useServerFn(checkReferralCode);
+  // Estado da validação em tempo real: null = nada a mostrar.
+  const [inviteCheck, setInviteCheck] = useState<CodeCheck | "checking" | null>(null);
+  useEffect(() => {
+    const code = normalizeCode(invite);
+    const typed = invite.replace(/[\s-]/g, "");
+    if (!typed) { setInviteCheck(null); return; }
+    if (!code) { setInviteCheck(typed.length >= 11 ? { state: "invalid" } : null); return; }
+    setInviteCheck("checking");
+    let alive = true;
+    const t = setTimeout(() => {
+      checkCodeFn({ data: { code } }).then((r) => { if (alive) setInviteCheck(r); }).catch(() => { if (alive) setInviteCheck({ state: "unavailable" }); });
+    }, 350);
+    return () => { alive = false; clearTimeout(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invite]);
   const [checks, setChecks] = useState<Record<SignupCheckboxId, boolean>>({
     "signup-age": false, "signup-legal": false, "signup-health": false, "signup-marketing": false,
   });
@@ -5223,10 +5250,23 @@ function SignupScreen({ onBack, onDone }: { onBack: () => void; onDone: (session
           </div>
           <div className="rv-field">
             <label className="rv-field-label" htmlFor="rv-su-invite">{L("Código de convite (opcional)", "Invite code (optional)")}</label>
-            <input className="rv-field-input" type="text" autoComplete="off" autoCapitalize="characters" value={invite} onChange={(e) => setInvite(e.target.value)} {...fieldProps("invite")}/>
-            {errors.invite
-              ? <div id="rv-su-invite-err" className="rv-field-error">{msg("invite", errors.invite)}</div>
-              : <div className="rv-field-hint">{L("Se tiver um código, ganha o primeiro mês grátis.", "If you have a code, you get the first month free.")}</div>}
+            <input className="rv-field-input" type="text" autoComplete="off" autoCapitalize="characters" spellCheck={false} value={invite} onChange={(e) => setInvite(e.target.value)} {...fieldProps("invite")}/>
+            <div aria-live="polite">
+              {errors.invite
+                ? <div id="rv-su-invite-err" className="rv-field-error">{msg("invite", errors.invite)}</div>
+                : inviteCheck === "checking"
+                  ? <div className="rv-field-hint">{L("A verificar…", "Checking…")}</div>
+                  : inviteCheck && inviteCheck.state === "valid"
+                    ? <div className="rv-field-ok">{inviteCheck.kind === "doctor" && inviteCheck.doctorName
+                        ? `${L("Recomendado por", "Recommended by")} ${doctorLabel(inviteCheck.doctorName)}`
+                        : L("Código válido", "Valid code")}</div>
+                    : inviteCheck && inviteCheck.state === "invalid"
+                      ? <div className="rv-field-error">{L("Este código não é válido. Confirme se o escreveu bem.", "This code isn't valid. Check you typed it correctly.")}</div>
+                      : inviteCheck && inviteCheck.state === "unavailable"
+                        ? <div className="rv-field-hint">{L("Não foi possível verificar agora. Verificamos ao criar a conta.", "Couldn't check right now. We'll check when you create the account.")}</div>
+                        : null}
+            </div>
+            <div className="rv-field-hint">{REFERRAL_RULE_TEXT[lang]}</div>
           </div>
 
           <fieldset className="rv-checks">
@@ -5420,6 +5460,153 @@ function WearableConsentModal({ name, metrics, tint, initials, onCancel, onConfi
   );
 }
 
+// ─── Recomendar a Vivara ─────────────────────────────
+// Texto das regras, tal como definido pela Vivara. NÃO alterar sem aprovação.
+const REFERRAL_RULE_TEXT = {
+  pt: "Quem recomenda e quem chega ganham um mês grátis, depois do primeiro pagamento de quem chega. Até 12 meses grátis por ano.",
+  en: "Anyone who recommends and anyone who joins each get a free month, after the joining person's first payment. Up to 12 free months per year.",
+};
+
+/** «Dr./Dra. Nome», sem duplicar o tratamento se o nome já o traz. */
+const doctorLabel = (name: string) => (/^dr\.?a?\.?\s/i.test(name.trim()) ? name.trim() : `Dr./Dra. ${name.trim()}`);
+
+function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text).then(() => true, () => false);
+  } catch { /* sem permissão */ }
+  return Promise.resolve(false);
+}
+
+function ReferralQR({ link }: { link: string }) {
+  const { L } = useLang();
+  const [svg, setSvg] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    // Gerado neste telemóvel: o código nunca vai para um serviço externo de QR.
+    import("qrcode")
+      .then((m) => m.toString(link, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#0b0d0f", light: "#ffffff" } }))
+      .then((s) => { if (alive) setSvg(s); })
+      .catch(() => { if (alive) setSvg(null); });
+    return () => { alive = false; };
+  }, [link]);
+  return (
+    <div className="rv-ref-qr" role="img" aria-label={L("Código QR da sua ligação de convite", "QR code for your invite link")}>
+      {svg ? <div dangerouslySetInnerHTML={{ __html: svg }}/> : <div className="rv-modal-spinner" aria-hidden="true"/>}
+    </div>
+  );
+}
+
+function RecomendarScreen() {
+  const { go, showToast } = useNav();
+  const { L, lang } = useLang();
+  const { mode } = useAccount();
+  const getMine = useServerFn(getMyReferral);
+  const [data, setData] = useState<MyReferral | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    if (mode !== "real") {
+      // Conta de demonstração: valores fictícios, nada é gerado nem guardado.
+      setData({
+        code: "VIV-K7M2-9QXA",
+        link: referralLink(`${window.location.origin}/app-v2`, "VIV-K7M2-9QXA"),
+        summary: { invited: 2, pending: 1, completed: 1, monthsThisYear: 1, credits: [{ grantedAt: "2026-04-02T10:00:00Z", appliedAt: "2026-04-02T10:05:00Z" }] },
+      });
+      setStatus("ready");
+      return;
+    }
+    setStatus("loading");
+    getMine().then((d) => { if (alive) { setData(d); setStatus("ready"); } }).catch(() => { if (alive) setStatus("error"); });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, attempt]);
+
+  const copy = async (text: string, okMsg: string) => {
+    showToast((await copyText(text)) ? okMsg : L("Não foi possível copiar", "Couldn't copy"));
+  };
+  const shareLink = async () => {
+    if (!data) return;
+    const text = L(`Experimente a Vivara. O meu código é ${data.code}.`, `Try Vivara. My code is ${data.code}.`);
+    try {
+      if (typeof navigator.share === "function") { await navigator.share({ title: "Vivara", text, url: data.link }); return; }
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return;   // a pessoa fechou a folha de partilha
+    }
+    await copy(data.link, L("Ligação copiada", "Link copied"));
+  };
+
+  const s = data?.summary;
+  const dateFmt = (iso: string) => fmtDay(iso.slice(0, 10), lang, true);
+  const rows: { key: string; state: "pending" | "completed" }[] = s
+    ? [...Array(s.completed).fill("completed"), ...Array(s.pending).fill("pending")].map((st, i) => ({ key: `${st}-${i}`, state: st as "pending" | "completed" }))
+    : [];
+
+  return (
+    <SubScreen title={L("Recomendar a Vivara", "Recommend Vivara")} onBack={() => go("profile")}>
+      {status === "loading" && <div className="rv-ref-state" role="status"><div className="rv-modal-spinner" aria-hidden="true"/><span>{L("A carregar…", "Loading…")}</span></div>}
+      {status === "error" && (
+        <div className="rv-ref-state" role="alert">
+          <span>{L("Não foi possível carregar o seu código agora.", "We couldn't load your code right now.")}</span>
+          <button type="button" className="rv-device-btn" data-tone="primary" onClick={() => setAttempt((n) => n + 1)}>{L("Tentar de novo", "Try again")}</button>
+        </div>
+      )}
+      {status === "ready" && data && s && (
+        <>
+          <section className="rv-ref-card" aria-labelledby="rv-ref-code-label">
+            <div id="rv-ref-code-label" className="rv-ref-label">{L("O seu código", "Your code")}</div>
+            <div className="rv-ref-code" aria-live="polite">{data.code}</div>
+            {mode !== "real" && <div className="rv-field-hint" style={{textAlign: "center"}}>{L("Código de demonstração.", "Demo code.")}</div>}
+            <div className="rv-ref-actions">
+              <button type="button" className="rv-cta-primary" onClick={() => copy(data.code, L("Código copiado", "Code copied"))}>{L("Copiar código", "Copy code")}</button>
+              <button type="button" className="rv-cta-ghost" onClick={shareLink}>{L("Partilhar ligação", "Share link")}</button>
+            </div>
+          </section>
+
+          <ReferralQR link={data.link}/>
+
+          <p className="rv-ref-rule">{REFERRAL_RULE_TEXT[lang]}</p>
+
+          <div className="rv-sub-section-head">{L("Acompanhamento", "Progress")}</div>
+          <div className="rv-ref-stats" aria-live="polite">
+            {L(`Convidados: ${s.invited} · Meses ganhos: ${s.monthsThisYear} de ${MAX_FREE_MONTHS_PER_YEAR} este ano`,
+               `Invited: ${s.invited} · Months earned: ${s.monthsThisYear} of ${MAX_FREE_MONTHS_PER_YEAR} this year`)}
+          </div>
+          {s.monthsThisYear >= MAX_FREE_MONTHS_PER_YEAR && (
+            <div className="rv-src-note" style={{margin: "8px 20px 0"}}>{L("Já atingiu o limite de meses grátis deste ano.", "You've reached this year's free-month limit.")}</div>
+          )}
+          {rows.length > 0 && (
+            <ul className="rv-ref-list">
+              {rows.map((r, i) => (
+                <li key={r.key} className="rv-ref-row">
+                  <span>{L("Recomendação", "Referral")} {i + 1}</span>
+                  <span className="rv-ref-badge" data-state={r.state}>{r.state === "completed" ? L("Concluída", "Completed") : L("Pendente", "Pending")}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {s.credits.length > 0 && (
+            <>
+              <div className="rv-sub-section-head">{L("Meses grátis", "Free months")}</div>
+              <ul className="rv-ref-list">
+                {s.credits.map((c, i) => (
+                  <li key={i} className="rv-ref-row">
+                    <span>{L("Mês grátis", "Free month")}</span>
+                    <span className="rv-ref-when">
+                      {c.appliedAt ? L(`Aplicado a ${dateFmt(c.appliedAt)}`, `Applied on ${dateFmt(c.appliedAt)}`) : L("A aplicar", "Being applied")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </>
+      )}
+    </SubScreen>
+  );
+}
+
 // ─── Login ───────────────────────────────────────────
 const LOGIN_EMAIL = "maria@vivara.health";
 const LOGIN_PASS = "+Vivara2024";
@@ -5515,6 +5702,8 @@ function AppV2Page() {
   const [mode, setMode] = useState<"none" | AccountMode>("none");
   const [authView, setAuthView] = useState<"login" | "signup" | "signup-done">("login");
   const [signupEmail, setSignupEmail] = useState("");
+  // Código vindo da ligação ou do QR (?ref=VIV-…): abre o registo já preenchido.
+  const [prefillRef, setPrefillRef] = useState("");
   const [account, setAccount] = useState<ConsentStatus | null>(null);
   const [accountState, setAccountState] = useState<"idle" | "loading" | "error">("idle");
   const fetchStatus = useServerFn(getConsentStatus);
@@ -5525,6 +5714,8 @@ function AppV2Page() {
 
   useEffect(() => {
     try {
+      const ref = codeFromSearch(window.location.search);
+      if (ref) { setPrefillRef(ref); setAuthView("signup"); }
       if (sessionStorage.getItem(LOGIN_STORAGE_KEY) === "1") setMode("demo");
       const savedLang = localStorage.getItem(LANG_STORAGE_KEY);
       if (savedLang === "pt" || savedLang === "en") setLangState(savedLang);
@@ -5632,7 +5823,7 @@ function AppV2Page() {
   const gate = (): ReactNode => {
     if (mode === "none") {
       if (authView === "signup") return (
-        <SignupScreen onBack={() => setAuthView("login")} onDone={async (session, email) => {
+        <SignupScreen initialInvite={prefillRef} onBack={() => setAuthView("login")} onDone={async (session, email) => {
           if (session) {
             await supabase.auth.setSession(session).catch(() => {});
             void enterReal();

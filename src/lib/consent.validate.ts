@@ -1,6 +1,7 @@
 // Validação do formulário de criar conta. Corre no browser (erros junto de
 // cada campo) e outra vez no servidor, que é quem decide.
 import { SIGNUP_CHECKBOXES, type ConsentLang, type SignupCheckboxId } from "./consent.config";
+import { normalizeCode } from "./referral";
 
 export type SignupField = "name" | "email" | "password" | "invite" | SignupCheckboxId;
 export type SignupResult =
@@ -21,6 +22,7 @@ export function validateSignup(raw: unknown): { input: SignupInput; errors: Part
     name: typeof r.name === "string" ? r.name.trim() : "",
     email: typeof r.email === "string" ? r.email.trim().toLowerCase() : "",
     password: typeof r.password === "string" ? r.password : "",
+    // Código de convite no formato VIV-XXXX-XXXX (aceita minúsculas, espaços e sem hífenes).
     invite: typeof r.invite === "string" ? r.invite.trim() : "",
     checks: {
       "signup-age": c["signup-age"] === true,
@@ -38,7 +40,11 @@ export function validateSignup(raw: unknown): { input: SignupInput; errors: Part
   if (!input.password) errors.password = "required";
   else if (input.password.length < 8) errors.password = "too_short";
   else if (input.password.length > 72) errors.password = "too_long";
-  if (input.invite && !/^[A-Za-z0-9-]{3,64}$/.test(input.invite)) errors.invite = "invalid";
+  if (input.invite) {
+    const code = normalizeCode(input.invite);
+    if (code) input.invite = code;
+    else errors.invite = "invalid";
+  }
   for (const cb of SIGNUP_CHECKBOXES) if (cb.required && !input.checks[cb.id]) errors[cb.id] = "required";
   return { input, errors };
 }

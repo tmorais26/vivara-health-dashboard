@@ -20,6 +20,18 @@ export type Database = {
         Update: { id?: string; role?: "physician" | "patient"; full_name?: string | null; invite_code?: string | null; created_at?: string }
         Relationships: []
       }
+      referral_codes: {
+        Row: { code: string; owner_id: string; owner_kind: string; created_at: string }
+        Insert: { code: string; owner_id: string; owner_kind: string; created_at?: string }
+        Update: { [_ in never]: never }
+        Relationships: []
+      }
+      medico_perfis: {
+        Row: { user_id: string; nome: string; especialidade: string | null; cedula_profissional: string | null; clinica: string | null; cedula_validada: boolean; criado_em: string }
+        Insert: { [_ in never]: never }
+        Update: { [_ in never]: never }
+        Relationships: []
+      }
       consent_events: {
         Row: {
           id: number; user_id: string; consent_type: string; action: "granted" | "withdrawn"
@@ -45,7 +57,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      rate_limit_hit: { Args: { p_bucket: string; p_limit: number; p_window: string }; Returns: boolean }
+      ensure_referral_code: { Args: { p_user: string; p_kind: string }; Returns: string }
+      register_referral: { Args: { p_code: string; p_referee: string; p_referee_kind: string; p_email_norm_hash: string | null }; Returns: string }
+      referral_summary: { Args: { p_user: string; p_year?: number }; Returns: Json }
+      referral_on_first_payment: { Args: { p_user: string; p_fingerprint_hash?: string | null; p_year?: number }; Returns: { credit_id: number; credited_user: string; credit_role: string }[] }
+      record_payment_fingerprint: { Args: { p_user: string; p_hash: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
