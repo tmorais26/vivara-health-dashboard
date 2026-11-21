@@ -79,6 +79,8 @@ export const signUpPatient = createServerFn({ method: "POST" })
       options: { data: { full_name: input.name }, emailRedirectTo: `${origin}/app-v2` },
     });
     if (error) {
+      // Domínios que o Supabase recusa (inexistentes, de teste ou descartáveis).
+      if ((error as { code?: string }).code === "email_address_invalid") return { ok: false, fieldErrors: { email: "invalid" } };
       if (/password/i.test(error.message)) return { ok: false, error: "weak_password" };
       console.error("[signup]", error.message);
       return { ok: false, error: "server" };
