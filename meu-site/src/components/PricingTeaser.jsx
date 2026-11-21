@@ -14,7 +14,7 @@ const T = {
     desc: "Preços com IVA incluído. Cancela quando quiser.",
     perMonth: "/mês",
     perDayUnit: "/dia",
-    billed: (m, a) => `Faturado €${m} por mês, ou €${a} por ano`,
+    billed: (m, a) => `€${m} por mês, ou €${a} por ano`,
     cards: [
       { key: "utente", who: "Utente", text: "A app completa, com o seu historial sempre consigo." },
       { key: "medico", who: "Médico individual", text: "O portal clínico, com ou sem a app do utente." },
@@ -33,7 +33,7 @@ const T = {
     desc: "VAT included. Cancel anytime.",
     perMonth: "/month",
     perDayUnit: "/day",
-    billed: (m, a) => `Billed €${m} a month, or €${a} a year`,
+    billed: (m, a) => `€${m} a month, or €${a} a year`,
     cards: [
       { key: "utente", who: "Patient", text: "The full app, with your record always with you." },
       { key: "medico", who: "Individual doctor", text: "The clinical portal, with or without the patient's app." },

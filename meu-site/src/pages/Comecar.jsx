@@ -11,7 +11,7 @@ const T = {
       desc: "A Vivara tem duas vistas do mesmo historial. Escolha a sua.",
     },
     perDayUnit: "/dia",
-    annualNote: (m, a) => `Faturado €${m} por mês, ou €${a} por ano`,
+    annualNote: (m, a) => `€${m} por mês, ou €${a} por ano`,
     waitlist: "Ainda não abrimos. Deixe o seu contacto e avisamos assim que puder entrar.",
     cards: [
       {
@@ -41,7 +41,7 @@ const T = {
       desc: "Vivara has two views of the same record. Choose yours.",
     },
     perDayUnit: "/day",
-    annualNote: (m, a) => `Billed €${m} a month, or €${a} a year`,
+    annualNote: (m, a) => `€${m} a month, or €${a} a year`,
     waitlist: "We haven't opened yet. Leave your details and we'll let you know as soon as you can get in.",
     cards: [
       {

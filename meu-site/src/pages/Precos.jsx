@@ -20,8 +20,8 @@ const T = {
     perMonth: "/mês",
     perYear: "/ano",
     perDayUnit: "/dia",
-    billedMonthly: (v) => `Faturado €${v} por mês`,
-    billedYearly: (v) => `Faturado €${v} por ano`,
+    billedMonthly: (v) => `€${v} por mês`,
+    billedYearly: (v) => `€${v} por ano`,
     patient: {
       name: "Utente",
       desc: "Acesso completo à app Vivara. Histórico, wearables, mensagens com a equipa e resumos de cada consulta.",
@@ -94,8 +94,8 @@ const T = {
     perMonth: "/month",
     perYear: "/year",
     perDayUnit: "/day",
-    billedMonthly: (v) => `Billed €${v} a month`,
-    billedYearly: (v) => `Billed €${v} a year`,
+    billedMonthly: (v) => `€${v} a month`,
+    billedYearly: (v) => `€${v} a year`,
     patient: {
       name: "Patient",
       desc: "Full access to the Vivara app. Record, wearables, messages with your team and a summary after every appointment.",
