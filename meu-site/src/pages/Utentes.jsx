@@ -121,7 +121,7 @@ export default function Utentes() {
   const L = t(T);
   return (
     <>
-      <PhotoHeader name="utentes" fallback={phonePhoto} position="62% 35%" badge={L.header.badge} title={L.header.title} desc={L.header.desc} cta={{ label: L.start, to: "/comecar?perfil=utente" }} />
+      <PhotoHeader name="utentes" fallback={phonePhoto} position="60% 40%" badge={L.header.badge} title={L.header.title} desc={L.header.desc} cta={{ label: L.start, to: "/comecar?perfil=utente" }} />
 
       <section className="bg-brand-beige py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6 grid md:grid-cols-2 gap-12 items-center">

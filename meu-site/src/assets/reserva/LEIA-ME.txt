@@ -1,0 +1,6 @@
+Fotografias em reserva (não entram no site). Para usar uma, copie-a para
+src/assets/scenes/ (cenas) ou src/assets/pages/ (cabeçalhos) com o nome da cena/página:
+
+  historia-mulher-grisalha.jpg      -> scenes/historia.jpg
+  entre-consultas-corredora.jpg     -> scenes/entre-consultas.jpg
+  utentes-mulher-sofa.jpg           -> pages/utentes.jpg (já está em uso)

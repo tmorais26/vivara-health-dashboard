@@ -164,7 +164,7 @@ export default function Sobre() {
   const L = t(T);
   return (
     <>
-      <PhotoHeader name="sobre" fallback={windowPhoto} position="68% 40%" badge={L.header.badge} title={L.header.title} desc={L.header.desc} />
+      <PhotoHeader name="sobre" fallback={windowPhoto} position="60% 45%" badge={L.header.badge} title={L.header.title} desc={L.header.desc} />
 
       <section className="bg-brand-beige pb-16 md:pb-24">
         <div className="mx-auto max-w-6xl px-6 grid md:grid-cols-2 gap-12 items-center">
