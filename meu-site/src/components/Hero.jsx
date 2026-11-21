@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { CTAButton } from "./ui";
 import { useT } from "../i18n";
-import heroPhoto from "../assets/hero-photo.jpg";
+import heroPhoto from "../assets/hero-sofa.webp";
 
 const T = {
   pt: {
@@ -37,13 +37,14 @@ export default function Hero() {
       <img
         src={heroPhoto}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover opacity-70"
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ objectPosition: "74% 22%" }}
       />
       <div
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, rgba(26,24,20,0.45) 0%, rgba(26,24,20,0.35) 35%, rgba(26,24,20,0.92) 100%)",
+            "linear-gradient(90deg, rgba(14,30,20,0.88) 0%, rgba(14,30,20,0.62) 38%, rgba(14,30,20,0.10) 72%), linear-gradient(180deg, rgba(14,30,20,0.35) 0%, rgba(14,30,20,0) 30%, rgba(14,30,20,0.80) 100%)",
         }}
       />
 

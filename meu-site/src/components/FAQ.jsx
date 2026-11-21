@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { SectionBadge, Reveal } from "./ui";
 import { useT } from "../i18n";
 
 const T = {
   pt: {
+    more: "Ver todas as perguntas",
     badge: "FAQ",
     title: (
       <>
@@ -59,6 +61,7 @@ const T = {
     ],
   },
   en: {
+    more: "See all questions",
     badge: "FAQ",
     title: (
       <>
@@ -114,7 +117,7 @@ const T = {
   },
 };
 
-export default function FAQ() {
+export default function FAQ({ limit }) {
   const t = useT();
   const L = t(T);
   const [open, setOpen] = useState(0);
@@ -129,7 +132,7 @@ export default function FAQ() {
         </Reveal>
 
         <div className="mt-12 divide-y divide-black/10">
-          {L.items.map((it, i) => (
+          {(limit ? L.items.slice(0, limit) : L.items).map((it, i) => (
             <div key={it.q}>
               <button
                 onClick={() => setOpen(open === i ? -1 : i)}
@@ -154,6 +157,11 @@ export default function FAQ() {
             </div>
           ))}
         </div>
+        {limit && (
+          <p className="mt-8">
+            <Link to="/faq" className="underline underline-offset-4">{L.more} →</Link>
+          </p>
+        )}
       </div>
     </section>
   );

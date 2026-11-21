@@ -22,8 +22,16 @@ const SCENES_BASE = [
   { file: "sono", image: phonePhoto, position: "55% 40%" },
   { file: "historia", bg: "radial-gradient(circle at 78% 35%, #7d6f55 0%, #4a4337 50%, #1a1814 100%)" },
 ];
+// Ajustes por fotografia própria: enquadramento e, se preciso, espelhar para o
+// assunto ficar do lado direito.
+const OWN_SETTINGS = {
+  resultados: { position: "70% 45%" },
+  "entre-consultas": { position: "30% 50%", flip: true },
+  historia: { position: "68% 40%" },
+  sono: { position: "68% 40%" },
+};
 const SCENE_IMAGES = SCENES_BASE.map((s) =>
-  own[s.file] ? { image: own[s.file], position: "68% 40%" } : s
+  own[s.file] ? { image: own[s.file], position: "68% 40%", ...OWN_SETTINGS[s.file] } : s
 );
 const KINDS = ["timeline", "upload", "trend", "sleep", "age"];
 
@@ -318,7 +326,7 @@ export default function Overview() {
                   src={SCENE_IMAGES[i].image}
                   alt=""
                   className="absolute inset-0 h-full w-full object-cover"
-                  style={{ objectPosition: SCENE_IMAGES[i].position }}
+                  style={{ objectPosition: SCENE_IMAGES[i].position, transform: SCENE_IMAGES[i].flip ? "scaleX(-1)" : undefined }}
                   loading="lazy"
                 />
               ) : (
@@ -355,7 +363,7 @@ export default function Overview() {
                   src={img.image}
                   alt=""
                   className="absolute inset-0 h-full w-full object-cover opacity-40 md:left-auto md:right-0 md:w-[64%] md:opacity-100"
-                  style={{ objectPosition: img.position }}
+                  style={{ objectPosition: img.position, transform: img.flip ? "scaleX(-1)" : undefined }}
                 />
               ) : (
                 <span className="absolute inset-0" style={{ background: img.bg }} />

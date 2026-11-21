@@ -1,4 +1,4 @@
-import { SectionBadge, Reveal } from "./ui";
+import { SectionBadge, Reveal, Check } from "./ui";
 import { useT } from "../i18n";
 
 const T = {
@@ -9,6 +9,13 @@ const T = {
         O que nos <em>guia.</em>
       </>
     ),
+    controlTitle: <>Os seus dados. <em>O seu controlo.</em></>,
+    control: [
+      "Os seus dados são seus — exportáveis a qualquer momento",
+      "Só os profissionais que escolher têm acesso",
+      "Tratamos os dados de saúde segundo o RGPD, incluindo o Artigo 9.º",
+      "Nunca vendemos os seus dados a terceiros",
+    ],
     principles: [
       {
         title: "Privacidade total",
@@ -31,6 +38,13 @@ const T = {
         What <em>guides us.</em>
       </>
     ),
+    controlTitle: <>Your data. <em>Your control.</em></>,
+    control: [
+      "Your data is yours — exportable at any time",
+      "Only the professionals you choose have access",
+      "We process health data under the GDPR, including Article 9",
+      "We never sell your data to third parties",
+    ],
     principles: [
       {
         title: "Total privacy",
@@ -69,6 +83,20 @@ export default function Trust() {
             </Reveal>
           ))}
         </div>
+
+        <Reveal delay={0.1}>
+          <div className="mt-14 rounded-3xl bg-brand-dark px-8 py-10 text-white md:px-12">
+            <h3 className="font-serif text-3xl md:text-4xl font-light">{L.controlTitle}</h3>
+            <ul className="mt-6 grid gap-x-10 gap-y-3 md:grid-cols-2">
+              {L.control.map((c) => (
+                <li key={c} className="flex items-start gap-3 text-white/85">
+                  <Check className="mt-1 size-4 shrink-0 text-brand-lime" />
+                  {c}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
