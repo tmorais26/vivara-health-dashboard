@@ -54,6 +54,22 @@ function TextField({
   );
 }
 
+// O Supabase devolve mensagens em inglês; traduzimos pelos códigos de erro conhecidos.
+function mensagemErroAuth(err: unknown, c: ReturnType<typeof useT>["conta"]): string {
+  const e = err as { code?: string; status?: number; message?: string } | null;
+  const code = e?.code ?? "";
+  const msg = (e?.message ?? "").toLowerCase();
+  if (code === "invalid_credentials" || msg.includes("invalid login credentials")) return c.erroCredenciais;
+  if (code === "email_not_confirmed" || msg.includes("email not confirmed")) return c.erroEmailPorConfirmar;
+  if (code === "user_already_exists" || code === "email_exists" || msg.includes("already registered")) return c.erroContaExiste;
+  if (code === "email_address_invalid" || code === "email_address_not_authorized" || msg.includes("is invalid"))
+    return c.erroEmailInvalido;
+  if (code === "weak_password" || msg.includes("password")) return c.erroPalavraPasseFraca;
+  if (code.startsWith("over_") || e?.status === 429) return c.erroDemasiadasTentativas;
+  if (msg.includes("failed to fetch") || msg.includes("network")) return c.erroLigacao;
+  return c.erroGenerico;
+}
+
 type Erros = Partial<Record<"nome" | "email" | "palavraPasse" | "especialidade" | "cedula", string>>;
 
 function AuthPage() {
@@ -145,7 +161,7 @@ function AuthPage() {
         navigate({ to: "/" });
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t.conta.erroGenerico);
+      setError(mensagemErroAuth(err, t.conta));
     } finally {
       setLoading(false);
     }

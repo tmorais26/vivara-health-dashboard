@@ -7,16 +7,14 @@ import {
   Eye,
   FileText,
   History,
-  Lock,
   MessageSquare,
   Phone,
   Settings2,
-  ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Alerta, Utente } from "@/data/mock-utente";
-import { formatarData } from "@/data/mock-utente";
+import { calcularEstado, formatarData } from "@/data/mock-utente";
 import { Link } from "@tanstack/react-router";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageToggle } from "@/components/portal/LanguageToggle";
@@ -55,14 +53,8 @@ export function PatientHeader({
   const t = useT();
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  // Sessão countdown — começa a 14:32
-  const [sessao, setSessao] = useState(14 * 60 + 32);
-  useEffect(() => {
-    const id = setInterval(() => setSessao((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(id);
-  }, []);
-  const sessaoFmt = `${String(Math.floor(sessao / 60)).padStart(2, "0")}:${String(sessao % 60).padStart(2, "0")}`;
-  const sessaoBaixa = sessao <= 180;
+
+  const foraDoAlvo = utente.marcadores.filter((m) => calcularEstado(m) !== "ok").length;
 
   const iniciais = utente.nome
     .split(" ")
@@ -87,20 +79,6 @@ export function PatientHeader({
           </nav>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full border border-state-ok/30 bg-state-ok-soft/60 px-2.5 py-1 text-[10.5px] font-medium text-state-ok"
-            title="Sessão protegida com autenticação multifator"
-          >
-            <ShieldCheck className="h-3 w-3" />
-            MFA activo
-          </span>
-          <span
-            className={`tabular inline-flex items-center gap-1.5 text-[10.5px] ${sessaoBaixa ? "font-medium text-state-warn" : "text-muted-foreground"}`}
-            title="Tempo restante de sessão antes de logout automático por inatividade"
-          >
-            <Lock className="h-3 w-3" />
-            Sessão · {sessaoFmt}
-          </span>
           <LanguageToggle />
           <ThemeToggle />
           <span>{utente.medicaResponsavel}</span>
@@ -120,7 +98,7 @@ export function PatientHeader({
             <div>
               <h1 className="font-serif text-4xl text-foreground">
                 {utente.nome}
-                <span className="ml-2 text-muted-foreground">, {utente.idade}</span>
+                <span className="text-muted-foreground">, {utente.idade}</span>
               </h1>
               <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                 <span>F · 67 kg · 1.65 m</span>
@@ -158,12 +136,12 @@ export function PatientHeader({
                       ? "border-state-alert bg-state-alert text-primary-foreground"
                       : "border-state-alert/30 bg-state-alert-soft text-state-alert hover:bg-state-alert-soft/80"
                   }`}
-                  title="Filtrar a lista para mostrar só os marcadores actualizados desde a última visita"
+                  title="Filtrar a lista para mostrar só os marcadores atualizados desde a última visita"
                 >
                   <Sparkles className="h-2.5 w-2.5" />
                   {novosDadosAtivo
                     ? "A mostrar só novos dados · limpar"
-                    : "Novos dados desde a tua última visita · 14 valores"}
+                    : "Novos dados desde a sua última visita · 14 valores"}
                 </button>
               </div>
             </div>
@@ -275,13 +253,13 @@ export function PatientHeader({
         {utente.alertas.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-muted-foreground">
-              {utente.alertas.length} alertas clínicos · 11 fora do alvo
+              {utente.alertas.length} alertas clínicos · {foraDoAlvo} fora do alvo (todas as categorias)
               <InfoHint title="Alertas clínicos vs. fora do alvo">
                 <p>{ALERTA_VS_ALVO_EXPLICACAO}</p>
                 <p className="text-muted-foreground">
                   Em prática: nem tudo o que está fora do alvo gera alerta —
                   apenas os marcadores com tendência ou magnitude clinicamente
-                  relevante surgem como alerta para acção.
+                  relevante surgem como alerta para ação.
                 </p>
               </InfoHint>
             </span>
@@ -423,7 +401,7 @@ function NovoAlertaModal({ open, onClose }: { open: boolean; onClose: () => void
       open={open}
       onClose={onClose}
       title="Novo alerta personalizado"
-      description="Define uma regra que dispara uma notificação no portal e/ou na app."
+      description="Defina uma regra que dispara uma notificação no portal e/ou na app."
       width="md"
     >
       <div className="space-y-4">
@@ -480,7 +458,7 @@ function PreviewAppModal({
       open={open}
       onClose={onClose}
       title="O que a utente vê"
-      description="Pré-visualização read-only da app de Maria. Nada do que vês aqui é editável."
+      description="Pré-visualização read-only da app de Maria. Nada do que vê aqui é editável."
       width="lg"
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -491,7 +469,7 @@ function PreviewAppModal({
             <li>· 22:30 — Magnésio bisglicinato ao deitar</li>
           </ul>
         </PreviewCard>
-        <PreviewCard title="Notas partilhadas activas">
+        <PreviewCard title="Notas partilhadas ativas">
           <p className="text-xs text-foreground">
             “O teu LDL tem subido nos últimos meses. Vamos reforçar fibra solúvel e reavaliar.”
           </p>
@@ -502,7 +480,7 @@ function PreviewAppModal({
             {formatarData(utente.proximaConsulta)} · 10:30 · presencial
           </p>
         </PreviewCard>
-        <PreviewCard title="Lembretes activos">
+        <PreviewCard title="Lembretes ativos">
           <ul className="space-y-1 text-xs text-foreground">
             <li>· Repetir painel lipídico até 15 Mai</li>
             <li>· Repetir Vitamina D após 8 semanas</li>

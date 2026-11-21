@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ShieldCheck, Bell, KeyRound, Globe, BellRing, Languages, Mail, Calendar, Database, Download, Upload } from "lucide-react";
+import { Bell, KeyRound, Globe, BellRing, Languages, Mail, Calendar, Database, Download, Upload } from "lucide-react";
 import { definirUsarAgenda, usePrefsMedico } from "@/lib/medico-prefs";
 import { exportarTudo } from "@/lib/exportacao";
 import { ImportarUtentesModal } from "@/components/portal/ImportarUtentesModal";
@@ -35,12 +35,6 @@ function DefinicoesPage() {
           <MarketingCard />
           <AgendaCard />
           <DadosCard />
-
-          <Card icon={<ShieldCheck className="h-4 w-4" />} title={t.definicoes.seguranca} sub={t.definicoes.segurancaSub}>
-            <Row label={t.definicoes.mfa} value="TOTP · Authenticator" status="ok" />
-            <Row label={t.definicoes.timeout} value={t.definicoes.timeoutValor} />
-            <Row label={t.definicoes.ultimaSessao} value="09:14 · IP 85.244.xxx.xxx" />
-          </Card>
 
           <Card icon={<KeyRound className="h-4 w-4" />} title={t.definicoes.acessos} sub={t.definicoes.acessosSub}>
             <Row label="Inês Carvalho" value="Nutricionista · plano e composição" />

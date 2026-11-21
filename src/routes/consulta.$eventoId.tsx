@@ -213,7 +213,7 @@ function ConsultaPage() {
               <div className="divide-y divide-border">
                 {requisicoes.length === 0 && (
                   <div className="px-5 py-8 text-center text-xs text-muted-foreground">
-                    Sem requisições. Pede uma análise ou exame para começar.
+                    Sem requisições. Peça uma análise ou exame para começar.
                   </div>
                 )}
                 {requisicoes.map((r) => (
@@ -274,7 +274,7 @@ function ConsultaPage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-[12px] text-muted-foreground">Sem alertas activos.</p>
+                <p className="text-[12px] text-muted-foreground">Sem alertas ativos.</p>
               )}
             </section>
 
@@ -360,7 +360,7 @@ function SoapField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={5}
-        placeholder="Escreve aqui…"
+        placeholder="Escreva aqui…"
         className="min-h-[120px] w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:border-foreground/30 focus:outline-none"
       />
     </div>

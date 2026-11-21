@@ -81,6 +81,7 @@ export const estadoConsentimento = createServerFn({ method: "GET" })
       .limit(1);
     return {
       precisaConsentir,
+      primeiraVez: (linhas ?? []).length === 0,
       marketing: mk?.[0]?.aceite ?? false,
       marketingDesde: mk?.[0]?.alterado_em ?? null,
     };

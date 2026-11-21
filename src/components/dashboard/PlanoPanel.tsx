@@ -164,7 +164,7 @@ export function PlanoPanel({
         <div className="divide-y divide-border">
           {ativas.length === 0 && !criando && (
             <div className="px-6 py-10 text-center text-sm text-muted-foreground">
-              Sem tarefas ativas. Adiciona uma instrução em cima ou a partir de um marcador.
+              Sem tarefas ativas. Adicione uma instrução em cima ou a partir de um marcador.
             </div>
           )}
           {ativas.map((t) => (

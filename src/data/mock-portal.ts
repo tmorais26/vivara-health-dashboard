@@ -225,4 +225,4 @@ export type AcessoPortal = {
  *   (subidas consecutivas, queda sustentada, magnitude do desvio).
  */
 export const ALERTA_VS_ALVO_EXPLICACAO =
-  "Fora do alvo: qualquer marcador fora do intervalo funcional. Alerta clínico: subset com tendência ou magnitude relevante que pede acção.";
+  "Fora do alvo: qualquer marcador fora do intervalo funcional. Alerta clínico: subset com tendência ou magnitude relevante que pede ação.";
