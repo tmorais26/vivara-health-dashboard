@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader, Reveal, Check } from "../components/ui";
 import { useLang, useT } from "../i18n";
-import { ACCESS_URLS, PRICES } from "../config/access";
+import { ACCESS_URLS, PRICES, dayPrice } from "../config/access";
 
 const T = {
   pt: {
@@ -10,8 +10,8 @@ const T = {
       title: <>Comece <em>no seu lado.</em></>,
       desc: "A Vivara tem duas vistas do mesmo historial. Escolha a sua.",
     },
-    perMonth: "/mês",
-    annualNote: (v) => `ou €${v} por ano`,
+    perDayUnit: "/dia",
+    annualNote: (m, a) => `Faturado €${m} por mês, ou €${a} por ano`,
     waitlist: "Ainda não abrimos. Deixe o seu contacto e avisamos assim que puder entrar.",
     cards: [
       {
@@ -40,8 +40,8 @@ const T = {
       title: <>Start <em>on your side.</em></>,
       desc: "Vivara has two views of the same record. Choose yours.",
     },
-    perMonth: "/month",
-    annualNote: (v) => `or €${v} a year`,
+    perDayUnit: "/day",
+    annualNote: (m, a) => `Billed €${m} a month, or €${a} a year`,
     waitlist: "We haven't opened yet. Leave your details and we'll let you know as soon as you can get in.",
     cards: [
       {
@@ -93,9 +93,9 @@ export default function Comecar() {
                   <p className={`text-xs uppercase tracking-[0.18em] ${featured ? "text-white/60" : "text-brand-muted/50"}`}>{c.who}</p>
                   <h2 className="font-serif text-3xl mt-1 mb-4">{c.title}</h2>
                   <p className="mb-6">
-                    <span className="font-serif text-3xl">€{euro(price.monthly)}</span>
-                    <span className={`text-sm ${featured ? "text-white/60" : "text-brand-muted/60"}`}>{L.perMonth}</span>
-                    <span className={`block text-xs mt-1 ${featured ? "text-white/60" : "text-brand-muted/60"}`}>{L.annualNote(euro(price.annual))}</span>
+                    <span className="font-serif text-3xl">€{euro(dayPrice(price.monthly))}</span>
+                    <span className={`text-sm ${featured ? "text-white/60" : "text-brand-muted/60"}`}>{L.perDayUnit}</span>
+                    <span className={`block text-xs mt-1 ${featured ? "text-white/60" : "text-brand-muted/60"}`}>{L.annualNote(euro(price.monthly), euro(price.annual))}</span>
                   </p>
                   <ul className="space-y-3 mb-8 text-sm">
                     {c.points.map((p) => (

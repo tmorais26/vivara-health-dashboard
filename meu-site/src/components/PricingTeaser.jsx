@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { SectionBadge, Reveal } from "./ui";
 import { useLang, useT } from "../i18n";
-import { PRICES } from "../config/access";
+import { PRICES, dayPrice as day } from "../config/access";
 
 const T = {
   pt: {
@@ -13,10 +13,11 @@ const T = {
     ),
     desc: "Preços com IVA incluído. Cancela quando quiser.",
     perMonth: "/mês",
-    perDay: (v) => `Cerca de €${v} por dia`,
+    perDayUnit: "/dia",
+    billed: (m, a) => `Faturado €${m} por mês, ou €${a} por ano`,
     cards: [
-      { key: "utente", who: "Utente", note: "ou €{annual} por ano", text: "A app completa, com o seu historial sempre consigo." },
-      { key: "medico", who: "Médico individual", note: "ou €{annual} por ano", text: "O portal clínico, com ou sem a app do utente." },
+      { key: "utente", who: "Utente", text: "A app completa, com o seu historial sempre consigo." },
+      { key: "medico", who: "Médico individual", text: "O portal clínico, com ou sem a app do utente." },
     ],
     clinic: "Clínicas com 2 ou mais profissionais",
     clinicNote: "Sob consulta",
@@ -31,21 +32,16 @@ const T = {
     ),
     desc: "VAT included. Cancel anytime.",
     perMonth: "/month",
-    perDay: (v) => `About €${v} a day`,
+    perDayUnit: "/day",
+    billed: (m, a) => `Billed €${m} a month, or €${a} a year`,
     cards: [
-      { key: "utente", who: "Patient", note: "or €{annual} a year", text: "The full app, with your record always with you." },
-      { key: "medico", who: "Individual doctor", note: "or €{annual} a year", text: "The clinical portal, with or without the patient's app." },
+      { key: "utente", who: "Patient", text: "The full app, with your record always with you." },
+      { key: "medico", who: "Individual doctor", text: "The clinical portal, with or without the patient's app." },
     ],
     clinic: "Clinics with 2 or more professionals",
     clinicNote: "Custom pricing",
     cta: "See all pricing",
   },
-};
-
-// €/dia a partir do preço mensal ("29,99" → "1"; "6,99" → "0,23").
-const day = (monthly) => {
-  const v = Math.round((parseFloat(monthly.replace(",", ".")) / 30) * 100) / 100;
-  return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(".", ",");
 };
 
 export default function PricingTeaser() {
@@ -67,11 +63,10 @@ export default function PricingTeaser() {
               <div className="rounded-3xl border border-black/10 bg-brand-beige p-8 h-full">
                 <p className="text-xs uppercase tracking-[0.18em] text-brand-muted/50">{c.who}</p>
                 <p className="mt-3">
-                  <span className="font-serif text-5xl">€{euro(PRICES[c.key].monthly)}</span>
-                  <span className="text-brand-muted/60">{L.perMonth}</span>
+                  <span className="font-serif text-5xl">€{euro(day(PRICES[c.key].monthly))}</span>
+                  <span className="text-brand-muted/60">{L.perDayUnit}</span>
                 </p>
-                <p className="mt-1 text-sm text-brand-muted/60">{c.note.replace("{annual}", euro(PRICES[c.key].annual))}</p>
-                <p className="mt-3 inline-block rounded-full bg-white px-3 py-1 text-sm text-brand-green-dark">{L.perDay(euro(day(PRICES[c.key].monthly)))}</p>
+                <p className="mt-1 text-sm text-brand-green-dark">{L.billed(euro(PRICES[c.key].monthly), euro(PRICES[c.key].annual))}</p>
                 <p className="mt-5 text-brand-muted/85 leading-relaxed">{c.text}</p>
               </div>
             </Reveal>

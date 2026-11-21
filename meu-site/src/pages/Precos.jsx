@@ -19,8 +19,9 @@ const T = {
     patientsBadge: "Para utentes",
     perMonth: "/mês",
     perYear: "/ano",
-    worksOut: (v) => `Equivale a €${v}/mês`,
-    perDay: (v) => `Cerca de €${v} por dia`,
+    perDayUnit: "/dia",
+    billedMonthly: (v) => `Faturado €${v} por mês`,
+    billedYearly: (v) => `Faturado €${v} por ano`,
     patient: {
       name: "Utente",
       desc: "Acesso completo à app Vivara. Histórico, wearables, mensagens com a equipa e resumos de cada consulta.",
@@ -43,6 +44,7 @@ const T = {
     doctorsBadge: "Para médicos e clínicas",
     perDoctorMonth: "/médico/mês",
     perDoctorYear: "/médico/ano",
+    perDoctor: "por médico",
     custom: "Sob consulta",
     doctorPlans: [
       {
@@ -91,8 +93,9 @@ const T = {
     patientsBadge: "For patients",
     perMonth: "/month",
     perYear: "/year",
-    worksOut: (v) => `Works out at €${v}/month`,
-    perDay: (v) => `About €${v} a day`,
+    perDayUnit: "/day",
+    billedMonthly: (v) => `Billed €${v} a month`,
+    billedYearly: (v) => `Billed €${v} a year`,
     patient: {
       name: "Patient",
       desc: "Full access to the Vivara app. Record, wearables, messages with your team and a summary after every appointment.",
@@ -115,6 +118,7 @@ const T = {
     doctorsBadge: "For doctors and clinics",
     perDoctorMonth: "/doctor/month",
     perDoctorYear: "/doctor/year",
+    perDoctor: "per doctor",
     custom: "Custom pricing",
     doctorPlans: [
       {
@@ -203,10 +207,9 @@ export default function Precos() {
                 <h3 className="font-serif text-2xl mb-2">{L.patient.name}</h3>
                 <p className="text-sm text-white/70 mb-6">{L.patient.desc}</p>
                 <div className="mb-6">
-                  <span className="font-serif text-4xl">€{fmt(yearly ? PATIENT.annual : PATIENT.monthly)}</span>
-                  <span className="text-white/60 text-sm">{yearly ? L.perYear : L.perMonth}</span>
-                  <p className="text-xs text-white/70 mt-1">{L.perDay(fmt(perDay(yearly ? PATIENT.annual / 365 : PATIENT.monthly / 30)))}</p>
-                  {yearly && <p className="text-xs text-brand-lime mt-1">{L.worksOut(fmt(Math.round((PATIENT.annual / 12) * 100) / 100))}</p>}
+                  <span className="font-serif text-4xl">€{fmt(perDay(yearly ? PATIENT.annual / 365 : PATIENT.monthly / 30))}</span>
+                  <span className="text-white/60 text-sm">{L.perDayUnit}</span>
+                  <p className="text-xs text-brand-lime mt-1">{yearly ? L.billedYearly(fmt(PATIENT.annual)) : L.billedMonthly(fmt(PATIENT.monthly))}</p>
                 </div>
                 <ul className="space-y-3 mb-8 text-sm">
                   {L.patient.features.map((f) => (
@@ -259,16 +262,11 @@ export default function Precos() {
                   <div className="mb-6">
                     {p.monthly ? (
                       <>
-                        <span className="font-serif text-4xl">€{fmt(yearly ? p.annual : p.monthly)}</span>
-                        <span className={`text-sm ${p.featured ? "text-white/60" : "text-brand-muted/60"}`}>{yearly ? L.perDoctorYear : L.perDoctorMonth}</span>
-                        <p className={`text-xs mt-1 ${p.featured ? "text-white/70" : "text-brand-muted/70"}`}>
-                          {L.perDay(fmt(perDay(yearly ? p.annual / 365 : p.monthly / 30)))}
+                        <span className="font-serif text-4xl">€{fmt(perDay(yearly ? p.annual / 365 : p.monthly / 30))}</span>
+                        <span className={`text-sm ${p.featured ? "text-white/60" : "text-brand-muted/60"}`}>{L.perDayUnit}</span>
+                        <p className={`text-xs mt-1 ${p.featured ? "text-brand-lime" : "text-brand-green-dark"}`}>
+                          {yearly ? L.billedYearly(fmt(p.annual)) : L.billedMonthly(fmt(p.monthly))} · {L.perDoctor}
                         </p>
-                        {yearly && (
-                          <p className={`text-xs mt-1 ${p.featured ? "text-brand-lime" : "text-brand-green-dark"}`}>
-                            {L.worksOut(fmt(Math.round((p.annual / 12) * 100) / 100))}
-                          </p>
-                        )}
                       </>
                     ) : (
                       <span className="font-serif text-4xl">{L.custom}</span>
