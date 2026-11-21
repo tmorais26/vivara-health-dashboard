@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
-import { PageHeader, SectionBadge, Reveal, CTAButton, Check, Highlight } from "../components/ui";
+import PhotoHeader from "../components/PhotoHeader";
+import phonePhoto from "../assets/hero-photo.jpg";
+import { SectionBadge, Reveal, CTAButton, Check, Highlight } from "../components/ui";
 import AppMock from "../components/AppMock";
 import { useT } from "../i18n";
 
@@ -18,6 +20,7 @@ const T = {
       },
       { title: "Plano do dia e mensagens", desc: "O que tomar e como tomar, que exames fazer e como os fazer. Mais mensagens com a equipa clínica e lembretes de consultas." },
     ],
+    start: "Abrir a app",
     planBadge: "Plano de utente",
     price: "€6,99",
     perMonth: "/mês",
@@ -71,6 +74,7 @@ const T = {
       },
       { title: "Daily plan and messages", desc: "What to take and how to take it, which exams to do and how to do them. Plus messages with your care team and appointment reminders." },
     ],
+    start: "Open the app",
     planBadge: "Patient plan",
     price: "€6.99",
     perMonth: "/month",
@@ -117,7 +121,7 @@ export default function Utentes() {
   const L = t(T);
   return (
     <>
-      <PageHeader badge={L.header.badge} title={L.header.title} desc={L.header.desc} />
+      <PhotoHeader name="utentes" fallback={phonePhoto} position="62% 35%" badge={L.header.badge} title={L.header.title} desc={L.header.desc} cta={{ label: L.start, to: "/comecar?perfil=utente" }} />
 
       <section className="bg-brand-beige py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6 grid md:grid-cols-2 gap-12 items-center">

@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
-import { PageHeader, SectionBadge, Reveal, CTAButton, Check, Highlight } from "../components/ui";
+import PhotoHeader from "../components/PhotoHeader";
+import doctorPhoto from "../assets/doctor-patient.jpg";
+import { SectionBadge, Reveal, CTAButton, Check, Highlight } from "../components/ui";
 import ClinicalAlerts from "../components/ClinicalAlerts";
 import TimelineMock from "../components/TimelineMock";
 import { useT } from "../i18n";
@@ -89,6 +91,7 @@ const T = {
         desc: <>Os dados do utente podem ser <Highlight>exportados sempre que necessário</Highlight>, num formato aberto.</>,
       },
     ],
+    start: "Criar conta",
     ctaTitle: "Pronto para conhecer a Vivara?",
     ctaPlans: "Ver planos",
     ctaDemo: "Agendar demo",
@@ -180,6 +183,7 @@ const T = {
     ctaTitle: "Ready to meet Vivara?",
     ctaPlans: "See plans",
     ctaDemo: "Book a demo",
+    start: "Create an account",
   },
 };
 
@@ -188,7 +192,7 @@ export default function Medicos() {
   const L = t(T);
   return (
     <>
-      <PageHeader badge={L.header.badge} title={L.header.title} desc={L.header.desc} />
+      <PhotoHeader name="medicos" fallback={doctorPhoto} position="50% 28%" badge={L.header.badge} title={L.header.title} desc={L.header.desc} cta={{ label: L.start, to: "/comecar?perfil=medico" }} />
 
       <section className="bg-brand-beige py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6">
