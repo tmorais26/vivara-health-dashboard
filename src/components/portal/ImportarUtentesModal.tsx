@@ -3,12 +3,12 @@ import { Upload } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { ModalActions, PrimaryButton, SecondaryButton, SimpleModal } from "@/components/portal/SimpleModal";
 import { FundamentoLegalDialog } from "@/components/dashboard/FundamentoLegalDialog";
-import { idDeNome, iniciaisDe, interpretarImportacao, type UtenteImportado } from "@/lib/exportacao";
-import { adicionarUtentes } from "@/lib/utentes-store";
-import { definirClinica } from "@/lib/utente-clinica";
-import type { ResumoUtente } from "@/data/mock-portal";
+import { interpretarImportacao, type UtenteImportado } from "@/lib/exportacao";
+import { criarUtentes } from "@/lib/dados";
+import { useSessao } from "@/lib/sessao";
 
 const MAX_FICHEIRO = 5 * 1024 * 1024;
+const MAX_UTENTES = 2000;
 
 export function ImportarUtentesModal({
   open,
@@ -20,10 +20,12 @@ export function ImportarUtentesModal({
   onImportados?: (n: number) => void;
 }) {
   const t = useT().dados;
+  const tc = useT().conta;
+  const { atual } = useSessao();
   const [lidos, setLidos] = useState<UtenteImportado[] | null>(null);
   const [ignoradas, setIgnoradas] = useState(0);
   const [erro, setErro] = useState<string | null>(null);
-  const [pendentes, setPendentes] = useState<{ resumo: ResumoUtente; clinica?: string }[] | null>(null);
+  const [pendentes, setPendentes] = useState<(UtenteImportado & { id: string })[] | null>(null);
 
   function fechar() {
     setLidos(null);
@@ -42,7 +44,7 @@ export function ImportarUtentesModal({
       return;
     }
     const r = interpretarImportacao(await file.text(), file.name);
-    if (!r.ok || r.utentes.length === 0) {
+    if (!r.ok || r.utentes.length === 0 || r.utentes.length > MAX_UTENTES) {
       setErro(t.formatoInvalido);
       return;
     }
@@ -50,22 +52,17 @@ export function ImportarUtentesModal({
     setIgnoradas(r.ignoradas);
   }
 
-  function continuar() {
-    if (!lidos) return;
-    setPendentes(
-      lidos.map(({ clinica, ...u }) => ({
-        resumo: { ...u, id: idDeNome(u.nome), iniciais: iniciaisDe(u.nome) },
-        clinica,
-      })),
-    );
-  }
-
-  function confirmar() {
-    if (!pendentes) return;
-    adicionarUtentes(pendentes.map((p) => p.resumo));
-    for (const p of pendentes) if (p.clinica) definirClinica(p.resumo.id, p.clinica);
-    onImportados?.(pendentes.length);
-    fechar();
+  async function confirmar() {
+    if (!pendentes || !atual) return;
+    try {
+      await criarUtentes(atual.espaco_id, atual.id, pendentes);
+      const n = pendentes.length;
+      fechar();
+      onImportados?.(n);
+    } catch {
+      setPendentes(null);
+      setErro(tc.erroGenerico);
+    }
   }
 
   return (
@@ -73,12 +70,7 @@ export function ImportarUtentesModal({
       <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-dashed border-border bg-background px-4 py-6 text-center text-sm text-foreground hover:bg-accent/40 focus-within:ring-1 focus-within:ring-ring">
         <Upload className="h-5 w-5 text-muted-foreground" />
         {t.escolherFicheiro}
-        <input
-          type="file"
-          accept=".json,.csv,application/json,text/csv"
-          className="sr-only"
-          onChange={(e) => ler(e.target.files?.[0])}
-        />
+        <input type="file" accept=".json,.csv,application/json,text/csv" className="sr-only" onChange={(e) => ler(e.target.files?.[0])} />
       </label>
       {erro && (
         <p role="alert" className="mt-3 text-xs text-state-alert">
@@ -90,13 +82,10 @@ export function ImportarUtentesModal({
           <p>{t.encontrados(lidos.length)}</p>
           {ignoradas > 0 && <p className="text-xs text-muted-foreground">{t.linhasIgnoradas(ignoradas)}</p>}
           <ul className="mt-2 max-h-40 overflow-y-auto rounded-xl border border-border text-xs">
-            {lidos.map((u, i) => (
+            {lidos.slice(0, 200).map((u, i) => (
               <li key={i} className="flex justify-between gap-3 border-b border-border px-3 py-1.5 last:border-0">
                 <span>{u.nome}</span>
-                <span className="text-muted-foreground">
-                  {u.idade || "—"} · {u.sexo}
-                  {u.clinica ? ` · ${u.clinica}` : ""}
-                </span>
+                <span className="text-muted-foreground">{[u.data_nascimento, u.sexo, u.cidade].filter(Boolean).join(" · ") || "—"}</span>
               </li>
             ))}
           </ul>
@@ -104,11 +93,15 @@ export function ImportarUtentesModal({
       )}
       <ModalActions>
         <SecondaryButton onClick={fechar}>{t.cancelar}</SecondaryButton>
-        {lidos && <PrimaryButton onClick={continuar}>{t.continuar}</PrimaryButton>}
+        {lidos && (
+          <PrimaryButton onClick={() => setPendentes(lidos.map((u) => ({ ...u, id: crypto.randomUUID() })))}>
+            {t.continuar}
+          </PrimaryButton>
+        )}
       </ModalActions>
       <FundamentoLegalDialog
         open={pendentes !== null}
-        utenteRefs={pendentes?.map((p) => p.resumo.id) ?? []}
+        utenteRefs={pendentes?.map((p) => p.id) ?? []}
         onConfirm={confirmar}
         onCancel={() => setPendentes(null)}
       />

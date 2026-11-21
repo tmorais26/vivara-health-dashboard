@@ -11,7 +11,7 @@ export function FundamentoLegalDialog({
 }: {
   open: boolean;
   utenteRefs: string[];
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   onCancel: () => void;
 }) {
   const t = useT();
@@ -22,12 +22,8 @@ export function FundamentoLegalDialog({
     setLoading(true);
     setErro(null);
     try {
-      await Promise.all(
-        utenteRefs.map((utenteRef) =>
-          registarFundamentoUtente({ data: { utenteRef, texto: t.consent.fundamento } }),
-        ),
-      );
-      onConfirm();
+      await registarFundamentoUtente({ data: { utenteRefs, texto: t.consent.fundamento } });
+      await onConfirm();
     } catch {
       setErro(t.conta.erroGenerico);
     } finally {

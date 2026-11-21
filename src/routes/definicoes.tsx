@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useSessao } from "@/lib/sessao";
 import { definirUsarAgenda, usePrefsMedico } from "@/lib/medico-prefs";
-import { exportarTudo } from "@/lib/exportacao";
+import { exportarEspaco } from "@/lib/exportacao";
 import { ImportarUtentesModal } from "@/components/portal/ImportarUtentesModal";
 import { useEffect, useState } from "react";
 import { definirMarketing, estadoConsentimento } from "@/lib/consent.functions";
@@ -194,6 +194,7 @@ function AgendaCard() {
 
 function DadosCard() {
   const t = useT().dados;
+  const tc = useT().conta;
   const sessao = useSessao();
   const [importarOpen, setImportarOpen] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -206,7 +207,14 @@ function DadosCard() {
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           <button
             type="button"
-            onClick={exportarTudo}
+            onClick={async () => {
+              if (!sessao.atual) return;
+              try {
+                await exportarEspaco(sessao.atual.espaco_id);
+              } catch {
+                setAviso(tc.erroGenerico);
+              }
+            }}
             className="flex items-start gap-2.5 rounded-xl border border-border bg-background px-4 py-3 text-left hover:bg-accent"
           >
             <Download className="mt-0.5 h-4 w-4 text-muted-foreground" />

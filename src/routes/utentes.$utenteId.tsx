@@ -14,11 +14,12 @@ import { AnamnesePanel } from "@/components/dashboard/AnamnesePanel";
 import { ConsultasPanel } from "@/components/dashboard/ConsultasPanel";
 import { CompararPanel } from "@/components/dashboard/CompararPanel";
 import { DocumentosPanel } from "@/components/dashboard/DocumentosPanel";
+import { FichaUtente } from "@/components/ficha/FichaUtente";
 
 export const Route = createFileRoute("/utentes/$utenteId")({
   head: ({ params }) => ({
     meta: [
-      { title: `${params.utenteId === "maria-antunes" ? "Maria Antunes" : "Utente"} — Vivara Health` },
+      { title: `${params.utenteId === "maria-antunes" ? "Maria Antunes (exemplo)" : "Utente"} — Vivara Health` },
       {
         name: "description",
         content:
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/utentes/$utenteId")({
       },
     ],
   }),
-  component: DashboardUtente,
+  component: RotaUtente,
   notFoundComponent: NaoEncontrado,
 });
 
@@ -71,6 +72,13 @@ function useTabLabels() {
     documentos: t.utente.subDocumentos,
   };
   return { main, clinico, cd };
+}
+
+const ID_EXEMPLO = "maria-antunes";
+
+function RotaUtente() {
+  const { utenteId } = Route.useParams();
+  return utenteId === ID_EXEMPLO ? <DashboardUtente /> : <FichaUtente utenteId={utenteId} />;
 }
 
 function DashboardUtente() {
@@ -127,6 +135,9 @@ function DashboardUtente() {
 
   return (
     <PortalShell hideSidebarChrome>
+      <div role="note" className="border-b border-state-warn/30 bg-state-warn-soft px-4 py-2 text-center text-xs text-state-warn sm:px-8">
+        {t.ficha.exemplo}
+      </div>
       {/* Vista mobile focada — apenas <lg */}
       <div className="lg:hidden">
         <PatientMobileView

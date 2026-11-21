@@ -103,14 +103,17 @@ export const definirMarketing = createServerFn({ method: "POST" })
 
 export const registarFundamentoUtente = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { utenteRef: string; texto: string }) => ({
-    utenteRef: texto(d?.utenteRef, 200),
-    texto: texto(d?.texto),
-  }))
+  .inputValidator((d: { utenteRefs: string[]; texto: string }) => {
+    if (!Array.isArray(d?.utenteRefs) || d.utenteRefs.length === 0 || d.utenteRefs.length > 2000) {
+      throw new Error("Dados inválidos");
+    }
+    return { utenteRefs: d.utenteRefs.map((r) => texto(r, 200)), texto: texto(d?.texto) };
+  })
   .handler(async ({ data, context }) => {
-    const { error } = await supabaseAdmin.from("medico_utente_fundamento").insert({
-      user_id: context.userId, utente_ref: data.utenteRef, texto_confirmado: data.texto, ip: ipDoPedido(),
-    });
+    const ip = ipDoPedido();
+    const { error } = await supabaseAdmin.from("medico_utente_fundamento").insert(
+      data.utenteRefs.map((utente_ref) => ({ user_id: context.userId, utente_ref, texto_confirmado: data.texto, ip })),
+    );
     if (error) throw new Error("Não foi possível registar a confirmação.");
     return { ok: true as const };
   });
