@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { SectionBadge, Reveal } from "./ui";
 import { useT } from "../i18n";
 
@@ -58,14 +59,19 @@ const T = {
         url: ANNALS,
       },
     ],
+    turnTag: "A diferença",
+    merge: ["Laboratório", "Seguro", "Ecografia", "Consulta"],
+    merged: "Um só historial",
     closing: "Com a Vivara, cada resultado vai para o mesmo historial — e o seu médico vê o ano inteiro antes de a consulta começar.",
     closingFacts: [
       {
+        stat: "+22 920",
         fact: "Quando os resultados de outros hospitais deixaram de estar num separador à parte e passaram a aparecer junto dos restantes, os médicos passaram a abri-los mais 22 920 vezes por semana.",
         source: "JAMIA, 2020 · Universidade da Califórnia, São Francisco",
         url: JAMIA,
       },
       {
+        stat: "40%",
         fact: "40% dos adultos em Portugal já consultam o seu registo de saúde online, acima da média europeia de 28%.",
         source: "OCDE e Observatório Europeu, 2025",
         url: CHP,
@@ -118,14 +124,19 @@ const T = {
         url: ANNALS,
       },
     ],
+    turnTag: "The difference",
+    merge: ["Lab", "Insurance", "Ultrasound", "Visit"],
+    merged: "One record",
     closing: "With Vivara, every result goes into the same record — and your doctor sees the whole year before the appointment begins.",
     closingFacts: [
       {
+        stat: "+22,920",
         fact: "When results from other hospitals stopped sitting in a separate tab and appeared alongside the rest, doctors opened them 22,920 more times a week.",
         source: "JAMIA, 2020 · University of California, San Francisco",
         url: JAMIA,
       },
       {
+        stat: "40%",
         fact: "40% of adults in Portugal already access their health record online, above the EU average of 28%.",
         source: "OECD & European Observatory, 2025",
         url: CHP,
@@ -156,6 +167,7 @@ export default function Problem() {
   const t = useT();
   const L = t(T);
   return (
+    <>
     <section id="porque" className="bg-white py-24 md:py-32">
       <div className="mx-auto max-w-6xl px-6">
         <Reveal>
@@ -193,16 +205,67 @@ export default function Problem() {
             );
           })}
         </ol>
-
-        <Reveal delay={0.1}>
-          <div className="mt-16 rounded-3xl bg-brand-dark px-8 py-10 text-white md:px-12">
-            <p className="font-serif text-2xl md:text-3xl leading-snug max-w-3xl">{L.closing}</p>
-            {L.closingFacts.map((f) => (
-              <Source key={f.source} fact={f.fact} source={f.source} url={f.url} dark />
-            ))}
-          </div>
-        </Reveal>
       </div>
     </section>
+
+      {/* Ponto de virada: o que a Vivara muda */}
+      <section className="bg-[#e9f0e1] py-24 md:py-32">
+        <div className="mx-auto max-w-5xl px-6 text-center">
+          <Reveal>
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-brand-green-dark">{L.turnTag}</p>
+            <h3 className="mx-auto mt-5 max-w-4xl font-serif text-4xl font-light leading-[1.1] tracking-tight md:text-6xl">
+              {L.closing}
+            </h3>
+          </Reveal>
+
+          {/* Quatro momentos que convergem num só historial */}
+          <div className="mx-auto mt-14 max-w-3xl">
+            <div className="grid grid-cols-4 gap-2 md:gap-4">
+              {L.steps.map((st, i) => (
+                <div key={st.when} className="rounded-2xl border border-black/10 bg-white/70 px-2 py-3 md:px-4">
+                  <p className="truncate text-[9px] uppercase tracking-[0.1em] text-brand-muted/60 md:text-[10px] md:tracking-[0.14em]">{st.when}</p>
+                  <p className="mt-0.5 truncate font-serif text-xs md:text-lg">{L.merge[i]}</p>
+                </div>
+              ))}
+            </div>
+            <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="h-14 w-full" aria-hidden="true">
+              {[12.5, 37.5, 62.5, 87.5].map((x, i) => (
+                <motion.path
+                  key={x}
+                  d={`M${x} 0 C${x} 14, 50 8, 50 24`}
+                  fill="none"
+                  stroke="#1a4d25"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 0.55 }}
+                  viewport={{ once: true, margin: "-80px" }}
+                  transition={{ duration: 0.7, delay: 0.15 * i }}
+                />
+              ))}
+            </svg>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.5, delay: 0.7 }}
+              className="mx-auto w-fit rounded-full bg-brand-green-dark px-8 py-3 font-serif text-xl text-white shadow-lg md:text-2xl"
+            >
+              {L.merged}
+            </motion.div>
+          </div>
+
+          <div className="mx-auto mt-16 grid max-w-4xl gap-10 text-left md:grid-cols-2 md:gap-14">
+            {L.closingFacts.map((f) => (
+              <Reveal key={f.source}>
+                <p className="font-serif text-6xl leading-none text-brand-green-dark">{f.stat}</p>
+                <Source fact={f.fact} source={f.source} url={f.url} />
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
