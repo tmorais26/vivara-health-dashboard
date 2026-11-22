@@ -3,10 +3,23 @@ import { useCallback, useEffect, useState } from "react";
 import { Download, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
-import { Field, ModalActions, PrimaryButton, SecondaryButton, SimpleModal, inputClass } from "@/components/portal/SimpleModal";
+import {
+  Field,
+  ModalActions,
+  PrimaryButton,
+  SecondaryButton,
+  SimpleModal,
+  inputClass,
+} from "@/components/portal/SimpleModal";
 import { useIdioma, useT } from "@/lib/i18n";
 import { e_admin, iniciais, useSessao } from "@/lib/sessao";
-import { dataHora, membrosDoEspaco, rotuloMembro, type MembroDb, type PedidoExportacaoDb } from "@/lib/dados";
+import {
+  dataHora,
+  membrosDoEspaco,
+  rotuloMembro,
+  type MembroDb,
+  type PedidoExportacaoDb,
+} from "@/lib/dados";
 
 export const Route = createFileRoute("/equipa")({
   head: () => ({ meta: [{ title: "Equipa — Vivara Health" }] }),
@@ -78,11 +91,17 @@ function EquipaPage() {
       <main className="mx-auto max-w-[960px] px-4 py-6 pb-24 sm:px-6 sm:py-10 lg:pb-10">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{atual.espaco.nome}</div>
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              {atual.espaco.nome}
+            </div>
             <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">{te.titulo}</h1>
           </div>
           {admin && (
-            <button type="button" onClick={() => setConvidarOpen(true)} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground hover:opacity-90">
+            <button
+              type="button"
+              onClick={() => setConvidarOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground hover:opacity-90"
+            >
               <UserPlus className="h-3.5 w-3.5" />
               {te.convidar}
             </button>
@@ -97,25 +116,50 @@ function EquipaPage() {
 
         {admin && (
           <section className="mb-6">
-            <h2 className="mb-2 text-[11px] uppercase tracking-wider text-muted-foreground">{te.pedidos}</h2>
+            <h2 className="mb-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+              {te.pedidos}
+            </h2>
             {pendentes.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-border bg-surface-raised px-5 py-4 text-sm text-muted-foreground">{te.semPedidos}</p>
+              <p className="rounded-2xl border border-dashed border-border bg-surface-raised px-5 py-4 text-sm text-muted-foreground">
+                {te.semPedidos}
+              </p>
             ) : (
               <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface-raised">
                 {pendentes.map((p) => (
                   <li key={p.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
                     <Download className="h-4 w-4 text-muted-foreground" />
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm text-foreground">{te.pedidoDe(nomeDe(p.requerente_id))}</div>
+                      <div className="text-sm text-foreground">
+                        {te.pedidoDe(nomeDe(p.requerente_id))}
+                      </div>
                       <div className="text-xs text-muted-foreground">
-                        {p.ambito === "tudo" ? te.ambitoTudo : te.ambitoUtente(nomesUtentes.get(p.utente_id ?? "") ?? "—")} · {dataHora(p.criado_em, idioma)}
+                        {p.ambito === "tudo"
+                          ? te.ambitoTudo
+                          : te.ambitoUtente(nomesUtentes.get(p.utente_id ?? "") ?? "—")}{" "}
+                        · {dataHora(p.criado_em, idioma)}
                         {p.motivo ? ` · ${p.motivo}` : ""}
                       </div>
                     </div>
-                    <button type="button" onClick={() => chamar(supabase.rpc("decidir_exportacao", { p_pedido: p.id, p_aprovar: false }))} className="rounded-full border border-border px-3 py-1.5 text-xs text-foreground hover:bg-accent">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        chamar(
+                          supabase.rpc("decidir_exportacao", { p_pedido: p.id, p_aprovar: false }),
+                        )
+                      }
+                      className="rounded-full border border-border px-3 py-1.5 text-xs text-foreground hover:bg-accent"
+                    >
                       {te.recusar}
                     </button>
-                    <button type="button" onClick={() => chamar(supabase.rpc("decidir_exportacao", { p_pedido: p.id, p_aprovar: true }))} className="rounded-full bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        chamar(
+                          supabase.rpc("decidir_exportacao", { p_pedido: p.id, p_aprovar: true }),
+                        )
+                      }
+                      className="rounded-full bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90"
+                    >
                       {te.aprovar}
                     </button>
                   </li>
@@ -124,12 +168,22 @@ function EquipaPage() {
             )}
             {decididos.length > 0 && (
               <details className="mt-2">
-                <summary className="cursor-pointer text-xs text-muted-foreground">{te.historico}</summary>
+                <summary className="cursor-pointer text-xs text-muted-foreground">
+                  {te.historico}
+                </summary>
                 <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
                   {decididos.map((p) => (
                     <li key={p.id}>
-                      {nomeDe(p.requerente_id)} · {p.ambito === "tudo" ? te.ambitoTudo : te.ambitoUtente(nomesUtentes.get(p.utente_id ?? "") ?? "—")} ·{" "}
-                      {p.estado === "aprovado" ? te.aprovado : p.estado === "recusado" ? te.recusado : te.usado}
+                      {nomeDe(p.requerente_id)} ·{" "}
+                      {p.ambito === "tudo"
+                        ? te.ambitoTudo
+                        : te.ambitoUtente(nomesUtentes.get(p.utente_id ?? "") ?? "—")}{" "}
+                      ·{" "}
+                      {p.estado === "aprovado"
+                        ? te.aprovado
+                        : p.estado === "recusado"
+                          ? te.recusado
+                          : te.usado}
                       {p.decidido_por ? ` (${nomeDe(p.decidido_por)})` : ""}
                     </li>
                   ))}
@@ -139,36 +193,73 @@ function EquipaPage() {
           </section>
         )}
 
+        {admin && <ResumoRecomendacoesClinica espacoId={atual.espaco_id} />}
+
         <section>
-          <h2 className="mb-2 text-[11px] uppercase tracking-wider text-muted-foreground">{te.membros}</h2>
+          <h2 className="mb-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+            {te.membros}
+          </h2>
           <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface-raised">
             {membros.map((m) => {
               const eu = m.id === atual.id;
-              const podeGerir = admin && !eu && m.papel_admin !== "dona" && (m.papel_admin !== "manager" || souDona);
+              const podeGerir =
+                admin &&
+                !eu &&
+                m.papel_admin !== "dona" &&
+                (m.papel_admin !== "manager" || souDona);
               return (
-                <li key={m.id} className={`flex flex-wrap items-center gap-3 px-5 py-3 ${m.estado === "bloqueado" ? "opacity-60" : ""}`}>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-[11px] font-medium text-foreground">{iniciais(m.nome_exibicao)}</span>
+                <li
+                  key={m.id}
+                  className={`flex flex-wrap items-center gap-3 px-5 py-3 ${m.estado === "bloqueado" ? "opacity-60" : ""}`}
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-[11px] font-medium text-foreground">
+                    {iniciais(m.nome_exibicao)}
+                  </span>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm text-foreground">
                       {rotuloMembro(m, rot)}
                       {eu && <span className="text-muted-foreground"> ({te.tu})</span>}
                     </div>
                     <div className="flex flex-wrap gap-1.5 text-[10.5px]">
-                      {m.papel_admin && <span className="rounded-full bg-accent px-2 py-0.5 text-foreground">{m.papel_admin === "dona" ? te.dona : te.manager}</span>}
-                      <span className={`rounded-full px-2 py-0.5 ${m.estado === "ativo" ? "bg-state-ok-soft text-state-ok" : "bg-state-alert-soft text-state-alert"}`}>
+                      {m.papel_admin && (
+                        <span className="rounded-full bg-accent px-2 py-0.5 text-foreground">
+                          {m.papel_admin === "dona" ? te.dona : te.manager}
+                        </span>
+                      )}
+                      <span
+                        className={`rounded-full px-2 py-0.5 ${m.estado === "ativo" ? "bg-state-ok-soft text-state-ok" : "bg-state-alert-soft text-state-alert"}`}
+                      >
                         {m.estado === "ativo" ? te.ativo : te.bloqueado}
                       </span>
                     </div>
                   </div>
                   {souDona && !eu && m.papel_admin !== "dona" && (
-                    <button type="button" onClick={() => chamar(supabase.rpc("definir_manager", { p_membro: m.id, p_manager: m.papel_admin !== "manager" }))} className="rounded-full border border-border px-3 py-1.5 text-xs text-foreground hover:bg-accent">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        chamar(
+                          supabase.rpc("definir_manager", {
+                            p_membro: m.id,
+                            p_manager: m.papel_admin !== "manager",
+                          }),
+                        )
+                      }
+                      className="rounded-full border border-border px-3 py-1.5 text-xs text-foreground hover:bg-accent"
+                    >
                       {m.papel_admin === "manager" ? te.retirarManager : te.tornarManager}
                     </button>
                   )}
                   {podeGerir && (
                     <button
                       type="button"
-                      onClick={() => chamar(supabase.rpc("definir_estado_membro", { p_membro: m.id, p_estado: m.estado === "ativo" ? "bloqueado" : "ativo" }))}
+                      onClick={() =>
+                        chamar(
+                          supabase.rpc("definir_estado_membro", {
+                            p_membro: m.id,
+                            p_estado: m.estado === "ativo" ? "bloqueado" : "ativo",
+                          }),
+                        )
+                      }
                       className={`rounded-full px-3 py-1.5 text-xs ${m.estado === "ativo" ? "text-state-alert hover:bg-state-alert-soft" : "border border-border text-foreground hover:bg-accent"}`}
                     >
                       {m.estado === "ativo" ? te.bloquear : te.desbloquear}
@@ -181,12 +272,53 @@ function EquipaPage() {
         </section>
       </main>
       <MobileNavTabs />
-      {admin && <ConvidarModal open={convidarOpen} onClose={() => setConvidarOpen(false)} espacoId={atual.espaco_id} onAdicionado={carregar} />}
+      {admin && (
+        <ConvidarModal
+          open={convidarOpen}
+          onClose={() => setConvidarOpen(false)}
+          espacoId={atual.espaco_id}
+          onAdicionado={carregar}
+        />
+      )}
     </PortalShell>
   );
 }
 
-function ConvidarModal({ open, onClose, espacoId, onAdicionado }: { open: boolean; onClose: () => void; espacoId: string; onAdicionado: () => void }) {
+// Só totais da equipa: nunca quem recomendou nem quem entrou.
+function ResumoRecomendacoesClinica({ espacoId }: { espacoId: string }) {
+  const tr = useT().recomendar;
+  const [r, setR] = useState<{ profissionais: number; utentes: number; medicos: number } | null>(
+    null,
+  );
+  useEffect(() => {
+    void supabase.rpc("resumo_recomendacoes_clinica", { p_espaco: espacoId }).then(({ data }) => {
+      setR((data as { profissionais: number; utentes: number; medicos: number } | null) ?? null);
+    });
+  }, [espacoId]);
+  if (!r) return null;
+  return (
+    <section className="mb-6 rounded-2xl border border-border bg-surface-raised p-5">
+      <h2 className="text-[11px] uppercase tracking-wider text-muted-foreground">
+        {tr.clinicaTitulo}
+      </h2>
+      <p className="mt-2 text-sm text-foreground">
+        {tr.clinicaTexto(r.profissionais, r.utentes, r.medicos)}
+      </p>
+    </section>
+  );
+}
+
+function ConvidarModal({
+  open,
+  onClose,
+  espacoId,
+  onAdicionado,
+}: {
+  open: boolean;
+  onClose: () => void;
+  espacoId: string;
+  onAdicionado: () => void;
+}) {
   const t = useT();
   const te = t.equipa;
   const tc = t.comecar;
@@ -199,7 +331,11 @@ function ConvidarModal({ open, onClose, espacoId, onAdicionado }: { open: boolea
 
   async function adicionar(e: React.FormEvent) {
     e.preventDefault();
-    if (!/^\S+@\S+\.\S+$/.test(email.trim()) || !nome.trim() || (funcao === "profissional" && !profissao.trim())) {
+    if (
+      !/^\S+@\S+\.\S+$/.test(email.trim()) ||
+      !nome.trim() ||
+      (funcao === "profissional" && !profissao.trim())
+    ) {
       return setErro(t.conta.erroObrigatorio);
     }
     setAGuardar(true);
@@ -213,7 +349,13 @@ function ConvidarModal({ open, onClose, espacoId, onAdicionado }: { open: boolea
     setAGuardar(false);
     if (error) {
       const m = error.message ?? "";
-      return setErro(m.includes("Não existe conta") ? te.erroConta : m.includes("duplicate") ? te.erroJaMembro : t.conta.erroGenerico);
+      return setErro(
+        m.includes("Não existe conta")
+          ? te.erroConta
+          : m.includes("duplicate")
+            ? te.erroJaMembro
+            : t.conta.erroGenerico,
+      );
     }
     setEmail("");
     setNome("");
@@ -224,16 +366,37 @@ function ConvidarModal({ open, onClose, espacoId, onAdicionado }: { open: boolea
   }
 
   return (
-    <SimpleModal open={open} onClose={onClose} title={te.convidar} description={te.convidarTexto} width="sm">
+    <SimpleModal
+      open={open}
+      onClose={onClose}
+      title={te.convidar}
+      description={te.convidarTexto}
+      width="sm"
+    >
       <form onSubmit={adicionar} noValidate className="space-y-3">
         <Field label={te.email}>
-          <input type="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" />
+          <input
+            type="email"
+            className={inputClass}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="off"
+          />
         </Field>
         <Field label={te.nome}>
-          <input className={inputClass} value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="off" />
+          <input
+            className={inputClass}
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            autoComplete="off"
+          />
         </Field>
         <Field label={te.funcao}>
-          <select className={inputClass} value={funcao} onChange={(e) => setFuncao(e.target.value as typeof funcao)}>
+          <select
+            className={inputClass}
+            value={funcao}
+            onChange={(e) => setFuncao(e.target.value as typeof funcao)}
+          >
             <option value="medico">{tc.funcaoMedico}</option>
             <option value="profissional">{tc.funcaoProfissional}</option>
             <option value="administrativo">{t.ficha.administrativo}</option>
@@ -241,7 +404,12 @@ function ConvidarModal({ open, onClose, espacoId, onAdicionado }: { open: boolea
         </Field>
         {funcao === "profissional" && (
           <Field label={te.profissao}>
-            <input className={inputClass} value={profissao} onChange={(e) => setProfissao(e.target.value)} placeholder={tc.profissaoPlaceholder} />
+            <input
+              className={inputClass}
+              value={profissao}
+              onChange={(e) => setProfissao(e.target.value)}
+              placeholder={tc.profissaoPlaceholder}
+            />
           </Field>
         )}
         {erro && (
@@ -251,7 +419,9 @@ function ConvidarModal({ open, onClose, espacoId, onAdicionado }: { open: boolea
         )}
         <ModalActions>
           <SecondaryButton onClick={onClose}>{te.cancelar}</SecondaryButton>
-          <PrimaryButton type="submit">{aGuardar ? t.conta.aProcessar : te.adicionar}</PrimaryButton>
+          <PrimaryButton type="submit">
+            {aGuardar ? t.conta.aProcessar : te.adicionar}
+          </PrimaryButton>
         </ModalActions>
       </form>
     </SimpleModal>

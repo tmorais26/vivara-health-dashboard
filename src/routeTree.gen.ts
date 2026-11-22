@@ -22,6 +22,7 @@ import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as NovaPalavraPasseRouteImport } from './routes/nova-palavra-passe'
 import { Route as ReconsentimentoRouteImport } from './routes/reconsentimento'
 import { Route as ConsultaEventoIdRouteImport } from './routes/consulta.$eventoId'
+import { Route as DefinicoesRecomendarRouteImport } from './routes/definicoes_.recomendar'
 import { Route as UtentesUtenteIdRouteImport } from './routes/utentes.$utenteId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -89,6 +90,11 @@ const ConsultaEventoIdRoute = ConsultaEventoIdRouteImport.update({
   path: '/consulta/$eventoId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DefinicoesRecomendarRoute = DefinicoesRecomendarRouteImport.update({
+  id: '/definicoes_/recomendar',
+  path: '/definicoes/recomendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UtentesUtenteIdRoute = UtentesUtenteIdRouteImport.update({
   id: '/utentes/$utenteId',
   path: '/utentes/$utenteId',
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/nova-palavra-passe': typeof NovaPalavraPasseRoute
   '/reconsentimento': typeof ReconsentimentoRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
+  '/definicoes/recomendar': typeof DefinicoesRecomendarRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
 export interface FileRoutesByTo {
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/nova-palavra-passe': typeof NovaPalavraPasseRoute
   '/reconsentimento': typeof ReconsentimentoRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
+  '/definicoes/recomendar': typeof DefinicoesRecomendarRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
 export interface FileRoutesById {
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/nova-palavra-passe': typeof NovaPalavraPasseRoute
   '/reconsentimento': typeof ReconsentimentoRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
+  '/definicoes_/recomendar': typeof DefinicoesRecomendarRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
 export interface FileRouteTypes {
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/nova-palavra-passe'
     | '/reconsentimento'
     | '/consulta/$eventoId'
+    | '/definicoes/recomendar'
     | '/utentes/$utenteId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/nova-palavra-passe'
     | '/reconsentimento'
     | '/consulta/$eventoId'
+    | '/definicoes/recomendar'
     | '/utentes/$utenteId'
   id:
     | '__root__'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/nova-palavra-passe'
     | '/reconsentimento'
     | '/consulta/$eventoId'
+    | '/definicoes_/recomendar'
     | '/utentes/$utenteId'
   fileRoutesById: FileRoutesById
 }
@@ -209,6 +221,7 @@ export interface RootRouteChildren {
   NovaPalavraPasseRoute: typeof NovaPalavraPasseRoute
   ReconsentimentoRoute: typeof ReconsentimentoRoute
   ConsultaEventoIdRoute: typeof ConsultaEventoIdRoute
+  DefinicoesRecomendarRoute: typeof DefinicoesRecomendarRoute
   UtentesUtenteIdRoute: typeof UtentesUtenteIdRoute
 }
 
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsultaEventoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/definicoes_/recomendar': {
+      id: '/definicoes_/recomendar'
+      path: '/definicoes/recomendar'
+      fullPath: '/definicoes/recomendar'
+      preLoaderRoute: typeof DefinicoesRecomendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/utentes/$utenteId': {
       id: '/utentes/$utenteId'
       path: '/utentes/$utenteId'
@@ -329,6 +349,7 @@ const rootRouteChildren: RootRouteChildren = {
   NovaPalavraPasseRoute: NovaPalavraPasseRoute,
   ReconsentimentoRoute: ReconsentimentoRoute,
   ConsultaEventoIdRoute: ConsultaEventoIdRoute,
+  DefinicoesRecomendarRoute: DefinicoesRecomendarRoute,
   UtentesUtenteIdRoute: UtentesUtenteIdRoute,
 }
 export const routeTree = rootRouteImport

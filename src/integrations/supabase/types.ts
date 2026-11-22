@@ -41,6 +41,24 @@ export type Database = {
         Update: { anexos?: Json; autor_membro_id?: string | null; criada_em?: string; do_utente?: boolean; espaco_id?: string; id?: string; texto?: string; utente_id?: string }
         Relationships: Rel[]
       }
+      codigos_recomendacao: {
+        Row: { codigo: string; criado_em: string; titular: string; user_id: string }
+        Insert: { codigo: string; criado_em?: string; titular: string; user_id: string }
+        Update: { codigo?: string; criado_em?: string; titular?: string; user_id?: string }
+        Relationships: Rel[]
+      }
+      convites_app: {
+        Row: { convidante_id: string; criado_em: string; token: string; usado_em: string | null; usado_por: string | null; utente_id: string | null }
+        Insert: { convidante_id: string; criado_em?: string; token?: string; usado_em?: string | null; usado_por?: string | null; utente_id?: string | null }
+        Update: { convidante_id?: string; criado_em?: string; token?: string; usado_em?: string | null; usado_por?: string | null; utente_id?: string | null }
+        Relationships: Rel[]
+      }
+      recomendacao_declaracoes: {
+        Row: { aceite_em: string; ip: string | null; texto: string; user_id: string }
+        Insert: { aceite_em?: string; ip?: string | null; texto: string; user_id: string }
+        Update: { aceite_em?: string; ip?: string | null; texto?: string; user_id?: string }
+        Relationships: Rel[]
+      }
       consultas: {
         Row: { criado_em: string; criado_por: string | null; duracao_min: number; espaco_id: string; estado: string; id: string; inicio: string; motivo: string | null; profissional_id: string; tipo: string; utente_id: string }
         Insert: { criado_em?: string; criado_por?: string | null; duracao_min?: number; espaco_id: string; estado?: string; id?: string; inicio: string; motivo?: string | null; profissional_id: string; tipo?: string; utente_id: string }
@@ -153,6 +171,13 @@ export type Database = {
       pedir_exportacao: { Args: { p_ambito: string; p_espaco: string; p_motivo?: string; p_utente?: string }; Returns: string }
       segue_utente: { Args: { p_utente: string }; Returns: boolean }
       usar_exportacao: { Args: { p_pedido: string }; Returns: undefined }
+      meu_codigo: { Args: never; Returns: string }
+      validar_codigo: { Args: { p_codigo: string }; Returns: boolean }
+      ja_declarou_recomendacao: { Args: never; Returns: boolean }
+      resumo_recomendacoes: { Args: never; Returns: Json }
+      resumo_recomendacoes_clinica: { Args: { p_espaco: string }; Returns: Json }
+      registar_recomendacao: { Args: { p_codigo: string; p_convidado: string; p_convidado_tipo: string }; Returns: string }
+      usar_codigo: { Args: { p_codigo: string }; Returns: string }
     }
     Enums: {
       user_role: "physician" | "patient"

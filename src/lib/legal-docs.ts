@@ -6,11 +6,15 @@ export const LEGAL_DOCS = {
     versao: "termos-v1",
   },
   acordo: {
-    url: import.meta.env.VITE_LEGAL_ACORDO_URL ?? "https://dist-coral-one-31.vercel.app/acordo-medicos",
+    url:
+      import.meta.env.VITE_LEGAL_ACORDO_URL ??
+      "https://dist-coral-one-31.vercel.app/acordo-medicos",
     versao: "acordo-v1",
   },
   privacidade: {
-    url: import.meta.env.VITE_LEGAL_PRIVACIDADE_URL ?? "https://dist-coral-one-31.vercel.app/privacidade",
+    url:
+      import.meta.env.VITE_LEGAL_PRIVACIDADE_URL ??
+      "https://dist-coral-one-31.vercel.app/privacidade",
     versao: "privacidade-v1",
   },
 } as const;
@@ -20,3 +24,15 @@ export const CAIXA_IDS = {
   habilitacao: "declaracao-habilitacao",
   marketing: "marketing-email",
 } as const;
+
+// Ligações de convite (configuráveis; o domínio final será o da Vivara).
+export const URL_APP_UTENTE =
+  import.meta.env.VITE_APP_UTENTE_URL ?? "https://dist-coral-one-31.vercel.app";
+
+export function ligacaoUtente(codigo: string) {
+  return `${URL_APP_UTENTE}/registo?codigo=${encodeURIComponent(codigo)}`;
+}
+
+export function ligacaoColega(codigo: string, origem: string) {
+  return `${origem}/auth?codigo=${encodeURIComponent(codigo)}`;
+}
