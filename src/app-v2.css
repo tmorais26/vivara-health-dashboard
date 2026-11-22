@@ -1980,3 +1980,14 @@ button.rv-toggle-row .rv-toggle-sub{color:var(--fg-50);}
 .rv-ref-badge[data-state="completed"]{background:var(--ok-soft);color:var(--ok);}
 .rv-ref-when{font-size:13px;color:var(--fg-70);}
 .rv-sub-free{text-align:center;font-size:15px;font-weight:600;color:var(--ok);padding:16px;}
+
+/* ── Registos: lista ou calendário ── */
+.rv-rec-views{display:flex;gap:6px;margin:0 20px 12px;padding:4px;border-radius:14px;background:var(--bg-elev-2);border:1px solid var(--line);}
+.rv-rec-view{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 10px;border-radius:10px;
+  border:none;background:transparent;color:var(--fg-70);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;
+}
+.rv-rec-view svg{width:16px;height:16px;}
+.rv-rec-view[data-active="true"]{background:var(--fg);color:var(--bg);}
+.rv-rec-view:focus-visible{outline:2px solid var(--lime);outline-offset:2px;}
+.rv-rec-legend{flex-wrap:wrap;gap:10px 14px;padding:0 20px;}

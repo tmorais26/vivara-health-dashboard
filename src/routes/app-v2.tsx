@@ -1767,7 +1767,7 @@ const CONSULTA_ENTRIES: RecordEntry[] = [
   { id: "c-2026-05-12", type: "consulta", origin: "clinic", iso: "2026-05-12T14:30:00", go: "consultas",
     sourcePt: "Clínica Lumiar", sourceEn: "Lumiar Clinic",
     titlePt: "Discussão sobre TRH personalizada", titleEn: "Personalised HRT discussion",
-    subPt: "Agendada · 14:30",                     subEn: "Scheduled · 14:30" },
+    subPt: "Agendada · 14:30 · marcada pelo médico", subEn: "Scheduled · 14:30 · booked by the doctor" },
   { id: "c-2026-05-20", type: "consulta", origin: "clinic", iso: "2026-05-20T09:00:00", go: "calendario",
     sourcePt: "Clínica Lumiar", sourceEn: "Lumiar Clinic",
     titlePt: "Colheita de sangue", titleEn: "Blood draw",
@@ -1886,6 +1886,11 @@ function RegistosScreen() {
   const [filter, setFilter] = useState<RecordType | "all">("all");
   const [range, setRange] = useState("all");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  // Lista ou calendário: os mesmos registos, vistos por mês.
+  const [view, setView] = useState<"lista" | "calendario">("lista");
+  const todayKey = dayKey(APP_TODAY);
+  const [ym, setYm] = useState({ year: APP_TODAY.getFullYear(), month: APP_TODAY.getMonth() });
+  const [selDay, setSelDay] = useState(todayKey);
   const uploads = useUploads();
 
   const all = buildTimeline(uploads);
@@ -1897,15 +1902,25 @@ function RegistosScreen() {
   const months = RANGE_OPTIONS.find((r) => r.id === range)?.months ?? null;
   const cutoff = months == null ? null : new Date(new Date(APP_TODAY).setMonth(APP_TODAY.getMonth() - months));
 
-  const entries = all.filter((e) => {
+  const matches = (e: RecordEntry) => {
     if (filter !== "all" && e.type !== filter) return false;
-    // Entradas futuras (consultas agendadas) escapam ao corte: não faz sentido
-    // "últimos 30 dias" esconder a consulta da semana que vem.
-    if (cutoff && new Date(e.iso) < cutoff && new Date(e.iso) <= APP_TODAY) return false;
     if (!term) return true;
     const hay = norm(`${e.titlePt} ${e.titleEn} ${e.subPt} ${e.subEn} ${e.sourcePt ?? ""} ${e.sourceEn ?? ""} ${RECORD_META[e.type].pt} ${RECORD_META[e.type].en}`);
     return hay.includes(norm(term));
+  };
+  const entries = all.filter((e) => {
+    if (!matches(e)) return false;
+    // Entradas futuras (consultas agendadas) escapam ao corte: não faz sentido
+    // "últimos 30 dias" esconder a consulta da semana que vem.
+    if (cutoff && new Date(e.iso) < cutoff && new Date(e.iso) <= APP_TODAY) return false;
+    return true;
   });
+  // No calendário o período não se aplica: navega-se pelos meses.
+  const calEntries = all.filter(matches);
+  const onDay = (key: string) => calEntries.filter((e) => dayOf(e.iso) === key);
+  const grid = monthGrid(ym.year, ym.month);
+  const weekdays = lang === "pt" ? ["S", "T", "Q", "Q", "S", "S", "D"] : ["M", "T", "W", "T", "F", "S", "S"];
+  const typeOrder: RecordType[] = ["analise", "consulta", "sintoma", "medicacao"];
 
   // Agrupamento cronológico: o que ainda está para vir fica destacado no topo,
   // o resto agrupa por mês.
@@ -1940,6 +1955,31 @@ function RegistosScreen() {
 
   const fmtDate = (iso: string) => fmtDay(iso, lang, true);
 
+  const row = (e: RecordEntry) => {
+    const meta = RECORD_META[e.type];
+    return (
+                        <button key={e.id} type="button" className="rv-rec-row" onClick={() => e.go && go(e.go)}>
+                          <span className="rv-rec-bar" style={{background: meta.color}}/>
+                          <span className="rv-rec-origin" data-origin={e.origin}
+                            aria-label={e.origin === "upload" ? L("Documento carregado","Uploaded document") : e.origin === "manual" ? L("Registo manual","Manual entry") : L("Equipa clínica","Clinical team")}>
+                            {ORIGIN_ICON[e.origin]}
+                          </span>
+                          <span className="rv-rec-body">
+                            <span className="rv-rec-top">
+                              <span className="rv-rec-tag" style={{color: meta.color, borderColor: meta.color}}>{L(meta.pt, meta.en)}</span>
+                              <span className="rv-rec-date">{fmtDate(e.iso)}</span>
+                            </span>
+                            <span className="rv-rec-title">{L(e.titlePt, e.titleEn)}</span>
+                            <span className="rv-rec-sub">{L(e.subPt, e.subEn)}</span>
+                            {(e.sourcePt || e.sourceEn) && (
+                              <span className="rv-rec-source">{L(e.sourcePt ?? "", e.sourceEn ?? "")}</span>
+                            )}
+                          </span>
+                          <span className="rv-chev">{Icon.chev}</span>
+                        </button>
+                      );
+  };
+
   return (
     <div className="rv-screen">
       <StatusBar />
@@ -1959,6 +1999,15 @@ function RegistosScreen() {
           />
         </div>
 
+        <div className="rv-rec-views" role="tablist" aria-label={L("Vista","View")}>
+          <button type="button" role="tab" aria-selected={view === "lista"} className="rv-rec-view" data-active={view === "lista" || undefined} onClick={() => setView("lista")}>
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 4 H14 M5.5 8 H14 M5.5 12 H14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><circle cx="2.5" cy="4" r="1.1" fill="currentColor"/><circle cx="2.5" cy="8" r="1.1" fill="currentColor"/><circle cx="2.5" cy="12" r="1.1" fill="currentColor"/></svg><span>{L("Lista","List")}</span>
+          </button>
+          <button type="button" role="tab" aria-selected={view === "calendario"} className="rv-rec-view" data-active={view === "calendario" || undefined} onClick={() => setView("calendario")}>
+            {CalIcon}<span>{L("Calendário","Calendar")}</span>
+          </button>
+        </div>
+
         <div className="rv-panel-chips">
           {filters.map((f) => (
             <button key={f.id} className="rv-period-chip" data-active={filter === f.id || undefined} onClick={() => setFilter(f.id)}>
@@ -1968,6 +2017,7 @@ function RegistosScreen() {
           ))}
         </div>
 
+        {view === "lista" ? (<>
         <div className="rv-panel-chips rv-range-chips">
           <span className="rv-range-label">{L("Período","Period")}</span>
           {RANGE_OPTIONS.map((r) => (
@@ -1997,36 +2047,47 @@ function RegistosScreen() {
                 </button>
                 {isOpen && (
                   <div className="rv-rec-list">
-                    {g.items.map((e) => {
-                      const meta = RECORD_META[e.type];
-                      return (
-                        <button key={e.id} type="button" className="rv-rec-row" onClick={() => e.go && go(e.go)}>
-                          <span className="rv-rec-bar" style={{background: meta.color}}/>
-                          <span className="rv-rec-origin" data-origin={e.origin}
-                            aria-label={e.origin === "upload" ? L("Documento carregado","Uploaded document") : e.origin === "manual" ? L("Registo manual","Manual entry") : L("Equipa clínica","Clinical team")}>
-                            {ORIGIN_ICON[e.origin]}
-                          </span>
-                          <span className="rv-rec-body">
-                            <span className="rv-rec-top">
-                              <span className="rv-rec-tag" style={{color: meta.color, borderColor: meta.color}}>{L(meta.pt, meta.en)}</span>
-                              <span className="rv-rec-date">{fmtDate(e.iso)}</span>
-                            </span>
-                            <span className="rv-rec-title">{L(e.titlePt, e.titleEn)}</span>
-                            <span className="rv-rec-sub">{L(e.subPt, e.subEn)}</span>
-                            {(e.sourcePt || e.sourceEn) && (
-                              <span className="rv-rec-source">{L(e.sourcePt ?? "", e.sourceEn ?? "")}</span>
-                            )}
-                          </span>
-                          <span className="rv-chev">{Icon.chev}</span>
-                        </button>
-                      );
-                    })}
+                    {g.items.map(row)}
                   </div>
                 )}
               </div>
             );
           })
         )}
+
+        </>) : (<>
+          <div className="rv-cal-nav">
+            <button type="button" className="rv-cal-nav-btn" onClick={() => setYm(shiftMonth(ym.year, ym.month, -1))} aria-label={L("Mês anterior", "Previous month")}>‹</button>
+            <div className="rv-cal-month" aria-live="polite">{monthName(ym.month, lang)} {ym.year}</div>
+            <button type="button" className="rv-cal-nav-btn" onClick={() => setYm(shiftMonth(ym.year, ym.month, 1))} aria-label={L("Mês seguinte", "Next month")}>›</button>
+          </div>
+          <div className="rv-cal-grid" role="grid" aria-label={`${monthName(ym.month, lang)} ${ym.year}`}>
+            {weekdays.map((w, i) => <div key={i} className="rv-cal-wd" aria-hidden="true">{w}</div>)}
+            {grid.map((c) => {
+              const items = onDay(c.key);
+              const types = typeOrder.filter((t) => items.some((e) => e.type === t));
+              return (
+                <button key={c.key} type="button" className="rv-cal-cell"
+                  data-in={c.inMonth || undefined} data-today={c.key === todayKey || undefined} data-sel={c.key === selDay || undefined}
+                  aria-pressed={c.key === selDay}
+                  aria-label={`${c.day} ${monthName(new Date(c.key + "T00:00").getMonth(), lang)}${items.length ? `, ${items.length} ${items.length === 1 ? L("registo", "record") : L("registos", "records")}` : ""}`}
+                  onClick={() => setSelDay(c.key)}>
+                  <span className="rv-cal-num">{c.day}</span>
+                  <span className="rv-cal-dots" aria-hidden="true">
+                    {types.map((t) => <span key={t} className="rv-cal-dot" style={{background: RECORD_META[t].color}}/>)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="rv-cal-legend rv-rec-legend">
+            {typeOrder.map((t) => <span key={t}><span className="rv-cal-dot" style={{background: RECORD_META[t].color}}/>{L(RECORD_META[t].pt, RECORD_META[t].en)}</span>)}
+          </div>
+          <div className="rv-sub-section-head">{fmtDay(selDay, lang, true)}</div>
+          {onDay(selDay).length === 0
+            ? <div className="rv-cal-empty">{L("Sem registos neste dia.", "No records on this day.")}</div>
+            : <div className="rv-rec-list">{onDay(selDay).map(row)}</div>}
+        </>)}
 
         <div style={{height: 90}}/>
       </div>
@@ -3029,7 +3090,7 @@ function CalendarioScreen() {
         </div>
 
         <div className="rv-cal-legend">
-          <span><span className="rv-cal-dot" data-kind="clinic"/>{L("Marcada pela clínica", "Booked by the clinic")}</span>
+          <span><span className="rv-cal-dot" data-kind="clinic"/>{L("Marcada pelo médico", "Booked by the doctor")}</span>
           <span><span className="rv-cal-dot" data-kind="mine"/>{L("Lembrete seu", "Your reminder")}</span>
         </div>
 
