@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useId, useState } from "react";
-import { ShieldCheck } from "lucide-react";
+import { ArrowLeft, Building2, Mail, ShieldCheck, Stethoscope } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { setIdioma, useIdioma, useT } from "@/lib/i18n";
 import {
@@ -10,6 +10,7 @@ import {
   type ConsentState,
 } from "@/components/auth/ConsentFields";
 import { gravarAceitacao } from "@/lib/consent-client";
+import { URL_APP_UTENTE } from "@/lib/legal-docs";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -18,8 +19,10 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Acesso à plataforma Vivara Health." },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { codigo?: string } =>
-    typeof s.codigo === "string" ? { codigo: s.codigo } : {},
+  validateSearch: (s: Record<string, unknown>): { codigo?: string; saiu?: number } => ({
+    ...(typeof s.codigo === "string" ? { codigo: s.codigo } : {}),
+    ...(s.saiu ? { saiu: 1 } : {}),
+  }),
   component: AuthPage,
 });
 
@@ -98,15 +101,25 @@ function mensagemErroAuth(err: unknown, c: ReturnType<typeof useT>["conta"]): st
 }
 
 type Erros = Partial<
-  Record<"nome" | "email" | "palavraPasse" | "especialidade" | "cedula", string>
+  Record<
+    "nome" | "email" | "palavraPasse" | "especialidade" | "cedula" | "profissao" | "nomeClinica",
+    string
+  >
 >;
+type Plano = "individual" | "clinica" | "convidado";
+type Funcao = "medico" | "profissional" | "administrativo";
 
 function AuthPage() {
   const t = useT();
   const idioma = useIdioma();
   const textos = useConsentTextos();
   const navigate = useNavigate();
-  const { codigo: codigoUrl } = Route.useSearch();
+  const { codigo: codigoUrl, saiu } = Route.useSearch();
+  const [plano, setPlano] = useState<Plano | null>(null);
+  const [funcao, setFuncao] = useState<Funcao>("medico");
+  const [profissao, setProfissao] = useState("");
+  const [nomeClinica, setNomeClinica] = useState("");
+  const [mostrarCodigo, setMostrarCodigo] = useState(!!codigoUrl);
   const [mode, setMode] = useState<"login" | "signup" | "recuperar">(
     codigoUrl ? "signup" : "login",
   );
@@ -129,7 +142,7 @@ function AuthPage() {
   const [erros, setErros] = useState<Erros>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(saiu ? t.conta.saiu : null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -158,8 +171,12 @@ function AuthPage() {
     const req = t.conta.erroObrigatorio;
     if (mode === "signup") {
       if (!nome.trim()) e.nome = req;
-      if (!especialidade.trim()) e.especialidade = req;
-      if (!cedula.trim()) e.cedula = req;
+      if (funcao === "medico") {
+        if (!especialidade.trim()) e.especialidade = req;
+        if (!cedula.trim()) e.cedula = req;
+      }
+      if (funcao === "profissional" && !profissao.trim()) e.profissao = req;
+      if (plano === "clinica" && !nomeClinica.trim()) e.nomeClinica = req;
     }
     if (!email.trim()) e.email = req;
     else if (!/^\S+@\S+\.\S+$/.test(email.trim())) e.email = t.conta.erroEmail;
@@ -190,9 +207,14 @@ function AuthPage() {
               role: "physician",
               full_name: nome.trim(),
               nome: nome.trim(),
-              especialidade: especialidade.trim(),
-              cedula: cedula.trim(),
-              clinica: clinica.trim() || null,
+              especialidade: funcao === "medico" ? especialidade.trim() : profissao.trim(),
+              cedula: funcao === "administrativo" ? "" : cedula.trim(),
+              clinica: plano === "clinica" ? nomeClinica.trim() : clinica.trim() || null,
+              // Escolha do primeiro passo: o espaço de trabalho é criado sozinho no primeiro acesso.
+              plano,
+              funcao,
+              profissao: funcao === "profissional" ? profissao.trim() : null,
+              nome_clinica: plano === "clinica" ? nomeClinica.trim() : null,
               marketing_opt_in: consent.marketing,
               codigo_convite: codigoEstado === "valido" ? codigoConvite.trim() : null,
             },
@@ -224,6 +246,8 @@ function AuthPage() {
 
   function trocarModo(m: "login" | "signup" | "recuperar") {
     setMode(m);
+    setPlano(null);
+    setInfo(null);
     setError(null);
     setErros({});
     setTentou(false);
@@ -270,15 +294,111 @@ function AuthPage() {
             {mode === "login"
               ? t.conta.subEntrar
               : mode === "signup"
-                ? t.conta.subCriar
+                ? plano
+                  ? t.conta.subCriarDados
+                  : t.conta.subCriar
                 : t.conta.recuperarSub}
           </p>
 
           {mode === "recuperar" ? (
             <RecuperarPalavraPasse emailInicial={email} onVoltar={() => trocarModo("login")} />
+          ) : mode === "signup" && !plano ? (
+            <>
+              <div className="mt-5 space-y-2">
+                <OpcaoPlano
+                  icon={<Stethoscope className="h-5 w-5" />}
+                  titulo={t.comecar.individualTitulo}
+                  texto={t.comecar.individualTexto}
+                  onClick={() => {
+                    setPlano("individual");
+                    setFuncao("medico");
+                  }}
+                />
+                <OpcaoPlano
+                  icon={<Building2 className="h-5 w-5" />}
+                  titulo={t.comecar.clinicaTitulo}
+                  texto={t.comecar.clinicaTexto}
+                  onClick={() => setPlano("clinica")}
+                />
+                <OpcaoPlano
+                  icon={<Mail className="h-5 w-5" />}
+                  titulo={t.comecar.convidadoTitulo}
+                  texto={t.conta.convidadoTextoRegisto}
+                  onClick={() => setPlano("convidado")}
+                />
+              </div>
+              <div className="mt-4 text-center text-xs text-muted-foreground">
+                {t.conta.temConta}{" "}
+                <button
+                  type="button"
+                  onClick={() => trocarModo("login")}
+                  className="font-medium text-foreground underline-offset-2 hover:underline"
+                >
+                  {t.conta.entrar}
+                </button>
+              </div>
+            </>
           ) : (
             <>
               <form onSubmit={handleSubmit} noValidate className="mt-5 space-y-3">
+                {mode === "signup" && plano && (
+                  <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs">
+                    <span className="text-foreground">
+                      {plano === "individual"
+                        ? t.comecar.individualTitulo
+                        : plano === "clinica"
+                          ? t.comecar.clinicaTitulo
+                          : t.comecar.convidadoTitulo}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPlano(null)}
+                      className="inline-flex items-center gap-1 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                      <ArrowLeft className="h-3 w-3" />
+                      {t.conta.mudar}
+                    </button>
+                  </div>
+                )}
+                {mode === "signup" && plano !== "individual" && (
+                  <fieldset>
+                    <legend className="block text-[11px] uppercase tracking-wider text-muted-foreground">
+                      {plano === "clinica" ? t.comecar.suaFuncao : t.conta.suaProfissao}
+                    </legend>
+                    <div className="mt-1 grid gap-1.5">
+                      {(
+                        [
+                          ["medico", t.comecar.funcaoMedico],
+                          ["profissional", t.comecar.funcaoProfissional],
+                          ["administrativo", t.comecar.funcaoAdministrativo],
+                        ] as const
+                      ).map(([id, label]) => (
+                        <label
+                          key={id}
+                          className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
+                        >
+                          <input
+                            type="radio"
+                            name="funcao"
+                            checked={funcao === id}
+                            onChange={() => setFuncao(id)}
+                            className="accent-foreground"
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
+                {mode === "signup" && plano === "clinica" && (
+                  <TextField
+                    label={t.comecar.nomeClinica}
+                    value={nomeClinica}
+                    onChange={(e) => setNomeClinica(e.target.value)}
+                    autoComplete="organization"
+                    error={erros.nomeClinica}
+                  />
+                )}
                 {mode === "signup" && (
                   <TextField
                     label={t.conta.nome}
@@ -318,39 +438,74 @@ function AuthPage() {
                 )}
                 {mode === "signup" && (
                   <>
-                    <TextField
-                      label={t.conta.especialidade}
-                      value={especialidade}
-                      onChange={(e) => setEspecialidade(e.target.value)}
-                      error={erros.especialidade}
-                    />
-                    <TextField
-                      label={t.conta.cedula}
-                      value={cedula}
-                      onChange={(e) => setCedula(e.target.value)}
-                      help={t.conta.cedulaAjuda}
-                      error={erros.cedula}
-                    />
-                    <TextField
-                      label={t.conta.clinica}
-                      value={clinica}
-                      onChange={(e) => setClinica(e.target.value)}
-                    />
-                    <TextField
-                      label={t.recomendar.codigoConvite}
-                      value={codigoConvite}
-                      onChange={(e) => setCodigoConvite(e.target.value.toUpperCase())}
-                      placeholder="VIV-XXXX-XXXX"
-                      autoComplete="off"
-                      spellCheck={false}
-                      maxLength={14}
-                      help={
-                        codigoEstado === "valido"
-                          ? t.recomendar.codigoValido
-                          : t.recomendar.codigoAjuda
-                      }
-                      error={codigoEstado === "invalido" ? t.recomendar.codigoInvalido : null}
-                    />
+                    {funcao === "medico" && (
+                      <>
+                        <TextField
+                          label={t.conta.especialidade}
+                          value={especialidade}
+                          onChange={(e) => setEspecialidade(e.target.value)}
+                          error={erros.especialidade}
+                        />
+                        <TextField
+                          label={t.conta.cedula}
+                          value={cedula}
+                          onChange={(e) => setCedula(e.target.value)}
+                          help={t.conta.cedulaAjuda}
+                          error={erros.cedula}
+                        />
+                      </>
+                    )}
+                    {funcao === "profissional" && (
+                      <>
+                        <TextField
+                          label={t.comecar.profissao}
+                          value={profissao}
+                          onChange={(e) => setProfissao(e.target.value)}
+                          placeholder={t.comecar.profissaoPlaceholder}
+                          error={erros.profissao}
+                        />
+                        <TextField
+                          label={t.conta.cedulaOpcional}
+                          value={cedula}
+                          onChange={(e) => setCedula(e.target.value)}
+                          help={t.conta.cedulaAjuda}
+                        />
+                      </>
+                    )}
+                    {plano === "individual" && (
+                      <TextField
+                        label={t.conta.clinica}
+                        value={clinica}
+                        onChange={(e) => setClinica(e.target.value)}
+                        help={t.conta.clinicaAjuda}
+                      />
+                    )}
+                    {plano !== "convidado" &&
+                      (mostrarCodigo ? (
+                        <TextField
+                          label={t.recomendar.codigoConvite}
+                          value={codigoConvite}
+                          onChange={(e) => setCodigoConvite(e.target.value.toUpperCase())}
+                          placeholder="VIV-XXXX-XXXX"
+                          autoComplete="off"
+                          spellCheck={false}
+                          maxLength={14}
+                          help={
+                            codigoEstado === "valido"
+                              ? t.recomendar.codigoValido
+                              : t.recomendar.codigoAjuda
+                          }
+                          error={codigoEstado === "invalido" ? t.recomendar.codigoInvalido : null}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setMostrarCodigo(true)}
+                          className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                        >
+                          {t.conta.temCodigo}
+                        </button>
+                      ))}
                     <div className="pt-2">
                       <ConsentFields value={consent} onChange={setConsent} showErrors={tentou} />
                     </div>
@@ -421,8 +576,45 @@ function AuthPage() {
           <ShieldCheck className="h-3 w-3 text-state-ok" />
           {t.conta.sessaoProtegida}
         </div>
+        {mode === "login" && (
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            {t.conta.eUtente}{" "}
+            <a
+              href={URL_APP_UTENTE}
+              className="font-medium text-foreground underline-offset-2 hover:underline"
+            >
+              {t.conta.irApp}
+            </a>
+          </p>
+        )}
       </div>
     </div>
+  );
+}
+
+function OpcaoPlano({
+  icon,
+  titulo,
+  texto,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  titulo: string;
+  texto: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-start gap-3 rounded-xl border border-border bg-background px-4 py-3 text-left transition-colors hover:border-foreground/30 hover:bg-accent/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span className="mt-0.5 text-muted-foreground">{icon}</span>
+      <span>
+        <span className="block text-sm font-medium text-foreground">{titulo}</span>
+        <span className="mt-0.5 block text-xs text-muted-foreground">{texto}</span>
+      </span>
+    </button>
   );
 }
 
