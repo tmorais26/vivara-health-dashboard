@@ -21,8 +21,8 @@ const T = {
       {
         title: "Tudo num só sítio",
         text: {
-          patient: "Carregue o PDF ou uma fotografia das análises, venha do laboratório que vier.",
-          doctor: "Crie a conta e acrescente os resultados que o utente lhe reencaminha.",
+          patient: "Crie a sua conta e carregue o PDF ou uma fotografia das análises, venha do laboratório que vier.",
+          doctor: "Crie a sua conta, individual ou da clínica, e acrescente os resultados que o utente lhe reencaminha.",
         },
         panel: {
           patient: {
@@ -120,8 +120,8 @@ const T = {
       {
         title: "Everything in one place",
         text: {
-          patient: "Upload the PDF or a photo of your results, whichever lab they came from.",
-          doctor: "Create your account and add the results the patient forwards to you.",
+          patient: "Create your account and upload the PDF or a photo of your results, whichever lab they came from.",
+          doctor: "Create your account, individual or for your clinic, and add the results the patient forwards to you.",
         },
         panel: {
           patient: {
