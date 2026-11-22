@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Reveal, CTAButton } from "./ui";
 import { useT } from "../i18n";
-import gradientWarm from "../assets/gradient-warm.jpg";
+import fimPhoto from "../assets/pages/fim.webp";
 
 const T = {
   pt: {
@@ -30,15 +30,17 @@ export default function FooterCTA() {
   const t = useT();
   const L = t(T);
   return (
-    <section className="relative overflow-hidden py-32 md:py-44">
+    <section className="relative overflow-hidden py-28 md:py-40">
       <img
-        src={gradientWarm}
+        src={fimPhoto}
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
+        style={{ objectPosition: "70% 25%" }}
+        loading="lazy"
       />
-      <div className="absolute inset-0 bg-brand-beige/40" />
-      <div className="relative mx-auto max-w-3xl px-6 text-center">
-        <Reveal>
+      <div className="absolute inset-0 bg-gradient-to-b from-brand-beige/30 via-brand-beige/65 to-brand-beige/85 md:bg-none md:bg-gradient-to-r md:from-brand-beige md:via-brand-beige/80 md:to-transparent md:to-70%" />
+      <div className="relative mx-auto max-w-6xl px-6">
+        <Reveal className="max-w-xl text-center md:text-left">
           <h2 className="font-serif font-light tracking-tight text-5xl md:text-7xl">{L.title}</h2>
           <p className="mt-6 text-lg text-brand-muted">{L.desc}</p>
           <div className="mt-10">
