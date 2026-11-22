@@ -17,6 +17,7 @@ import { MarcarConsultaModal } from "@/components/portal/MarcarConsultaModal";
 import { ChatUtente } from "@/components/ficha/ChatUtente";
 import { PedirExportacao } from "@/components/ficha/PedirExportacao";
 import { ConvidarApp } from "@/components/ficha/ConvidarApp";
+import { Documentos } from "@/components/ficha/Documentos";
 import { useIdioma, useT } from "@/lib/i18n";
 import { e_admin, e_clinico, iniciais, useSessao } from "@/lib/sessao";
 import {
@@ -31,7 +32,7 @@ import {
   type UtenteDb,
 } from "@/lib/dados";
 
-type Tab = "resumo" | "diario" | "outros" | "observacoes" | "consultas";
+type Tab = "resumo" | "diario" | "outros" | "observacoes" | "consultas" | "documentos";
 type Partilhas = Record<string, string[]>;
 
 export function FichaUtente({ utenteId }: { utenteId: string }) {
@@ -171,6 +172,11 @@ export function FichaUtente({ utenteId }: { utenteId: string }) {
     { id: "outros", label: tf.tabOutros, mostrar: souClinico || souAdmin },
     { id: "observacoes", label: tf.tabObservacoes, mostrar: true },
     { id: "consultas", label: tf.tabConsultas, mostrar: true },
+    {
+      id: "documentos",
+      label: t.documentos.tab,
+      mostrar: sigo || atual.funcao === "administrativo",
+    },
   ];
 
   const aviso = sigo
@@ -380,6 +386,14 @@ export function FichaUtente({ utenteId }: { utenteId: string }) {
                 <ListaConsultas consultas={anteriores} nomeDe={nomeDe} idioma={idioma} />
               </Bloco>
             </div>
+          )}
+          {tab === "documentos" && (
+            <Documentos
+              utente={utente}
+              consultas={consultas}
+              podeEmitir={sigo || atual.funcao === "administrativo"}
+              nomeDe={nomeDe}
+            />
           )}
         </section>
       </main>

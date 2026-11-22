@@ -47,6 +47,18 @@ export type Database = {
         Update: { codigo?: string; criado_em?: string; titular?: string; user_id?: string }
         Relationships: Rel[]
       }
+      modelos_documento: {
+        Row: { alterado_em: string; autor_id: string; corpo: string; criado_em: string; espaco_id: string; id: string; nome: string; partilhado: boolean; tipo: string }
+        Insert: { alterado_em?: string; autor_id: string; corpo: string; criado_em?: string; espaco_id: string; id?: string; nome: string; partilhado?: boolean; tipo: string }
+        Update: { alterado_em?: string; autor_id?: string; corpo?: string; criado_em?: string; espaco_id?: string; id?: string; nome?: string; partilhado?: boolean; tipo?: string }
+        Relationships: Rel[]
+      }
+      documentos_emitidos: {
+        Row: { autor_id: string; cabecalho: Json; consulta_id: string | null; corpo: string; emitido_em: string; espaco_id: string; id: string; tipo: string; titulo: string; utente_id: string }
+        Insert: { autor_id: string; cabecalho?: Json; consulta_id?: string | null; corpo: string; emitido_em?: string; espaco_id: string; id?: string; tipo: string; titulo: string; utente_id: string }
+        Update: { autor_id?: string; cabecalho?: Json; consulta_id?: string | null; corpo?: string; emitido_em?: string; espaco_id?: string; id?: string; tipo?: string; titulo?: string; utente_id?: string }
+        Relationships: Rel[]
+      }
       convites_app: {
         Row: { convidante_id: string; criado_em: string; token: string; usado_em: string | null; usado_por: string | null; utente_id: string | null }
         Insert: { convidante_id: string; criado_em?: string; token?: string; usado_em?: string | null; usado_por?: string | null; utente_id?: string | null }
