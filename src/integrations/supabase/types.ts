@@ -47,6 +47,18 @@ export type Database = {
         Update: { codigo?: string; criado_em?: string; titular?: string; user_id?: string }
         Relationships: Rel[]
       }
+      medicacoes: {
+        Row: { autor_id: string; criado_em: string; atualizado_em: string; cronica: boolean; dci: string; dosagem: string | null; embalagens: number | null; espaco_id: string; estado: string; estado_em: string | null; estado_motivo: string | null; fim: string | null; forma: string | null; id: string; inicio: string; motivo: string | null; nome_comercial: string | null; numero_receita: string | null; origem: string; posologia: string; utente_id: string; via: string | null }
+        Insert: { autor_id: string; criado_em?: string; atualizado_em?: string; cronica?: boolean; dci: string; dosagem?: string | null; embalagens?: number | null; espaco_id: string; estado?: string; estado_em?: string | null; estado_motivo?: string | null; fim?: string | null; forma?: string | null; id?: string; inicio?: string; motivo?: string | null; nome_comercial?: string | null; numero_receita?: string | null; origem?: string; posologia: string; utente_id: string; via?: string | null }
+        Update: { autor_id?: string; criado_em?: string; atualizado_em?: string; cronica?: boolean; dci?: string; dosagem?: string | null; embalagens?: number | null; espaco_id?: string; estado?: string; estado_em?: string | null; estado_motivo?: string | null; fim?: string | null; forma?: string | null; id?: string; inicio?: string; motivo?: string | null; nome_comercial?: string | null; numero_receita?: string | null; origem?: string; posologia?: string; utente_id?: string; via?: string | null }
+        Relationships: Rel[]
+      }
+      alergias: {
+        Row: { ativa: boolean; atualizado_em: string; autor_id: string; criado_em: string; espaco_id: string; gravidade: string; id: string; reacao: string | null; substancia: string; utente_id: string }
+        Insert: { ativa?: boolean; atualizado_em?: string; autor_id: string; criado_em?: string; espaco_id: string; gravidade?: string; id?: string; reacao?: string | null; substancia: string; utente_id: string }
+        Update: { ativa?: boolean; atualizado_em?: string; autor_id?: string; criado_em?: string; espaco_id?: string; gravidade?: string; id?: string; reacao?: string | null; substancia?: string; utente_id?: string }
+        Relationships: Rel[]
+      }
       modelos_documento: {
         Row: { alterado_em: string; autor_id: string; corpo: string; criado_em: string; espaco_id: string; id: string; nome: string; partilhado: boolean; tipo: string }
         Insert: { alterado_em?: string; autor_id: string; corpo: string; criado_em?: string; espaco_id: string; id?: string; nome: string; partilhado?: boolean; tipo: string }

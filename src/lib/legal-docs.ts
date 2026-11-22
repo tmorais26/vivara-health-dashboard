@@ -36,3 +36,6 @@ export function ligacaoUtente(codigo: string) {
 export function ligacaoColega(codigo: string, origem: string) {
   return `${origem}/auth?codigo=${encodeURIComponent(codigo)}`;
 }
+
+// Prescrição Eletrónica Médica do SNS (gratuita para os médicos). Confirmar o endereço em uso com a SPMS.
+export const URL_PEM_SPMS = import.meta.env.VITE_URL_PEM ?? "https://pem.min-saude.pt";

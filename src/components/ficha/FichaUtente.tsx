@@ -18,6 +18,7 @@ import { ChatUtente } from "@/components/ficha/ChatUtente";
 import { PedirExportacao } from "@/components/ficha/PedirExportacao";
 import { ConvidarApp } from "@/components/ficha/ConvidarApp";
 import { Documentos } from "@/components/ficha/Documentos";
+import { Medicacao } from "@/components/ficha/Medicacao";
 import { useIdioma, useT } from "@/lib/i18n";
 import { e_admin, e_clinico, iniciais, useSessao } from "@/lib/sessao";
 import {
@@ -32,7 +33,8 @@ import {
   type UtenteDb,
 } from "@/lib/dados";
 
-type Tab = "resumo" | "diario" | "outros" | "observacoes" | "consultas" | "documentos";
+type Tab =
+  "resumo" | "diario" | "outros" | "observacoes" | "consultas" | "medicacao" | "documentos";
 type Partilhas = Record<string, string[]>;
 
 export function FichaUtente({ utenteId }: { utenteId: string }) {
@@ -172,6 +174,7 @@ export function FichaUtente({ utenteId }: { utenteId: string }) {
     { id: "outros", label: tf.tabOutros, mostrar: souClinico || souAdmin },
     { id: "observacoes", label: tf.tabObservacoes, mostrar: true },
     { id: "consultas", label: tf.tabConsultas, mostrar: true },
+    { id: "medicacao", label: t.medicacao.tab, mostrar: sigo },
     {
       id: "documentos",
       label: t.documentos.tab,
@@ -387,6 +390,7 @@ export function FichaUtente({ utenteId }: { utenteId: string }) {
               </Bloco>
             </div>
           )}
+          {tab === "medicacao" && sigo && <Medicacao utente={utente} nomeDe={nomeDe} />}
           {tab === "documentos" && (
             <Documentos
               utente={utente}

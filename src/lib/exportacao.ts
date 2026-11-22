@@ -20,19 +20,35 @@ const hoje = () => new Date().toISOString().slice(0, 10);
 export async function exportarEspaco(espacoId: string, pedidoId?: string) {
   let id = pedidoId;
   if (!id) {
-    const { data, error } = await supabase.rpc("pedir_exportacao", { p_espaco: espacoId, p_ambito: "tudo" });
+    const { data, error } = await supabase.rpc("pedir_exportacao", {
+      p_espaco: espacoId,
+      p_ambito: "tudo",
+    });
     if (error || !data) throw error ?? new Error("pedido");
     id = data;
   }
   const { error: eUsar } = await supabase.rpc("usar_exportacao", { p_pedido: id });
   if (eUsar) throw eUsar;
-  const [utentes, consultas, diarios, observacoes, registos, chat] = await Promise.all([
+  const [
+    utentes,
+    consultas,
+    diarios,
+    observacoes,
+    registos,
+    chat,
+    medicacoes,
+    alergias,
+    documentos,
+  ] = await Promise.all([
     supabase.from("utentes").select("*").eq("espaco_id", espacoId),
     supabase.from("consultas").select("*").eq("espaco_id", espacoId),
     supabase.from("diarios").select("*").eq("espaco_id", espacoId),
     supabase.from("observacoes").select("*").eq("espaco_id", espacoId),
     supabase.from("registos_clinicos").select("*").eq("espaco_id", espacoId),
     supabase.from("chat_mensagens").select("*").eq("espaco_id", espacoId),
+    supabase.from("medicacoes").select("*").eq("espaco_id", espacoId),
+    supabase.from("alergias").select("*").eq("espaco_id", espacoId),
+    supabase.from("documentos_emitidos").select("*").eq("espaco_id", espacoId),
   ]);
   const dados = {
     formato: FORMATO_EXPORTACAO,
@@ -43,6 +59,9 @@ export async function exportarEspaco(espacoId: string, pedidoId?: string) {
     observacoes: observacoes.data ?? [],
     registosClinicos: registos.data ?? [],
     chat: chat.data ?? [],
+    medicacoes: medicacoes.data ?? [],
+    alergias: alergias.data ?? [],
+    documentos: documentos.data ?? [],
   };
   descarregar(`vivara-dados-${hoje()}.json`, JSON.stringify(dados, null, 2), "application/json");
 }
@@ -51,19 +70,36 @@ export async function exportarEspaco(espacoId: string, pedidoId?: string) {
 export async function exportarUtenteDb(espacoId: string, utenteId: string, pedidoId?: string) {
   let id = pedidoId;
   if (!id) {
-    const { data, error } = await supabase.rpc("pedir_exportacao", { p_espaco: espacoId, p_ambito: "utente", p_utente: utenteId });
+    const { data, error } = await supabase.rpc("pedir_exportacao", {
+      p_espaco: espacoId,
+      p_ambito: "utente",
+      p_utente: utenteId,
+    });
     if (error || !data) throw error ?? new Error("pedido");
     id = data;
   }
   const { error: eUsar } = await supabase.rpc("usar_exportacao", { p_pedido: id });
   if (eUsar) throw eUsar;
-  const [utente, consultas, diarios, observacoes, registos, chat] = await Promise.all([
+  const [
+    utente,
+    consultas,
+    diarios,
+    observacoes,
+    registos,
+    chat,
+    medicacoes,
+    alergias,
+    documentos,
+  ] = await Promise.all([
     supabase.from("utentes").select("*").eq("id", utenteId).maybeSingle(),
     supabase.from("consultas").select("*").eq("utente_id", utenteId),
     supabase.from("diarios").select("*").eq("utente_id", utenteId),
     supabase.from("observacoes").select("*").eq("utente_id", utenteId),
     supabase.from("registos_clinicos").select("*").eq("utente_id", utenteId),
     supabase.from("chat_mensagens").select("*").eq("utente_id", utenteId),
+    supabase.from("medicacoes").select("*").eq("utente_id", utenteId),
+    supabase.from("alergias").select("*").eq("utente_id", utenteId),
+    supabase.from("documentos_emitidos").select("*").eq("utente_id", utenteId),
   ]);
   const dados = {
     formato: FORMATO_EXPORTACAO,
@@ -74,6 +110,9 @@ export async function exportarUtenteDb(espacoId: string, utenteId: string, pedid
     observacoes: observacoes.data ?? [],
     registosClinicos: registos.data ?? [],
     chat: chat.data ?? [],
+    medicacoes: medicacoes.data ?? [],
+    alergias: alergias.data ?? [],
+    documentos: documentos.data ?? [],
   };
   descarregar(`vivara-utente-${hoje()}.json`, JSON.stringify(dados, null, 2), "application/json");
 }
@@ -84,7 +123,11 @@ export function exportarUtenteJson(utente: Utente) {
     exportadoEm: new Date().toISOString(),
     utente,
   };
-  descarregar(`vivara-${utente.id}-${hoje()}.json`, JSON.stringify(dados, null, 2), "application/json");
+  descarregar(
+    `vivara-${utente.id}-${hoje()}.json`,
+    JSON.stringify(dados, null, 2),
+    "application/json",
+  );
 }
 
 const csvCampo = (v: unknown) => {
@@ -107,11 +150,12 @@ export function exportarMarcadoresCsv(utente: Utente) {
 export type UtenteImportado = NovoUtente & { nome: string };
 
 export type ResultadoImportacao =
-  | { ok: true; utentes: UtenteImportado[]; ignoradas: number }
-  | { ok: false };
+  { ok: true; utentes: UtenteImportado[]; ignoradas: number } | { ok: false };
 
 const texto = (v: unknown, max = 200) => {
-  const t = String(v ?? "").trim().slice(0, max);
+  const t = String(v ?? "")
+    .trim()
+    .slice(0, max);
   return t || null;
 };
 
@@ -127,7 +171,9 @@ function dataIso(v: unknown): string | null {
 function base(o: Record<string, unknown>): UtenteImportado | null {
   const nome = texto(o.nome, 200);
   if (!nome) return null;
-  const sexo = String(o.sexo ?? "").trim().toUpperCase();
+  const sexo = String(o.sexo ?? "")
+    .trim()
+    .toUpperCase();
   return {
     nome,
     data_nascimento: dataIso(o.data_nascimento ?? o.nascimento),
@@ -161,13 +207,17 @@ function dividirCsv(linha: string, sep: string): string[] {
   return out.map((x) => x.trim());
 }
 
-export function interpretarImportacao(conteudoBruto: string, nomeFicheiro: string): ResultadoImportacao {
+export function interpretarImportacao(
+  conteudoBruto: string,
+  nomeFicheiro: string,
+): ResultadoImportacao {
   const conteudo = conteudoBruto.replace(/^\uFEFF/, "");
   let linhas: Record<string, unknown>[] = [];
   if (nomeFicheiro.toLowerCase().endsWith(".json")) {
     try {
       const dados = JSON.parse(conteudo) as { formato?: string; utentes?: unknown };
-      if (!String(dados.formato ?? "").startsWith("vivara-export") || !Array.isArray(dados.utentes)) return { ok: false };
+      if (!String(dados.formato ?? "").startsWith("vivara-export") || !Array.isArray(dados.utentes))
+        return { ok: false };
       linhas = dados.utentes as Record<string, unknown>[];
     } catch {
       return { ok: false };
