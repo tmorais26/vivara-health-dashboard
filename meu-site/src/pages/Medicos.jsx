@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import PhotoHeader from "../components/PhotoHeader";
 import doctorPhoto from "../assets/doctor-patient.jpg";
+import equipaPhoto from "../assets/pages/equipa.webp";
 import { SectionBadge, Reveal, CTAButton, Check, Highlight } from "../components/ui";
 import ClinicalAlerts from "../components/ClinicalAlerts";
 import TimelineMock from "../components/TimelineMock";
@@ -217,7 +218,16 @@ export default function Medicos() {
               {L.audienceTitle}
             </h2>
           </Reveal>
-          <div className="mt-10 grid md:grid-cols-2 gap-6">
+          <Reveal delay={0.05}>
+            <img
+              src={equipaPhoto}
+              alt=""
+              loading="lazy"
+              className="mt-10 w-full aspect-[4/3] md:aspect-[21/9] rounded-3xl object-cover"
+              style={{ objectPosition: "50% 35%" }}
+            />
+          </Reveal>
+          <div className="mt-6 grid md:grid-cols-2 gap-6">
             {L.audience.map((a, i) => (
               <Reveal key={a.title} delay={i * 0.1}>
                 <div className="rounded-2xl border border-black/10 bg-brand-beige p-6 h-full">
