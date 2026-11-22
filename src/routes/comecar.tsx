@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Building2, Mail, Stethoscope } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
@@ -30,6 +30,67 @@ function Comecar() {
   const [erro, setErro] = useState<string | null>(null);
   const [aGuardar, setAGuardar] = useState(false);
   const [semConvite, setSemConvite] = useState(false);
+
+  // Quem escolheu o tipo de conta no registo não volta a escolher: o espaço é criado sozinho.
+  const meta = (sessao.user.user_metadata ?? {}) as Record<string, unknown>;
+  const planoRegisto =
+    meta.plano === "individual" || meta.plano === "clinica" || meta.plano === "convidado"
+      ? meta.plano
+      : null;
+  const [automatico, setAutomatico] = useState(
+    planoRegisto === "individual" || planoRegisto === "clinica",
+  );
+  const tentado = useRef(false);
+
+  useEffect(() => {
+    if (tentado.current || !planoRegisto) return;
+    tentado.current = true;
+    if (planoRegisto === "convidado") {
+      setModo("convidado");
+      return;
+    }
+    void (async () => {
+      const funcaoRegisto: Funcao =
+        planoRegisto === "individual"
+          ? "medico"
+          : ((meta.funcao as Funcao | undefined) ?? "medico");
+      const nomeClinica = typeof meta.nome_clinica === "string" ? meta.nome_clinica.trim() : "";
+      const { error } = await supabase.rpc("criar_espaco", {
+        p_tipo: planoRegisto,
+        p_nome:
+          planoRegisto === "individual"
+            ? sessao.perfil?.clinica || nomePessoa
+            : nomeClinica || nomePessoa,
+        p_nome_exibicao: nomePessoa,
+        p_funcao: funcaoRegisto,
+        p_profissao:
+          funcaoRegisto === "profissional" && typeof meta.profissao === "string"
+            ? meta.profissao
+            : undefined,
+      });
+      if (error) {
+        // Se falhar, mostra a escolha manual com os dados já preenchidos.
+        setAutomatico(false);
+        setModo(planoRegisto);
+        if (planoRegisto === "clinica") setNome(nomeClinica);
+        setFuncao(funcaoRegisto);
+        return;
+      }
+      await supabase.auth.updateUser({
+        data: { plano: null, funcao: null, profissao: null, nome_clinica: null },
+      });
+      await sessao.recarregar();
+      navigate({ to: "/" });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // À espera do convite: verifica sozinho de 20 em 20 segundos (sai desta página quando for adicionado).
+  useEffect(() => {
+    if (modo !== "convidado") return;
+    const id = setInterval(() => void sessao.recarregar(), 20000);
+    return () => clearInterval(id);
+  }, [modo, sessao]);
 
   async function criar(e: React.FormEvent) {
     e.preventDefault();
@@ -64,7 +125,17 @@ function Comecar() {
 
   async function sair() {
     await supabase.auth.signOut();
-    navigate({ to: "/auth" });
+    navigate({ to: "/auth", search: { saiu: 1 } });
+  }
+
+  if (automatico) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <p role="status" className="text-sm text-muted-foreground">
+          {t.aPreparar}
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -81,9 +152,27 @@ function Comecar() {
 
           {modo === "escolher" && (
             <div className="mt-5 space-y-2">
-              <Opcao icon={<Stethoscope className="h-5 w-5" />} titulo={t.individualTitulo} texto={t.individualTexto} onClick={() => setModo("individual")} />
-              <Opcao icon={<Building2 className="h-5 w-5" />} titulo={t.clinicaTitulo} texto={t.clinicaTexto} onClick={() => { setNome(""); setModo("clinica"); }} />
-              <Opcao icon={<Mail className="h-5 w-5" />} titulo={t.convidadoTitulo} texto={t.convidadoTexto(sessao.user.email ?? "")} onClick={() => setModo("convidado")} />
+              <Opcao
+                icon={<Stethoscope className="h-5 w-5" />}
+                titulo={t.individualTitulo}
+                texto={t.individualTexto}
+                onClick={() => setModo("individual")}
+              />
+              <Opcao
+                icon={<Building2 className="h-5 w-5" />}
+                titulo={t.clinicaTitulo}
+                texto={t.clinicaTexto}
+                onClick={() => {
+                  setNome("");
+                  setModo("clinica");
+                }}
+              />
+              <Opcao
+                icon={<Mail className="h-5 w-5" />}
+                titulo={t.convidadoTitulo}
+                texto={t.convidadoTexto(sessao.user.email ?? "")}
+                onClick={() => setModo("convidado")}
+              />
             </div>
           )}
 
@@ -91,15 +180,26 @@ function Comecar() {
             <form onSubmit={criar} noValidate className="mt-5 space-y-3">
               <label className="block text-[11px] uppercase tracking-wider text-muted-foreground">
                 {modo === "individual" ? t.nomeConsultorio : t.nomeClinica}
-                <input className={inputClass} value={nome} onChange={(e) => setNome(e.target.value)} placeholder={modo === "individual" ? nomePessoa : ""} />
+                <input
+                  className={inputClass}
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  placeholder={modo === "individual" ? nomePessoa : ""}
+                />
               </label>
               <label className="block text-[11px] uppercase tracking-wider text-muted-foreground">
                 {t.nomeExibicao}
-                <input className={inputClass} value={nomeExibicao} onChange={(e) => setNomeExibicao(e.target.value)} />
+                <input
+                  className={inputClass}
+                  value={nomeExibicao}
+                  onChange={(e) => setNomeExibicao(e.target.value)}
+                />
               </label>
               {modo === "clinica" && (
                 <fieldset>
-                  <legend className="text-[11px] uppercase tracking-wider text-muted-foreground">{t.suaFuncao}</legend>
+                  <legend className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                    {t.suaFuncao}
+                  </legend>
                   <div className="mt-1 grid gap-1.5">
                     {(
                       [
@@ -108,8 +208,17 @@ function Comecar() {
                         ["administrativo", t.funcaoAdministrativo],
                       ] as const
                     ).map(([id, label]) => (
-                      <label key={id} className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground">
-                        <input type="radio" name="funcao" checked={funcao === id} onChange={() => setFuncao(id)} className="accent-foreground" />
+                      <label
+                        key={id}
+                        className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
+                      >
+                        <input
+                          type="radio"
+                          name="funcao"
+                          checked={funcao === id}
+                          onChange={() => setFuncao(id)}
+                          className="accent-foreground"
+                        />
                         {label}
                       </label>
                     ))}
@@ -117,7 +226,12 @@ function Comecar() {
                   {funcao === "profissional" && (
                     <label className="mt-2 block text-[11px] uppercase tracking-wider text-muted-foreground">
                       {t.profissao}
-                      <input className={inputClass} value={profissao} onChange={(e) => setProfissao(e.target.value)} placeholder={t.profissaoPlaceholder} />
+                      <input
+                        className={inputClass}
+                        value={profissao}
+                        onChange={(e) => setProfissao(e.target.value)}
+                        placeholder={t.profissaoPlaceholder}
+                      />
                     </label>
                   )}
                 </fieldset>
@@ -128,10 +242,18 @@ function Comecar() {
                 </p>
               )}
               <div className="flex items-center justify-between pt-2">
-                <button type="button" onClick={() => setModo("escolher")} className="text-xs text-muted-foreground hover:text-foreground">
+                <button
+                  type="button"
+                  onClick={() => setModo("escolher")}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
                   {t.voltar}
                 </button>
-                <button type="submit" disabled={aGuardar} className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-50">
+                <button
+                  type="submit"
+                  disabled={aGuardar}
+                  className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
+                >
                   {aGuardar ? tc.aProcessar : t.criar}
                 </button>
               </div>
@@ -147,17 +269,29 @@ function Comecar() {
                 </p>
               )}
               <div className="flex items-center justify-between pt-2">
-                <button type="button" onClick={() => setModo("escolher")} className="text-xs text-muted-foreground hover:text-foreground">
+                <button
+                  type="button"
+                  onClick={() => setModo("escolher")}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
                   {t.voltar}
                 </button>
-                <button type="button" onClick={verificar} className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background">
+                <button
+                  type="button"
+                  onClick={verificar}
+                  className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background"
+                >
                   {t.verificar}
                 </button>
               </div>
             </div>
           )}
         </div>
-        <button type="button" onClick={sair} className="mx-auto mt-4 block text-xs text-muted-foreground hover:text-foreground">
+        <button
+          type="button"
+          onClick={sair}
+          className="mx-auto mt-4 block text-xs text-muted-foreground hover:text-foreground"
+        >
           {t.sair}
         </button>
       </div>
@@ -165,7 +299,17 @@ function Comecar() {
   );
 }
 
-function Opcao({ icon, titulo, texto, onClick }: { icon: React.ReactNode; titulo: string; texto: string; onClick: () => void }) {
+function Opcao({
+  icon,
+  titulo,
+  texto,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  titulo: string;
+  texto: string;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"

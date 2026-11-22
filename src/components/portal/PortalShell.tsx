@@ -42,9 +42,13 @@ function useNavItems(): NavItem[] {
       match: (p) => p === "/" || p.startsWith("/utentes"),
     },
     { label: t.nav.agenda, to: "/agenda", icon: Calendar },
-    ...(clinica ? [{ label: t.mensagens.nav, to: "/mensagens" as const, icon: MessagesSquare }] : []),
+    ...(clinica
+      ? [{ label: t.mensagens.nav, to: "/mensagens" as const, icon: MessagesSquare }]
+      : []),
     { label: t.notifDb.titulo, to: "/notificacoes", icon: Bell, badge: naoLidas },
-    ...(clinica ? [{ label: t.equipa.nav, to: "/equipa" as const, icon: UsersRound, soDesktop: true }] : []),
+    ...(clinica
+      ? [{ label: t.equipa.nav, to: "/equipa" as const, icon: UsersRound, soDesktop: true }]
+      : []),
     { label: t.nav.definicoes, to: "/definicoes", icon: Settings },
   ];
   return usarAgenda ? items : items.filter((i) => i.to !== "/agenda");
@@ -68,7 +72,7 @@ export function PortalShell({
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    navigate({ to: "/auth" });
+    navigate({ to: "/auth", search: { saiu: 1 } });
   }
 
   return (
@@ -82,9 +86,7 @@ export function PortalShell({
 
         <nav className="flex-1 space-y-1 px-3 py-4">
           {items.map((it) => {
-            const active = it.match
-              ? it.match(pathname)
-              : pathname === it.to;
+            const active = it.match ? it.match(pathname) : pathname === it.to;
             return (
               <Link
                 key={it.to}

@@ -194,7 +194,7 @@ function ContaCard() {
 
   async function sair() {
     await supabase.auth.signOut();
-    navigate({ to: "/auth" });
+    navigate({ to: "/auth", search: { saiu: 1 } });
   }
 
   const campo =
