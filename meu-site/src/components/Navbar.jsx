@@ -7,7 +7,7 @@ const LINKS = {
   pt: [
     { label: "Sobre nós", to: "/sobre" },
     { label: "Como funciona", to: "/como-funciona" },
-    { label: "Para médicos", to: "/medicos" },
+    { label: "Médicos e clínicas", to: "/medicos" },
     { label: "Para utentes", to: "/utentes" },
     { label: "Preços", to: "/precos" },
     { label: "FAQ", to: "/faq" },
@@ -15,7 +15,7 @@ const LINKS = {
   en: [
     { label: "About us", to: "/sobre" },
     { label: "How it works", to: "/como-funciona" },
-    { label: "For doctors", to: "/medicos" },
+    { label: "Doctors & clinics", to: "/medicos" },
     { label: "For patients", to: "/utentes" },
     { label: "Pricing", to: "/precos" },
     { label: "FAQ", to: "/faq" },

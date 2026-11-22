@@ -11,9 +11,9 @@ import { useT, useLang } from "../i18n";
 const T = {
   pt: {
     header: {
-      badge: "Para médicos · Portal clínico",
+      badge: "Para médicos e clínicas · Portal clínico",
       title: <>O contexto completo, <em>antes de cada decisão.</em></>,
-      desc: "Um portal clínico para acompanhar utentes entre consultas. Análises, exames e notas organizados cronologicamente.",
+      desc: "Para o médico que trabalha por conta própria e para a clínica com equipa. Análises, exames e notas de cada utente, organizados cronologicamente.",
     },
     tabs: { doctor: "Médico", clinic: "Clínica" },
     doctor: {
@@ -90,9 +90,9 @@ const T = {
   },
   en: {
     header: {
-      badge: "For doctors · Clinical portal",
+      badge: "For doctors and clinics · Clinical portal",
       title: <>Full context, <em>before every decision.</em></>,
-      desc: "A clinical portal for following patients between appointments. Lab results, exams and notes organised chronologically.",
+      desc: "For the doctor working on their own and for the clinic with a team. Each patient's lab results, exams and notes, organised chronologically.",
     },
     tabs: { doctor: "Doctor", clinic: "Clinic" },
     doctor: {
