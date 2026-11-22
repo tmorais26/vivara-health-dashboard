@@ -12,11 +12,12 @@ import {
   LogOut,
   Gift,
   ChevronRight,
+  AlarmClock,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useSessao } from "@/lib/sessao";
+import { e_admin, useSessao } from "@/lib/sessao";
 import { definirUsarAgenda, usePrefsMedico } from "@/lib/medico-prefs";
 import { exportarEspaco } from "@/lib/exportacao";
 import { ImportarUtentesModal } from "@/components/portal/ImportarUtentesModal";
@@ -54,6 +55,7 @@ function DefinicoesPage() {
           <PerfilCard />
           <ContaCard />
           <NotificacoesGlobais />
+          <LembretesCard />
           <RecomendarCard />
           <AgendaCard />
           <DadosCard />
@@ -276,6 +278,60 @@ function RecomendarCard() {
       </span>
       <ChevronRight className="h-4 w-4 text-muted-foreground" />
     </Link>
+  );
+}
+
+// Lembretes de consulta por email: decisão da administração do espaço.
+function LembretesCard() {
+  const t = useT().lembretes;
+  const sessao = useSessao();
+  const atual = sessao.atual;
+  const admin = e_admin(atual);
+  const [ativo, setAtivo] = useState(!!atual?.espaco.lembretes_email);
+  const [erro, setErro] = useState<string | null>(null);
+  const tc = useT().conta;
+
+  useEffect(() => setAtivo(!!atual?.espaco.lembretes_email), [atual?.espaco.lembretes_email]);
+
+  async function mudar(v: boolean) {
+    if (!atual || !admin) return;
+    setAtivo(v);
+    setErro(null);
+    const { error } = await supabase
+      .from("espacos")
+      .update({ lembretes_email: v })
+      .eq("id", atual.espaco_id);
+    if (error) {
+      setAtivo(!v);
+      setErro(tc.erroGenerico);
+      return;
+    }
+    await sessao.recarregar();
+  }
+
+  return (
+    <Card icon={<AlarmClock className="h-4 w-4" />} title={t.titulo} sub={t.sub}>
+      <div className="flex items-center justify-between gap-4 px-5 py-4">
+        <div>
+          <p id="pref-lembretes" className="text-sm text-foreground">
+            {t.ativo}
+          </p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            {admin ? t.explicacao : t.soAdmin}
+          </p>
+          {erro && (
+            <p role="alert" className="mt-1 text-xs text-state-alert">
+              {erro}
+            </p>
+          )}
+        </div>
+        {admin ? (
+          <Toggle checked={ativo} onChange={(v) => void mudar(v)} labelledBy="pref-lembretes" />
+        ) : (
+          <span className="text-xs text-muted-foreground">{ativo ? "✓" : "—"}</span>
+        )}
+      </div>
+    </Card>
   );
 }
 

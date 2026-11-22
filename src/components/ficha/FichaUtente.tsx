@@ -20,6 +20,7 @@ import { ConvidarApp } from "@/components/ficha/ConvidarApp";
 import { Documentos } from "@/components/ficha/Documentos";
 import { Medicacao } from "@/components/ficha/Medicacao";
 import { Analises } from "@/components/ficha/Analises";
+import { Pendencias } from "@/components/ficha/Pendencias";
 import { useIdioma, useT } from "@/lib/i18n";
 import { e_admin, e_clinico, iniciais, useAlinharEspaco, useSessao } from "@/lib/sessao";
 import {
@@ -244,6 +245,25 @@ export function FichaUtente({ utenteId }: { utenteId: string }) {
                     {utente.email}
                   </a>
                 )}
+                {utente.email && atual.espaco.lembretes_email && (
+                  <label className="inline-flex cursor-pointer items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      checked={utente.lembretes_email}
+                      onChange={async (e) => {
+                        const ativo = e.target.checked;
+                        setUtente({ ...utente, lembretes_email: ativo });
+                        const { error } = await supabase
+                          .from("utentes")
+                          .update({ lembretes_email: ativo })
+                          .eq("id", utente.id);
+                        if (error) setUtente({ ...utente, lembretes_email: !ativo });
+                      }}
+                      className="h-3 w-3 accent-foreground"
+                    />
+                    {t.lembretes.utente}
+                  </label>
+                )}
                 {utente.clinica_onde_visto && (
                   <span className="inline-flex items-center gap-1">
                     <Building2 className="h-3 w-3" />
@@ -314,6 +334,14 @@ export function FichaUtente({ utenteId }: { utenteId: string }) {
         <section className="mt-6">
           {tab === "resumo" && (
             <div className="grid gap-4 lg:grid-cols-2">
+              <Pendencias
+                utente={utente}
+                consultas={consultas}
+                sigo={sigo}
+                lembretesEspaco={!!atual.espaco.lembretes_email}
+                onIrPara={(x) => setTab(x as Tab)}
+                onMarcar={() => setMarcarOpen(true)}
+              />
               <Bloco titulo={tf.proximas}>
                 <ListaConsultas consultas={proximas.slice(0, 5)} nomeDe={nomeDe} idioma={idioma} />
               </Bloco>

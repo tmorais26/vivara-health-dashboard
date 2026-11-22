@@ -10,4 +10,15 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // plugin nitro fica desligado por omissão e o output deixa de ter o
 // roteamento correto para SSR — daqui resultam 404 da Vercel em produção.
 // Dentro do sandbox da Lovable este preset é ignorado (força sempre Cloudflare).
-export default defineConfig({ nitro: { preset: "vercel" } });
+// A tarefa diária envia os lembretes das consultas de amanhã (17h UTC = 17h/18h em Lisboa).
+export default defineConfig({
+  nitro: {
+    preset: "vercel",
+    // A configuração da Lovable passa estas opções ao Nitro tal como estão; só a tipagem é mais curta.
+    ...({
+      vercel: {
+        config: { version: 3, crons: [{ path: "/api/lembretes", schedule: "0 17 * * *" }] },
+      },
+    } as object),
+  },
+});

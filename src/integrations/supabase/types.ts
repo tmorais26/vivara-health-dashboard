@@ -47,6 +47,12 @@ export type Database = {
         Update: { codigo?: string; criado_em?: string; titular?: string; user_id?: string }
         Relationships: Rel[]
       }
+      pedidos_exame: {
+        Row: { analise_id: string | null; atualizado_em: string; autor_id: string; criado_em: string; descricao: string; espaco_id: string; estado: string; id: string; pedido_em: string; prazo: string | null; utente_id: string }
+        Insert: { analise_id?: string | null; atualizado_em?: string; autor_id: string; criado_em?: string; descricao: string; espaco_id: string; estado?: string; id?: string; pedido_em?: string; prazo?: string | null; utente_id: string }
+        Update: { analise_id?: string | null; atualizado_em?: string; autor_id?: string; criado_em?: string; descricao?: string; espaco_id?: string; estado?: string; id?: string; pedido_em?: string; prazo?: string | null; utente_id?: string }
+        Relationships: Rel[]
+      }
       analises: {
         Row: { atualizado_em: string; autor_id: string; criado_em: string; data_colheita: string; espaco_id: string; estado: string; ficheiro_nome: string | null; ficheiro_path: string | null; id: string; laboratorio: string | null; notas: string | null; tipo: string; titulo: string | null; utente_id: string }
         Insert: { atualizado_em?: string; autor_id: string; criado_em?: string; data_colheita: string; espaco_id: string; estado?: string; ficheiro_nome?: string | null; ficheiro_path?: string | null; id?: string; laboratorio?: string | null; notas?: string | null; tipo?: string; titulo?: string | null; utente_id: string }
@@ -102,9 +108,9 @@ export type Database = {
         Relationships: Rel[]
       }
       consultas: {
-        Row: { criado_em: string; criado_por: string | null; duracao_min: number; espaco_id: string; estado: string; id: string; inicio: string; motivo: string | null; profissional_id: string; tipo: string; utente_id: string }
-        Insert: { criado_em?: string; criado_por?: string | null; duracao_min?: number; espaco_id: string; estado?: string; id?: string; inicio: string; motivo?: string | null; profissional_id: string; tipo?: string; utente_id: string }
-        Update: { criado_em?: string; criado_por?: string | null; duracao_min?: number; espaco_id?: string; estado?: string; id?: string; inicio?: string; motivo?: string | null; profissional_id?: string; tipo?: string; utente_id?: string }
+        Row: { lembrete_enviado_em: string | null; criado_em: string; criado_por: string | null; duracao_min: number; espaco_id: string; estado: string; id: string; inicio: string; motivo: string | null; profissional_id: string; tipo: string; utente_id: string }
+        Insert: { lembrete_enviado_em?: string | null; criado_em?: string; criado_por?: string | null; duracao_min?: number; espaco_id: string; estado?: string; id?: string; inicio: string; motivo?: string | null; profissional_id: string; tipo?: string; utente_id: string }
+        Update: { lembrete_enviado_em?: string | null; criado_em?: string; criado_por?: string | null; duracao_min?: number; espaco_id?: string; estado?: string; id?: string; inicio?: string; motivo?: string | null; profissional_id?: string; tipo?: string; utente_id?: string }
         Relationships: Rel[]
       }
       diario_partilhas: {
@@ -120,9 +126,9 @@ export type Database = {
         Relationships: Rel[]
       }
       espacos: {
-        Row: { criado_em: string; criado_por: string; id: string; nome: string; tipo: string }
-        Insert: { criado_em?: string; criado_por: string; id?: string; nome: string; tipo: string }
-        Update: { criado_em?: string; criado_por?: string; id?: string; nome?: string; tipo?: string }
+        Row: { lembretes_email: boolean; criado_em: string; criado_por: string; id: string; nome: string; tipo: string }
+        Insert: { lembretes_email?: boolean; criado_em?: string; criado_por: string; id?: string; nome: string; tipo: string }
+        Update: { lembretes_email?: boolean; criado_em?: string; criado_por?: string; id?: string; nome?: string; tipo?: string }
         Relationships: Rel[]
       }
       medico_consentimento_marketing: {
@@ -192,9 +198,9 @@ export type Database = {
         Relationships: Rel[]
       }
       utentes: {
-        Row: { chat_estado: string; cidade: string | null; clinica_onde_visto: string | null; criado_em: string; criado_por: string | null; data_nascimento: string | null; email: string | null; espaco_id: string; id: string; nome: string; sexo: string | null; telefone: string | null }
-        Insert: { chat_estado?: string; cidade?: string | null; clinica_onde_visto?: string | null; criado_em?: string; criado_por?: string | null; data_nascimento?: string | null; email?: string | null; espaco_id: string; id?: string; nome: string; sexo?: string | null; telefone?: string | null }
-        Update: { chat_estado?: string; cidade?: string | null; clinica_onde_visto?: string | null; criado_em?: string; criado_por?: string | null; data_nascimento?: string | null; email?: string | null; espaco_id?: string; id?: string; nome?: string; sexo?: string | null; telefone?: string | null }
+        Row: { lembretes_email: boolean; chat_estado: string; cidade: string | null; clinica_onde_visto: string | null; criado_em: string; criado_por: string | null; data_nascimento: string | null; email: string | null; espaco_id: string; id: string; nome: string; sexo: string | null; telefone: string | null }
+        Insert: { lembretes_email?: boolean; chat_estado?: string; cidade?: string | null; clinica_onde_visto?: string | null; criado_em?: string; criado_por?: string | null; data_nascimento?: string | null; email?: string | null; espaco_id: string; id?: string; nome: string; sexo?: string | null; telefone?: string | null }
+        Update: { lembretes_email?: boolean; chat_estado?: string; cidade?: string | null; clinica_onde_visto?: string | null; criado_em?: string; criado_por?: string | null; data_nascimento?: string | null; email?: string | null; espaco_id?: string; id?: string; nome?: string; sexo?: string | null; telefone?: string | null }
         Relationships: Rel[]
       }
     }
@@ -215,6 +221,11 @@ export type Database = {
       usar_exportacao: { Args: { p_pedido: string }; Returns: undefined }
       meu_codigo: { Args: never; Returns: string }
       validar_codigo: { Args: { p_codigo: string }; Returns: boolean }
+      consultas_para_lembrete: {
+        Args: { p_de: string; p_ate: string }
+        Returns: { consulta_id: string; inicio: string; tipo: string; email: string; utente_nome: string; espaco_nome: string; profissional_nome: string }[]
+      }
+      marcar_lembrete_enviado: { Args: { p_consulta: string }; Returns: undefined }
       ja_declarou_recomendacao: { Args: never; Returns: boolean }
       resumo_recomendacoes: { Args: never; Returns: Json }
       resumo_recomendacoes_clinica: { Args: { p_espaco: string }; Returns: Json }

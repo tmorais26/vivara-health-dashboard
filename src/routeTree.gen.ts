@@ -19,6 +19,7 @@ import { Route as MensagensRouteImport } from './routes/mensagens'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as NovaPalavraPasseRouteImport } from './routes/nova-palavra-passe'
 import { Route as ReconsentimentoRouteImport } from './routes/reconsentimento'
+import { Route as ApiLembretesRouteImport } from './routes/api/lembretes'
 import { Route as ConsultaEventoIdRouteImport } from './routes/consulta.$eventoId'
 import { Route as DefinicoesRecomendarRouteImport } from './routes/definicoes_.recomendar'
 import { Route as UtentesUtenteIdRouteImport } from './routes/utentes.$utenteId'
@@ -73,6 +74,11 @@ const ReconsentimentoRoute = ReconsentimentoRouteImport.update({
   path: '/reconsentimento',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLembretesRoute = ApiLembretesRouteImport.update({
+  id: '/api/lembretes',
+  path: '/api/lembretes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConsultaEventoIdRoute = ConsultaEventoIdRouteImport.update({
   id: '/consulta/$eventoId',
   path: '/consulta/$eventoId',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/notificacoes': typeof NotificacoesRoute
   '/nova-palavra-passe': typeof NovaPalavraPasseRoute
   '/reconsentimento': typeof ReconsentimentoRoute
+  '/api/lembretes': typeof ApiLembretesRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/definicoes/recomendar': typeof DefinicoesRecomendarRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/notificacoes': typeof NotificacoesRoute
   '/nova-palavra-passe': typeof NovaPalavraPasseRoute
   '/reconsentimento': typeof ReconsentimentoRoute
+  '/api/lembretes': typeof ApiLembretesRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/definicoes/recomendar': typeof DefinicoesRecomendarRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/notificacoes': typeof NotificacoesRoute
   '/nova-palavra-passe': typeof NovaPalavraPasseRoute
   '/reconsentimento': typeof ReconsentimentoRoute
+  '/api/lembretes': typeof ApiLembretesRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/definicoes_/recomendar': typeof DefinicoesRecomendarRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/notificacoes'
     | '/nova-palavra-passe'
     | '/reconsentimento'
+    | '/api/lembretes'
     | '/consulta/$eventoId'
     | '/definicoes/recomendar'
     | '/utentes/$utenteId'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/notificacoes'
     | '/nova-palavra-passe'
     | '/reconsentimento'
+    | '/api/lembretes'
     | '/consulta/$eventoId'
     | '/definicoes/recomendar'
     | '/utentes/$utenteId'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/notificacoes'
     | '/nova-palavra-passe'
     | '/reconsentimento'
+    | '/api/lembretes'
     | '/consulta/$eventoId'
     | '/definicoes_/recomendar'
     | '/utentes/$utenteId'
@@ -194,6 +206,7 @@ export interface RootRouteChildren {
   NotificacoesRoute: typeof NotificacoesRoute
   NovaPalavraPasseRoute: typeof NovaPalavraPasseRoute
   ReconsentimentoRoute: typeof ReconsentimentoRoute
+  ApiLembretesRoute: typeof ApiLembretesRoute
   ConsultaEventoIdRoute: typeof ConsultaEventoIdRoute
   DefinicoesRecomendarRoute: typeof DefinicoesRecomendarRoute
   UtentesUtenteIdRoute: typeof UtentesUtenteIdRoute
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReconsentimentoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/lembretes': {
+      id: '/api/lembretes'
+      path: '/api/lembretes'
+      fullPath: '/api/lembretes'
+      preLoaderRoute: typeof ApiLembretesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/consulta/$eventoId': {
       id: '/consulta/$eventoId'
       path: '/consulta/$eventoId'
@@ -306,6 +326,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificacoesRoute: NotificacoesRoute,
   NovaPalavraPasseRoute: NovaPalavraPasseRoute,
   ReconsentimentoRoute: ReconsentimentoRoute,
+  ApiLembretesRoute: ApiLembretesRoute,
   ConsultaEventoIdRoute: ConsultaEventoIdRoute,
   DefinicoesRecomendarRoute: DefinicoesRecomendarRoute,
   UtentesUtenteIdRoute: UtentesUtenteIdRoute,
