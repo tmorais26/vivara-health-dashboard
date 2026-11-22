@@ -46,6 +46,7 @@ import { eixoY } from "@/lib/eixo";
 import { soData, type UtenteDb } from "@/lib/dados";
 import { useIdioma, useT } from "@/lib/i18n";
 import { useSessao } from "@/lib/sessao";
+import { PedidosExame, type PedidoExameDb } from "@/components/ficha/PedidosExame";
 
 type AnaliseDb = Tables<"analises">;
 type ResultadoDb = Tables<"resultados">;
@@ -85,11 +86,12 @@ export function Analises({
   const [analises, setAnalises] = useState<AnaliseDb[]>([]);
   const [resultados, setResultados] = useState<ResultadoDb[]>([]);
   const [alvos, setAlvos] = useState<AlvoDb[]>([]);
+  const [pedidos, setPedidos] = useState<PedidoExameDb[]>([]);
   const [aberto, setAberto] = useState<string | null>(null);
   const [registar, setRegistar] = useState(false);
 
   const carregar = useCallback(async () => {
-    const [a, r, al] = await Promise.all([
+    const [a, r, al, pe] = await Promise.all([
       supabase
         .from("analises")
         .select("*")
@@ -97,10 +99,16 @@ export function Analises({
         .order("data_colheita", { ascending: false }),
       supabase.from("resultados").select("*").eq("utente_id", utente.id),
       supabase.from("alvos_marcador").select("*").eq("utente_id", utente.id),
+      supabase
+        .from("pedidos_exame")
+        .select("*")
+        .eq("utente_id", utente.id)
+        .order("pedido_em", { ascending: false }),
     ]);
     setAnalises(a.data ?? []);
     setResultados(r.data ?? []);
     setAlvos(al.data ?? []);
+    setPedidos(pe.data ?? []);
   }, [utente.id]);
 
   useEffect(() => {
@@ -178,6 +186,8 @@ export function Analises({
           {ta.registar}
         </button>
       </div>
+
+      <PedidosExame utente={utente} pedidos={pedidos} onMudou={carregar} />
 
       <section className="rounded-2xl border border-border bg-surface-raised p-5">
         <h2 className="mb-3 text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -274,6 +284,7 @@ export function Analises({
         onClose={() => setRegistar(false)}
         utente={utente}
         anteriores={resultados}
+        pendentes={pedidos.filter((p) => p.estado === "pendente")}
         onGuardado={() => {
           setRegistar(false);
           void carregar();
@@ -596,12 +607,14 @@ function RegistarAnalise({
   onClose,
   utente,
   anteriores,
+  pendentes,
   onGuardado,
 }: {
   open: boolean;
   onClose: () => void;
   utente: UtenteDb;
   anteriores: ResultadoDb[];
+  pendentes: PedidoExameDb[];
   onGuardado: () => void;
 }) {
   const ta = useT().analises;
@@ -615,9 +628,11 @@ function RegistarAnalise({
   const [linhas, setLinhas] = useState<Linha[]>([{ ...LINHA_VAZIA }]);
   const [erro, setErro] = useState<string | null>(null);
   const [aGuardar, setAGuardar] = useState(false);
+  const [responde, setResponde] = useState<string[]>([]);
 
   useEffect(() => {
     if (!open) return;
+    setResponde([]);
     setData(new Date().toISOString().slice(0, 10));
     setLaboratorio("");
     setTipo("analises");
@@ -726,6 +741,13 @@ function RegistarAnalise({
         return setErro(ta.erro);
       }
     }
+    // Os exames pedidos a que este registo responde deixam de estar pendentes.
+    if (responde.length) {
+      await supabase
+        .from("pedidos_exame")
+        .update({ estado: "recebido", analise_id: analiseId })
+        .in("id", responde);
+    }
     setAGuardar(false);
     onGuardado();
   }
@@ -790,6 +812,31 @@ function RegistarAnalise({
           />
         </Field>
       </div>
+
+      {pendentes.length > 0 && (
+        <fieldset className="mt-4">
+          <legend className="mb-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+            {ta.respondeA}
+          </legend>
+          <div className="space-y-1">
+            {pendentes.map((p) => (
+              <label key={p.id} className="flex items-center gap-2 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  checked={responde.includes(p.id)}
+                  onChange={(e) =>
+                    setResponde((r) =>
+                      e.target.checked ? [...r, p.id] : r.filter((x) => x !== p.id),
+                    )
+                  }
+                  className="accent-foreground"
+                />
+                {p.descricao}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <div className="mt-4">
         <div className="mb-1 text-[11px] uppercase tracking-wider text-muted-foreground">

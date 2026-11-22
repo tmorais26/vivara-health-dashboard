@@ -42,6 +42,7 @@ export async function exportarEspaco(espacoId: string, pedidoId?: string) {
     analises,
     resultados,
     alvos,
+    pedidosExame,
   ] = await Promise.all([
     supabase.from("utentes").select("*").eq("espaco_id", espacoId),
     supabase.from("consultas").select("*").eq("espaco_id", espacoId),
@@ -55,6 +56,7 @@ export async function exportarEspaco(espacoId: string, pedidoId?: string) {
     supabase.from("analises").select("*").eq("espaco_id", espacoId),
     supabase.from("resultados").select("*").eq("espaco_id", espacoId),
     supabase.from("alvos_marcador").select("*").eq("espaco_id", espacoId),
+    supabase.from("pedidos_exame").select("*").eq("espaco_id", espacoId),
   ]);
   const dados = {
     formato: FORMATO_EXPORTACAO,
@@ -71,6 +73,7 @@ export async function exportarEspaco(espacoId: string, pedidoId?: string) {
     analises: analises.data ?? [],
     resultados: resultados.data ?? [],
     alvosMarcadores: alvos.data ?? [],
+    pedidosExame: pedidosExame.data ?? [],
   };
   descarregar(`vivara-dados-${hoje()}.json`, JSON.stringify(dados, null, 2), "application/json");
 }
@@ -102,6 +105,7 @@ export async function exportarUtenteDb(espacoId: string, utenteId: string, pedid
     analises,
     resultados,
     alvos,
+    pedidosExame,
   ] = await Promise.all([
     supabase.from("utentes").select("*").eq("id", utenteId).maybeSingle(),
     supabase.from("consultas").select("*").eq("utente_id", utenteId),
@@ -115,6 +119,7 @@ export async function exportarUtenteDb(espacoId: string, utenteId: string, pedid
     supabase.from("analises").select("*").eq("utente_id", utenteId),
     supabase.from("resultados").select("*").eq("utente_id", utenteId),
     supabase.from("alvos_marcador").select("*").eq("utente_id", utenteId),
+    supabase.from("pedidos_exame").select("*").eq("utente_id", utenteId),
   ]);
   const dados = {
     formato: FORMATO_EXPORTACAO,
@@ -131,6 +136,7 @@ export async function exportarUtenteDb(espacoId: string, utenteId: string, pedid
     analises: analises.data ?? [],
     resultados: resultados.data ?? [],
     alvosMarcadores: alvos.data ?? [],
+    pedidosExame: pedidosExame.data ?? [],
   };
   descarregar(`vivara-utente-${hoje()}.json`, JSON.stringify(dados, null, 2), "application/json");
 }
