@@ -48,7 +48,8 @@ type RouteId =
 type NavRoute =
   | RouteId
   | { route: "marker"; marker: BioMarker }
-  | { route: "documento"; docId: string };
+  | { route: "documento"; docId: string }
+  | { route: "registos"; view: "calendario" };
 
 interface NavCtxValue {
   go: (r: NavRoute) => void;
@@ -711,6 +712,9 @@ function HomeScreenV2() {
           <div className="rv-home-greet-name">{t("home.title")}</div>
         </div>
         <div className="rv-home-greet-actions">
+        <button className="rv-home-bell" onClick={() => go({ route: "registos", view: "calendario" })} aria-label={L("Calendário dos seus registos", "Calendar of your records")}>
+          {CalIcon}
+        </button>
         <button className="rv-home-bell" onClick={() => go("alerts")} aria-label={t("home.bell")}>
           {Icon.bell}
           {unreadCount > 0 && <span className="rv-home-bell-dot"/>}
@@ -1879,7 +1883,7 @@ const RANGE_OPTIONS: { id: string; months: number | null; pt: string; en: string
 const MONTHS_LONG_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 const MONTHS_LONG_EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-function RegistosScreen() {
+function RegistosScreen({ initialView = "lista" }: { initialView?: "lista" | "calendario" }) {
   const { go } = useNav();
   const { L, lang } = useLang();
   const [q, setQ] = useState("");
@@ -1887,7 +1891,7 @@ function RegistosScreen() {
   const [range, setRange] = useState("all");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   // Lista ou calendário: os mesmos registos, vistos por mês.
-  const [view, setView] = useState<"lista" | "calendario">("lista");
+  const [view, setView] = useState<"lista" | "calendario">(initialView);
   const todayKey = dayKey(APP_TODAY);
   const [ym, setYm] = useState({ year: APP_TODAY.getFullYear(), month: APP_TODAY.getMonth() });
   const [selDay, setSelDay] = useState(todayKey);
@@ -5112,7 +5116,7 @@ function renderScreen(route: NavRoute): ReactNode {
     case "exportar":     return <ExportarScreen />;
     case "sintomas":     return <SintomasScreen />;
     case "nutricao":     return <NutricaoScreen />;
-    case "registos":     return <RegistosScreen />;
+    case "registos":     return <RegistosScreen initialView={typeof route === "object" && route.route === "registos" ? route.view : "lista"} />;
     case "documento":    return <DocumentoScreen docId={docId} />;
     case "guardadas":    return <AnalisesGuardadasScreen />;
     case "calendario":   return <CalendarioScreen />;
