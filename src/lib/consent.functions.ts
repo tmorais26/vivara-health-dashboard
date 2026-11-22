@@ -8,7 +8,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestUrl } from "@tanstack/react-start/server";
 import { clientIp, userAgent, sha256 } from "./request-info.server";
-import { ensureReferral, usableCodeFor } from "./referral.server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
@@ -49,20 +48,6 @@ export const signUpPatient = createServerFn({ method: "POST" })
     if (Object.keys(errors).length) return { ok: false, fieldErrors: errors };
     if (!isConfigured()) return { ok: false, error: "not_configured" };
 
-    // Código de convite: tem de existir e não pode ser o da própria pessoa.
-    // Código mal escrito ou desconhecido bloqueia o registo com erro no campo;
-    // assim ninguém se regista a achar que o código foi aplicado.
-    let usedCode: string | null = null;
-    if (input.invite) {
-      try {
-        usedCode = (await usableCodeFor(input.invite, input.email))?.code ?? null;
-      } catch (e) {
-        console.error("[signup] referral", e instanceof Error ? e.message : e);
-        return { ok: false, error: "server" };
-      }
-      if (!usedCode) return { ok: false, fieldErrors: { invite: "invalid" } };
-    }
-
     const anon = createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
       auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
     });
@@ -70,7 +55,13 @@ export const signUpPatient = createServerFn({ method: "POST" })
     const { data: su, error } = await anon.auth.signUp({
       email: input.email,
       password: input.password,
-      options: { data: { full_name: input.name }, emailRedirectTo: `${origin}/app-v2` },
+      // O código e o convite ficam guardados na conta até haver sessão (com a
+      // confirmação de email não há sessão logo a seguir ao registo). No primeiro
+      // acesso, a app chama usar_codigo / aceitar_convite_app e limpa-os.
+      options: {
+        data: { full_name: input.name, codigo_pendente: input.invite || null, convite_pendente: input.convite || null },
+        emailRedirectTo: `${origin}/app-v2`,
+      },
     });
     if (error) {
       // Domínios que o Supabase recusa (inexistentes, de teste ou descartáveis).
@@ -104,13 +95,9 @@ export const signUpPatient = createServerFn({ method: "POST" })
       // O trigger on_auth_user_created já criou o perfil; confirma-se aqui o
       // papel de utente e guarda-se o código de convite.
       const { error: pErr } = await supabaseAdmin.from("profiles")
-        .upsert({ id: user.id, role: "patient", full_name: input.name, invite_code: usedCode }, { onConflict: "id" });
+        .upsert({ id: user.id, role: "patient", full_name: input.name }, { onConflict: "id" });
       if (pErr) throw new Error(`profiles: ${pErr.message}`);
       await insertEvents(rows);
-      // O seu código pessoal e, se usou um, o registo da recomendação («pendente»).
-      // Uma recomendação recusada (mesma pessoa, conta repetida) não bloqueia o registo.
-      const ref = await ensureReferral(user.id, input.email, usedCode);
-      if (usedCode && ref.registered !== "ok") console.warn("[signup] recomendação não registada:", ref.registered);
     } catch (e) {
       // Sem registo de consentimento não pode haver conta: desfaz-se.
       console.error("[signup]", e instanceof Error ? e.message : e);

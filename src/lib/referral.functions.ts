@@ -1,36 +1,28 @@
-// Funções de servidor do programa de recomendação.
+// Funções de servidor do programa de recomendação (lado do utente).
+//
+// As chamadas que o utente pode fazer com a sua sessão (validar_codigo,
+// usar_codigo, aceitar_convite_app, meu_codigo_utente) vão diretas do telemóvel
+// para o Supabase. Aqui fica só o que precisa da chave de serviço: ler os meses
+// grátis do próprio (meses_gratis não tem leitura para o utente).
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestUrl } from "@tanstack/react-start/server";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { clientIp } from "./request-info.server";
-import { checkCode, myCode, mySummary } from "./referral.server";
-import { referralLink, type CodeCheck, type ReferralSummary } from "./referral";
+import type { FreeMonth } from "./referral";
 
-/** Validação em tempo real do código no registo (sem sessão; com limite de pedidos). */
-export const checkReferralCode = createServerFn({ method: "POST" })
-  .inputValidator((raw: unknown) => ({ code: typeof (raw as { code?: unknown })?.code === "string" ? ((raw as { code: string }).code).slice(0, 40) : "" }))
-  .handler(async ({ data }): Promise<CodeCheck> => {
-    try {
-      return await checkCode(data.code, clientIp());
-    } catch (e) {
-      console.error("[referral] check", e instanceof Error ? e.message : e);
-      return { state: "unavailable" };
-    }
-  });
-
-export interface MyReferral {
-  code: string;
-  link: string;
-  summary: ReferralSummary;
-}
-
-/** O código da pessoa, a sua ligação e as contagens. */
-export const getMyReferral = createServerFn({ method: "GET" })
+export const getMyFreeMonths = createServerFn({ method: "GET" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])
-  .handler(async ({ context }): Promise<MyReferral> => {
-    const [code, summary] = await Promise.all([myCode(context.userId), mySummary(context.userId)]);
-    // Ligação com o domínio configurado (APP_PUBLIC_URL) ou, por omissão, o do pedido.
-    const base = process.env.APP_PUBLIC_URL || `${new URL(getRequestUrl()).origin}/app-v2`;
-    return { code, link: referralLink(base, code), summary };
+  .handler(async ({ context }): Promise<FreeMonth[]> => {
+    const { data, error } = await supabaseAdmin
+      .from("meses_gratis")
+      .select("estado, ano, criado_em, aplicado_em")
+      .eq("beneficiario_id", context.userId)
+      .order("criado_em", { ascending: false });
+    if (error) throw new Error(`meses_gratis: ${error.message}`);
+    return (data ?? []).map((m) => ({
+      estado: m.estado as FreeMonth["estado"],
+      ano: m.ano,
+      criadoEm: m.criado_em,
+      aplicadoEm: m.aplicado_em,
+    }));
   });

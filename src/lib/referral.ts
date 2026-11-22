@@ -1,16 +1,14 @@
 // Programa de recomendação: partes puras (sem rede), usadas no telemóvel, no
-// servidor e nos testes.
+// servidor e nos testes. As regras e os códigos vivem na base de dados do
+// portal (codigos_recomendacao, recomendacoes, meses_gratis); aqui só se
+// normaliza o que a pessoa escreve e se constroem ligações.
 //
-// Código: VIV-XXXX-XXXX. Alfabeto de 31 símbolos, sem 0/O/1/I/L, que se
-// confundem ao ler ou ditar. Os 8 símbolos vêm de aleatoriedade segura na base
-// de dados (ver supabase/migrations/…_referral_program.sql): 31^8 ≈ 8,5×10^11
-// combinações e nada do código depende do nome da pessoa.
+// Código: VIV-XXXX-XXXX, letras e números sem 0/O/1/I.
 
-export const CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
-export const CODE_RE = /^VIV-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}$/;
-
-/** Máximo de meses grátis por pessoa e por ano civil. */
-export const MAX_FREE_MONTHS_PER_YEAR = 12;
+const SYMBOL = "[2-9A-HJ-NP-Z]";
+export const CODE_RE = new RegExp(`^VIV-${SYMBOL}{4}-${SYMBOL}{4}$`);
+const RAW_RE = new RegExp(`^VIV${SYMBOL}{8}$`);
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Põe o que a pessoa escreveu no formato do código: maiúsculas, sem espaços,
@@ -18,58 +16,54 @@ export const MAX_FREE_MONTHS_PER_YEAR = 12;
  */
 export function normalizeCode(input: string): string {
   const raw = (input ?? "").toUpperCase().replace(/[\s-]+/g, "");
-  if (!/^VIV[2-9A-HJKMNP-Z]{8}$/.test(raw)) return "";
+  if (!RAW_RE.test(raw)) return "";
   return `VIV-${raw.slice(3, 7)}-${raw.slice(7, 11)}`;
 }
 
 export const isCodeFormat = (code: string): boolean => CODE_RE.test(code);
 
-/**
- * Email normalizado só para detetar contas repetidas da mesma pessoa:
- * minúsculas, sem «+etiqueta» e, no Gmail, sem pontos. Não é usado para enviar
- * nada.
- */
-export function normalizeEmail(email: string): string {
-  const e = (email ?? "").trim().toLowerCase();
-  const at = e.lastIndexOf("@");
-  if (at < 1) return e;
-  let local = e.slice(0, at);
-  let domain = e.slice(at + 1);
-  local = local.split("+")[0];
-  if (domain === "googlemail.com") domain = "gmail.com";
-  if (domain === "gmail.com") local = local.replace(/\./g, "");
-  return `${local}@${domain}`;
+/** Token de convite (uuid) enviado pelo médico; "" se não for um uuid. */
+export function normalizeInvite(input: string): string {
+  const v = (input ?? "").trim().toLowerCase();
+  return UUID_RE.test(v) ? v : "";
 }
 
-/** Ligação de convite, com o código já preenchido. */
-export function referralLink(base: string, code: string): string {
-  const u = new URL(base);
-  u.searchParams.set("ref", code);
-  return u.toString();
-}
-
-/** Código vindo de «?ref=…» no endereço; "" se não for um código válido. */
-export function codeFromSearch(search: string): string {
+/** «?codigo=VIV-…» e «?convite=<uuid>» do endereço, já validados no formato. */
+export function referralParams(search: string): { codigo: string; convite: string } {
   try {
-    return normalizeCode(new URLSearchParams(search).get("ref") ?? "");
+    const p = new URLSearchParams(search);
+    return { codigo: normalizeCode(p.get("codigo") ?? ""), convite: normalizeInvite(p.get("convite") ?? "") };
   } catch {
-    return "";
+    return { codigo: "", convite: "" };
   }
 }
 
-export type ReferralKind = "patient" | "doctor";
+/** Domínio do portal do médico (configurável por VITE_PORTAL_URL). */
+export const PORTAL_URL =
+  (import.meta.env?.VITE_PORTAL_URL as string | undefined) || "https://vivara-plataforma-medico.vercel.app";
 
-export interface ReferralSummary {
-  invited: number;
-  pending: number;
-  completed: number;
-  /** Meses grátis atribuídos no ano civil em curso (máx. 12). */
-  monthsThisYear: number;
-  /** Cada mês atribuído: sem identidades, só datas e estado. */
-  credits: { grantedAt: string; appliedAt: string | null }[];
+/** Ligação para o registo de médicos, com o código do utente já preenchido. */
+export function doctorSignupLink(code: string, portal: string = PORTAL_URL): string {
+  const u = new URL("/auth", portal);
+  u.searchParams.set("codigo", code);
+  return u.toString();
 }
 
-export type CodeCheck =
-  | { state: "valid"; kind: ReferralKind; doctorName?: string }
-  | { state: "invalid" }
-  | { state: "unavailable" };
+/** Respostas de usar_codigo / aceitar_convite_app. */
+export type ReferralResult =
+  | "ok" | "codigo_invalido" | "convite_invalido" | "proprio_codigo" | "nao_aplicavel" | "ja_usado" | "fora_do_registo";
+
+export const REFERRAL_RESULTS: ReferralResult[] = [
+  "ok", "codigo_invalido", "convite_invalido", "proprio_codigo", "nao_aplicavel", "ja_usado", "fora_do_registo",
+];
+
+export const asReferralResult = (v: unknown): ReferralResult | null =>
+  typeof v === "string" && (REFERRAL_RESULTS as string[]).includes(v) ? (v as ReferralResult) : null;
+
+/** Uma linha de meses_gratis, tal como a app a mostra (sem identidades). */
+export interface FreeMonth {
+  estado: "por_aplicar" | "aplicado" | "limite_atingido";
+  ano: number;
+  criadoEm: string;
+  aplicadoEm: string | null;
+}

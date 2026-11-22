@@ -1979,3 +1979,4 @@ button.rv-toggle-row .rv-toggle-sub{color:var(--fg-50);}
 .rv-ref-badge[data-state="pending"]{background:var(--watch-soft);color:var(--watch);}
 .rv-ref-badge[data-state="completed"]{background:var(--ok-soft);color:var(--ok);}
 .rv-ref-when{font-size:13px;color:var(--fg-70);}
+.rv-sub-free{text-align:center;font-size:15px;font-weight:600;color:var(--ok);padding:16px;}

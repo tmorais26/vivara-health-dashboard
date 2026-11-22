@@ -22,8 +22,10 @@ import {
   LEGAL_URLS, LEGAL_LINK_PARTS, SIGNUP_CHECKBOXES, RECONSENT_CHECKBOX, EXPORT_WINDOW_DAYS, wearablePrompt,
   type SignupCheckboxId,
 } from "@/lib/consent.config";
-import { getMyReferral, checkReferralCode, type MyReferral } from "@/lib/referral.functions";
-import { normalizeCode, referralLink, codeFromSearch, MAX_FREE_MONTHS_PER_YEAR, type CodeCheck } from "@/lib/referral";
+import { getMyFreeMonths } from "@/lib/referral.functions";
+import {
+  normalizeCode, normalizeInvite, referralParams, doctorSignupLink, asReferralResult, type ReferralResult, type FreeMonth,
+} from "@/lib/referral";
 import "../app-v2.css";
 
 export const Route = createFileRoute("/app-v2")({
@@ -40,7 +42,7 @@ export const Route = createFileRoute("/app-v2")({
 type RouteId =
   | "home" | "data" | "upload" | "messages" | "alerts"
   | "diary" | "consultas" | "profile" | "marker" | "summary" | "schedule" | "devices" | "assistente"
-  | "recomendar" | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar"
+  | "recomendar" | "subscricao" | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar"
   | "sintomas" | "nutricao" | "registos" | "documento" | "guardadas" | "calendario" | "condicoes";
 
 type NavRoute =
@@ -3763,14 +3765,6 @@ function PerfilScreen() {
             </div>
             <span className="rv-chev">{Icon.chev}</span>
           </a>
-          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("recomendar"); }}>
-            <div className="rv-list-icon">{Icon.share}</div>
-            <div className="rv-list-text">
-              <span className="rv-list-name">{L("Recomendar a Vivara","Recommend Vivara")}</span>
-              <span className="rv-list-sub">{L("O seu código e os meses grátis","Your code and free months")}</span>
-            </div>
-            <span className="rv-chev">{Icon.chev}</span>
-          </a>
           <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("nutricao"); }}>
             <div className="rv-list-icon">{Icon.pill}</div>
             <div className="rv-list-text">
@@ -3792,6 +3786,16 @@ function PerfilScreen() {
               <button type="button" className="rv-lang-opt" data-active={lang === "en"} onClick={() => setLang("en")}>EN</button>
             </div>
           </div>
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("subscricao"); }}>
+            <div className="rv-list-icon">{Icon.doc}</div>
+            <div className="rv-list-text"><span className="rv-list-name">{L("Subscrição","Subscription")}</span><span className="rv-list-sub">{L("Meses grátis","Free months")}</span></div>
+            <span className="rv-chev">{Icon.chev}</span>
+          </a>
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("recomendar"); }}>
+            <div className="rv-list-icon">{Icon.share}</div>
+            <div className="rv-list-text"><span className="rv-list-name">{L("Recomendar o meu médico","Recommend my doctor")}</span><span className="rv-list-sub">{L("Partilhe o seu código","Share your code")}</span></div>
+            <span className="rv-chev">{Icon.chev}</span>
+          </a>
           <a className="rv-list-row" style={{cursor: "pointer"}} onClick={(e) => { e.preventDefault(); go("notificacoes"); }}>
             <div className="rv-list-icon">{Icon.bell}</div>
             <div className="rv-list-text"><span className="rv-list-name">{t("profile.notifications")}</span></div>
@@ -5052,7 +5056,8 @@ function renderScreen(route: NavRoute): ReactNode {
     case "guardadas":    return <AnalisesGuardadasScreen />;
     case "calendario":   return <CalendarioScreen />;
     case "condicoes":    return <CondicoesScreen />;
-    case "recomendar":   return <RecomendarScreen />;
+    case "recomendar":   return <RecomendarMedicoScreen />;
+    case "subscricao":   return <SubscricaoScreen />;
     default:          return <HomeScreenV2 />;
   }
 }
@@ -5132,7 +5137,7 @@ function ConsentCheck({ id, checked, onChange, error, children }: {
   );
 }
 
-function SignupScreen({ onBack, onDone, initialInvite = "" }: { onBack: () => void; initialInvite?: string; onDone: (session: { access_token: string; refresh_token: string } | null, email: string) => void }) {
+function SignupScreen({ onBack, onDone, initialInvite = "", initialConvite = "" }: { onBack: () => void; initialInvite?: string; initialConvite?: string; onDone: (session: { access_token: string; refresh_token: string } | null, email: string) => void }) {
   const { L, lang } = useLang();
   const signUp = useServerFn(signUpPatient);
   const [name, setName] = useState("");
@@ -5140,21 +5145,22 @@ function SignupScreen({ onBack, onDone, initialInvite = "" }: { onBack: () => vo
   const [pass, setPass] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [invite, setInvite] = useState(initialInvite);
-  const checkCodeFn = useServerFn(checkReferralCode);
-  // Estado da validação em tempo real: null = nada a mostrar.
-  const [inviteCheck, setInviteCheck] = useState<CodeCheck | "checking" | null>(null);
+  // Validação em tempo real com validar_codigo (funciona sem sessão).
+  const [inviteCheck, setInviteCheck] = useState<"checking" | "valid" | "not_found" | "unavailable" | null>(null);
   useEffect(() => {
     const code = normalizeCode(invite);
     const typed = invite.replace(/[\s-]/g, "");
     if (!typed) { setInviteCheck(null); return; }
-    if (!code) { setInviteCheck(typed.length >= 11 ? { state: "invalid" } : null); return; }
+    if (!code) { setInviteCheck(typed.length >= 11 ? "not_found" : null); return; }
     setInviteCheck("checking");
     let alive = true;
     const t = setTimeout(() => {
-      checkCodeFn({ data: { code } }).then((r) => { if (alive) setInviteCheck(r); }).catch(() => { if (alive) setInviteCheck({ state: "unavailable" }); });
+      supabase.rpc("validar_codigo", { p_codigo: code }).then(({ data, error }) => {
+        if (!alive) return;
+        setInviteCheck(error ? "unavailable" : data ? "valid" : "not_found");
+      }, () => { if (alive) setInviteCheck("unavailable"); });
     }, 350);
     return () => { alive = false; clearTimeout(t); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invite]);
   const [checks, setChecks] = useState<Record<SignupCheckboxId, boolean>>({
     "signup-age": false, "signup-legal": false, "signup-health": false, "signup-marketing": false,
@@ -5175,28 +5181,27 @@ function SignupScreen({ onBack, onDone, initialInvite = "" }: { onBack: () => vo
     if (field === "name") return code === "too_long" ? L("O nome é demasiado longo.", "The name is too long.") : L("Escreva o seu nome.", "Enter your name.");
     if (field === "email") return code === "required" ? L("Escreva o seu email.", "Enter your email.") : L("Este email não parece válido. Confirme se está bem escrito.", "This email doesn't look valid. Check it is spelt correctly.");
     if (field === "password") return code === "too_long" ? L("A palavra-passe tem de ter no máximo 72 caracteres.", "The password must be at most 72 characters.") : L("A palavra-passe tem de ter pelo menos 8 caracteres.", "The password must be at least 8 characters.");
-    if (field === "invite") return L("O código só pode ter letras, números e hífenes.", "The code can only contain letters, numbers and hyphens.");
     return L("Esta caixa é obrigatória para criar conta.", "This box is required to create an account.");
   };
 
   const focusFirstError = (errs: Partial<Record<SignupField, string>>) => {
-    const order: SignupField[] = ["name", "email", "password", "invite", "signup-age", "signup-legal", "signup-health"];
+    const order: SignupField[] = ["name", "email", "password", "signup-age", "signup-legal", "signup-health"];
     const first = order.find((f) => errs[f]);
     if (!first) return;
-    const el = formRef.current?.querySelector<HTMLInputElement>(`#${first === "name" || first === "email" || first === "password" || first === "invite" ? `rv-su-${first}` : first}`);
+    const el = formRef.current?.querySelector<HTMLInputElement>(`#${first === "name" || first === "email" || first === "password" ? `rv-su-${first}` : first}`);
     el?.focus();
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
-    const { errors: errs } = validateSignup({ name, email, password: pass, invite, checks, lang });
+    const { errors: errs } = validateSignup({ name, email, password: pass, invite, convite: initialConvite, checks, lang });
     setErrors(errs);
     setFormError(null);
     if (Object.keys(errs).length) { focusFirstError(errs); return; }
     setBusy(true);
     try {
-      const r = await signUp({ data: { name, email, password: pass, invite, checks, lang } });
+      const r = await signUp({ data: { name, email, password: pass, invite, convite: initialConvite, checks, lang } });
       if (r.ok) { onDone(r.session, email.trim()); return; }
       if (r.fieldErrors) { setErrors(r.fieldErrors); focusFirstError(r.fieldErrors); }
       else if (r.error === "weak_password") { setErrors({ password: "too_short" }); setFormError(L("Escolha uma palavra-passe mais difícil de adivinhar.", "Choose a password that is harder to guess.")); }
@@ -5209,7 +5214,7 @@ function SignupScreen({ onBack, onDone, initialInvite = "" }: { onBack: () => vo
     }
   };
 
-  const fieldProps = (field: "name" | "email" | "password" | "invite") => ({
+  const fieldProps = (field: "name" | "email" | "password") => ({
     id: `rv-su-${field}`,
     "aria-invalid": errors[field] ? true : undefined,
     "aria-describedby": errors[field] ? `rv-su-${field}-err` : undefined,
@@ -5250,23 +5255,16 @@ function SignupScreen({ onBack, onDone, initialInvite = "" }: { onBack: () => vo
           </div>
           <div className="rv-field">
             <label className="rv-field-label" htmlFor="rv-su-invite">{L("Código de convite (opcional)", "Invite code (optional)")}</label>
-            <input className="rv-field-input" type="text" autoComplete="off" autoCapitalize="characters" spellCheck={false} value={invite} onChange={(e) => setInvite(e.target.value)} {...fieldProps("invite")}/>
-            <div aria-live="polite">
-              {errors.invite
-                ? <div id="rv-su-invite-err" className="rv-field-error">{msg("invite", errors.invite)}</div>
-                : inviteCheck === "checking"
-                  ? <div className="rv-field-hint">{L("A verificar…", "Checking…")}</div>
-                  : inviteCheck && inviteCheck.state === "valid"
-                    ? <div className="rv-field-ok">{inviteCheck.kind === "doctor" && inviteCheck.doctorName
-                        ? `${L("Recomendado por", "Recommended by")} ${doctorLabel(inviteCheck.doctorName)}`
-                        : L("Código válido", "Valid code")}</div>
-                    : inviteCheck && inviteCheck.state === "invalid"
-                      ? <div className="rv-field-error">{L("Este código não é válido. Confirme se o escreveu bem.", "This code isn't valid. Check you typed it correctly.")}</div>
-                      : inviteCheck && inviteCheck.state === "unavailable"
-                        ? <div className="rv-field-hint">{L("Não foi possível verificar agora. Verificamos ao criar a conta.", "Couldn't check right now. We'll check when you create the account.")}</div>
-                        : null}
+            <input className="rv-field-input" type="text" autoComplete="off" autoCapitalize="characters" spellCheck={false} value={invite} onChange={(e) => setInvite(e.target.value)} id="rv-su-invite" aria-describedby="rv-su-invite-state"/>
+            <div id="rv-su-invite-state" aria-live="polite">
+              {inviteCheck === "checking" && <div className="rv-field-hint">{L("A verificar…", "Checking…")}</div>}
+              {inviteCheck === "valid" && <div className="rv-field-ok">{L("Código válido.", "Valid code.")}</div>}
+              {inviteCheck === "not_found" && <div className="rv-field-error">{L("Código não encontrado.", "Code not found.")}</div>}
+              {inviteCheck === "unavailable" && <div className="rv-field-hint">{L("Não foi possível verificar agora. Pode continuar.", "Couldn't check right now. You can carry on.")}</div>}
             </div>
-            <div className="rv-field-hint">{REFERRAL_RULE_TEXT[lang]}</div>
+            {initialConvite
+              ? <div className="rv-field-hint">{L("Vai criar a conta com o convite do seu médico.", "You're creating your account with your doctor's invitation.")}</div>
+              : <div className="rv-field-hint">{INVITE_HINT_TEXT[lang]}</div>}
           </div>
 
           <fieldset className="rv-checks">
@@ -5460,15 +5458,40 @@ function WearableConsentModal({ name, metrics, tint, initials, onCancel, onConfi
   );
 }
 
-// ─── Recomendar a Vivara ─────────────────────────────
-// Texto das regras, tal como definido pela Vivara. NÃO alterar sem aprovação.
-const REFERRAL_RULE_TEXT = {
-  pt: "Quem recomenda e quem chega ganham um mês grátis, depois do primeiro pagamento de quem chega. Até 12 meses grátis por ano.",
-  en: "Anyone who recommends and anyone who joins each get a free month, after the joining person's first payment. Up to 12 free months per year.",
+// ─── Recomendar o meu médico ─────────────────────────
+// Regras (portal): médico → utente, o utente ganha 1 mês; utente → médico, só o
+// médico ganha o 1.º mês; utente → utente não se aplica. Os códigos e as regras
+// vivem na base de dados do portal; a app só chama as funções dele.
+
+// [Revisão jurídica: confirmar com o advogado/Ordem dos Médicos antes de publicar.]
+const RECOMMEND_DOCTOR_TEXT = {
+  pt: "Partilhe com o seu médico. Se ele aderir à Vivara, ganha o primeiro mês grátis. Você não recebe nenhum benefício.",
+  en: "Share it with your doctor. If they join Vivara, they get the first month free. You don't receive any benefit.",
 };
 
-/** «Dr./Dra. Nome», sem duplicar o tratamento se o nome já o traz. */
-const doctorLabel = (name: string) => (/^dr\.?a?\.?\s/i.test(name.trim()) ? name.trim() : `Dr./Dra. ${name.trim()}`);
+// [Revisão jurídica: confirmar com o advogado/Ordem dos Médicos antes de publicar.]
+const INVITE_HINT_TEXT = {
+  pt: "Se o seu médico lhe deu um código, ganha um mês grátis depois do seu primeiro pagamento.",
+  en: "If your doctor gave you a code, you get a free month after your first payment.",
+};
+
+// [Revisão jurídica: confirmar com o advogado/Ordem dos Médicos antes de publicar.]
+const FREE_MONTH_RULE_TEXT = {
+  pt: "O mês grátis entra depois do seu primeiro pagamento e adia a cobrança seguinte um mês; no plano anual, prolonga a subscrição um mês. Máximo de 12 meses grátis por ano.",
+  en: "The free month starts after your first payment and pushes your next charge back one month; on the annual plan, it extends your subscription by one month. Up to 12 free months per year.",
+};
+
+// Resultado de usar_codigo / aceitar_convite_app, mostrado uma vez depois do registo.
+// [Revisão jurídica: confirmar com o advogado/Ordem dos Médicos antes de publicar.] (a de «ok» descreve a regra)
+const REFERRAL_RESULT_TEXT: Record<ReferralResult, { pt: string; en: string }> = {
+  ok:               { pt: "Código aplicado. O mês grátis entra depois do seu primeiro pagamento.", en: "Code applied. The free month starts after your first payment." },
+  codigo_invalido:  { pt: "O código de convite não foi encontrado. A sua conta foi criada na mesma.", en: "The invite code wasn't found. Your account was created anyway." },
+  convite_invalido: { pt: "Este convite já não é válido. A sua conta foi criada na mesma.", en: "This invitation is no longer valid. Your account was created anyway." },
+  proprio_codigo:   { pt: "Não pode usar o seu próprio código.", en: "You can't use your own code." },
+  nao_aplicavel:    { pt: "Este código não dá benefício a contas de utente.", en: "This code doesn't give a benefit to patient accounts." },
+  ja_usado:         { pt: "Esta conta já usou um código de convite.", en: "This account has already used an invite code." },
+  fora_do_registo:  { pt: "Os códigos só podem ser usados até 7 dias depois de criar a conta.", en: "Codes can only be used up to 7 days after creating the account." },
+};
 
 function copyText(text: string): Promise<boolean> {
   try {
@@ -5490,61 +5513,52 @@ function ReferralQR({ link }: { link: string }) {
     return () => { alive = false; };
   }, [link]);
   return (
-    <div className="rv-ref-qr" role="img" aria-label={L("Código QR da sua ligação de convite", "QR code for your invite link")}>
+    <div className="rv-ref-qr" role="img" aria-label={L("Código QR da ligação para o seu médico", "QR code for the link for your doctor")}>
       {svg ? <div dangerouslySetInnerHTML={{ __html: svg }}/> : <div className="rv-modal-spinner" aria-hidden="true"/>}
     </div>
   );
 }
 
-function RecomendarScreen() {
+const DEMO_CODE = "VIV-K7M2-9QXA";
+
+function RecomendarMedicoScreen() {
   const { go, showToast } = useNav();
   const { L, lang } = useLang();
   const { mode } = useAccount();
-  const getMine = useServerFn(getMyReferral);
-  const [data, setData] = useState<MyReferral | null>(null);
+  const [code, setCode] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let alive = true;
-    if (mode !== "real") {
-      // Conta de demonstração: valores fictícios, nada é gerado nem guardado.
-      setData({
-        code: "VIV-K7M2-9QXA",
-        link: referralLink(`${window.location.origin}/app-v2`, "VIV-K7M2-9QXA"),
-        summary: { invited: 2, pending: 1, completed: 1, monthsThisYear: 1, credits: [{ grantedAt: "2026-04-02T10:00:00Z", appliedAt: "2026-04-02T10:05:00Z" }] },
-      });
-      setStatus("ready");
-      return;
-    }
+    if (mode !== "real") { setCode(DEMO_CODE); setStatus("ready"); return; }   // demonstração: nada é criado
     setStatus("loading");
-    getMine().then((d) => { if (alive) { setData(d); setStatus("ready"); } }).catch(() => { if (alive) setStatus("error"); });
+    supabase.rpc("meu_codigo_utente").then(({ data, error }) => {
+      if (!alive) return;
+      if (error || !data) { setStatus("error"); return; }
+      setCode(data); setStatus("ready");
+    }, () => { if (alive) setStatus("error"); });
     return () => { alive = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, attempt]);
 
-  const copy = async (text: string, okMsg: string) => {
-    showToast((await copyText(text)) ? okMsg : L("Não foi possível copiar", "Couldn't copy"));
+  const link = code ? doctorSignupLink(code) : "";
+  const copyCode = async () => {
+    if (!code) return;
+    showToast((await copyText(code)) ? L("Código copiado", "Code copied") : L("Não foi possível copiar", "Couldn't copy"));
   };
-  const shareLink = async () => {
-    if (!data) return;
-    const text = L(`Experimente a Vivara. O meu código é ${data.code}.`, `Try Vivara. My code is ${data.code}.`);
+  const share = async () => {
+    if (!code) return;
+    const text = L(`Junte-se à Vivara com o meu código: ${code}`, `Join Vivara with my code: ${code}`);
     try {
-      if (typeof navigator.share === "function") { await navigator.share({ title: "Vivara", text, url: data.link }); return; }
+      if (typeof navigator.share === "function") { await navigator.share({ title: "Vivara", text, url: link }); return; }
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") return;   // a pessoa fechou a folha de partilha
     }
-    await copy(data.link, L("Ligação copiada", "Link copied"));
+    showToast((await copyText(`${text}\n${link}`)) ? L("Ligação copiada", "Link copied") : L("Não foi possível copiar", "Couldn't copy"));
   };
 
-  const s = data?.summary;
-  const dateFmt = (iso: string) => fmtDay(iso.slice(0, 10), lang, true);
-  const rows: { key: string; state: "pending" | "completed" }[] = s
-    ? [...Array(s.completed).fill("completed"), ...Array(s.pending).fill("pending")].map((st, i) => ({ key: `${st}-${i}`, state: st as "pending" | "completed" }))
-    : [];
-
   return (
-    <SubScreen title={L("Recomendar a Vivara", "Recommend Vivara")} onBack={() => go("profile")}>
+    <SubScreen title={L("Recomendar o meu médico", "Recommend my doctor")} onBack={() => go("profile")}>
       {status === "loading" && <div className="rv-ref-state" role="status"><div className="rv-modal-spinner" aria-hidden="true"/><span>{L("A carregar…", "Loading…")}</span></div>}
       {status === "error" && (
         <div className="rv-ref-state" role="alert">
@@ -5552,59 +5566,142 @@ function RecomendarScreen() {
           <button type="button" className="rv-device-btn" data-tone="primary" onClick={() => setAttempt((n) => n + 1)}>{L("Tentar de novo", "Try again")}</button>
         </div>
       )}
-      {status === "ready" && data && s && (
+      {status === "ready" && code && (
         <>
+          <p className="rv-ref-rule" style={{marginTop: 4, marginBottom: 14}}>{RECOMMEND_DOCTOR_TEXT[lang]}</p>
           <section className="rv-ref-card" aria-labelledby="rv-ref-code-label">
             <div id="rv-ref-code-label" className="rv-ref-label">{L("O seu código", "Your code")}</div>
-            <div className="rv-ref-code" aria-live="polite">{data.code}</div>
+            <div className="rv-ref-code">{code}</div>
             {mode !== "real" && <div className="rv-field-hint" style={{textAlign: "center"}}>{L("Código de demonstração.", "Demo code.")}</div>}
             <div className="rv-ref-actions">
-              <button type="button" className="rv-cta-primary" onClick={() => copy(data.code, L("Código copiado", "Code copied"))}>{L("Copiar código", "Copy code")}</button>
-              <button type="button" className="rv-cta-ghost" onClick={shareLink}>{L("Partilhar ligação", "Share link")}</button>
+              <button type="button" className="rv-cta-primary" onClick={copyCode}>{L("Copiar", "Copy")}</button>
+              <button type="button" className="rv-cta-ghost" onClick={share}>{L("Partilhar", "Share")}</button>
             </div>
           </section>
-
-          <ReferralQR link={data.link}/>
-
-          <p className="rv-ref-rule">{REFERRAL_RULE_TEXT[lang]}</p>
-
-          <div className="rv-sub-section-head">{L("Acompanhamento", "Progress")}</div>
-          <div className="rv-ref-stats" aria-live="polite">
-            {L(`Convidados: ${s.invited} · Meses ganhos: ${s.monthsThisYear} de ${MAX_FREE_MONTHS_PER_YEAR} este ano`,
-               `Invited: ${s.invited} · Months earned: ${s.monthsThisYear} of ${MAX_FREE_MONTHS_PER_YEAR} this year`)}
-          </div>
-          {s.monthsThisYear >= MAX_FREE_MONTHS_PER_YEAR && (
-            <div className="rv-src-note" style={{margin: "8px 20px 0"}}>{L("Já atingiu o limite de meses grátis deste ano.", "You've reached this year's free-month limit.")}</div>
-          )}
-          {rows.length > 0 && (
-            <ul className="rv-ref-list">
-              {rows.map((r, i) => (
-                <li key={r.key} className="rv-ref-row">
-                  <span>{L("Recomendação", "Referral")} {i + 1}</span>
-                  <span className="rv-ref-badge" data-state={r.state}>{r.state === "completed" ? L("Concluída", "Completed") : L("Pendente", "Pending")}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {s.credits.length > 0 && (
-            <>
-              <div className="rv-sub-section-head">{L("Meses grátis", "Free months")}</div>
-              <ul className="rv-ref-list">
-                {s.credits.map((c, i) => (
-                  <li key={i} className="rv-ref-row">
-                    <span>{L("Mês grátis", "Free month")}</span>
-                    <span className="rv-ref-when">
-                      {c.appliedAt ? L(`Aplicado a ${dateFmt(c.appliedAt)}`, `Applied on ${dateFmt(c.appliedAt)}`) : L("A aplicar", "Being applied")}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
+          <ReferralQR link={link}/>
+          <p className="rv-field-hint" style={{margin: "0 20px", textAlign: "center"}}>{L("O seu médico pode ler o QR na consulta.", "Your doctor can scan the QR at your appointment.")}</p>
         </>
       )}
     </SubScreen>
   );
+}
+
+// ─── Subscrição ──────────────────────────────────────
+// Por agora só mostra os meses grátis (meses_gratis, lido no servidor). O plano
+// e as cobranças entram com o prestador de pagamentos.
+function SubscricaoScreen() {
+  const { go } = useNav();
+  const { L, lang } = useLang();
+  const { mode } = useAccount();
+  const getMonths = useServerFn(getMyFreeMonths);
+  const [months, setMonths] = useState<FreeMonth[] | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    if (mode !== "real") {
+      setMonths([{ estado: "por_aplicar", ano: 2026, criadoEm: "2026-04-20T10:00:00Z", aplicadoEm: null }]);
+      setStatus("ready");
+      return;
+    }
+    setStatus("loading");
+    getMonths().then((m) => { if (alive) { setMonths(m); setStatus("ready"); } }).catch(() => { if (alive) setStatus("error"); });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, attempt]);
+
+  const pending = (months ?? []).filter((m) => m.estado === "por_aplicar").length;
+  const applied = (months ?? []).filter((m) => m.estado === "aplicado");
+  const capped = (months ?? []).filter((m) => m.estado === "limite_atingido").length;
+  const day = (iso: string) => fmtDay(iso.slice(0, 10), lang, true);
+
+  return (
+    <SubScreen title={L("Subscrição", "Subscription")} onBack={() => go("profile")}>
+      <div className="rv-sub-section-head" style={{marginTop: 4}}>{L("Meses grátis", "Free months")}</div>
+      {status === "loading" && <div className="rv-ref-state" role="status"><div className="rv-modal-spinner" aria-hidden="true"/><span>{L("A carregar…", "Loading…")}</span></div>}
+      {status === "error" && (
+        <div className="rv-ref-state" role="alert">
+          <span>{L("Não foi possível carregar os seus meses grátis.", "We couldn't load your free months.")}</span>
+          <button type="button" className="rv-device-btn" data-tone="primary" onClick={() => setAttempt((n) => n + 1)}>{L("Tentar de novo", "Try again")}</button>
+        </div>
+      )}
+      {status === "ready" && (
+        <>
+          {pending > 0 && (
+            <div className="rv-ref-card rv-sub-free" role="status">
+              {pending === 1
+                ? L("Tem 1 mês grátis por aplicar", "You have 1 free month to be applied")
+                : L(`Tem ${pending} meses grátis por aplicar`, `You have ${pending} free months to be applied`)}
+            </div>
+          )}
+          {applied.length > 0 && (
+            <ul className="rv-ref-list">
+              {applied.map((m, i) => (
+                <li key={i} className="rv-ref-row">
+                  <span>{L("Mês grátis", "Free month")}</span>
+                  <span className="rv-ref-when">{L(`Aplicado a ${day(m.aplicadoEm ?? m.criadoEm)}`, `Applied on ${day(m.aplicadoEm ?? m.criadoEm)}`)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {capped > 0 && (
+            // [Revisão jurídica: confirmar com o advogado/Ordem dos Médicos antes de publicar.]
+            <div className="rv-src-note" style={{margin: "0 20px 10px"}}>
+              {L("Atingiu o limite de 12 meses grátis deste ano.", "You've reached the limit of 12 free months this year.")}
+            </div>
+          )}
+          {pending === 0 && applied.length === 0 && capped === 0 && (
+            <div className="rv-src-note" style={{margin: "0 20px 10px"}}>{L("Não tem meses grátis.", "You don't have any free months.")}</div>
+          )}
+          <p className="rv-ref-rule">{FREE_MONTH_RULE_TEXT[lang]}</p>
+          {mode !== "real" && <p className="rv-field-hint" style={{margin: "6px 20px 0"}}>{L("Valores de demonstração.", "Demo values.")}</p>}
+        </>
+      )}
+    </SubScreen>
+  );
+}
+
+/** Aviso simples com um só botão (resultado do código depois do registo). */
+function NoticeDialog({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
+  const { L } = useLang();
+  const okRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    okRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return (
+    <div className="rv-overlay" role="dialog" aria-modal="true" aria-labelledby="rv-notice-title">
+      <div className="rv-modal">
+        <div className="rv-modal-title" id="rv-notice-title">{title}</div>
+        <div className="rv-modal-text">{children}</div>
+        <div className="rv-modal-actions">
+          <button ref={okRef} className="rv-device-btn" data-tone="primary" type="button" onClick={onClose}>{L("Entendido", "OK")}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Depois do registo, já com sessão: aplica o convite ou o código que ficaram
+ * guardados na conta. Convite tem prioridade. Nunca bloqueia nada: se falhar
+ * (rede), tenta outra vez no próximo acesso.
+ */
+async function applyPendingReferral(): Promise<ReferralResult | null> {
+  const { data } = await supabase.auth.getUser();
+  const md = (data.user?.user_metadata ?? {}) as Record<string, unknown>;
+  const convite = normalizeInvite(typeof md.convite_pendente === "string" ? md.convite_pendente : "");
+  const codigo = normalizeCode(typeof md.codigo_pendente === "string" ? md.codigo_pendente : "");
+  if (!convite && !codigo) return null;
+  const { data: res, error } = convite
+    ? await supabase.rpc("aceitar_convite_app", { p_token: convite })
+    : await supabase.rpc("usar_codigo", { p_codigo: codigo });
+  if (error) return null;
+  await supabase.auth.updateUser({ data: { codigo_pendente: null, convite_pendente: null } }).catch(() => {});
+  return asReferralResult(res);
 }
 
 // ─── Login ───────────────────────────────────────────
@@ -5702,8 +5799,11 @@ function AppV2Page() {
   const [mode, setMode] = useState<"none" | AccountMode>("none");
   const [authView, setAuthView] = useState<"login" | "signup" | "signup-done">("login");
   const [signupEmail, setSignupEmail] = useState("");
-  // Código vindo da ligação ou do QR (?ref=VIV-…): abre o registo já preenchido.
-  const [prefillRef, setPrefillRef] = useState("");
+  // ?codigo=VIV-… e ?convite=<uuid> (ligação do médico ou /registo): abrem o
+  // registo já preenchido; o convite fica guardado até a conta estar criada.
+  const [prefill, setPrefill] = useState<{ codigo: string; convite: string }>({ codigo: "", convite: "" });
+  const [referralNotice, setReferralNotice] = useState<ReferralResult | null>(null);
+  const referralTried = useRef(false);
   const [account, setAccount] = useState<ConsentStatus | null>(null);
   const [accountState, setAccountState] = useState<"idle" | "loading" | "error">("idle");
   const fetchStatus = useServerFn(getConsentStatus);
@@ -5714,8 +5814,10 @@ function AppV2Page() {
 
   useEffect(() => {
     try {
-      const ref = codeFromSearch(window.location.search);
-      if (ref) { setPrefillRef(ref); setAuthView("signup"); }
+      const params = referralParams(window.location.search);
+      const wantsSignup = new URLSearchParams(window.location.search).has("registo");
+      if (params.codigo || params.convite) setPrefill(params);
+      if (params.codigo || params.convite || wantsSignup) setAuthView("signup");
       if (sessionStorage.getItem(LOGIN_STORAGE_KEY) === "1") setMode("demo");
       const savedLang = localStorage.getItem(LANG_STORAGE_KEY);
       if (savedLang === "pt" || savedLang === "en") setLangState(savedLang);
@@ -5803,7 +5905,18 @@ function AppV2Page() {
     return () => { alive = false; };
   }, [enterReal]);
 
+  // Depois do registo, já com sessão e com a conta em ordem: aplica o convite ou
+  // o código guardados. Uma vez por sessão; nunca bloqueia a app.
+  useEffect(() => {
+    if (mode !== "real" || !account || account.closure || !account.health || account.needsReconsent) return;
+    if (referralTried.current) return;
+    referralTried.current = true;
+    applyPendingReferral().then((r) => { if (r) setReferralNotice(r); }).catch(() => {});
+  }, [mode, account]);
+
   const logout = useCallback(() => {
+    referralTried.current = false;
+    setReferralNotice(null);
     try { sessionStorage.removeItem(LOGIN_STORAGE_KEY); } catch { /* modo privado */ }
     if (mode === "real") void supabase.auth.signOut().catch(() => {});
     setMode("none");
@@ -5823,7 +5936,7 @@ function AppV2Page() {
   const gate = (): ReactNode => {
     if (mode === "none") {
       if (authView === "signup") return (
-        <SignupScreen initialInvite={prefillRef} onBack={() => setAuthView("login")} onDone={async (session, email) => {
+        <SignupScreen initialInvite={prefill.codigo} initialConvite={prefill.convite} onBack={() => setAuthView("login")} onDone={async (session, email) => {
           if (session) {
             await supabase.auth.setSession(session).catch(() => {});
             void enterReal();
@@ -5880,6 +5993,11 @@ function AppV2Page() {
                 {renderScreen(route)}
                 {toastMsg && <div className="rv-toast" role="status" aria-live="polite">{toastMsg}</div>}
                 <AssistantFAB />
+                {referralNotice && (
+                  <NoticeDialog title={L("Código de convite", "Invite code")} onClose={() => setReferralNotice(null)}>
+                    {REFERRAL_RESULT_TEXT[referralNotice][lang]}
+                  </NoticeDialog>
+                )}
               </>
             )}
           </div>

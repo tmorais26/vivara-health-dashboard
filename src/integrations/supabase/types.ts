@@ -20,9 +20,9 @@ export type Database = {
         Update: { id?: string; role?: "physician" | "patient"; full_name?: string | null; invite_code?: string | null; created_at?: string }
         Relationships: []
       }
-      referral_codes: {
-        Row: { code: string; owner_id: string; owner_kind: string; created_at: string }
-        Insert: { code: string; owner_id: string; owner_kind: string; created_at?: string }
+      meses_gratis: {
+        Row: { id: string; beneficiario_id: string; recomendacao_id: string; ano: number; estado: string; referencia_prestador: string | null; criado_em: string; aplicado_em: string | null }
+        Insert: { [_ in never]: never }
         Update: { [_ in never]: never }
         Relationships: []
       }
@@ -57,12 +57,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      rate_limit_hit: { Args: { p_bucket: string; p_limit: number; p_window: string }; Returns: boolean }
-      ensure_referral_code: { Args: { p_user: string; p_kind: string }; Returns: string }
-      register_referral: { Args: { p_code: string; p_referee: string; p_referee_kind: string; p_email_norm_hash: string | null }; Returns: string }
-      referral_summary: { Args: { p_user: string; p_year?: number }; Returns: Json }
-      referral_on_first_payment: { Args: { p_user: string; p_fingerprint_hash?: string | null; p_year?: number }; Returns: { credit_id: number; credited_user: string; credit_role: string }[] }
-      record_payment_fingerprint: { Args: { p_user: string; p_hash: string }; Returns: boolean }
+      validar_codigo: { Args: { p_codigo: string }; Returns: boolean }
+      usar_codigo: { Args: { p_codigo: string }; Returns: string }
+      aceitar_convite_app: { Args: { p_token: string }; Returns: string }
+      meu_codigo_utente: { Args: Record<PropertyKey, never>; Returns: string }
+      registar_primeiro_pagamento: { Args: { p_user: string }; Returns: undefined }
+      marcar_mes_aplicado: { Args: { p_mes: string; p_referencia: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

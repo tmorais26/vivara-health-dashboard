@@ -16,6 +16,7 @@ import { Route as AppV2RouteImport } from './routes/app-v2'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DefinicoesRouteImport } from './routes/definicoes'
 import { Route as PrescricoesRouteImport } from './routes/prescricoes'
+import { Route as RegistoRouteImport } from './routes/registo'
 import { Route as ConsultaEventoIdRouteImport } from './routes/consulta.$eventoId'
 import { Route as UtentesUtenteIdRouteImport } from './routes/utentes.$utenteId'
 
@@ -54,6 +55,11 @@ const PrescricoesRoute = PrescricoesRouteImport.update({
   path: '/prescricoes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegistoRoute = RegistoRouteImport.update({
+  id: '/registo',
+  path: '/registo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConsultaEventoIdRoute = ConsultaEventoIdRouteImport.update({
   id: '/consulta/$eventoId',
   path: '/consulta/$eventoId',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
   '/prescricoes': typeof PrescricoesRoute
+  '/registo': typeof RegistoRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
   '/prescricoes': typeof PrescricoesRoute
+  '/registo': typeof RegistoRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/definicoes': typeof DefinicoesRoute
   '/prescricoes': typeof PrescricoesRoute
+  '/registo': typeof RegistoRoute
   '/consulta/$eventoId': typeof ConsultaEventoIdRoute
   '/utentes/$utenteId': typeof UtentesUtenteIdRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/definicoes'
     | '/prescricoes'
+    | '/registo'
     | '/consulta/$eventoId'
     | '/utentes/$utenteId'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/definicoes'
     | '/prescricoes'
+    | '/registo'
     | '/consulta/$eventoId'
     | '/utentes/$utenteId'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/definicoes'
     | '/prescricoes'
+    | '/registo'
     | '/consulta/$eventoId'
     | '/utentes/$utenteId'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DefinicoesRoute: typeof DefinicoesRoute
   PrescricoesRoute: typeof PrescricoesRoute
+  RegistoRoute: typeof RegistoRoute
   ConsultaEventoIdRoute: typeof ConsultaEventoIdRoute
   UtentesUtenteIdRoute: typeof UtentesUtenteIdRoute
 }
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrescricoesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/registo': {
+      id: '/registo'
+      path: '/registo'
+      fullPath: '/registo'
+      preLoaderRoute: typeof RegistoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/consulta/$eventoId': {
       id: '/consulta/$eventoId'
       path: '/consulta/$eventoId'
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DefinicoesRoute: DefinicoesRoute,
   PrescricoesRoute: PrescricoesRoute,
+  RegistoRoute: RegistoRoute,
   ConsultaEventoIdRoute: ConsultaEventoIdRoute,
   UtentesUtenteIdRoute: UtentesUtenteIdRoute,
 }
