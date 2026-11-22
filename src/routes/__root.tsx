@@ -11,6 +11,8 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { estadoConsentimento } from "@/lib/consent.functions";
+import { SessaoProvider, useSessao } from "@/lib/sessao";
+import { NotificacoesProvider } from "@/lib/notificacoes";
 
 import appCss from "../styles.css?url";
 
@@ -117,6 +119,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   const isAuthRoute = pathname === "/auth";
   const isReconsentRoute = pathname === "/reconsentimento";
+  const isNovaPalavraPasse = pathname === "/nova-palavra-passe";
   const userId = session?.user.id;
 
   // Nova versão de um documento legal (ou aceitação em falta) → pede nova aceitação.
@@ -135,31 +138,59 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [userId, pathname]);
+  }, [userId]);
 
   useEffect(() => {
     if (!ready) return;
-    if (!session && !isAuthRoute) {
+    if (!session && !isAuthRoute && !isNovaPalavraPasse) {
       navigate({ to: "/auth" });
     }
     if (session && isAuthRoute) {
       navigate({ to: "/" });
     }
-    if (session && precisaConsentir && !isReconsentRoute) {
+    if (session && precisaConsentir && !isReconsentRoute && !isNovaPalavraPasse) {
       navigate({ to: "/reconsentimento" });
     }
-  }, [ready, session, isAuthRoute, isReconsentRoute, precisaConsentir, navigate]);
+  }, [ready, session, isAuthRoute, isReconsentRoute, isNovaPalavraPasse, precisaConsentir, navigate]);
 
-  if (!ready) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-xs text-muted-foreground">A carregar…</div>
-      </div>
-    );
-  }
+  if (!ready) return <Carregar />;
 
-  if (!session && !isAuthRoute) return null;
-  if (session && !isAuthRoute && !isReconsentRoute && precisaConsentir !== false) return null;
+  if (!session && !isAuthRoute && !isNovaPalavraPasse) return null;
+  if (!session) return <>{children}</>;
+  if (isNovaPalavraPasse || isReconsentRoute) return <>{children}</>;
+  if (!isAuthRoute && precisaConsentir !== false) return <Carregar />;
 
+  return (
+    <SessaoProvider user={session.user}>
+      <NotificacoesProvider>
+        <EspacoGate>{children}</EspacoGate>
+      </NotificacoesProvider>
+    </SessaoProvider>
+  );
+}
+
+function Carregar() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="text-xs text-muted-foreground">A carregar…</div>
+    </div>
+  );
+}
+
+// Quem ainda não pertence a nenhum espaço (Plano Médico ou clínica) começa por /comecar.
+function EspacoGate({ children }: { children: React.ReactNode }) {
+  const { carregando, membros } = useSessao();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const semEspaco = !carregando && membros.length === 0;
+  const naComecar = pathname === "/comecar";
+
+  useEffect(() => {
+    if (semEspaco && !naComecar && pathname !== "/auth") navigate({ to: "/comecar" });
+    if (!carregando && !semEspaco && naComecar) navigate({ to: "/" });
+  }, [semEspaco, naComecar, carregando, pathname, navigate]);
+
+  if (carregando) return <Carregar />;
+  if (semEspaco && !naComecar) return <Carregar />;
   return <>{children}</>;
 }

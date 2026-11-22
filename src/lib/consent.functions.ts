@@ -21,6 +21,7 @@ type EntradaAceitacao = {
   textos: { documentos: string; habilitacao: string; marketing: string };
   marketing: boolean;
   perfil?: { nome?: string; especialidade?: string; cedula?: string; clinica?: string };
+  codigoConvite?: string;
 };
 
 export const registarAceitacao = createServerFn({ method: "POST" })
@@ -33,21 +34,45 @@ export const registarAceitacao = createServerFn({ method: "POST" })
     },
     marketing: d?.marketing === true,
     perfil: d?.perfil,
+    codigoConvite: typeof d?.codigoConvite === "string" ? d.codigoConvite.slice(0, 20) : undefined,
   }))
   .handler(async ({ data, context }) => {
     const ip = ipDoPedido();
     const user_id = context.userId;
     const base = { user_id, ip };
     const { error } = await supabaseAdmin.from("medico_consentimentos").insert([
-      { ...base, tipo: "documento", codigo: "termos", versao: LEGAL_DOCS.termos.versao, caixa_id: CAIXA_IDS.documentos, texto_caixa: data.textos.documentos },
-      { ...base, tipo: "documento", codigo: "acordo", versao: LEGAL_DOCS.acordo.versao, caixa_id: CAIXA_IDS.documentos, texto_caixa: data.textos.documentos },
-      { ...base, tipo: "declaracao", codigo: "habilitacao", versao: "habilitacao-v1", caixa_id: CAIXA_IDS.habilitacao, texto_caixa: data.textos.habilitacao },
+      {
+        ...base,
+        tipo: "documento",
+        codigo: "termos",
+        versao: LEGAL_DOCS.termos.versao,
+        caixa_id: CAIXA_IDS.documentos,
+        texto_caixa: data.textos.documentos,
+      },
+      {
+        ...base,
+        tipo: "documento",
+        codigo: "acordo",
+        versao: LEGAL_DOCS.acordo.versao,
+        caixa_id: CAIXA_IDS.documentos,
+        texto_caixa: data.textos.documentos,
+      },
+      {
+        ...base,
+        tipo: "declaracao",
+        codigo: "habilitacao",
+        versao: "habilitacao-v1",
+        caixa_id: CAIXA_IDS.habilitacao,
+        texto_caixa: data.textos.habilitacao,
+      },
     ]);
     if (error) throw new Error("Não foi possível registar a aceitação.");
 
     if (data.marketing) {
       await supabaseAdmin.from("medico_consentimento_marketing").insert({
-        ...base, aceite: true, texto_caixa: data.textos.marketing,
+        ...base,
+        aceite: true,
+        texto_caixa: data.textos.marketing,
       });
     }
     if (data.perfil) {
@@ -59,7 +84,17 @@ export const registarAceitacao = createServerFn({ method: "POST" })
         clinica: opcional(data.perfil.clinica),
       });
     }
-    return { ok: true as const };
+    // Código de convite usado no registo: só uma vez por conta e só no registo (regras na base de dados).
+    let convite: string | null = null;
+    if (data.codigoConvite) {
+      const { data: r } = await supabaseAdmin.rpc("registar_recomendacao", {
+        p_convidado: user_id,
+        p_codigo: data.codigoConvite,
+        p_convidado_tipo: "profissional",
+      });
+      convite = (r as string | null) ?? null;
+    }
+    return { ok: true as const, convite };
   });
 
 export const estadoConsentimento = createServerFn({ method: "GET" })
@@ -95,7 +130,10 @@ export const definirMarketing = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data, context }) => {
     const { error } = await supabaseAdmin.from("medico_consentimento_marketing").insert({
-      user_id: context.userId, aceite: data.aceite, texto_caixa: data.texto, ip: ipDoPedido(),
+      user_id: context.userId,
+      aceite: data.aceite,
+      texto_caixa: data.texto,
+      ip: ipDoPedido(),
     });
     if (error) throw new Error("Não foi possível guardar.");
     return { ok: true as const };
@@ -103,14 +141,36 @@ export const definirMarketing = createServerFn({ method: "POST" })
 
 export const registarFundamentoUtente = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { utenteRef: string; texto: string }) => ({
-    utenteRef: texto(d?.utenteRef, 200),
-    texto: texto(d?.texto),
-  }))
+  .inputValidator((d: { utenteRefs: string[]; texto: string }) => {
+    if (!Array.isArray(d?.utenteRefs) || d.utenteRefs.length === 0 || d.utenteRefs.length > 2000) {
+      throw new Error("Dados inválidos");
+    }
+    return { utenteRefs: d.utenteRefs.map((r) => texto(r, 200)), texto: texto(d?.texto) };
+  })
   .handler(async ({ data, context }) => {
-    const { error } = await supabaseAdmin.from("medico_utente_fundamento").insert({
-      user_id: context.userId, utente_ref: data.utenteRef, texto_confirmado: data.texto, ip: ipDoPedido(),
-    });
+    const ip = ipDoPedido();
+    const { error } = await supabaseAdmin.from("medico_utente_fundamento").insert(
+      data.utenteRefs.map((utente_ref) => ({
+        user_id: context.userId,
+        utente_ref,
+        texto_confirmado: data.texto,
+        ip,
+      })),
+    );
     if (error) throw new Error("Não foi possível registar a confirmação.");
+    return { ok: true as const };
+  });
+
+export const registarDeclaracaoRecomendacao = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { texto: string }) => ({ texto: texto(d?.texto) }))
+  .handler(async ({ data, context }) => {
+    const { error } = await supabaseAdmin
+      .from("recomendacao_declaracoes")
+      .upsert(
+        { user_id: context.userId, texto: data.texto, ip: ipDoPedido() },
+        { onConflict: "user_id", ignoreDuplicates: true },
+      );
+    if (error) throw new Error("Não foi possível registar a declaração.");
     return { ok: true as const };
   });

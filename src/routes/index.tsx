@@ -1,35 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { ArrowRight, Bell, Building2, ChevronDown, Plus, Search, Sparkles, Upload } from "lucide-react";
-import type { ResumoUtente } from "@/data/mock-portal";
-import { formatarData } from "@/data/mock-utente";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowRight, Building2, CalendarClock, MessageSquare, Plus, Search, Upload, UserRoundCheck } from "lucide-react";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
-import { useT } from "@/lib/i18n";
-import { FundamentoLegalDialog } from "@/components/dashboard/FundamentoLegalDialog";
-import { chatAcoes } from "@/lib/chat-store";
-import { adicionarUtentes, useUtentes } from "@/lib/utentes-store";
-import { definirClinica, useClinicaUtente, useClinicasConhecidas } from "@/lib/utente-clinica";
+import { useIdioma, useT } from "@/lib/i18n";
+import { e_clinico, iniciais, useSessao } from "@/lib/sessao";
+import { dataHora, idade, listarUtentes, type ResumoUtenteDb } from "@/lib/dados";
+import { NovoUtenteModal } from "@/components/portal/NovoUtenteModal";
 import { ImportarUtentesModal } from "@/components/portal/ImportarUtentesModal";
-import {
-  Field,
-  ModalActions,
-  PrimaryButton,
-  SecondaryButton,
-  SimpleModal,
-  inputClass,
-} from "@/components/portal/SimpleModal";
 
-type SortKey = "alertas" | "proxima" | "ultima" | "nome";
+type Ordem = "nome" | "proxima" | "recentes";
+type Filtro = "sigo" | "todos";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Vivara Health — Portal Clínico" },
-      {
-        name: "description",
-        content:
-          "Portal clínico Vivara Health. Lista de utentes em medicina de longevidade com alertas funcionais.",
-      },
+      { title: "Utentes — Vivara Health" },
+      { name: "description", content: "Portal clínico Vivara Health: lista de utentes." },
     ],
   }),
   component: Index,
@@ -37,448 +23,269 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const t = useT();
+  const tu = t.utentes;
+  const idioma = useIdioma();
+  const { atual } = useSessao();
+  const clinico = e_clinico(atual);
+  const [utentes, setUtentes] = useState<ResumoUtenteDb[] | null>(null);
+  const [erro, setErro] = useState(false);
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<SortKey>("alertas");
-  const resumosUtentes = useUtentes();
-  const [novoUtenteOpen, setNovoUtenteOpen] = useState(false);
+  const [ordem, setOrdem] = useState<Ordem>("nome");
+  const [filtro, setFiltro] = useState<Filtro>(clinico && atual?.espaco.tipo === "clinica" ? "sigo" : "todos");
+  const [novoOpen, setNovoOpen] = useState(false);
   const [importarOpen, setImportarOpen] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
 
+  const carregar = useCallback(async () => {
+    if (!atual) return;
+    setErro(false);
+    try {
+      setUtentes(await listarUtentes(atual.espaco_id, atual.id));
+    } catch {
+      setErro(true);
+    }
+  }, [atual]);
+
+  useEffect(() => {
+    void carregar();
+  }, [carregar]);
+
   const filtrados = useMemo(() => {
+    if (!utentes) return [];
     const q = query.trim().toLowerCase();
-    const lista = q
-      ? resumosUtentes.filter((u) => u.nome.toLowerCase().includes(q) || u.cidade.toLowerCase().includes(q))
-      : [...resumosUtentes];
-    lista.sort((a, b) => {
-      switch (sort) {
-        case "alertas":
-          return b.alertasAtivos - a.alertasAtivos || b.marcadoresForaAlvo - a.marcadoresForaAlvo;
-        case "proxima":
-          return (a.proximaConsulta ?? "9999").localeCompare(b.proximaConsulta ?? "9999");
-        case "ultima":
-          return a.ultimaConsulta.localeCompare(b.ultimaConsulta);
-        case "nome":
-          return a.nome.localeCompare(b.nome);
-      }
-    });
-    return lista;
-  }, [query, sort, resumosUtentes]);
+    const lista = utentes.filter(
+      (u) =>
+        (filtro === "todos" || u.segue) &&
+        (!q ||
+          u.nome.toLowerCase().includes(q) ||
+          (u.cidade ?? "").toLowerCase().includes(q) ||
+          (u.telefone ?? "").replace(/\s/g, "").includes(q.replace(/\s/g, ""))),
+    );
+    return lista.sort((a, b) =>
+      ordem === "nome"
+        ? a.nome.localeCompare(b.nome)
+        : ordem === "recentes"
+          ? b.criado_em.localeCompare(a.criado_em)
+          : (a.proxima?.inicio ?? "9999").localeCompare(b.proxima?.inicio ?? "9999"),
+    );
+  }, [utentes, query, ordem, filtro]);
+
+  const mostrarFiltro = clinico && atual?.espaco.tipo === "clinica";
+  const vazio = utentes !== null && utentes.length === 0;
 
   return (
     <PortalShell>
       <main className="mx-auto max-w-[1100px] px-4 py-6 pb-24 sm:px-6 sm:py-10 lg:pb-10">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8">
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              {t.comum.portalClinico}
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{atual?.espaco.nome}</div>
+            <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">{tu.titulo}</h1>
+            {utentes && !vazio && <p className="mt-2 text-sm text-muted-foreground">{tu.sub(utentes.length)}</p>}
+          </div>
+          {!vazio && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setImportarOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-raised px-3.5 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                {t.dados.importar}
+              </button>
+              <button
+                type="button"
+                onClick={() => setNovoOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {tu.novoTitulo}
+              </button>
             </div>
-            <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">{t.lista.titulo}</h1>
-            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-              {t.lista.subtitulo(resumosUtentes.length)}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setImportarOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-raised px-3.5 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Upload className="h-3.5 w-3.5" />
-            {t.dados.importar}
-          </button>
-          <button
-            type="button"
-            onClick={() => setNovoUtenteOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            {t.lista.novoUtente}
-          </button>
-          </div>
+          )}
         </div>
+
         {aviso && (
           <div role="status" className="mb-4 rounded-xl border border-border bg-surface-raised px-4 py-2.5 text-sm text-foreground">
             {aviso}
           </div>
         )}
-
-        {/* Search + sort */}
-        <div className="mb-5 flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[240px]">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t.lista.pesquisar}
-              className="w-full rounded-full border border-border bg-surface-raised py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
-            />
+        {erro && (
+          <div role="alert" className="mb-4 rounded-xl border border-state-alert/30 bg-state-alert-soft px-4 py-2.5 text-sm text-state-alert">
+            {tu.erroCarregar}
           </div>
-          <SortDropdown sort={sort} onChange={setSort} />
-        </div>
+        )}
 
-        <div className="grid grid-cols-1 gap-3">
-          {filtrados.map((u) => (
-            <UtenteCard key={u.id} u={u} />
-          ))}
-        </div>
+        {utentes === null && !erro && <ListaACarregar />}
 
-        <p className="mt-8 text-[11px] text-muted-foreground">{t.comum.demoNota}</p>
+        {vazio && (
+          <div className="rounded-2xl border border-dashed border-border bg-surface-raised px-6 py-12 text-center">
+            <h2 className="font-serif text-2xl text-foreground">{tu.vazioTitulo}</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{tu.vazioTexto}</p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setNovoOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+              >
+                <Plus className="h-4 w-4" />
+                {tu.criarPrimeiro}
+              </button>
+              <button
+                type="button"
+                onClick={() => setImportarOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
+              >
+                <Upload className="h-4 w-4" />
+                {t.dados.importar}
+              </button>
+            </div>
+            <Link
+              to="/utentes/$utenteId"
+              params={{ utenteId: "maria-antunes" }}
+              className="mt-5 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              {tu.verExemplo} <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+        )}
 
-        <div className="mt-4 flex flex-wrap gap-4">
-          <Link
-            to="/app"
-            className="inline-flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground"
-          >
-            {t.lista.verAppUtente} <ArrowRight className="h-3 w-3" />
-          </Link>
-          <Link
-            to="/app-v2"
-            className="inline-flex items-center gap-2 text-[11px] text-primary hover:opacity-80"
-          >
-            {t.lista.appV2} <ArrowRight className="h-3 w-3" />
-          </Link>
-        </div>
+        {utentes && !vazio && (
+          <>
+            <div className="mb-5 flex flex-wrap items-center gap-3">
+              <div className="relative min-w-[240px] flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={tu.pesquisar}
+                  aria-label={tu.pesquisar}
+                  className="w-full rounded-full border border-border bg-surface-raised py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
+                />
+              </div>
+              {mostrarFiltro && (
+                <div role="group" className="flex rounded-full border border-border bg-surface-raised p-0.5 text-xs">
+                  {(["sigo", "todos"] as const).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      aria-pressed={filtro === f}
+                      onClick={() => setFiltro(f)}
+                      className={`rounded-full px-3 py-1.5 ${filtro === f ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      {f === "sigo" ? tu.filtroSigo : tu.filtroTodos}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                {tu.ordenar}
+                <select
+                  value={ordem}
+                  onChange={(e) => setOrdem(e.target.value as Ordem)}
+                  className="rounded-full border border-border bg-surface-raised px-3 py-1.5 text-xs text-foreground"
+                >
+                  <option value="nome">{tu.ordNome}</option>
+                  <option value="proxima">{tu.ordProxima}</option>
+                  <option value="recentes">{tu.ordRecentes}</option>
+                </select>
+              </label>
+            </div>
+
+            {filtrados.length === 0 ? (
+              <p className="py-10 text-center text-sm text-muted-foreground">{tu.semResultados}</p>
+            ) : (
+              <ul className="grid grid-cols-1 gap-3">
+                {filtrados.map((u) => (
+                  <li key={u.id}>
+                    <UtenteCard u={u} idioma={idioma} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
       </main>
       <MobileNavTabs />
       <NovoUtenteModal
-        open={novoUtenteOpen}
-        onClose={() => setNovoUtenteOpen(false)}
-        onCreate={(u) => adicionarUtentes([u])}
+        open={novoOpen}
+        onClose={() => setNovoOpen(false)}
+        onCriado={() => {
+          setNovoOpen(false);
+          void carregar();
+        }}
       />
       <ImportarUtentesModal
         open={importarOpen}
         onClose={() => setImportarOpen(false)}
-        onImportados={(n) => setAviso(t.dados.importados(n))}
+        onImportados={(n) => {
+          setAviso(t.dados.importados(n));
+          void carregar();
+        }}
       />
     </PortalShell>
   );
 }
 
-function NovoUtenteModal({
-  open,
-  onClose,
-  onCreate,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onCreate: (u: ResumoUtente) => void;
-}) {
-  const t = useT();
-  const [nome, setNome] = useState("");
-  const [idade, setIdade] = useState("");
-  const [sexo, setSexo] = useState<"F" | "M">("F");
-  const [cidade, setCidade] = useState("");
-  const [plano, setPlano] = useState("Essencial");
-  const [pendente, setPendente] = useState<ResumoUtente | null>(null);
-  const [chatAtivo, setChatAtivo] = useState(false);
-  const [clinica, setClinica] = useState("");
-  const clinicasConhecidas = useClinicasConhecidas();
-
-  function reset() {
-    setNome("");
-    setIdade("");
-    setSexo("F");
-    setCidade("");
-    setPlano("Essencial");
-    setChatAtivo(false);
-    setClinica("");
-  }
-
-  function criar() {
-    if (!nome.trim()) return;
-    const iniciais = nome
-      .trim()
-      .split(/\s+/)
-      .map((p) => p[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-    const id = `${nome
-      .trim()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`;
-    setPendente({
-      id,
-      nome: nome.trim(),
-      iniciais,
-      idade: Number(idade) || 0,
-      sexo,
-      cidade: cidade.trim() || "—",
-      plano,
-      alertasAtivos: 0,
-      marcadoresForaAlvo: 0,
-      totalMarcadores: 0,
-      ultimaConsulta: new Date().toISOString().slice(0, 10),
-      acessivel: false,
-    });
-  }
-
-  function confirmarFundamento() {
-    if (!pendente) return;
-    onCreate(pendente);
-    if (chatAtivo) chatAcoes.definirEstado(pendente.id, "ativo");
-    if (clinica.trim()) definirClinica(pendente.id, clinica);
-    setPendente(null);
-    reset();
-    onClose();
-  }
-
+function ListaACarregar() {
   return (
-    <SimpleModal
-      open={open}
-      onClose={() => {
-        reset();
-        onClose();
-      }}
-      title={t.lista.novoUtente}
-      description="Crie a ficha do utente. Dados clínicos completos são preenchidos na primeira consulta."
-      width="md"
+    <ul className="grid grid-cols-1 gap-3" aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <li key={i} className="h-20 animate-pulse rounded-2xl border border-border bg-surface-raised" />
+      ))}
+    </ul>
+  );
+}
+
+function UtenteCard({ u, idioma }: { u: ResumoUtenteDb; idioma: "pt" | "en" }) {
+  const tu = useT().utentes;
+  const anos = idade(u.data_nascimento);
+  const detalhe = [anos !== null ? tu.anos(anos) : null, u.sexo, u.cidade].filter(Boolean).join(" · ");
+  return (
+    <Link
+      to="/utentes/$utenteId"
+      params={{ utenteId: u.id }}
+      className="group flex items-center gap-4 rounded-2xl border border-border bg-surface-raised p-4 transition-colors hover:border-foreground/20 sm:p-5"
     >
-      <div className="space-y-4">
-        <Field label="Nome">
-          <input
-            className={inputClass}
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            placeholder="Nome completo"
-          />
-        </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Idade">
-            <input
-              className={inputClass}
-              type="number"
-              min={0}
-              value={idade}
-              onChange={(e) => setIdade(e.target.value)}
-              placeholder="42"
-            />
-          </Field>
-          <Field label="Sexo">
-            <div className="grid grid-cols-2 gap-2">
-              {(["F", "M"] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setSexo(s)}
-                  className={`rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${
-                    sexo === s
-                      ? "border-foreground/40 bg-accent text-foreground"
-                      : "border-border bg-background text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </Field>
-        </div>
-        <Field label="Cidade">
-          <input
-            className={inputClass}
-            value={cidade}
-            onChange={(e) => setCidade(e.target.value)}
-            placeholder="Lisboa"
-          />
-        </Field>
-        <Field label="Plano">
-          <select className={inputClass} value={plano} onChange={(e) => setPlano(e.target.value)}>
-            <option>Essencial</option>
-            <option>Performance</option>
-            <option>Longevidade+</option>
-          </select>
-        </Field>
-        <Field label={t.clinicaUtente.label}>
-          <input
-            className={inputClass}
-            value={clinica}
-            onChange={(e) => setClinica(e.target.value)}
-            placeholder={t.clinicaUtente.placeholder}
-            list="novo-utente-clinicas"
-          />
-          <datalist id="novo-utente-clinicas">
-            {clinicasConhecidas.map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
-        </Field>
-        <div className="flex items-start gap-2.5 rounded-xl border border-border bg-background px-3 py-2.5">
-          <input
-            id="novo-utente-chat"
-            type="checkbox"
-            checked={chatAtivo}
-            onChange={(e) => setChatAtivo(e.target.checked)}
-            className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
-          />
-          <label htmlFor="novo-utente-chat" className="text-sm text-foreground">
-            {t.chat.ativarNoRegisto}
-            <span className="block text-[11px] text-muted-foreground">{t.chat.ativarNoRegistoAjuda}</span>
-          </label>
-        </div>
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-medium text-foreground">
+        {iniciais(u.nome)}
       </div>
-      <ModalActions>
-        <SecondaryButton
-          onClick={() => {
-            reset();
-            onClose();
-          }}
-        >
-          Cancelar
-        </SecondaryButton>
-        <PrimaryButton onClick={criar}>Criar utente</PrimaryButton>
-      </ModalActions>
-      <FundamentoLegalDialog
-        open={pendente !== null}
-        utenteRefs={pendente ? [pendente.id] : []}
-        onConfirm={confirmarFundamento}
-        onCancel={() => setPendente(null)}
-      />
-    </SimpleModal>
-  );
-}
-
-function SortDropdown({ sort, onChange }: { sort: SortKey; onChange: (s: SortKey) => void }) {
-  const t = useT();
-  const labels: Record<SortKey, string> = {
-    alertas: t.lista.ordAlertas,
-    proxima: t.lista.ordProxima,
-    ultima: t.lista.ordUltima,
-    nome: t.lista.ordNome,
-  };
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-raised px-3.5 py-2 text-xs font-medium text-foreground hover:bg-accent"
-      >
-        {t.lista.ordenar}: {labels[sort]}
-        <ChevronDown className="h-3 w-3" />
-      </button>
-      {open && (
-        <div className="absolute right-0 z-20 mt-1.5 w-56 overflow-hidden rounded-xl border border-border bg-surface-raised shadow-lg">
-          {(Object.keys(labels) as SortKey[]).map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => {
-                onChange(k);
-                setOpen(false);
-              }}
-              className={`flex w-full items-center justify-between px-3 py-2 text-left text-xs hover:bg-accent ${
-                sort === k ? "bg-accent text-foreground" : "text-foreground"
-              }`}
-            >
-              {labels[k]}
-              {sort === k && <span className="inline-block h-1.5 w-1.5 rounded-full bg-foreground" />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function UtenteCard({ u }: { u: ResumoUtente }) {
-  const t = useT();
-  const clinica = useClinicaUtente(u.id);
-  const conteudo = (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
-      <div className="flex items-center gap-4">
-        <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-accent text-sm font-medium text-foreground">
-          {u.iniciais}
-          {u.novosDados && (
-            <span className="absolute -right-0.5 -top-0.5 inline-flex h-3 w-3 items-center justify-center rounded-full bg-state-alert">
-              <Sparkles className="h-2 w-2 text-primary-foreground" />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="font-serif text-lg text-foreground">{u.nome}</span>
+          {u.segue && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-medium text-foreground">
+              <UserRoundCheck className="h-3 w-3" />
+              {tu.segue}
+            </span>
+          )}
+          {u.chat_estado === "ativo" && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-state-ok-soft px-2 py-0.5 text-[10px] font-medium text-state-ok">
+              <MessageSquare className="h-3 w-3" />
+              {tu.chatAtivo}
             </span>
           )}
         </div>
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-baseline gap-x-2">
-            <span className="font-serif text-xl text-foreground">{u.nome}</span>
-            <span className="text-xs text-muted-foreground">{u.idade} · {u.sexo}</span>
-            {u.novosDados && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-state-alert-soft px-2 py-0.5 text-[10px] font-medium text-state-alert">
-                <Sparkles className="h-2.5 w-2.5" />
-                {t.lista.novosDados}
-              </span>
-            )}
-          </div>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
-            <span>{u.cidade}</span>
-            <span>·</span>
-            <span>{t.lista.plano} {u.plano}</span>
-            {clinica?.atual && (
-              <>
-                <span>·</span>
-                <span className="inline-flex items-center gap-1">
-                  <Building2 className="h-3 w-3" />
-                  {clinica.atual}
-                </span>
-              </>
-            )}
-          </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-            <span>{t.lista.ultima}: {formatarData(u.ultimaConsulta)}</span>
-            {u.proximaConsulta && (
-              <span className="inline-flex items-center gap-1 text-foreground">
-                <Bell className="h-3 w-3 text-state-warn" />
-                {t.lista.proxima}: {formatarData(u.proximaConsulta)}
-                {u.proximaConsultaHora ? ` · ${u.proximaConsultaHora}` : ""}
-              </span>
-            )}
-          </div>
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-muted-foreground">
+          {detalhe && <span>{detalhe}</span>}
+          {u.clinica_onde_visto && (
+            <span className="inline-flex items-center gap-1">
+              <Building2 className="h-3 w-3" />
+              {u.clinica_onde_visto}
+            </span>
+          )}
+        </div>
+        <div className="mt-1 text-[12px]">
+          {u.proxima ? (
+            <span className="inline-flex items-center gap-1 text-foreground">
+              <CalendarClock className="h-3.5 w-3.5 text-state-warn" />
+              {tu.proxima}: {dataHora(u.proxima.inicio, idioma)}
+            </span>
+          ) : (
+            <span className="text-muted-foreground">{tu.semConsulta}</span>
+          )}
         </div>
       </div>
-
-      <div className="flex items-center gap-5 sm:gap-6">
-        <Stat label={t.lista.alertas} value={String(u.alertasAtivos)} tone={u.alertasAtivos > 0 ? "alert" : "muted"} />
-        <Stat label={t.lista.foraDoAlvo} value={String(u.marcadoresForaAlvo)} tone={u.marcadoresForaAlvo > 5 ? "warn" : "muted"} />
-        <Stat label={t.lista.marcadores} value={String(u.totalMarcadores)} tone="muted" />
-        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-      </div>
-    </div>
-  );
-
-  if (u.acessivel) {
-    return (
-      <Link
-        to="/utentes/$utenteId"
-        params={{ utenteId: u.id }}
-        className="group block rounded-2xl border border-border bg-surface-raised p-4 transition-colors hover:border-foreground/20 sm:p-5"
-      >
-        {conteudo}
-      </Link>
-    );
-  }
-  return (
-    <div
-      title="Demo: apenas o perfil de Maria Antunes está acessível"
-      className="block cursor-not-allowed rounded-2xl border border-border bg-surface-raised p-4 opacity-60 sm:p-5"
-    >
-      {conteudo}
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone: "alert" | "warn" | "muted";
-}) {
-  const color =
-    tone === "alert" ? "text-state-alert" : tone === "warn" ? "text-state-warn" : "text-foreground";
-  return (
-    <div className="text-right">
-      <div className={`tabular text-xl font-light ${color}`}>{value}</div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-    </div>
+      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+    </Link>
   );
 }

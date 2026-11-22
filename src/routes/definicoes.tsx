@@ -1,7 +1,24 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Bell, KeyRound, Globe, BellRing, Languages, Mail, Calendar, Database, Download, Upload } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  BellRing,
+  Languages,
+  Mail,
+  Calendar,
+  Database,
+  Download,
+  Upload,
+  UserRound,
+  KeyRound,
+  LogOut,
+  Gift,
+  ChevronRight,
+} from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useSessao } from "@/lib/sessao";
 import { definirUsarAgenda, usePrefsMedico } from "@/lib/medico-prefs";
-import { exportarTudo } from "@/lib/exportacao";
+import { exportarEspaco } from "@/lib/exportacao";
 import { ImportarUtentesModal } from "@/components/portal/ImportarUtentesModal";
 import { useEffect, useState } from "react";
 import { definirMarketing, estadoConsentimento } from "@/lib/consent.functions";
@@ -25,38 +42,240 @@ function DefinicoesPage() {
     <PortalShell>
       <main className="mx-auto max-w-[860px] px-4 py-6 pb-24 sm:px-6 sm:py-10 lg:pb-10">
         <div className="mb-6 sm:mb-8">
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{t.comum.portal}</div>
-          <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">{t.definicoes.titulo}</h1>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            {t.comum.portal}
+          </div>
+          <h1 className="font-serif mt-2 text-3xl text-foreground sm:text-4xl">
+            {t.definicoes.titulo}
+          </h1>
         </div>
 
         <div className="space-y-4">
-          <IdiomaCard />
+          <PerfilCard />
+          <ContaCard />
           <NotificacoesGlobais />
-          <MarketingCard />
+          <RecomendarCard />
           <AgendaCard />
           <DadosCard />
-
-          <Card icon={<KeyRound className="h-4 w-4" />} title={t.definicoes.acessos} sub={t.definicoes.acessosSub}>
-            <Row label="Inês Carvalho" value="Nutricionista · plano e composição" />
-            <Row label="Margarida Lopes" value="Assistente clínica · agenda" />
-          </Card>
-
-          <Card icon={<Bell className="h-4 w-4" />} title={t.definicoes.notificacoes} sub={t.definicoes.notificacoesSub}>
-            <Row label={t.definicoes.notifNovosDados} value="Email + portal" />
-            <Row label={t.definicoes.notifCriticos} value="Email + SMS" />
-          </Card>
-
-          <Card icon={<Globe className="h-4 w-4" />} title={t.definicoes.clinica} sub={t.definicoes.clinicaSub}>
-            <Row label={t.definicoes.clinica} value="Lumiar Longevidade Clínica" />
-            <Row label="OM" value="Cédula 48 217" />
-            <Row label={t.definicoes.contactos} value="sofia@vivarahealth.pt · +351 21 000 0000" />
-          </Card>
+          <IdiomaCard />
+          <MarketingCard />
         </div>
-
-        <p className="mt-6 text-[11px] text-muted-foreground">{t.definicoes.demoRodape}</p>
       </main>
       <MobileNavTabs />
     </PortalShell>
+  );
+}
+
+function PerfilCard() {
+  const t = useT();
+  const tp = t.perfil;
+  const sessao = useSessao();
+  const p = sessao.perfil;
+  const [nome, setNome] = useState(p?.nome ?? sessao.atual?.nome_exibicao ?? "");
+  const [especialidade, setEspecialidade] = useState(p?.especialidade ?? "");
+  const [cedula, setCedula] = useState(p?.cedula_profissional ?? "");
+  const [clinica, setClinica] = useState(p?.clinica ?? "");
+  const [estado, setEstado] = useState<"" | "aGuardar" | "guardado" | "erro">("");
+  const [erroNome, setErroNome] = useState(false);
+
+  async function guardar(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nome.trim()) {
+      setErroNome(true);
+      return;
+    }
+    setErroNome(false);
+    setEstado("aGuardar");
+    const { error } = await supabase.rpc("guardar_perfil", {
+      p_nome: nome,
+      p_especialidade: especialidade,
+      p_cedula: cedula,
+      p_clinica: clinica,
+    });
+    if (error) return setEstado("erro");
+    await sessao.recarregar();
+    setEstado("guardado");
+  }
+
+  const campo =
+    "mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring";
+  return (
+    <Card icon={<UserRound className="h-4 w-4" />} title={tp.titulo} sub={sessao.user.email ?? ""}>
+      <form onSubmit={guardar} noValidate className="grid gap-3 px-5 py-4 sm:grid-cols-2">
+        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          {t.conta.nome}
+          <input
+            className={campo}
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            aria-invalid={erroNome}
+            aria-describedby={erroNome ? "perfil-nome-erro" : undefined}
+          />
+          {erroNome && (
+            <span
+              id="perfil-nome-erro"
+              role="alert"
+              className="mt-1 block normal-case tracking-normal text-state-alert"
+            >
+              {t.conta.erroObrigatorio}
+            </span>
+          )}
+        </label>
+        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          {t.conta.especialidade}
+          <input
+            className={campo}
+            value={especialidade}
+            onChange={(e) => setEspecialidade(e.target.value)}
+          />
+        </label>
+        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          {t.conta.cedula}
+          <input className={campo} value={cedula} onChange={(e) => setCedula(e.target.value)} />
+          <span className="mt-1 block normal-case tracking-normal">
+            {p?.cedula_validada ? tp.cedulaValidada : tp.cedulaPorValidar}
+          </span>
+        </label>
+        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          {tp.clinicaHabitual}
+          <input className={campo} value={clinica} onChange={(e) => setClinica(e.target.value)} />
+        </label>
+        <div className="flex items-center justify-end gap-3 sm:col-span-2">
+          {estado === "guardado" && (
+            <span role="status" className="text-xs text-state-ok">
+              {tp.guardado}
+            </span>
+          )}
+          {estado === "erro" && (
+            <span role="alert" className="text-xs text-state-alert">
+              {t.conta.erroGenerico}
+            </span>
+          )}
+          <button
+            type="submit"
+            disabled={estado === "aGuardar"}
+            className="rounded-full bg-foreground px-4 py-1.5 text-xs font-medium text-background disabled:opacity-50"
+          >
+            {estado === "aGuardar" ? t.conta.aProcessar : tp.guardar}
+          </button>
+        </div>
+      </form>
+    </Card>
+  );
+}
+
+function ContaCard() {
+  const t = useT();
+  const navigate = useNavigate();
+  const [p1, setP1] = useState("");
+  const [p2, setP2] = useState("");
+  const [msg, setMsg] = useState<{ tipo: "ok" | "erro"; texto: string } | null>(null);
+  const [aGuardar, setAGuardar] = useState(false);
+
+  async function mudar(e: React.FormEvent) {
+    e.preventDefault();
+    if (p1.length < 6) return setMsg({ tipo: "erro", texto: t.conta.erroPalavraPasse });
+    if (p1 !== p2) return setMsg({ tipo: "erro", texto: t.conta.novaDiferentes });
+    setAGuardar(true);
+    const { error } = await supabase.auth.updateUser({ password: p1 });
+    setAGuardar(false);
+    if (error)
+      return setMsg({
+        tipo: "erro",
+        texto:
+          error.code === "weak_password" || error.code === "same_password"
+            ? t.conta.erroPalavraPasseFraca
+            : t.conta.erroGenerico,
+      });
+    setP1("");
+    setP2("");
+    setMsg({ tipo: "ok", texto: t.conta.novaGuardada });
+  }
+
+  async function sair() {
+    await supabase.auth.signOut();
+    navigate({ to: "/auth" });
+  }
+
+  const campo =
+    "mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring";
+  return (
+    <Card icon={<KeyRound className="h-4 w-4" />} title={t.perfil.contaTitulo}>
+      <form
+        onSubmit={mudar}
+        noValidate
+        className="grid gap-3 px-5 py-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+      >
+        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          {t.conta.novaTitulo}
+          <input
+            type="password"
+            autoComplete="new-password"
+            className={campo}
+            value={p1}
+            onChange={(e) => setP1(e.target.value)}
+          />
+        </label>
+        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          {t.conta.novaConfirmar}
+          <input
+            type="password"
+            autoComplete="new-password"
+            className={campo}
+            value={p2}
+            onChange={(e) => setP2(e.target.value)}
+          />
+        </label>
+        <button
+          type="submit"
+          disabled={aGuardar || !p1}
+          className="rounded-full border border-border px-4 py-2 text-xs font-medium text-foreground hover:bg-accent disabled:opacity-50"
+        >
+          {aGuardar ? t.conta.aProcessar : t.perfil.mudarPalavraPasse}
+        </button>
+        {msg && (
+          <p
+            role={msg.tipo === "erro" ? "alert" : "status"}
+            className={`text-xs sm:col-span-3 ${msg.tipo === "erro" ? "text-state-alert" : "text-state-ok"}`}
+          >
+            {msg.texto}
+          </p>
+        )}
+      </form>
+      <div className="flex items-center justify-between gap-4 px-5 py-3">
+        <span className="text-sm text-foreground">{t.perfil.tema}</span>
+        <ThemeToggle />
+      </div>
+      <div className="px-5 py-3">
+        <button
+          type="button"
+          onClick={sair}
+          className="inline-flex items-center gap-2 text-sm text-state-alert hover:underline"
+        >
+          <LogOut className="h-4 w-4" />
+          {t.nav.sair}
+        </button>
+      </div>
+    </Card>
+  );
+}
+
+function RecomendarCard() {
+  const t = useT().recomendar;
+  return (
+    <Link
+      to="/definicoes/recomendar"
+      className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface-raised px-5 py-4 hover:bg-accent"
+    >
+      <span className="flex items-center gap-2">
+        <Gift className="h-4 w-4 text-foreground" />
+        <span>
+          <span className="block text-sm font-medium text-foreground">{t.titulo}</span>
+          <span className="block text-[11px] text-muted-foreground">{t.sub}</span>
+        </span>
+      </span>
+      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+    </Link>
   );
 }
 
@@ -67,7 +286,9 @@ function AgendaCard() {
     <Card icon={<Calendar className="h-4 w-4" />} title={t.titulo} sub={t.sub}>
       <div className="flex items-center justify-between gap-4 px-5 py-4">
         <div>
-          <p id="pref-agenda" className="text-sm text-foreground">{t.usar}</p>
+          <p id="pref-agenda" className="text-sm text-foreground">
+            {t.usar}
+          </p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">{t.ajuda}</p>
         </div>
         <Toggle checked={usarAgenda} onChange={definirUsarAgenda} labelledBy="pref-agenda" />
@@ -78,8 +299,12 @@ function AgendaCard() {
 
 function DadosCard() {
   const t = useT().dados;
+  const tc = useT().conta;
+  const sessao = useSessao();
   const [importarOpen, setImportarOpen] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+  // No Plano Clínica a exportação passa por aprovação da administração (ver Equipa).
+  if (sessao.atual?.espaco.tipo !== "individual") return null;
   return (
     <Card icon={<Database className="h-4 w-4" />} title={t.titulo} sub={t.sub}>
       <div className="px-5 py-4">
@@ -87,7 +312,14 @@ function DadosCard() {
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           <button
             type="button"
-            onClick={exportarTudo}
+            onClick={async () => {
+              if (!sessao.atual) return;
+              try {
+                await exportarEspaco(sessao.atual.espaco_id);
+              } catch {
+                setAviso(tc.erroGenerico);
+              }
+            }}
             className="flex items-start gap-2.5 rounded-xl border border-border bg-background px-4 py-3 text-left hover:bg-accent"
           >
             <Download className="mt-0.5 h-4 w-4 text-muted-foreground" />
@@ -214,7 +446,9 @@ function IdiomaCard() {
                 <span className="text-sm font-medium">{i.label}</span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
-                    activo ? "bg-foreground text-background" : "border border-border text-muted-foreground"
+                    activo
+                      ? "bg-foreground text-background"
+                      : "border border-border text-muted-foreground"
                   }`}
                 >
                   {i.detalhe}
@@ -258,15 +492,9 @@ function NotificacoesGlobais() {
       sub={t.definicoes.notifGlobaisSub}
     >
       {NOTIF_TIPOS.map((t) => (
-        <div
-          key={t.id}
-          className="flex items-center justify-between gap-4 px-5 py-3"
-        >
+        <div key={t.id} className="flex items-center justify-between gap-4 px-5 py-3">
           <span className="text-sm text-foreground">{t.label}</span>
-          <Toggle
-            checked={state[t.id]}
-            onChange={(v) => setState((s) => ({ ...s, [t.id]: v }))}
-          />
+          <Toggle checked={state[t.id]} onChange={(v) => setState((s) => ({ ...s, [t.id]: v }))} />
         </div>
       ))}
     </Card>
@@ -324,17 +552,5 @@ function Card({
       </header>
       <div className="divide-y divide-border">{children}</div>
     </section>
-  );
-}
-
-function Row({ label, value, status }: { label: string; value: string; status?: "ok" }) {
-  return (
-    <div className="flex items-center justify-between gap-4 px-5 py-3">
-      <span className="text-sm text-foreground">{label}</span>
-      <span className="flex items-center gap-2 text-[12px] text-muted-foreground">
-        {status === "ok" && <span className="inline-block h-1.5 w-1.5 rounded-full bg-state-ok" />}
-        {value}
-      </span>
-    </div>
   );
 }

@@ -47,10 +47,12 @@ export function MarkerDetailPanel({
   const s = marcador.serie;
   const ultimo = s[s.length - 1];
   const anterior = s[s.length - 2];
-  const haUmAno = s.find((p) => {
-    const diff = (new Date(ultimo.data).getTime() - new Date(p.data).getTime()) / (1000 * 60 * 60 * 24);
-    return diff >= 330 && diff <= 400;
-  }) ?? s[0];
+  const haUmAno =
+    s.find((p) => {
+      const diff =
+        (new Date(ultimo.data).getTime() - new Date(p.data).getTime()) / (1000 * 60 * 60 * 24);
+      return diff >= 330 && diff <= 400;
+    }) ?? s[0];
 
   const delta = ultimo.valor - anterior.valor;
   const deltaAno = ultimo.valor - haUmAno.valor;
@@ -162,7 +164,9 @@ export function MarkerDetailPanel({
           <span className="ml-1 text-xs text-muted-foreground">{marcador.unidade}</span>
         </Card>
         <Card label="Δ vs há 12 meses" sub={formatarData(haUmAno.data)}>
-          <span className="tabular text-2xl font-light text-foreground">{formatDelta(deltaAno)}</span>
+          <span className="tabular text-2xl font-light text-foreground">
+            {formatDelta(deltaAno)}
+          </span>
           <span className="ml-2 text-xs text-muted-foreground">
             ({pctAno > 0 ? "+" : ""}
             {pctAno.toFixed(1)}%)
@@ -192,67 +196,22 @@ export function MarkerDetailPanel({
       {/* Notas + próxima recolha */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-3 lg:col-span-2">
-          {/* Nota interna — só médico */}
-          <div className="rounded-2xl border border-state-warn/30 bg-state-warn-soft/30 p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-state-warn">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-state-warn" />
-                Nota interna · só visível ao médico
-              </div>
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <Pencil className="h-3 w-3" />
-                Editar
-              </button>
-            </div>
-            <p className="font-serif mt-3 text-lg leading-relaxed text-foreground">
-              {marcador.notaMedica ??
-                "Sem notas internas. A tendência mantém-se dentro do alvo funcional definido."}
-            </p>
-          </div>
-
-          {/* Nota partilhada — visível na app */}
-          <div className="rounded-2xl border border-border bg-surface-raised p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-state-ok" />
-                Nota partilhada · visível na app da utente
-              </div>
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <Pencil className="h-3 w-3" />
-                Editar
-              </button>
-            </div>
-            <p className="font-serif mt-3 text-base leading-relaxed text-foreground">
-              {marcador.notaPartilhada ?? (
-                <span className="text-muted-foreground italic">
-                  Nada partilhado com a utente para este marcador.
-                </span>
-              )}
-            </p>
-          </div>
+          <NotaEditavel
+            key={`interna-${marcador.id}`}
+            titulo="Nota interna · só visível ao médico"
+            interna
+            inicial={marcador.notaMedica ?? ""}
+            vazio="Sem notas internas. A tendência mantém-se dentro do alvo funcional definido."
+          />
+          <NotaEditavel
+            key={`partilhada-${marcador.id}`}
+            titulo="Nota partilhada · visível na app da utente"
+            inicial={marcador.notaPartilhada ?? ""}
+            vazio="Nada partilhado com a utente para este marcador."
+          />
         </div>
 
-        <div className="rounded-2xl border border-border bg-surface-raised p-5">
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Próxima recolha
-          </div>
-          <div className="font-serif mt-3 text-2xl text-foreground">
-            {marcador.proximaRecolha ?? "Não agendada"}
-          </div>
-          <button
-            type="button"
-            className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Bell className="h-3.5 w-3.5" />
-            Adicionar lembrete
-          </button>
-        </div>
+        <ProximaRecolha key={`recolha-${marcador.id}`} inicial={marcador.proximaRecolha ?? null} />
       </div>
 
       {/* Adesão ao plano (visível à médica) */}
@@ -309,7 +268,8 @@ function AdesaoCard({ marcador }: { marcador: Marcador }) {
       </div>
       <p className="mt-3 text-sm text-foreground">
         Marcou <span className="tabular font-medium">{feitas}</span> em{" "}
-        <span className="tabular font-medium">{tomas}</span> dias as tomas associadas a este marcador.
+        <span className="tabular font-medium">{tomas}</span> dias as tomas associadas a este
+        marcador.
       </p>
       <p className="mt-1 text-[11px] text-muted-foreground">
         Dados sincronizados a partir do plano da app. Falhas registadas pelo próprio utente.
@@ -382,5 +342,153 @@ function EditarAlvoModal({
         <PrimaryButton onClick={onClose}>Guardar alteração</PrimaryButton>
       </ModalActions>
     </SimpleModal>
+  );
+}
+
+// Utente de exemplo: as edições ficam só neste ecrã (não são gravadas).
+function NotaEditavel({
+  titulo,
+  inicial,
+  vazio,
+  interna = false,
+}: {
+  titulo: string;
+  inicial: string;
+  vazio: string;
+  interna?: boolean;
+}) {
+  const [texto, setTexto] = useState(inicial);
+  const [rascunho, setRascunho] = useState(inicial);
+  const [aEditar, setAEditar] = useState(false);
+  return (
+    <div
+      className={
+        interna
+          ? "rounded-2xl border border-state-warn/30 bg-state-warn-soft/30 p-5"
+          : "rounded-2xl border border-border bg-surface-raised p-5"
+      }
+    >
+      <div className="flex items-center justify-between">
+        <div
+          className={`flex items-center gap-2 text-[11px] uppercase tracking-wider ${interna ? "text-state-warn" : "text-muted-foreground"}`}
+        >
+          <span
+            className={`inline-block h-1.5 w-1.5 rounded-full ${interna ? "bg-state-warn" : "bg-state-ok"}`}
+          />
+          {titulo}
+        </div>
+        {!aEditar && (
+          <button
+            type="button"
+            onClick={() => {
+              setRascunho(texto);
+              setAEditar(true);
+            }}
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Pencil className="h-3 w-3" />
+            Editar
+          </button>
+        )}
+      </div>
+      {aEditar ? (
+        <div className="mt-3">
+          <textarea
+            value={rascunho}
+            onChange={(e) => setRascunho(e.target.value)}
+            rows={3}
+            autoFocus
+            className="w-full resize-y rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+          <div className="mt-2 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setAEditar(false)}
+              className="rounded-full border border-border px-3 py-1.5 text-xs text-foreground hover:bg-accent"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTexto(rascunho.trim());
+                setAEditar(false);
+              }}
+              className="rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
+            >
+              Guardar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p
+          className={`font-serif mt-3 leading-relaxed text-foreground ${interna ? "text-lg" : "text-base"}`}
+        >
+          {texto || <span className="italic text-muted-foreground">{vazio}</span>}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ProximaRecolha({ inicial }: { inicial: string | null }) {
+  const [data, setData] = useState<string | null>(inicial);
+  const [lembrete, setLembrete] = useState<string | null>(null);
+  const [aEditar, setAEditar] = useState(false);
+  const [rascunho, setRascunho] = useState("");
+  return (
+    <div className="rounded-2xl border border-border bg-surface-raised p-5">
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+        Próxima recolha
+      </div>
+      <div className="font-serif mt-3 text-2xl text-foreground">{data ?? "Não agendada"}</div>
+      {lembrete && (
+        <p className="mt-2 text-xs text-state-ok">Lembrete para a utente a {lembrete}.</p>
+      )}
+      {aEditar ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <input
+            type="date"
+            value={rascunho}
+            onChange={(e) => setRascunho(e.target.value)}
+            aria-label="Data da próxima recolha"
+            className="rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground"
+          />
+          <button
+            type="button"
+            disabled={!rascunho}
+            onClick={() => {
+              const d = new Date(rascunho).toLocaleDateString("pt-PT", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              });
+              setData(d);
+              setLembrete(d);
+              setAEditar(false);
+            }}
+            className="rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          >
+            Guardar
+          </button>
+          <button
+            type="button"
+            onClick={() => setAEditar(false)}
+            className="rounded-full border border-border px-3 py-1.5 text-xs text-foreground hover:bg-accent"
+          >
+            Cancelar
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setAEditar(true)}
+          className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+        >
+          <Bell className="h-3.5 w-3.5" />
+          Adicionar lembrete
+        </button>
+      )}
+    </div>
   );
 }

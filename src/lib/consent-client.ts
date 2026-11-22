@@ -8,11 +8,14 @@ type Textos = { documentos: string; habilitacao: string; marketing: string };
 // marketing escolhidos no registo viajam em user_metadata até haver sessão.
 export async function gravarAceitacao(user: User, textos: Textos, marketingAgora = false) {
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-  const pendente = typeof meta.especialidade === "string" || meta.marketing_opt_in === true;
+  const codigoConvite = typeof meta.codigo_convite === "string" ? meta.codigo_convite : undefined;
+  const pendente =
+    typeof meta.especialidade === "string" || meta.marketing_opt_in === true || !!codigoConvite;
   await registarAceitacao({
     data: {
       textos,
       marketing: marketingAgora || meta.marketing_opt_in === true,
+      codigoConvite,
       perfil: pendente
         ? {
             nome: meta.nome as string | undefined,
@@ -25,7 +28,14 @@ export async function gravarAceitacao(user: User, textos: Textos, marketingAgora
   });
   if (pendente) {
     await supabase.auth.updateUser({
-      data: { nome: null, especialidade: null, cedula: null, clinica: null, marketing_opt_in: null },
+      data: {
+        nome: null,
+        especialidade: null,
+        cedula: null,
+        clinica: null,
+        marketing_opt_in: null,
+        codigo_convite: null,
+      },
     });
   }
 }

@@ -4,6 +4,8 @@ import {
   Activity,
   Bell,
   Calendar,
+  MessagesSquare,
+  UsersRound,
   LogOut,
   Settings,
   ShieldCheck,
@@ -13,12 +15,14 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageToggle } from "./LanguageToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
-import { useNaoLidas } from "@/lib/notificacoes-store";
+import { useNotificacoesDb } from "@/lib/notificacoes";
 import { usePrefsMedico } from "@/lib/medico-prefs";
+import { iniciais, nomeAtual, useSessaoOpcional } from "@/lib/sessao";
 
 type NavItem = {
   label: string;
-  to: "/" | "/agenda" | "/notificacoes" | "/definicoes";
+  to: "/" | "/agenda" | "/mensagens" | "/notificacoes" | "/equipa" | "/definicoes";
+  soDesktop?: boolean;
   icon: typeof Users;
   match?: (pathname: string) => boolean;
   badge?: number;
@@ -26,8 +30,10 @@ type NavItem = {
 
 function useNavItems(): NavItem[] {
   const t = useT();
-  const naoLidas = useNaoLidas();
+  const { naoLidas } = useNotificacoesDb();
   const { usarAgenda } = usePrefsMedico();
+  const sessao = useSessaoOpcional();
+  const clinica = sessao?.atual?.espaco.tipo === "clinica";
   const items: NavItem[] = [
     {
       label: t.nav.utentes,
@@ -35,8 +41,10 @@ function useNavItems(): NavItem[] {
       icon: Users,
       match: (p) => p === "/" || p.startsWith("/utentes"),
     },
-    { label: t.nav.agenda, to: "/agenda", icon: Calendar, badge: 5 },
-    { label: t.notificacoes.nav, to: "/notificacoes", icon: Bell, badge: naoLidas },
+    { label: t.nav.agenda, to: "/agenda", icon: Calendar },
+    ...(clinica ? [{ label: t.mensagens.nav, to: "/mensagens" as const, icon: MessagesSquare }] : []),
+    { label: t.notifDb.titulo, to: "/notificacoes", icon: Bell, badge: naoLidas },
+    ...(clinica ? [{ label: t.equipa.nav, to: "/equipa" as const, icon: UsersRound, soDesktop: true }] : []),
     { label: t.nav.definicoes, to: "/definicoes", icon: Settings },
   ];
   return usarAgenda ? items : items.filter((i) => i.to !== "/agenda");
@@ -54,6 +62,9 @@ export function PortalShell({
   const navigate = useNavigate();
   const t = useT();
   const items = useNavItems();
+  const sessao = useSessaoOpcional();
+  const nome = sessao ? nomeAtual(sessao) : "";
+  const ini = iniciais(nome);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -67,6 +78,7 @@ export function PortalShell({
           <span className="inline-block h-2 w-2 rounded-full bg-state-ok" />
           <span className="font-serif text-base text-foreground">Vivara Health</span>
         </div>
+        <SeletorEspaco />
 
         <nav className="flex-1 space-y-1 px-3 py-4">
           {items.map((it) => {
@@ -122,18 +134,14 @@ export function PortalShell({
           </Link>
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <LanguageToggle />
-            <ThemeToggle />
-            <button
-              type="button"
-              onClick={handleLogout}
-              aria-label={t.nav.sair}
-              className="rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            <Link
+              to="/definicoes"
+              aria-label={nome}
+              title={nome}
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground"
             >
-              <LogOut className="h-3.5 w-3.5" />
-            </button>
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-              SC
-            </div>
+              {ini}
+            </Link>
           </div>
         </header>
         {!hideSidebarChrome && (
@@ -146,9 +154,9 @@ export function PortalShell({
               <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
                 <LanguageToggle />
                 <ThemeToggle />
-                <span>Dra. Sofia Cardoso</span>
+                <span>{nome}</span>
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
-                  SC
+                  {ini}
                 </div>
               </div>
             </div>
@@ -163,7 +171,7 @@ export function PortalShell({
 export function MobileNavTabs() {
   // Bottom tabs para viewports estreitos (<lg). Manter visível abaixo da sidebar fixa.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const items = useNavItems();
+  const items = useNavItems().filter((i) => !i.soDesktop);
   return (
     <div className="fixed inset-x-0 bottom-0 z-30 grid auto-cols-fr grid-flow-col border-t border-border bg-surface-raised lg:hidden">
       {items.map((it) => {
@@ -195,4 +203,34 @@ export function MobileNavTabs() {
 // Pequeno componente decorativo usado em headers vazios (para evitar warning de import não usado).
 export function PortalActivityDot() {
   return <Activity className="h-3 w-3 text-muted-foreground" />;
+}
+function SeletorEspaco() {
+  const sessao = useSessaoOpcional();
+  const t = useT();
+  if (!sessao?.atual) return null;
+  const { membros, atual, escolherEspaco } = sessao;
+  const tipo = atual.espaco.tipo === "individual" ? t.espaco.planoMedico : t.espaco.planoClinica;
+  return (
+    <div className="border-b border-border px-3 py-3">
+      {membros.length > 1 ? (
+        <label className="block">
+          <span className="sr-only">{t.espaco.escolher}</span>
+          <select
+            value={atual.espaco_id}
+            onChange={(e) => escolherEspaco(e.target.value)}
+            className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground"
+          >
+            {membros.map((m) => (
+              <option key={m.espaco_id} value={m.espaco_id}>
+                {m.espaco.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : (
+        <div className="truncate px-2 text-sm font-medium text-foreground">{atual.espaco.nome}</div>
+      )}
+      <div className="mt-1 px-2 text-[10.5px] text-muted-foreground">{tipo}</div>
+    </div>
+  );
 }
