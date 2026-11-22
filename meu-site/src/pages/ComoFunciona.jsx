@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import PhotoHeader from "../components/PhotoHeader";
-import appHome from "../assets/app/inicio.webp";
+import PhoneApp from "../components/PhoneApp";
 import photo from "../assets/pages/como-funciona.webp";
 import { SectionBadge, Reveal } from "../components/ui";
 import { useT } from "../i18n";
@@ -209,18 +209,8 @@ const T = {
   },
 };
 
-function Phone() {
-  return (
-    <div className="mx-auto w-[15.5rem] rounded-[2.6rem] border-[7px] border-brand-dark bg-brand-dark shadow-xl md:w-[17rem]">
-      <div className="h-[30rem] overflow-hidden rounded-[2.1rem] md:h-[34rem]">
-        <img src={appHome} alt="" loading="lazy" className="w-full" />
-      </div>
-    </div>
-  );
-}
-
 function Panel({ data }) {
-  if (data.phone) return <Phone />;
+  if (data.phone) return <PhoneApp />;
   return (
     <div className="rounded-3xl border border-black/10 bg-white p-6 shadow-sm md:p-7">
       <p className="text-xs uppercase tracking-[0.15em] text-brand-muted/50">{data.title}</p>

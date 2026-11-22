@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import PhotoHeader from "../components/PhotoHeader";
 import phonePhoto from "../assets/hero-photo.jpg";
 import { SectionBadge, Reveal, CTAButton, Check, Highlight } from "../components/ui";
-import AppMock from "../components/AppMock";
+import PhoneApp from "../components/PhoneApp";
 import { useT } from "../i18n";
 
 const T = {
@@ -136,7 +136,7 @@ export default function Utentes() {
             ))}
           </div>
           <Reveal delay={0.15} className="md:order-1">
-            <AppMock />
+            <PhoneApp />
           </Reveal>
         </div>
       </section>
