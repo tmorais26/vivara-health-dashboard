@@ -1,6 +1,6 @@
 import appHome from "../assets/app/inicio.webp";
 
-// Ecrã real da app do utente dentro de um iPhone (ecrã 860×1864, proporção real).
+// Ecrã real da app do paciente dentro de um iPhone (ecrã 860×1864, proporção real).
 export default function PhoneApp({ src = appHome }) {
   return (
     <div className="relative mx-auto w-[15rem] md:w-[17rem]">

@@ -8,7 +8,7 @@ import { useT } from "../i18n";
 const T = {
   pt: {
     header: {
-      badge: "Para utentes · App do utente",
+      badge: "Para pacientes · App do paciente",
       title: <>A sua saúde, <em>na palma da mão.</em></>,
       desc: "Um lugar seguro para exames, resultados, sintomas e registos médicos. Sem ruído — só o que importa, perto da sua equipa clínica.",
     },
@@ -21,7 +21,7 @@ const T = {
       { title: "Plano do dia e mensagens", desc: "O que tomar e como tomar, que exames fazer e como os fazer. Mais mensagens com a equipa clínica e lembretes de consultas." },
     ],
     start: "Abrir a app",
-    planBadge: "Plano de utente",
+    planBadge: "Plano de paciente",
     price: "€0,23",
     perMonth: "/dia",
     annualNote: "€6,99 por mês, ou €79 por ano com plano anual",

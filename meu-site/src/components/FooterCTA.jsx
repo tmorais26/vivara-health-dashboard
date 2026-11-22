@@ -10,7 +10,7 @@ const T = {
         Pronto para <em>começar?</em>
       </>
     ),
-    desc: "Um lugar seguro para exames, resultados e registos médicos — para médicos e utentes.",
+    desc: "Um lugar seguro para exames, resultados e registos médicos — para médicos e pacientes.",
     cta: "Começar",
     tagline: "Para que cada consulta médica valha a pena.",
   },

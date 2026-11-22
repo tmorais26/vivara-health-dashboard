@@ -10,19 +10,19 @@ const T = {
         Nascida de uma <em>frustração partilhada.</em>
       </>
     ),
-    body: "A Vivara Health não nasceu numa sala de reuniões. Nasceu da frustração partilhada entre médicos e utentes: análises perdidas em emails, exames espalhados por pastas, wearables que ninguém olha em consulta e cada visita a começar do zero.",
+    body: "A Vivara Health não nasceu numa sala de reuniões. Nasceu da frustração partilhada entre médicos e pacientes: análises perdidas em emails, exames espalhados por pastas, wearables que ninguém olha em consulta e cada visita a começar do zero.",
     pillars: [
       {
         title: "Médicos no desenho",
         desc: "Cada ecrã validado com médicos em prática ativa.",
       },
       {
-        title: "Utentes no centro",
+        title: "Pacientes no centro",
         desc: "Pensada para quem quer acompanhar a sua saúde.",
       },
       {
         title: "Um só historial",
-        desc: "Um único historial, partilhado só entre utente e profissionais.",
+        desc: "Um único historial, partilhado só entre paciente e profissionais.",
       },
     ],
     link: "Conhecer a nossa história",

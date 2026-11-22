@@ -1,5 +1,5 @@
 // Endereços de registo. Quando existirem, basta preenchê-los aqui:
-//  - utente: página da app (App Store / Google Play) ou registo web
+//  - utente (paciente): página da app (App Store / Google Play) ou registo web
 //  - medico: página de criação de conta do portal
 // Enquanto estiverem vazios, os botões levam ao formulário de contacto com
 // o perfil já escolhido (lista de espera).

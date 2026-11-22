@@ -10,7 +10,7 @@ const T = {
     header: {
       badge: "Sobre nós",
       title: <>Nascida de uma <em>frustração partilhada.</em></>,
-      desc: "Nasceu de um problema que médicos e utentes viviam todos os dias.",
+      desc: "Nasceu de um problema que médicos e pacientes viviam todos os dias.",
     },
     problemBadge: "O problema",
     problemTitle: <>A informação existia. <em>Só nunca estava junta.</em></>,
@@ -23,15 +23,15 @@ const T = {
     solution: "Por isso construímos a Vivara: um lugar seguro onde o historial se constrói entre consultas, e não só durante cada uma.",
     pillars: [
       ["Médicos no desenho", "Cada ecrã validado com médicos em prática ativa."],
-      ["Utentes no centro", "Para quem quer entender e acompanhar a sua própria saúde."],
-      ["Um só historial", "Partilhado só com quem o utente escolher."],
+      ["Pacientes no centro", "Para quem quer entender e acompanhar a sua própria saúde."],
+      ["Um só historial", "Partilhado só com quem o paciente escolher."],
     ],
     buildBadge: "Como construímos",
     buildTitle: "Devagar, com quem vai usar.",
     process: [
-      ["01", "Falámos com médicos e utentes", "Ouvimos o que se perde entre consultas e o que gostariam de ter à mão."],
+      ["01", "Falámos com médicos e pacientes", "Ouvimos o que se perde entre consultas e o que gostariam de ter à mão."],
       ["02", "Desenhámos com médicos em prática", "Cada funcionalidade validada por quem está na consulta todos os dias."],
-      ["03", "Vamos testar com utentes antes de lançar", "Pessoas comuns, no dia a dia, e não só em laboratório de testes."],
+      ["03", "Vamos testar com pacientes antes de lançar", "Pessoas comuns, no dia a dia, e não só em laboratório de testes."],
     ],
     clearBadge: "Para ser claro",
     clearTitle: "O que a Vivara não é.",

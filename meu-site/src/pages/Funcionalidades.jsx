@@ -12,7 +12,7 @@ const T = {
       ["Acompanhamento contínuo", "A saúde acompanhada entre consultas, não só no dia da visita."],
       ["Wearables", "Apple Health, Oura e Whoop. Sono e atividade ao lado dos dados clínicos."],
       ["Documentos seguros", "Cofre encriptado para PDFs, exames e cartas — sempre acessível, sempre privado."],
-      ["Mensagens diretas", "Conversa direta e privada entre utente e equipa clínica, com histórico permanente."],
+      ["Mensagens diretas", "Conversa direta e privada entre paciente e equipa clínica, com histórico permanente."],
     ],
   },
   en: {

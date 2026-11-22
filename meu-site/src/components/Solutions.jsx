@@ -12,13 +12,13 @@ const T = {
       badge: "Para médicos · Portal clínico",
       title: (
         <>
-          Cada utente, <em>organizado cronologicamente.</em>
+          Cada paciente, <em>organizado cronologicamente.</em>
         </>
       ),
       desc: "Análises, exames e notas organizados em linha do tempo, com wearables, sono e atividade ao lado dos dados clínicos.",
     },
     vault: {
-      badge: "Para utentes · App do utente",
+      badge: "Para pacientes · App do paciente",
       title: (
         <>
           A sua saúde, <em>na palma da mão.</em>
@@ -40,10 +40,10 @@ const T = {
       badge: "Mensagens diretas",
       title: (
         <>
-          Médico e utente, <em>a mesma história.</em>
+          Médico e paciente, <em>a mesma história.</em>
         </>
       ),
-      desc: "Mensagens diretas com a equipa clínica e um histórico partilhado só entre o utente e quem ele escolher.",
+      desc: "Mensagens diretas com a equipa clínica e um histórico partilhado só entre o paciente e quem ele escolher.",
       cardLabel: "Partilhado com",
       cardValue: "Equipa clínica",
     },

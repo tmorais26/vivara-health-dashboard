@@ -13,7 +13,7 @@ const T = {
     header: {
       badge: "Para médicos e clínicas · Portal clínico",
       title: <>O contexto completo, <em>antes de cada decisão.</em></>,
-      desc: "Para o médico que trabalha por conta própria e para a clínica com equipa. Análises, exames e notas de cada utente, organizados cronologicamente.",
+      desc: "Para o médico que trabalha por conta própria e para a clínica com equipa. Análises, exames e notas de cada paciente, organizados cronologicamente.",
     },
     tabs: { doctor: "Médico", clinic: "Clínica" },
     doctor: {
@@ -21,14 +21,14 @@ const T = {
       stepsTitle: <>Do primeiro resultado <em>à consulta.</em></>,
       steps: [
         ["01", "Crie a sua conta", "Abra o acesso em minutos com a cédula profissional, sem instalar nada."],
-        ["02", "Junte os resultados", "O utente carrega-os na app ou reencaminha-lhe o email, e você acrescenta-os ao historial."],
+        ["02", "Junte os resultados", "O paciente carrega-os na app ou reencaminha-lhe o email, e você acrescenta-os ao historial."],
         ["03", "Acompanhe entre consultas", "Tudo numa só linha do tempo, com alertas de valores fora do alvo."],
         ["04", "Chegue preparado", "Contexto completo num só ecrã. A decisão clínica é sempre sua."],
       ],
       cards: [
         { title: "Historial cronológico", desc: "Análises, exames e consultas numa só linha do tempo, venham de onde vierem." },
         { title: "Alertas no contexto certo", desc: <>Valores fora do alvo definido por si, <Highlight>sempre com a tendência</Highlight> e nunca só o último número.</> },
-        { title: "Plano do utente e mensagens", desc: "O plano do dia (o que tomar, que exames fazer) e conversa direta com o utente, sem sair do portal." },
+        { title: "Plano do paciente e mensagens", desc: "O plano do dia (o que tomar, que exames fazer) e conversa direta com o paciente, sem sair do portal." },
       ],
       planBadge: "Plano de médico",
       annualNote: "€{m} por mês, ou €{a} por ano com plano anual. Por médico.",
@@ -37,10 +37,10 @@ const T = {
       featuresTitle: "Tudo o que precisa no portal.",
       features: [
         { title: "Histórico com tendência", desc: "Cada marcador ao longo do tempo, com a origem de cada valor." },
-        { title: "Planos e documentos num só sítio", desc: "O plano do dia do utente e os documentos, sem andar a procurar em pastas." },
-        { title: "Diário clínico privado", desc: "Notas suas, nunca partilhadas com o utente." },
-        { title: "Com ou sem app do utente", desc: "Sem app, basta o utente reencaminhar-lhe os resultados e você acrescenta-os ao historial." },
-        { title: "Mensagens diretas", desc: "Conversa com o utente com histórico permanente da troca." },
+        { title: "Planos e documentos num só sítio", desc: "O plano do dia do paciente e os documentos, sem andar a procurar em pastas." },
+        { title: "Diário clínico privado", desc: "Notas suas, nunca partilhadas com o paciente." },
+        { title: "Com ou sem app do paciente", desc: "Sem app, basta o paciente reencaminhar-lhe os resultados e você acrescenta-os ao historial." },
+        { title: "Mensagens diretas", desc: "Conversa com o paciente com histórico permanente da troca." },
         { title: "Exportação a qualquer momento", desc: "Os dados saem num formato aberto, sempre que necessário." },
       ],
     },
@@ -50,13 +50,13 @@ const T = {
       steps: [
         ["01", "Abra o acesso da clínica", "Falamos consigo e acertamos condições e suporte para a equipa."],
         ["02", "Convide os profissionais", "Cada um com o seu acesso e o seu nível de permissões."],
-        ["03", "Partilhe o utente", "Médicos, enfermeiros e nutricionistas veem o mesmo historial, cada um no seu perfil."],
+        ["03", "Partilhe o paciente", "Médicos, enfermeiros e nutricionistas veem o mesmo historial, cada um no seu perfil."],
         ["04", "Acompanhem em conjunto", "Notas internas só entre a equipa. A decisão clínica continua a ser dos médicos."],
       ],
       cards: [
-        { title: "Um só historial por utente", desc: "Toda a equipa trabalha sobre o mesmo registo, sem versões soltas em pastas e emails." },
-        { title: "Acesso por perfil", desc: <>Cada profissional vê <Highlight>o que o seu papel exige</Highlight>, e o utente continua a decidir quem acede aos seus dados.</> },
-        { title: "Notas internas da equipa", desc: "Diário clínico visível só entre profissionais, nunca partilhado com o utente." },
+        { title: "Um só historial por paciente", desc: "Toda a equipa trabalha sobre o mesmo registo, sem versões soltas em pastas e emails." },
+        { title: "Acesso por perfil", desc: <>Cada profissional vê <Highlight>o que o seu papel exige</Highlight>, e o paciente continua a decidir quem acede aos seus dados.</> },
+        { title: "Notas internas da equipa", desc: "Diário clínico visível só entre profissionais, nunca partilhado com o paciente." },
       ],
       team: {
         title: "Equipa",
@@ -69,14 +69,14 @@ const T = {
       planBadge: "Plano de clínica",
       price: "Sob consulta",
       planDesc: "Para clínicas com 2 ou mais profissionais. Tudo o que o plano de médico inclui, mais condições e suporte acordados com a equipa.",
-      planNote: "O acesso do utente é independente do da clínica e tem plano próprio.",
+      planNote: "O acesso do paciente é independente do da clínica e tem plano próprio.",
       planCta: "Falar connosco",
       featuresTitle: "O que a clínica ganha.",
       features: [
         { title: "Tudo do plano de médico", desc: "Historial, alertas, planos, mensagens e exportação para cada profissional." },
-        { title: "Vários profissionais, um só historial", desc: "Médicos, enfermeiros e nutricionistas sobre o mesmo registo do utente." },
+        { title: "Vários profissionais, um só historial", desc: "Médicos, enfermeiros e nutricionistas sobre o mesmo registo do paciente." },
         { title: "Permissões por perfil", desc: "Cada pessoa vê só o que o seu papel exige." },
-        { title: "Notas internas da equipa", desc: "Só entre profissionais, nunca partilhadas com o utente." },
+        { title: "Notas internas da equipa", desc: "Só entre profissionais, nunca partilhadas com o paciente." },
         { title: "Sem depender do sistema da clínica", desc: "A Vivara funciona ao lado do que já usam, sem integrações." },
         { title: "Condições e suporte acordados", desc: "Preço e acompanhamento ajustados ao tamanho da equipa." },
       ],
@@ -85,8 +85,8 @@ const T = {
     startClinic: "Falar connosco",
     featuresBadge: "Incluído",
     perDay: "/dia",
-    dataTitle: "Os dados são do utente.",
-    dataDesc: "Cada utente decide quem vê o seu historial, e os dados podem ser exportados a qualquer momento, num formato aberto. A decisão clínica é sempre do médico.",
+    dataTitle: "Os dados são do paciente.",
+    dataDesc: "Cada paciente decide quem vê o seu historial, e os dados podem ser exportados a qualquer momento, num formato aberto. A decisão clínica é sempre do médico.",
   },
   en: {
     header: {

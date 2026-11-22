@@ -16,18 +16,18 @@ const T = {
     cards: [
       {
         key: "utente",
-        who: "Utente",
+        who: "Paciente",
         title: "Abra a app",
         points: ["Carregue as suas análises (PDF ou fotografia)", "Veja o seu historial numa só linha do tempo", "Convide o seu médico quando quiser"],
         cta: "Abrir a app",
-        more: "Ver a vista do utente",
-        to: "/utentes",
+        more: "Ver a vista do paciente",
+        to: "/pacientes",
       },
       {
         key: "medico",
         who: "Médico ou clínica",
         title: "Crie a sua conta",
-        points: ["Conta de profissional em minutos", "Funciona com ou sem a app do utente", "Clínicas com 2 ou mais profissionais: falar connosco"],
+        points: ["Conta de profissional em minutos", "Funciona com ou sem a app do paciente", "Clínicas com 2 ou mais profissionais: falar connosco"],
         cta: "Criar conta no portal",
         more: "Ver a vista do médico",
         to: "/medicos",
@@ -51,7 +51,7 @@ const T = {
         points: ["Upload your lab results (PDF or photo)", "See your record on a single timeline", "Invite your doctor whenever you like"],
         cta: "Open the app",
         more: "See the patient view",
-        to: "/utentes",
+        to: "/pacientes",
       },
       {
         key: "medico",

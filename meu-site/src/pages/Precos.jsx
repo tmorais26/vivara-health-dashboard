@@ -12,18 +12,18 @@ const T = {
     header: {
       badge: "Preços",
       title: <>Simples e <em>transparente.</em></>,
-      desc: "Planos separados para quem acompanha e quem é acompanhado. O acesso do utente é independente do da clínica.",
+      desc: "Planos separados para quem acompanha e quem é acompanhado. O acesso do paciente é independente do da clínica.",
     },
     monthly: "Mensal",
     annual: "Anual",
-    patientsBadge: "Para utentes",
+    patientsBadge: "Para pacientes",
     perMonth: "/mês",
     perYear: "/ano",
     perDayUnit: "/dia",
     billedMonthly: (v) => `€${v} por mês`,
     billedYearly: (v) => `€${v} por ano`,
     patient: {
-      name: "Utente",
+      name: "Paciente",
       desc: "Acesso completo à app Vivara. Histórico, wearables, mensagens com a equipa e resumos de cada consulta.",
       features: [
         "Resumo da saúde e histórico unificado",
@@ -32,9 +32,9 @@ const T = {
         "Lembretes e resumos de cada consulta",
         "Os seus dados, sempre seus — exportação completa",
       ],
-      cta: "Começar como utente",
+      cta: "Começar como paciente",
     },
-    patientSide1: "O plano do utente dá-lhe acesso total à sua área na app Vivara, independentemente da clínica onde é acompanhado.",
+    patientSide1: "O plano do paciente dá-lhe acesso total à sua área na app Vivara, independentemente da clínica onde é acompanhado.",
     patientSide2: "Os médicos e clínicas pagam os seus próprios planos à parte — o seu acesso não depende disso.",
     patientPoints: [
       "Funciona com qualquer médico na Vivara",
@@ -52,13 +52,13 @@ const T = {
         monthly: 29.99,
         annual: 320,
         desc: "Para médicos a trabalhar de forma independente.",
-        features: ["Portal clínico completo", "Análises, exames e notas numa só linha do tempo", "Alertas de valores fora do alvo", "Funciona com ou sem app do utente", "Suporte por email"],
+        features: ["Portal clínico completo", "Análises, exames e notas numa só linha do tempo", "Alertas de valores fora do alvo", "Funciona com ou sem app do paciente", "Suporte por email"],
       },
       {
         name: "Equipa",
         monthly: null,
         desc: "Para clínicas com 2 ou mais profissionais.",
-        features: ["Tudo do Individual", "Vários profissionais, um só historial por utente", "Condições e suporte acordados com a clínica"],
+        features: ["Tudo do Individual", "Vários profissionais, um só historial por paciente", "Condições e suporte acordados com a clínica"],
         featured: true,
       },
     ],
@@ -67,12 +67,12 @@ const T = {
     referral: {
       badge: "Recomendar a Vivara",
       title: <>Recomende e <em>ganhe um mês grátis.</em></>,
-      desc: "Quem recomenda e quem chega ganham um mês grátis — entre utentes, entre médicos, e de utente para médico.",
+      desc: "Quem recomenda e quem chega ganham um mês grátis — entre pacientes, entre médicos, e de paciente para médico.",
       rules: [
-        { who: "Utente → utente", text: "Os dois ganham um mês grátis." },
+        { who: "Paciente → paciente", text: "Os dois ganham um mês grátis." },
         { who: "Médico → médico", text: "Os dois ganham um mês grátis." },
-        { who: "Utente → o seu médico", text: "O utente ganha um mês grátis e o médico começa com o primeiro mês grátis." },
-        { who: "Médico → utente", text: "O utente começa com o primeiro mês grátis. O médico não recebe nada em troca: a recomendação de um médico nunca deve depender de um benefício próprio." },
+        { who: "Paciente → o seu médico", text: "O paciente ganha um mês grátis e o médico começa com o primeiro mês grátis." },
+        { who: "Médico → paciente", text: "O paciente começa com o primeiro mês grátis. O médico não recebe nada em troca: a recomendação de um médico nunca deve depender de um benefício próprio." },
       ],
       fine: [
         "O mês grátis de quem recomenda é atribuído quando a pessoa convidada paga a primeira mensalidade.",
@@ -80,7 +80,7 @@ const T = {
         "Planos de clínica: condições a combinar.",
       ],
     },
-    footnote: "Sem custos de setup. Cancela quando quiser. IVA incluído. Os planos de médicos e utentes são independentes.",
+    footnote: "Sem custos de setup. Cancela quando quiser. IVA incluído. Os planos de médicos e pacientes são independentes.",
   },
   en: {
     header: {
@@ -197,7 +197,7 @@ export default function Precos() {
           </div>
         </div>
       </section>
-      {/* Utente */}
+      {/* Paciente */}
       <section className="bg-brand-beige pb-16">
         <div className="mx-auto max-w-6xl px-6">
           <SectionBadge>{L.patientsBadge}</SectionBadge>

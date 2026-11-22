@@ -16,8 +16,8 @@ const T = {
     perDayUnit: "/dia",
     billed: (m, a) => `€${m} por mês, ou €${a} por ano`,
     cards: [
-      { key: "utente", who: "Utente", text: "A app completa, com o seu historial sempre consigo." },
-      { key: "medico", who: "Médico individual", text: "O portal clínico, com ou sem a app do utente." },
+      { key: "utente", who: "Paciente", text: "A app completa, com o seu historial sempre consigo." },
+      { key: "medico", who: "Médico individual", text: "O portal clínico, com ou sem a app do paciente." },
     ],
     clinic: "Clínicas com 2 ou mais profissionais",
     clinicNote: "Sob consulta",

@@ -6,7 +6,7 @@ import doctorPhoto from "../assets/doctor-patient.jpg";
 import notebookPhoto from "../assets/sobre-photo.jpg";
 import phonePhoto from "../assets/hero-photo.jpg";
 
-// Cada cena mostra um momento real, nas duas vistas (médico e utente).
+// Cada cena mostra um momento real, nas duas vistas (médico e paciente).
 // Para trocar uma fotografia, substitua o ficheiro em src/assets e ajuste
 // `image` / `position` abaixo. O texto fica na esquerda; o assunto da imagem
 // deve ficar do lado direito.
@@ -49,13 +49,13 @@ const T = {
         who: "Médico",
         tag: "Antes da consulta",
         title: "Chegue já a saber tudo",
-        desc: "«Trouxe as análises?» deixa de ser a primeira pergunta. Tudo o que o utente recebeu está no mesmo sítio.",
+        desc: "«Trouxe as análises?» deixa de ser a primeira pergunta. Tudo o que o paciente recebeu está no mesmo sítio.",
         q: "O que mudou desde a última consulta?",
         a: "Há 2 análises novas desde 12 mar. LDL-C: 142 mg/dL, acima do alvo que definiu.",
       },
       {
         thumb: "Resultados",
-        who: "Utente",
+        who: "Paciente",
         tag: "Resultados",
         title: "Todas as análises, num só sítio",
         desc: "Do laboratório que for. Carregue o PDF ou uma fotografia, e fica organizado por data.",
@@ -64,7 +64,7 @@ const T = {
       },
       {
         thumb: "Entre consultas",
-        who: "Médico e utente",
+        who: "Médico e paciente",
         tag: "Entre consultas",
         title: "Veja a evolução, não só o último valor",
         desc: "O mesmo historial para os dois, com a tendência de cada marcador ao longo do tempo.",
@@ -73,7 +73,7 @@ const T = {
       },
       {
         thumb: "Sono",
-        who: "Utente",
+        who: "Paciente",
         tag: "Wearables",
         title: "O sono, ao lado das análises",
         desc: "Ligue o seu wearable. Os dados aparecem junto do historial, mas sempre identificados como wearable.",
@@ -82,7 +82,7 @@ const T = {
       },
       {
         thumb: "A sua história",
-        who: "Utente",
+        who: "Paciente",
         tag: "Indicadores",
         title: "Os seus números, ao longo do tempo",
         desc: "Indicadores de acompanhamento, com a origem de cada dado à vista.",

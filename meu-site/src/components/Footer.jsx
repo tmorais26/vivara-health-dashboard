@@ -4,7 +4,7 @@ import { useT } from "../i18n";
 const T = {
   pt: {
     tagline: "A sua saúde, sempre acompanhada.",
-    taglineEm: "A mesma história, para médicos e utentes.",
+    taglineEm: "A mesma história, para médicos e pacientes.",
     soonApp: "Em breve na",
     soonPlay: "Em breve no",
     rights: "Todos os direitos reservados.",
@@ -21,7 +21,7 @@ const T = {
         title: "Ajuda",
         links: [
           ["Médicos e clínicas", "/medicos"],
-          ["Para utentes", "/utentes"],
+          ["Pacientes", "/pacientes"],
           ["FAQ", "/faq"],
           ["Contacto", "/contacto"],
         ],
@@ -56,7 +56,7 @@ const T = {
         title: "Help",
         links: [
           ["Doctors & clinics", "/medicos"],
-          ["For patients", "/utentes"],
+          ["Patients", "/pacientes"],
           ["FAQ", "/faq"],
           ["Contact", "/contacto"],
         ],

@@ -18,7 +18,7 @@ const T = {
     name: "Nome",
     email: "Email",
     iAm: "Sou…",
-    roles: ["Médico / Clínica", "Utente", "Imprensa", "Outro"],
+    roles: ["Médico / Clínica", "Paciente", "Imprensa", "Outro"],
     clinicRole: "Médico / Clínica",
     clinicName: "Nome da clínica",
     message: "Mensagem",

@@ -16,13 +16,13 @@ const T = {
       desc: "Os resultados chegam de vários laboratórios e ficam num só sítio. Cada um vê o que precisa.",
       cta: "Começar",
     },
-    views: { patient: "Vista do utente", doctor: "Vista do médico" },
+    views: { patient: "Vista do paciente", doctor: "Vista do médico" },
     steps: [
       {
         title: "Tudo num só sítio",
         text: {
           patient: "Crie a sua conta e carregue o PDF ou uma fotografia das análises, venha do laboratório que vier.",
-          doctor: "Crie a sua conta, individual ou da clínica, e acrescente os resultados que o utente lhe reencaminha.",
+          doctor: "Crie a sua conta, individual ou da clínica, e acrescente os resultados que o paciente lhe reencaminha.",
         },
         panel: {
           patient: {
@@ -34,10 +34,10 @@ const T = {
             ],
           },
           doctor: {
-            title: "Historial do utente",
+            title: "Historial do paciente",
             rows: [
               ["Conta de profissional", "Criada em minutos", "Pronto"],
-              ["Resultados por email", "Reencaminhados pelo utente", "Adicionar"],
+              ["Resultados por email", "Reencaminhados pelo paciente", "Adicionar"],
               ["Hemograma completo", "Já no historial", "Feito"],
             ],
           },
@@ -98,7 +98,7 @@ const T = {
     startBadge: "Por onde começar",
     startTitle: <>Cada um começa <em>no seu lado.</em></>,
     starts: [
-      { who: "Utente", title: "Carregue o primeiro resultado", cta: "Ver a vista do utente", to: "/utentes" },
+      { who: "Paciente", title: "Carregue o primeiro resultado", cta: "Ver a vista do paciente", to: "/pacientes" },
       { who: "Médico", title: "Crie a conta e comece a acompanhar", cta: "Ver a vista do médico", to: "/medicos" },
     ],
     startNote: "Os dois acessos são independentes e funcionam em conjunto.",
@@ -197,7 +197,7 @@ const T = {
     startBadge: "Where to start",
     startTitle: <>Everyone starts <em>on their own side.</em></>,
     starts: [
-      { who: "Patient", title: "Upload your first result", cta: "See the patient view", to: "/utentes" },
+      { who: "Patient", title: "Upload your first result", cta: "See the patient view", to: "/pacientes" },
       { who: "Doctor", title: "Create your account and start following", cta: "See the doctor view", to: "/medicos" },
     ],
     startNote: "The two accesses are independent and work together.",

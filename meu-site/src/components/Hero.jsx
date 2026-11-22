@@ -15,12 +15,12 @@ const T = {
       </>
     ),
     desc: "Uma só plataforma, duas vistas:",
-    views: ["O utente tem a sua saúde num só lugar", "O médico tem o historial completo"],
+    views: ["O paciente tem a sua saúde num só lugar", "O médico tem o historial completo"],
     cta: "Ver como funciona",
     facts: [
       { big: "Qualquer laboratório", text: "PDF ou fotografia" },
-      { big: "Médico e utente", text: "O mesmo historial" },
-      { big: "Desde €{u}/dia", text: "Utentes. Médicos: €{m} por dia", link: "Ver preços", to: "/precos" },
+      { big: "Médico e paciente", text: "O mesmo historial" },
+      { big: "Desde €{u}/dia", text: "Pacientes. Médicos: €{m} por dia", link: "Ver preços", to: "/precos" },
     ],
   },
   en: {

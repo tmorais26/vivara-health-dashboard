@@ -16,7 +16,7 @@ const T = {
     items: [
       {
         q: "Para quem é a Vivara?",
-        a: "Para médicos e clínicas que querem acompanhar utentes entre consultas, e para utentes que querem ter os seus exames, resultados e registos médicos num só lugar. Uma plataforma, dois acessos.",
+        a: "Para médicos e clínicas que querem acompanhar pacientes entre consultas, e para pacientes que querem ter os seus exames, resultados e registos médicos num só lugar. Uma plataforma, dois acessos.",
       },
       {
         q: "Quem vê os meus dados?",
@@ -31,20 +31,20 @@ const T = {
         a: "Apple Health, Oura e Whoop. Os dados dos wearables são sempre distinguidos das análises medidas em laboratório.",
       },
       {
-        q: "Os utentes pagam?",
-        a: "Os médicos e clínicas têm os seus planos; o utente tem um plano próprio com acesso completo à app. Os acessos são independentes.",
+        q: "Os pacientes pagam?",
+        a: "Os médicos e clínicas têm os seus planos; o paciente tem um plano próprio com acesso completo à app. Os acessos são independentes.",
       },
       {
         q: "E se o meu médico ainda não usar a Vivara?",
-        a: "Pode começar sozinho como utente. O seu historial fica organizado e pronto para partilhar com a sua equipa clínica assim que ela se juntar à Vivara.",
+        a: "Pode começar sozinho como paciente. O seu historial fica organizado e pronto para partilhar com a sua equipa clínica assim que ela se juntar à Vivara.",
       },
       {
-        q: "O meu utente tem de ter a app?",
-        a: "Não. O portal serve por si só para organizar o historial: se o utente lhe reencaminhar as análises por email, você acrescenta-as. Com a app, o utente carrega os resultados diretamente e vê o mesmo historial.",
+        q: "O meu paciente tem de ter a app?",
+        a: "Não. O portal serve por si só para organizar o historial: se o paciente lhe reencaminhar as análises por email, você acrescenta-as. Com a app, o paciente carrega os resultados diretamente e vê o mesmo historial.",
       },
       {
         q: "Há vantagens em recomendar a Vivara?",
-        a: "Sim. Quando um utente ou um médico recomenda a Vivara, quem recomenda e quem chega ganham um mês grátis. Quando é um médico a recomendar a um utente, só o utente beneficia. Os detalhes estão na página de Preços.",
+        a: "Sim. Quando um paciente ou um médico recomenda a Vivara, quem recomenda e quem chega ganham um mês grátis. Quando é um médico a recomendar a um paciente, só o paciente beneficia. Os detalhes estão na página de Preços.",
       },
       {
         q: "Posso cancelar a qualquer momento?",
