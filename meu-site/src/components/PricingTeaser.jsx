@@ -14,7 +14,7 @@ const T = {
     desc: "Preços com IVA incluído. Cancela quando quiser.",
     perMonth: "/mês",
     perDayUnit: "/dia",
-    billed: (m, a) => `€${m} por mês, ou €${a} por ano`,
+    billed: (m, a) => `${m} € por mês, ou ${a} € por ano`,
     cards: [
       { key: "utente", who: "Membro", text: "A app completa, com o seu historial sempre consigo." },
       { key: "medico", who: "Médico individual", text: "O portal clínico, com ou sem a app do paciente." },
@@ -63,7 +63,7 @@ export default function PricingTeaser() {
               <div className="rounded-3xl border border-black/10 bg-brand-beige p-8 h-full">
                 <p className="text-xs uppercase tracking-[0.18em] text-brand-muted/50">{c.who}</p>
                 <p className="mt-3">
-                  <span className="font-serif text-5xl">€{euro(day(PRICES[c.key].monthly))}</span>
+                  <span className="font-serif text-5xl">{lang === "pt" ? `${euro(day(PRICES[c.key].monthly))} €` : `€${euro(day(PRICES[c.key].monthly))}`}</span>
                   <span className="text-brand-muted/60">{L.perDayUnit}</span>
                 </p>
                 <p className="mt-1 text-sm text-brand-green-dark">{L.billed(euro(PRICES[c.key].monthly), euro(PRICES[c.key].annual))}</p>

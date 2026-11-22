@@ -20,7 +20,7 @@ const T = {
     facts: [
       { big: "Qualquer laboratório", text: "PDF ou fotografia" },
       { big: "Médico e paciente", text: "O mesmo historial" },
-      { big: "Desde €{u}/dia", text: "Membros. Médicos: €{m} por dia", link: "Ver preços", to: "/precos" },
+      { big: "Desde {u} €/dia", text: "Membros. Médicos: {m} € por dia", link: "Ver preços", to: "/precos" },
     ],
   },
   en: {

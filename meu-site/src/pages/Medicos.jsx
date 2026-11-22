@@ -31,7 +31,7 @@ const T = {
         { title: "Plano do paciente e mensagens", desc: "O plano do dia (o que tomar, que exames fazer) e conversa direta com o paciente, sem sair do portal." },
       ],
       planBadge: "Plano de médico",
-      annualNote: "€{m} por mês, ou €{a} por ano com plano anual. Por médico.",
+      annualNote: "{m} € por mês, ou {a} € por ano com plano anual. Por médico.",
       planDesc: "Acesso total ao portal, a título individual. Cancela quando quiser. IVA incluído.",
       planNote: "Trabalha numa clínica com 2 ou mais profissionais? Veja a vista de clínica.",
       featuresTitle: "Tudo o que precisa no portal.",
@@ -268,7 +268,7 @@ export default function Medicos() {
                 ) : (
                   <>
                     <h2 className="mt-5 font-serif text-4xl font-light md:text-5xl">
-                      €{day} <span className="text-2xl text-brand-muted/60">{L.perDay}</span>
+                      {lang === "pt" ? `${day} €` : `€${day}`} <span className="text-2xl text-brand-muted/60">{L.perDay}</span>
                     </h2>
                     <p className="mt-1 text-sm text-brand-muted/60">{note}</p>
                   </>

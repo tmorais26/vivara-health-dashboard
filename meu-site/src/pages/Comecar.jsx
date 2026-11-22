@@ -11,7 +11,7 @@ const T = {
       desc: "A Vivara tem duas vistas do mesmo historial. Escolha a sua.",
     },
     perDayUnit: "/dia",
-    annualNote: (m, a) => `€${m} por mês, ou €${a} por ano`,
+    annualNote: (m, a) => `${m} € por mês, ou ${a} € por ano`,
     waitlist: "Ainda não abrimos. Deixe o seu contacto e avisamos assim que puder entrar.",
     cards: [
       {
@@ -93,7 +93,7 @@ export default function Comecar() {
                   <p className={`text-xs uppercase tracking-[0.18em] ${featured ? "text-white/60" : "text-brand-muted/50"}`}>{c.who}</p>
                   <h2 className="font-serif text-3xl mt-1 mb-4">{c.title}</h2>
                   <p className="mb-6">
-                    <span className="font-serif text-3xl">€{euro(dayPrice(price.monthly))}</span>
+                    <span className="font-serif text-3xl">{lang === "pt" ? `${euro(dayPrice(price.monthly))} €` : `€${euro(dayPrice(price.monthly))}`}</span>
                     <span className={`text-sm ${featured ? "text-white/60" : "text-brand-muted/60"}`}>{L.perDayUnit}</span>
                     <span className={`block text-xs mt-1 ${featured ? "text-white/60" : "text-brand-muted/60"}`}>{L.annualNote(euro(price.monthly), euro(price.annual))}</span>
                   </p>

@@ -273,8 +273,8 @@ export const LEGAL = {
           body: [
             {
               rows: [
-                ["Membro", "€6,99 por mês ou €79 por ano."],
-                ["Médico individual", "€29,99 por mês ou €320 por ano."],
+                ["Membro", "6,99 € por mês ou 79 € por ano."],
+                ["Médico individual", "29,99 € por mês ou 320 € por ano."],
                 ["Clínica (2 ou mais profissionais)", "Sob consulta."],
               ],
             },
