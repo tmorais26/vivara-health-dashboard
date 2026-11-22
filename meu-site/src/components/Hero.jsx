@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { CTAButton } from "./ui";
-import { useT } from "../i18n";
+import { useLang, useT } from "../i18n";
+import { PRICES, dayPrice } from "../config/access";
 import heroPhoto from "../assets/hero-sofa.webp";
 
 const T = {
@@ -18,7 +19,7 @@ const T = {
     facts: [
       { big: "Qualquer laboratório", text: "PDF ou fotografia" },
       { big: "Médico e utente", text: "O mesmo historial" },
-      { big: "16 min", text: "por consulta no registo clínico", source: "Annals of Internal Medicine, 2020", url: "https://doi.org/10.7326/M18-3684" },
+      { big: "Desde €{u}/dia", text: "Utentes. Médicos: €{m} por dia", link: "Ver preços", to: "/precos" },
     ],
   },
   en: {
@@ -34,7 +35,7 @@ const T = {
     facts: [
       { big: "Any lab", text: "PDF or photo" },
       { big: "Doctor and patient", text: "The same record" },
-      { big: "16 min", text: "per appointment in the health record", source: "Annals of Internal Medicine, 2020", url: "https://doi.org/10.7326/M18-3684" },
+      { big: "From €{u}/day", text: "Patients. Doctors: €{m} a day", link: "See pricing", to: "/precos" },
     ],
   },
 };
@@ -42,6 +43,12 @@ const T = {
 export default function Hero() {
   const t = useT();
   const L = t(T);
+  const { lang } = useLang();
+  // Preços por dia a partir dos preços mensais (config), com vírgula em PT e ponto em EN.
+  const fill = (str) =>
+    str
+      .replace("{u}", lang === "pt" ? dayPrice(PRICES.utente.monthly) : dayPrice(PRICES.utente.monthly).replace(",", "."))
+      .replace("{m}", lang === "pt" ? dayPrice(PRICES.medico.monthly) : dayPrice(PRICES.medico.monthly).replace(",", "."));
   return (
     <section id="top" className="relative min-h-screen flex items-end overflow-hidden bg-brand-dark">
       <img
@@ -96,17 +103,12 @@ export default function Hero() {
         >
           {L.facts.map((f) => (
             <div key={f.big}>
-              <p className="font-serif text-lg leading-tight text-white md:text-2xl">{f.big}</p>
-              <p className="mt-1 text-[11px] leading-snug text-white/75 md:text-sm">{f.text}</p>
-              {f.source && (
-                <a
-                  href={f.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 hidden text-xs text-white/55 underline underline-offset-2 hover:text-white/80 md:block"
-                >
-                  {f.source}
-                </a>
+              <p className="font-serif text-lg leading-tight text-white md:text-2xl">{fill(f.big)}</p>
+              <p className="mt-1 text-[11px] leading-snug text-white/75 md:text-sm">{fill(f.text)}</p>
+              {f.to && (
+                <Link to={f.to} className="mt-1 hidden text-xs text-white/60 underline underline-offset-2 hover:text-white/90 md:block">
+                  {f.link} →
+                </Link>
               )}
             </div>
           ))}
