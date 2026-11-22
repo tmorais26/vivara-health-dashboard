@@ -19,7 +19,9 @@ import { FichaUtente } from "@/components/ficha/FichaUtente";
 export const Route = createFileRoute("/utentes/$utenteId")({
   head: ({ params }) => ({
     meta: [
-      { title: `${params.utenteId === "maria-antunes" ? "Maria Antunes (exemplo)" : "Utente"} — Vivara Health` },
+      {
+        title: `${params.utenteId === "maria-antunes" ? "Maria Antunes (exemplo)" : "Utente"} — Vivara Health`,
+      },
       {
         name: "description",
         content:
@@ -27,6 +29,8 @@ export const Route = createFileRoute("/utentes/$utenteId")({
       },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { separador?: string } =>
+    typeof s.separador === "string" ? { separador: s.separador } : {},
   component: RotaUtente,
   notFoundComponent: NaoEncontrado,
 });
@@ -37,7 +41,10 @@ function NaoEncontrado() {
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
         <h1 className="font-serif text-3xl text-foreground">{t.utente.naoEncontrado}</h1>
-        <Link to="/" className="mt-4 inline-block text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/"
+          className="mt-4 inline-block text-sm text-muted-foreground hover:text-foreground"
+        >
           {t.utente.voltarLista}
         </Link>
       </div>
@@ -78,7 +85,12 @@ const ID_EXEMPLO = "maria-antunes";
 
 function RotaUtente() {
   const { utenteId } = Route.useParams();
-  return utenteId === ID_EXEMPLO ? <DashboardUtente /> : <FichaUtente utenteId={utenteId} />;
+  const { separador } = Route.useSearch();
+  return utenteId === ID_EXEMPLO ? (
+    <DashboardUtente />
+  ) : (
+    <FichaUtente utenteId={utenteId} separadorInicial={separador} />
+  );
 }
 
 function DashboardUtente() {
@@ -95,29 +107,23 @@ function DashboardUtente() {
     marcador?: Marcador;
   } | null>(null);
 
-  const marcadoresFiltrados = useMemo(
-    () => {
-      const showMarkers =
-        mainTab === "clinico" &&
-        (clinicoSub === "analises" ||
-          clinicoSub === "composicao" ||
-          clinicoSub === "wearable");
-      const base = !showMarkers
-        ? []
-        : utente.marcadores.filter((m) => m.categoria === (clinicoSub as Categoria));
-      if (!novosDadosFiltro) return base;
-      // Considera "novo" se a última medição é nos últimos 14 dias
-      const cutoff = Date.now() - 14 * 24 * 3600 * 1000;
-      return base.filter((m) => {
-        const last = m.serie[m.serie.length - 1];
-        return last && new Date(last.data).getTime() >= cutoff;
-      });
-    },
-    [mainTab, clinicoSub, novosDadosFiltro],
-  );
+  const marcadoresFiltrados = useMemo(() => {
+    const showMarkers =
+      mainTab === "clinico" &&
+      (clinicoSub === "analises" || clinicoSub === "composicao" || clinicoSub === "wearable");
+    const base = !showMarkers
+      ? []
+      : utente.marcadores.filter((m) => m.categoria === (clinicoSub as Categoria));
+    if (!novosDadosFiltro) return base;
+    // Considera "novo" se a última medição é nos últimos 14 dias
+    const cutoff = Date.now() - 14 * 24 * 3600 * 1000;
+    return base.filter((m) => {
+      const last = m.serie[m.serie.length - 1];
+      return last && new Date(last.data).getTime() >= cutoff;
+    });
+  }, [mainTab, clinicoSub, novosDadosFiltro]);
 
-  const selecionado =
-    utente.marcadores.find((m) => m.id === selectedId) ?? marcadoresFiltrados[0];
+  const selecionado = utente.marcadores.find((m) => m.id === selectedId) ?? marcadoresFiltrados[0];
 
   function handleClinicoSub(id: ClinicoSub) {
     setClinicoSub(id);
@@ -135,7 +141,10 @@ function DashboardUtente() {
 
   return (
     <PortalShell hideSidebarChrome>
-      <div role="note" className="border-b border-state-warn/30 bg-state-warn-soft px-4 py-2 text-center text-xs text-state-warn sm:px-8">
+      <div
+        role="note"
+        className="border-b border-state-warn/30 bg-state-warn-soft px-4 py-2 text-center text-xs text-state-warn sm:px-8"
+      >
         {t.ficha.exemplo}
       </div>
       {/* Vista mobile focada — apenas <lg */}
@@ -145,7 +154,11 @@ function DashboardUtente() {
           onAlertClick={(a) => {
             const m = utente.marcadores.find((mm) => mm.id === a.marcadorId);
             if (m) {
-              if (m.categoria === "analises" || m.categoria === "composicao" || m.categoria === "wearable") {
+              if (
+                m.categoria === "analises" ||
+                m.categoria === "composicao" ||
+                m.categoria === "wearable"
+              ) {
                 setMainTab("clinico");
                 setClinicoSub(m.categoria);
               } else if (m.categoria === "genomica") {
@@ -159,154 +172,157 @@ function DashboardUtente() {
 
       {/* Vista desktop completa — apenas lg+ */}
       <div className="hidden lg:block">
-      <PatientHeader
-        utente={utente}
-        novosDadosAtivo={novosDadosFiltro}
-        onShowNovosDados={() => {
-          setMainTab("clinico");
-          setClinicoSub("analises");
-          setNovosDadosFiltro((v) => !v);
-        }}
-        onAlertClick={(a) => {
-          const m = utente.marcadores.find((mm) => mm.id === a.marcadorId);
-          if (m) {
-            if (m.categoria === "analises" || m.categoria === "composicao" || m.categoria === "wearable") {
-              setMainTab("clinico");
-              setClinicoSub(m.categoria);
-            } else if (m.categoria === "genomica") {
-              setMainTab("genomica");
+        <PatientHeader
+          utente={utente}
+          novosDadosAtivo={novosDadosFiltro}
+          onShowNovosDados={() => {
+            setMainTab("clinico");
+            setClinicoSub("analises");
+            setNovosDadosFiltro((v) => !v);
+          }}
+          onAlertClick={(a) => {
+            const m = utente.marcadores.find((mm) => mm.id === a.marcadorId);
+            if (m) {
+              if (
+                m.categoria === "analises" ||
+                m.categoria === "composicao" ||
+                m.categoria === "wearable"
+              ) {
+                setMainTab("clinico");
+                setClinicoSub(m.categoria);
+              } else if (m.categoria === "genomica") {
+                setMainTab("genomica");
+              }
+              setSelectedId(m.id);
             }
-            setSelectedId(m.id);
-          }
-        }}
-      />
+          }}
+        />
 
-      {/* Anamnese — accordion sempre visível abaixo do header */}
-      <section className="border-b border-border bg-surface-raised">
-        <button
-          type="button"
-          onClick={() => setAnamneseOpen((v) => !v)}
-          className="flex w-full items-center justify-between gap-3 px-8 py-3 text-left transition-colors hover:bg-accent/40"
-          aria-expanded={anamneseOpen}
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              {t.utente.anamnese}
-            </span>
-            <span className="text-sm text-foreground">
-              {t.utente.anamneseDesc}
-            </span>
-          </div>
-          <ChevronDown
-            className={`h-4 w-4 text-muted-foreground transition-transform ${anamneseOpen ? "rotate-180" : ""}`}
-          />
-        </button>
-        {anamneseOpen && (
-          <div className="border-t border-border px-8 py-6">
-            <AnamnesePanel utente={utente} />
-          </div>
-        )}
-      </section>
+        {/* Anamnese — accordion sempre visível abaixo do header */}
+        <section className="border-b border-border bg-surface-raised">
+          <button
+            type="button"
+            onClick={() => setAnamneseOpen((v) => !v)}
+            className="flex w-full items-center justify-between gap-3 px-8 py-3 text-left transition-colors hover:bg-accent/40"
+            aria-expanded={anamneseOpen}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                {t.utente.anamnese}
+              </span>
+              <span className="text-sm text-foreground">{t.utente.anamneseDesc}</span>
+            </div>
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform ${anamneseOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {anamneseOpen && (
+            <div className="border-t border-border px-8 py-6">
+              <AnamnesePanel utente={utente} />
+            </div>
+          )}
+        </section>
 
-      {/* Tabs */}
-      <nav className="sticky top-0 z-10 border-b border-border bg-surface/90 backdrop-blur">
-        <div className="flex items-center gap-1 px-8">
-          {mainTabIds.map((id) => {
-            const isActive = mainTab === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setMainTab(id)}
-                className={`relative px-4 py-3.5 text-sm transition-colors ${
-                  isActive
-                    ? "font-medium text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {labels.main[id]}
-                {isActive && (
-                  <span className="absolute inset-x-3 -bottom-px h-px bg-foreground" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-        {(mainTab === "clinico" || mainTab === "consultas-docs") && (
-          <div className="flex items-center gap-1 border-t border-border bg-background/60 px-8 py-2">
-            {(mainTab === "clinico" ? clinicoSubIds : cdSubIds).map((id) => {
-              const isActive =
-                mainTab === "clinico" ? clinicoSub === id : cdSub === id;
+        {/* Tabs */}
+        <nav className="sticky top-0 z-10 border-b border-border bg-surface/90 backdrop-blur">
+          <div className="flex items-center gap-1 px-8">
+            {mainTabIds.map((id) => {
+              const isActive = mainTab === id;
               return (
                 <button
                   key={id}
                   type="button"
-                  onClick={() =>
-                    mainTab === "clinico"
-                      ? handleClinicoSub(id as ClinicoSub)
-                      : setCdSub(id as CDSub)
-                  }
-                  className={`rounded-full px-3 py-1 text-[11.5px] transition-colors ${
+                  onClick={() => setMainTab(id)}
+                  className={`relative px-4 py-3.5 text-sm transition-colors ${
                     isActive
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      ? "font-medium text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {mainTab === "clinico" ? labels.clinico[id as ClinicoSub] : labels.cd[id as CDSub]}
+                  {labels.main[id]}
+                  {isActive && (
+                    <span className="absolute inset-x-3 -bottom-px h-px bg-foreground" />
+                  )}
                 </button>
               );
             })}
           </div>
-        )}
-      </nav>
+          {(mainTab === "clinico" || mainTab === "consultas-docs") && (
+            <div className="flex items-center gap-1 border-t border-border bg-background/60 px-8 py-2">
+              {(mainTab === "clinico" ? clinicoSubIds : cdSubIds).map((id) => {
+                const isActive = mainTab === "clinico" ? clinicoSub === id : cdSub === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() =>
+                      mainTab === "clinico"
+                        ? handleClinicoSub(id as ClinicoSub)
+                        : setCdSub(id as CDSub)
+                    }
+                    className={`rounded-full px-3 py-1 text-[11.5px] transition-colors ${
+                      isActive
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                    }`}
+                  >
+                    {mainTab === "clinico"
+                      ? labels.clinico[id as ClinicoSub]
+                      : labels.cd[id as CDSub]}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </nav>
 
-      {/* Body */}
-      <main className="mx-auto max-w-[1440px] px-8 py-8 pb-24 lg:pb-8">
-        {mainTab === "consultas-docs" ? (
-          cdSub === "consultas" ? (
-            <ConsultasPanel utente={utente} />
+        {/* Body */}
+        <main className="mx-auto max-w-[1440px] px-8 py-8 pb-24 lg:pb-8">
+          {mainTab === "consultas-docs" ? (
+            cdSub === "consultas" ? (
+              <ConsultasPanel utente={utente} />
+            ) : (
+              <DocumentosPanel utente={utente} />
+            )
+          ) : mainTab === "clinico" && clinicoSub === "comparar" ? (
+            <CompararPanel utente={utente} />
+          ) : mainTab === "plano" ? (
+            <PlanoPanel
+              utente={utente}
+              initialPrefill={planoPrefill}
+              onConsumePrefill={() => setPlanoPrefill(null)}
+            />
+          ) : mainTab === "genomica" ? (
+            <GenomicaPanel utente={utente} />
           ) : (
-            <DocumentosPanel utente={utente} />
-          )
-        ) : mainTab === "clinico" && clinicoSub === "comparar" ? (
-          <CompararPanel utente={utente} />
-        ) : mainTab === "plano" ? (
-          <PlanoPanel
-            utente={utente}
-            initialPrefill={planoPrefill}
-            onConsumePrefill={() => setPlanoPrefill(null)}
-          />
-        ) : mainTab === "genomica" ? (
-          <GenomicaPanel utente={utente} />
-        ) : (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[420px_1fr]">
-            {/* Marker list */}
-            <aside className="rounded-2xl border border-border bg-surface-raised">
-              <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
-                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                  {marcadoresFiltrados.length} {t.utente.marcadores}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[420px_1fr]">
+              {/* Marker list */}
+              <aside className="rounded-2xl border border-border bg-surface-raised">
+                <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                    {marcadoresFiltrados.length} {t.utente.marcadores}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">{t.utente.meses18}</div>
                 </div>
-                <div className="text-[11px] text-muted-foreground">{t.utente.meses18}</div>
-              </div>
-              <MarkerList
-                marcadores={marcadoresFiltrados}
-                selectedId={selecionado?.id ?? ""}
-                onSelect={setSelectedId}
-              />
-            </aside>
-
-            {/* Detail */}
-            <section>
-              {selecionado && (
-                <MarkerDetailPanel
-                  marcador={selecionado}
-                  onPrescrever={(tipo) => handlePrescrever(tipo, selecionado)}
+                <MarkerList
+                  marcadores={marcadoresFiltrados}
+                  selectedId={selecionado?.id ?? ""}
+                  onSelect={setSelectedId}
                 />
-              )}
-            </section>
-          </div>
-        )}
-      </main>
+              </aside>
+
+              {/* Detail */}
+              <section>
+                {selecionado && (
+                  <MarkerDetailPanel
+                    marcador={selecionado}
+                    onPrescrever={(tipo) => handlePrescrever(tipo, selecionado)}
+                  />
+                )}
+              </section>
+            </div>
+          )}
+        </main>
       </div>
       <MobileNavTabs />
     </PortalShell>

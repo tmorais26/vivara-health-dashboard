@@ -47,6 +47,12 @@ export type Database = {
         Update: { codigo?: string; criado_em?: string; titular?: string; user_id?: string }
         Relationships: Rel[]
       }
+      preferencias_notificacao: {
+        Row: { atualizado_em: string; desligadas: string[]; user_id: string }
+        Insert: { atualizado_em?: string; desligadas?: string[]; user_id: string }
+        Update: { atualizado_em?: string; desligadas?: string[]; user_id?: string }
+        Relationships: Rel[]
+      }
       pedidos_exame: {
         Row: { analise_id: string | null; atualizado_em: string; autor_id: string; criado_em: string; descricao: string; espaco_id: string; estado: string; id: string; pedido_em: string; prazo: string | null; utente_id: string }
         Insert: { analise_id?: string | null; atualizado_em?: string; autor_id: string; criado_em?: string; descricao: string; espaco_id: string; estado?: string; id?: string; pedido_em?: string; prazo?: string | null; utente_id: string }
