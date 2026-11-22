@@ -18,6 +18,12 @@ export interface ParsedValue {
   ref: string;
   keep: boolean;
   suspect: boolean; // valor fora do fisicamente possível — pede confirmação
+  /** Valor e unidade tal como vêm no documento, quando foram convertidos. */
+  origValue?: string;
+  origUnit?: string;
+  origRef?: string;
+  /** O documento não indica a unidade: assumiu-se a unidade de referência. */
+  unitAssumed?: boolean;
 }
 
 export interface ExtractedDoc {
@@ -128,12 +134,14 @@ const LABS = ["Synlab", "CUF", "Joaquim Chaves", "Germano de Sousa", "Unilabs", 
 export const norm = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
 
+import { knownUnits, toCanonical, convertRef, unitKey as unitKeyStrict, MARKER_UNITS } from "./lab-units";
+
 // Unidades aceites. Serve para não confundir o número do valor com números que
 // aparecem noutras colunas (datas, códigos de exame, intervalos).
 // A lookbehind impede que "U/L" seja apanhado dentro de "mU/L": sem ela, um
 // TSH lido pelo OCR como "mU/L" ficava com unidade "U/L", incompatível com o
 // marcador, e o valor era descartado por engano.
-const UNIT_RE = /(?<![A-Za-zµ])(x?10\^?12\/L|x?10\^?9\/L|x?10\*9\/L|KUA\/L|KU\/L|mU\/mL|mU\/L|mg\/dL|g\/dL|µg\/dL|ug\/dL|ng\/mL|pg\/mL|µU\/mL|uU\/mL|mUI\/mL|mUI\/L|UI\/mL|U\/L|µmol\/L|umol\/L|mmol\/L|nmol\/L|mg\/L|µg\/L|ug\/L|ng\/dL|10\^?[369]\/L|10\^?12\/L|mL\/min[^\s]*|fL|pg|%|mm\/h|mg\/g)/i;
+const UNIT_RE = /(?<![A-Za-zµ])(x?10\^?12\/L|x?10\^?9\/L|x?10\*9\/L|KUA\/L|KU\/L|mU\/mL|mU\/L|mg\/dL|g\/dL|µg\/dL|ug\/dL|ng\/mL|pg\/mL|µU\/mL|uU\/mL|mUI\/mL|mUI\/L|UI\/mL|U\/L|µmol\/L|umol\/L|mmol\/mol|mmol\/L|nmol\/L|pmol\/L|mg\/L|g\/L|UI\/L|IU\/L|mIU\/mL|kU\/L|µg\/L|ug\/L|ng\/dL|10\^?[369]\/L|10\^?12\/L|mL\/min[^\s]*|fL|pg|%|mm\/h|mg\/g)/i;
 
 function parseNumber(tok: string): string | null {
   // Aceita "5.7" e "5,7"; rejeita anos e códigos longos.
@@ -197,7 +205,10 @@ function findCandidates(line: string): { clean: string; viable: Candidate[] } {
       if (idx < 0) continue;
       if (!prefixIsCode(n.slice(0, idx))) continue;
       if (!endsAtBoundary(idx, alias)) continue;
-      candidates.push({ marker: entry.marker, alias, at: idx, units: entry.units, plaus: entry.plaus });
+      // Unidades aceites: as que a app sabe ler para o marcador (iguais à de
+      // referência ou convertíveis). Uma unidade fora desta lista desmente o nome.
+      const units = MARKER_UNITS[entry.marker] ? knownUnits(entry.marker) : entry.units;
+      candidates.push({ marker: entry.marker, alias, at: idx, units: units && units.length ? units : undefined, plaus: entry.plaus });
     }
   }
   if (candidates.length === 0) return { clean, viable: [] };
@@ -225,7 +236,7 @@ function readValue(tail: string, cand: Candidate): { value: string; unit: string
   // 47,8-65,0 [3,4-4,8]". Para a albumina e as proteínas totais interessa o
   // g/dL (é o que o PhenoAge e o painel usam), por isso lê-se o valor entre
   // parênteses e o intervalo de referência que vem igualmente entre parênteses.
-  if (cand.units?.includes("g/dL") && !cand.units.includes("%")) {
+  if (MARKER_UNITS[cand.marker]?.canonical === "g/dL" || (cand.units?.includes("g/dL") && !cand.units.includes("%"))) {
     const br = tail.match(/^\s*-?\d+(?:[.,]\d+)?\s*\[(\d+(?:[.,]\d+)?)\]\s*%\s*\[g\/dL\][^\[]*\[(\d+(?:[.,]\d+)?\s*[-–]\s*\d+(?:[.,]\d+)?)\]/i);
     if (br) {
       return { value: br[1].replace(",", "."), unit: "g/dL", ref: br[2].replace(/,/g, ".").replace(/\s*[-–]\s*/, " – ") };
@@ -245,24 +256,44 @@ function readValue(tail: string, cand: Candidate): { value: string; unit: string
   const unit = unitMatch ? unitMatch[1] : "";
 
   // Unidade presente e incompatível com o marcador: o nome enganou-se.
-  if (unit && cand.units && !cand.units.some((u) => unitKey(u) === unitKey(unit))) return null;
+  if (unit && cand.units && !cand.units.some((u) => unitKeyStrict(u) === unitKeyStrict(unit))) return null;
 
   const ref = extractRef(unit ? after.slice(after.indexOf(unit) + unit.length) : after);
   return { value, unit, ref };
 }
 
 function build(cand: Candidate, clean: string, raw: string, v: { value: string; unit: string; ref: string }): ParsedValue {
-  const num = Number(v.value);
-  return {
+  const base = {
     marker: cand.marker,
     label: clean.slice(cand.at, cand.at + cand.alias.length).trim(),
     raw: raw.trim(),
-    value: v.value,
-    unit: v.unit,
-    ref: v.ref,
     keep: true,
-    suspect: !!cand.plaus && (num < cand.plaus[0] || num > cand.plaus[1]),
   };
+  const num = Number(v.value);
+  const plausible = (n: number) => !cand.plaus || (n >= cand.plaus[0] && n <= cand.plaus[1]);
+  const u = toCanonical(cand.marker, num, v.unit);
+  if (u.status === "converted") {
+    // Outra unidade: converte-se para a de referência e guarda-se o original.
+    return {
+      ...base, value: String(u.value), unit: u.unit, ref: convertRef(v.ref, u.factor, u.offset),
+      origValue: v.value, origUnit: v.unit, origRef: v.ref, suspect: !plausible(u.value),
+    };
+  }
+  if (u.status === "missing") {
+    // Sem unidade no documento: assume-se a de referência e pede-se confirmação.
+    const canon = MARKER_UNITS[cand.marker].canonical;
+    return { ...base, value: v.value, unit: canon, ref: v.ref, unitAssumed: true, suspect: !plausible(num) };
+  }
+  return { ...base, value: v.value, unit: u.status === "same" ? u.unit : v.unit, ref: v.ref, suspect: !plausible(num) };
+}
+
+/** Recalcula o valor de referência quando a pessoa corrige o valor original. */
+export function reconvert(v: ParsedValue, origValue: string): ParsedValue {
+  if (!v.marker || !v.origUnit) return { ...v, value: origValue };
+  const n = Number(origValue.replace(",", "."));
+  if (!origValue.trim() || !Number.isFinite(n)) return { ...v, origValue, value: "" };
+  const u = toCanonical(v.marker, n, v.origUnit);
+  return { ...v, origValue, value: u.status === "converted" || u.status === "same" ? String(u.value) : origValue };
 }
 
 export function parseLine(line: string): ParsedValue | null {

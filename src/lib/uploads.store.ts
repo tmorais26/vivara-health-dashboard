@@ -14,6 +14,12 @@ export interface StoredValue {
   value: string;
   unit: string;
   ref: string;
+  /** Valor/unidade/referência tal como vêm no documento, quando foram convertidos. */
+  origValue?: string;
+  origUnit?: string;
+  origRef?: string;
+  /** O documento não indicava a unidade e a pessoa confirmou a assumida. */
+  unitAssumed?: boolean;
 }
 
 // Como o conteúdo foi lido. Muda o que o ecrã de documento mostra (texto do
@@ -86,7 +92,8 @@ export function makeUpload(
     collectedISO: doc.collectedISO ?? now.toISOString().slice(0, 10),
     lab: doc.lab,
     lines: doc.lines.slice(0, MAX_LINES),
-    values: values.map(({ marker, label, raw, value, unit, ref }) => ({ marker, label, raw, value, unit, ref })),
+    values: values.map(({ marker, label, raw, value, unit, ref, origValue, origUnit, origRef, unitAssumed }) =>
+      ({ marker, label, raw, value, unit, ref, origValue, origUnit, origRef, unitAssumed })),
     hasFile: false,
   };
 }

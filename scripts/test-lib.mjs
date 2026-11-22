@@ -14,7 +14,8 @@ const bundle = async (entry, name) => {
   await build({ entryPoints: [entry], bundle: true, format: "esm", platform: "node", external: ["pdfjs-dist"], outfile: out, logLevel: "silent" });
   return import(out);
 };
-const { parseLine, parseValues } = await bundle("src/lib/lab-parse.ts", "lab-parse.mjs");
+const { parseLine, parseValues, reconvert } = await bundle("src/lib/lab-parse.ts", "lab-parse.mjs");
+const { toCanonical, convertRef, MARKER_UNITS } = await bundle("src/lib/lab-units.ts", "lab-units.mjs");
 const { phenoAge } = await bundle("src/lib/bioage.ts", "bioage.mjs");
 const { answer } = await bundle("src/lib/assistant-rules.ts", "assistant.mjs");
 const { searchConditions, CONDITION_LIST } = await bundle("src/lib/conditions.ts", "conditions.mjs");
@@ -51,9 +52,53 @@ test("mU/L não é confundido com U/L", () => {
   assert.equal(r.marker, "TSH"); assert.equal(r.value, "2.10");
 });
 test("valor sem separador decimal fica marcado para confirmar", () => assert.equal(one("Hemoglobina Alc 57 % <57").suspect, true));
-test("sinónimo com acento (Proteína C Reativa)", () => {
+test("sinónimo com acento (Proteína C Reativa), convertido para mg/L com o original guardado", () => {
   const r = one("Proteína C Reativa 0,12 mg/dL < 0,50");
-  assert.equal(r.marker, "PCR-us"); assert.equal(r.unit, "mg/dL");
+  assert.equal(r.marker, "PCR-us");
+  assert.equal(r.unit, "mg/L"); assert.equal(r.value, "1.2");
+  assert.equal(r.origValue, "0.12"); assert.equal(r.origUnit, "mg/dL");
+  assert.equal(r.ref, "< 5"); assert.equal(r.origRef, "< 0.50");
+});
+
+console.log("Unidades de laboratórios diferentes");
+const conv = (line, marker, unit, value, origUnit) => {
+  const r = one(line);
+  assert.ok(r, `não leu: ${line}`);
+  assert.equal(r.marker, marker); assert.equal(r.unit, unit); assert.equal(r.value, value);
+  assert.equal(r.origUnit, origUnit);
+};
+test("Vitamina D em nmol/L passa a ng/mL", () => conv("25-OH Vitamina D 62,4 nmol/L 75 - 250", "Vitamina D", "ng/mL", "25", "nmol/L"));
+test("Glicose em mmol/L passa a mg/dL", () => conv("Glicose 5,2 mmol/L 3,9 - 5,6", "Glicose", "mg/dL", "93.7", "mmol/L"));
+test("Colesterol total em mmol/L passa a mg/dL", () => conv("Colesterol total 5,0 mmol/L < 5,2", "Colesterol total", "mg/dL", "193", "mmol/L"));
+test("HbA1c em mmol/mol (IFCC) passa a %", () => conv("Hemoglobina A1c 39 mmol/mol", "HbA1c", "%", "5.72", "mmol/mol"));
+test("Creatinina em µmol/L passa a mg/dL", () => conv("Creatinina 70 µmol/L 45 - 84", "Creatinina", "mg/dL", "0.792", "µmol/L"));
+test("Estradiol em pmol/L passa a pg/mL", () => conv("Estradiol 140 pmol/L", "Estradiol", "pg/mL", "38.1", "pmol/L"));
+test("T4 livre em pmol/L passa a ng/dL", () => conv("T4 livre 15 pmol/L 12 - 22", "T4 livre", "ng/dL", "1.17", "pmol/L"));
+test("na unidade de referência não há conversão nem «original»", () => {
+  const r = one("25-OH Vitamina D 31 ng/mL 30 - 100");
+  assert.equal(r.value, "31"); assert.equal(r.unit, "ng/mL"); assert.equal(r.origUnit, undefined);
+});
+test("Lp(a) em nmol/L não se converte (depende do método): fica para revisão", () => assert.equal(one("Lipoproteína (a) 75 nmol/L"), null));
+test("sem unidade no documento: assume a de referência e pede confirmação", () => {
+  const r = one("Vitamina D 30");
+  assert.equal(r.unit, "ng/mL"); assert.equal(r.unitAssumed, true);
+});
+test("a referência é convertida com o valor; se não der, fica vazia", () => {
+  assert.equal(convertRef("3,9 - 5,6", 18.016), "70.3 - 101");
+  assert.equal(convertRef("< 5", 38.67), "< 193");
+  assert.equal(convertRef("ver relatório 1 2 3", 2), "");
+});
+test("corrigir o valor original recalcula o convertido", () => {
+  const r = one("Glicose 5,2 mmol/L");
+  const fixed = reconvert(r, "6,1");
+  assert.equal(fixed.origValue, "6,1"); assert.equal(fixed.value, "110");
+});
+test("todos os marcadores reconhecidos têm unidade de referência", () => {
+  const markers = new Set(parseValues([
+    "Estradiol 40 pg/mL", "FSH 7 mUI/mL", "TSH 2 mUI/L", "Ferritina 80 ng/mL", "Glicose 90 mg/dL",
+  ]).map((v) => v.marker));
+  for (const m of markers) assert.ok(MARKER_UNITS[m], m);
+  assert.equal(toCanonical("Marcador inventado", 1, "mg/dL").status, "no-rule");
 });
 
 console.log("Formato de duas linhas (Joaquim Chaves)");

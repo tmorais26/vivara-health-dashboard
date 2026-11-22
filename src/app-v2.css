@@ -1991,3 +1991,13 @@ button.rv-toggle-row .rv-toggle-sub{color:var(--fg-50);}
 .rv-rec-view[data-active="true"]{background:var(--fg);color:var(--bg);}
 .rv-rec-view:focus-visible{outline:2px solid var(--lime);outline-offset:2px;}
 .rv-rec-legend{flex-wrap:wrap;gap:10px 14px;padding:0 20px;}
+.rv-up-warn[data-tone="info"]{background:var(--accent-soft);border-color:rgba(0,102,255,0.35);}
+.rv-up-warn[data-tone="info"] strong{color:var(--chat-link);}
+.rv-up-conv{display:block;font-size:11.5px;color:var(--fg-70);margin-top:3px;line-height:1.35;}
+/* Historial do marcador: origem de cada valor */
+.rv-marker-row--real{row-gap:2px;}
+.rv-marker-row-badge{display:inline-block;margin-left:6px;font-size:10px;font-weight:600;padding:1px 6px;border-radius:999px;border:1px dashed var(--fg-50);color:var(--fg-70);vertical-align:1px;}
+.rv-marker-row-note{grid-column:1 / -1;font-size:11.5px;color:var(--fg-50);line-height:1.35;}
+.rv-marker-row-val small{font-size:11px;color:var(--fg-50);font-weight:500;}
+.rv-marker-labnote{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--fg-50);margin-top:6px;}
+.rv-marker-labnote-line{display:inline-block;width:14px;border-top:1.5px dashed var(--fg-50);}

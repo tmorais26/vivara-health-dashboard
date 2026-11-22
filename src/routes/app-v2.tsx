@@ -4,6 +4,7 @@ import { useState, useContext, createContext, useRef, useCallback, useEffect, ty
 import { whoopAuthUrl, whoopExchange, whoopStatus, whoopDisconnect, type WhoopStatus } from "@/lib/whoop.server";
 import { translate, LANG_STORAGE_KEY, type Lang } from "@/lib/app-v2-i18n";
 import type { ExtractedDoc, ParsedValue } from "@/lib/lab-parse";
+import { toCanonical, fmtNum } from "@/lib/lab-units";
 import type { StoredUpload, UploadKind } from "@/lib/uploads.store";
 import { phenoAge, PHENO_NEEDS, type PhenoValue } from "@/lib/bioage";
 import { answer as answerQuestion, type Facts as AsstFacts, type Action as AsstAction } from "@/lib/assistant-rules";
@@ -72,6 +73,20 @@ interface BioMarker {
   state: BioState;
   panel: string;
   fromUpload?: boolean; // valor veio de uma análise carregada pela utente
+  /** Pontos das análises carregadas, do mais antigo para o mais recente. */
+  points?: MarkerPoint[];
+}
+
+/** Um valor no historial, com a origem e o valor tal como veio no documento. */
+interface MarkerPoint {
+  iso: string;
+  value: number;
+  unit: string;
+  lab: string | null;
+  origValue?: string;
+  origUnit?: string;
+  /** Outro valor do mesmo marcador no mesmo dia, noutro documento. */
+  sameDay?: { value: number; unit: string; lab: string | null }[];
 }
 
 // ─── Contexts ────────────────────────────────────────
@@ -1017,20 +1032,32 @@ function stateFromRange(v: number, r: { min: number | null; max: number | null }
 function mergeUploads(base: BioMarker[], uploads: StoredUpload[]): BioMarker[] {
   if (uploads.length === 0) return base;
 
-  // Série por marcador, da colheita mais antiga para a mais recente.
-  const series = new Map<string, { iso: string; value: number; unit: string; ref: string }[]>();
+  // Série por marcador, da colheita mais antiga para a mais recente. Se o
+  // mesmo marcador aparece no mesmo dia em dois documentos, fica o do
+  // documento mais completo e o outro é mostrado como nota nesse ponto.
+  const series = new Map<string, (MarkerPoint & { ref: string; docSize: number })[]>();
   for (const u of [...uploads].sort((a, b) => a.collectedISO.localeCompare(b.collectedISO))) {
     for (const v of u.values) {
       if (!v.marker) continue;
       const num = Number(v.value);
       if (!Number.isFinite(num)) continue;
       if (!series.has(v.marker)) series.set(v.marker, []);
-      series.get(v.marker)!.push({ iso: u.collectedISO, value: num, unit: v.unit, ref: v.ref });
+      const list = series.get(v.marker)!;
+      const day = u.collectedISO.slice(0, 10);
+      const pt: MarkerPoint & { ref: string; docSize: number } = { iso: u.collectedISO, value: num, unit: v.unit, ref: v.ref, lab: u.lab, origValue: v.origValue, origUnit: v.origUnit, docSize: u.values.length };
+      const same = list.find((p) => p.iso.slice(0, 10) === day);
+      if (!same) { list.push(pt); continue; }
+      if (same.value === num && same.unit === v.unit) continue;   // o mesmo valor repetido
+      const keepNew = pt.docSize > same.docSize;
+      const winner = keepNew ? pt : same;
+      const loser = keepNew ? same : pt;
+      winner.sameDay = [...(same.sameDay ?? []), { value: loser.value, unit: loser.unit, lab: loser.lab }];
+      if (keepNew) list[list.indexOf(same)] = winner;
     }
   }
   if (series.size === 0) return base;
 
-  const shape = (name: string, pts: { value: number; unit: string; ref: string }[], prev?: BioMarker): BioMarker => {
+  const shape = (name: string, pts: (MarkerPoint & { ref: string })[], prev?: BioMarker): BioMarker => {
     const last = pts[pts.length - 1];
     const range = prev && (prev.targetRange.min != null || prev.targetRange.max != null)
       ? prev.targetRange
@@ -1052,6 +1079,7 @@ function mergeUploads(base: BioMarker[], uploads: StoredUpload[]): BioMarker[] {
       state,
       panel: prev?.panel ?? "carregados",
       fromUpload: true,
+      points: pts.map(({ iso, value, unit, lab, origValue, origUnit, sameDay }) => ({ iso, value, unit, lab, origValue, origUnit, sameDay })),
     };
   };
 
@@ -1319,7 +1347,7 @@ function DadosScreen() {
 // ─── Marker Detail ───────────────────────────────────
 function MarkerDetail({ marker }: { marker?: BioMarker }) {
   const { go } = useNav();
-  const { t, L } = useLang();
+  const { t, L, lang } = useLang();
   const m: BioMarker = marker ?? BIOMARKERS[0];
   const note = CLINICAL_NOTES[m.name];
   const tone = m.tone || "ok";
@@ -1337,6 +1365,12 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
   const toY = (v: number) => H - 10 - ((v - min) / (max - min)) * (H - 20);
   const bandY1 = m.targetRange.max != null ? toY(m.targetRange.max) : null; // limite superior
   const bandY2 = m.targetRange.min != null ? toY(m.targetRange.min) : null; // limite inferior
+  // Pontos reais (análises carregadas): onde muda o laboratório desenha-se uma
+  // linha, e no historial cada valor diz de onde veio.
+  const real = m.points && m.points.length === pts.length ? m.points : null;
+  const labOf = (p: MarkerPoint) => p.lab ?? L("Laboratório não identificado", "Unidentified lab");
+  const labChanges = real ? real.map((p, i) => i > 0 && labOf(p) !== labOf(real[i - 1])) : [];
+  const labsCount = real ? new Set(real.map(labOf)).size : 0;
 
   return (
     <div className="rv-screen">
@@ -1355,7 +1389,9 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
           </div>
           <div className="rv-marker-hero-target">
             {L("alvo","target")} {m.target}
-            {hasSeries ? ` · ${t("marker.lastCollection")}` : ` · ${L("sem colheita","no sample yet")}`}
+            {hasSeries
+              ? ` · ${real ? L(`última colheita ${fmtDay(real[real.length - 1].iso.slice(0, 10), "pt", true)}`, `last sample ${fmtDay(real[real.length - 1].iso.slice(0, 10), "en", true)}`) : t("marker.lastCollection")}`
+              : ` · ${L("sem colheita","no sample yet")}`}
           </div>
         </div>
 
@@ -1371,14 +1407,26 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
               {bandY2 != null && <line x1="0" x2={W} y1={bandY2} y2={bandY2} stroke="var(--lime)" strokeOpacity="0.5" strokeDasharray="3 3"/>}
               <path d={area} fill={col} opacity="0.15"/>
               <path d={path} fill="none" stroke={col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              {labChanges.map((ch, i) => ch && (
+                <line key={`lab-${i}`} x1={(xs[i] + xs[i - 1]) / 2} x2={(xs[i] + xs[i - 1]) / 2} y1="4" y2={H - 4}
+                  stroke="var(--fg-50)" strokeOpacity="0.6" strokeDasharray="2 4"/>
+              ))}
               {pts.map((_, i) => (
                 <circle key={i} cx={xs[i]} cy={ys[i]} r={i === pts.length - 1 ? 4.5 : 2.5}
                   fill={i === pts.length - 1 ? col : "var(--bg-elev)"} stroke={col} strokeWidth="1.5"/>
               ))}
             </svg>
             <div className="rv-marker-chart-axis">
-              <span>out 25</span><span>dez 25</span><span>fev 26</span><span>abr 26</span>
+              {real
+                ? <><span>{fmtDay(real[0].iso.slice(0, 10), lang, true)}</span><span>{fmtDay(real[real.length - 1].iso.slice(0, 10), lang, true)}</span></>
+                : <><span>out 25</span><span>dez 25</span><span>fev 26</span><span>abr 26</span></>}
             </div>
+            {labsCount > 1 && (
+              <div className="rv-marker-labnote">
+                <span className="rv-marker-labnote-line" aria-hidden="true"/>
+                {L("Linha tracejada: mudança de laboratório.", "Dashed line: change of lab.")}
+              </div>
+            )}
           </div>
         ) : (
           <div className="rv-info-note" style={{margin: "0 20px 14px"}}>
@@ -1387,7 +1435,9 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
           </div>
         )}
 
-        {hasSeries && <div className="rv-marker-context">
+        {/* A nota da equipa clínica é sobre os valores de demonstração: com
+            valores carregados pela pessoa não se mostra, para não contradizer. */}
+        {hasSeries && !real && <div className="rv-marker-context">
           <div className="rv-marker-context-head">
             <span className="rv-dot" data-tone={tone}/>{t("marker.contextHead")}
           </div>
@@ -1405,12 +1455,52 @@ function MarkerDetail({ marker }: { marker?: BioMarker }) {
               <h3>{t("marker.history")}</h3>
               <a>{t("marker.seeAll")}</a>
             </div>
+            {real ? (
+              <>
+                {labsCount > 1 && (
+                  <div className="rv-info-note" style={{margin: "0 0 10px"}}>
+                    <strong>{L("Valores de laboratórios diferentes", "Values from different labs")}</strong>
+                    <span>{L("Cada laboratório tem o seu método e os seus valores de referência, por isso podem existir pequenas diferenças só por isso. Para saber o que significam, fale com a sua equipa clínica.",
+                             "Each lab has its own method and reference values, so small differences can come from that alone. To know what they mean, talk to your clinical team.")}</span>
+                  </div>
+                )}
+                <div className="rv-marker-rows">
+                  {[...real].reverse().map((p, i, arr) => {
+                    const prevLab = arr[i + 1] ? labOf(arr[i + 1]) : null;
+                    const changed = prevLab != null && prevLab !== labOf(p);
+                    return (
+                      <div key={p.iso + i} className="rv-marker-row rv-marker-row--real">
+                        <span className="rv-marker-row-date">{fmtDay(p.iso.slice(0, 10), lang, true)}</span>
+                        <span className="rv-marker-row-lab">
+                          {labOf(p)}
+                          {changed && <span className="rv-marker-row-badge">{L("outro laboratório", "different lab")}</span>}
+                        </span>
+                        <span className="rv-marker-row-val" style={i === 0 ? {color: col} : undefined}>{fmtNum(p.value, lang)} <small>{p.unit}</small></span>
+                        {p.origUnit && (
+                          <span className="rv-marker-row-note">
+                            {L(`No documento: ${fmtNum(p.origValue ?? "", "pt")} ${p.origUnit} (convertido para ${p.unit} para comparar)`,
+                               `In the document: ${p.origValue} ${p.origUnit} (converted to ${p.unit} to compare)`)}
+                          </span>
+                        )}
+                        {p.sameDay?.map((d, k) => (
+                          <span key={k} className="rv-marker-row-note">
+                            {L(`Noutro documento do mesmo dia: ${fmtNum(d.value, "pt")} ${d.unit}${d.lab ? ` (${d.lab})` : ""}. Mostramos o do documento mais completo.`,
+                               `In another document from the same day: ${d.value} ${d.unit}${d.lab ? ` (${d.lab})` : ""}. We show the one from the more complete document.`)}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
             <div className="rv-marker-rows">
               <div className="rv-marker-row"><span className="rv-marker-row-date">22 abr 2026</span><span className="rv-marker-row-lab">Synlab</span><span className="rv-marker-row-val" style={{color: col}}>{m.value}</span></div>
               <div className="rv-marker-row"><span className="rv-marker-row-date">18 fev 2026</span><span className="rv-marker-row-lab">Synlab</span><span className="rv-marker-row-val">{pts[pts.length - 2]}</span></div>
               <div className="rv-marker-row"><span className="rv-marker-row-date">06 dez 2025</span><span className="rv-marker-row-lab">CUF</span><span className="rv-marker-row-val">{pts[pts.length - 3]}</span></div>
               <div className="rv-marker-row"><span className="rv-marker-row-date">14 set 2025</span><span className="rv-marker-row-lab">CUF</span><span className="rv-marker-row-val">{pts[0]}</span></div>
             </div>
+            )}
           </div>
         )}
 
@@ -2476,7 +2566,11 @@ function ShareUploadScreen() {
   async function save() {
     if (!file || !doc) return;
     const store = await import("@/lib/uploads.store");
-    const kept = values.filter((v) => v.keep && v.value.trim() !== "");
+    // Vírgula decimal (como se escreve em PT) passa a ponto antes de guardar;
+    // sem isto, «5,7» escrito à mão não entrava no historial.
+    const kept = values
+      .filter((v) => v.keep && v.value.trim() !== "")
+      .map((v) => ({ ...v, value: v.value.trim().replace(",", "."), origValue: v.origValue?.trim().replace(",", ".") }));
     const upload = store.makeUpload(file, doc, kept, kind);
 
     // Pede ao browser para não apagar isto sozinho. Sem este pedido, o que
@@ -2495,7 +2589,15 @@ function ShareUploadScreen() {
 
   const reset = () => { setStep("pick"); setFile(null); setDoc(null); setValues([]); setPct(null); };
   const toggle = (i: number) => setValues((p) => p.map((v, k) => (k === i ? { ...v, keep: !v.keep } : v)));
-  const edit = (i: number, val: string) => setValues((p) => p.map((v, k) => (k === i ? { ...v, value: val } : v)));
+  // Valor convertido: a pessoa corrige o número tal como está no documento
+  // (na unidade original) e a app recalcula o valor na unidade de referência.
+  const edit = (i: number, val: string) => setValues((p) => p.map((v, k) => {
+    if (k !== i) return v;
+    if (!v.origUnit || !v.marker) return { ...v, value: val };
+    const n = Number(val.replace(",", "."));
+    const u = Number.isFinite(n) && val.trim() ? toCanonical(v.marker, n, v.origUnit) : null;
+    return { ...v, origValue: val, value: u && (u.status === "converted" || u.status === "same") ? String(u.value) : "" };
+  }));
   const keptCount = values.filter((v) => v.keep && v.value.trim() !== "").length;
   const isOcr = kind !== "pdf-text";
 
@@ -2653,6 +2755,24 @@ function ShareUploadScreen() {
                 </span>
               </div>
             )}
+            {values.some((v) => v.origUnit) && (
+              <div className="rv-up-warn" data-tone="info">
+                <strong>{L("Alguns valores vêm noutra unidade","Some values are in a different unit")}</strong>
+                <span>
+                  {L("Para os comparar com as suas outras análises, mostramos também o valor na unidade usada na app. O número do documento fica guardado tal como está.",
+                     "To compare them with your other results, we also show the value in the unit the app uses. The number from the document is kept exactly as it is.")}
+                </span>
+              </div>
+            )}
+            {values.some((v) => v.unitAssumed) && (
+              <div className="rv-up-warn" data-tone="alert">
+                <strong>{L("Há valores sem unidade","Some values have no unit")}</strong>
+                <span>
+                  {L("O documento não indica a unidade destes valores. Assumimos a habitual (marcada com “unidade?”). Confirme no original e exclua o valor se não corresponder.",
+                     "The document doesn't state the unit for these values. We've assumed the usual one (marked “unit?”). Check the original and exclude the value if it doesn't match.")}
+                </span>
+              </div>
+            )}
             <div className="rv-up-summary">
               <strong>{values.length}</strong> {L("parâmetros reconhecidos","parameters recognised")}
               <span>{L("Toque na caixa para excluir, ou no número para corrigir.","Tap the box to exclude, or the number to correct.")}</span>
@@ -2669,21 +2789,32 @@ function ShareUploadScreen() {
                     <span className="rv-up-row-name">
                       {v.marker}
                       {v.suspect && <span className="rv-up-flag">{L("confirmar","check")}</span>}
+                      {v.unitAssumed && <span className="rv-up-flag">{L("unidade?","unit?")}</span>}
                     </span>
                     <span className="rv-up-row-raw">{v.label}</span>
+                    {v.origUnit && (
+                      <span className="rv-up-conv">
+                        {v.value
+                          ? L(`Na app: ${fmtNum(v.value, "pt")} ${v.unit} (convertido de ${v.origUnit})`, `In the app: ${v.value} ${v.unit} (converted from ${v.origUnit})`)
+                          : L("Escreva o valor do documento", "Enter the value from the document")}
+                      </span>
+                    )}
+                    {v.unitAssumed && (
+                      <span className="rv-up-conv">{L(`Sem unidade no documento: assumimos ${v.unit}`, `No unit in the document: we assumed ${v.unit}`)}</span>
+                    )}
                   </span>
                   <span className="rv-up-row-vals">
                     <span className="rv-up-edit">
                       <input
                         className="rv-up-input"
                         inputMode="decimal"
-                        value={v.value}
+                        value={fmtNum(v.origUnit ? v.origValue ?? "" : v.value, lang)}
                         onChange={(e) => edit(i, e.target.value)}
-                        aria-label={`${v.marker} ${L("valor","value")}`}
+                        aria-label={`${v.marker} ${L("valor no documento","value in the document")}${v.origUnit ? ` (${v.origUnit})` : ""}`}
                       />
-                      <span className="rv-doc-row-unit">{v.unit}</span>
+                      <span className="rv-doc-row-unit">{v.origUnit ?? v.unit}</span>
                     </span>
-                    {v.ref && <span className="rv-doc-row-ref">ref {v.ref}</span>}
+                    {(v.origUnit ? v.origRef : v.ref) && <span className="rv-doc-row-ref">ref {fmtNum(v.origUnit ? v.origRef ?? "" : v.ref, lang)}</span>}
                   </span>
                 </div>
               ))}
