@@ -51,7 +51,8 @@ const pt = {
     portal: "Portal",
     portalClinico: "Portal clínico",
     fechar: "Fechar",
-    demoNota: "Versão demonstrativa — apenas o perfil de Maria Antunes está disponível para navegação detalhada.",
+    demoNota:
+      "Versão demonstrativa — apenas o perfil de Maria Antunes está disponível para navegação detalhada.",
   },
   conta: {
     entrar: "Entrar",
@@ -73,14 +74,16 @@ const pt = {
     erroEmail: "Indique um email válido.",
     erroPalavraPasse: "A palavra-passe deve ter pelo menos 6 caracteres.",
     erroGenerico: "Ocorreu um erro. Tente novamente.",
-    erroAceitacao: "Conta criada, mas não foi possível registar a aceitação. Será pedida no próximo acesso.",
+    erroAceitacao:
+      "Conta criada, mas não foi possível registar a aceitação. Será pedida no próximo acesso.",
     avisoConfirmarEmail: "Conta criada. Confirme o seu email e inicie sessão para continuar.",
     erroCredenciais: "Email ou palavra-passe incorretos.",
     esqueci: "Esqueceu-se da palavra-passe?",
     recuperarTitulo: "Recuperar palavra-passe",
     recuperarSub: "Enviamos-lhe um email com um link para definir uma nova palavra-passe.",
     recuperarEnviar: "Enviar link",
-    recuperarEnviado: "Se existir uma conta com este email, vai receber um link dentro de minutos. Veja também a pasta de spam.",
+    recuperarEnviado:
+      "Se existir uma conta com este email, vai receber um link dentro de minutos. Veja também a pasta de spam.",
     voltarEntrar: "Voltar a entrar",
     novaTitulo: "Nova palavra-passe",
     novaSub: "Escolha uma palavra-passe nova para a sua conta.",
@@ -92,7 +95,8 @@ const pt = {
     erroEmailPorConfirmar: "Ainda não confirmou o seu email. Veja a sua caixa de correio.",
     erroContaExiste: "Já existe uma conta com este email. Inicie sessão.",
     erroEmailInvalido: "Este endereço de email não é aceite. Use outro.",
-    erroPalavraPasseFraca: "A palavra-passe é demasiado fraca ou já apareceu numa fuga de dados. Escolha outra.",
+    erroPalavraPasseFraca:
+      "A palavra-passe é demasiado fraca ou já apareceu numa fuga de dados. Escolha outra.",
     erroDemasiadasTentativas: "Demasiadas tentativas. Aguarde alguns minutos e tente novamente.",
     erroLigacao: "Sem ligação ao servidor. Verifique a internet e tente novamente.",
   },
@@ -111,9 +115,11 @@ const pt = {
     erroObrigatoria: "Esta declaração é obrigatória para criar conta.",
     novaTab: "(abre num novo separador)",
     primeiraTitulo: "Antes de começar",
-    primeiraTexto: "Para usar a plataforma, confirme que aceita os documentos legais e a declaração profissional.",
+    primeiraTexto:
+      "Para usar a plataforma, confirme que aceita os documentos legais e a declaração profissional.",
     reTitulo: "Atualização dos documentos legais",
-    reTexto: "Os documentos legais foram atualizados. Para continuar, é necessário aceitar novamente.",
+    reTexto:
+      "Os documentos legais foram atualizados. Para continuar, é necessário aceitar novamente.",
     reContinuar: "Aceitar e continuar",
     reSair: "Sair",
     fundamentoTitulo: "Fundamento legal",
@@ -177,7 +183,8 @@ const pt = {
     titulo: "Agenda",
     sub: "Opcional",
     usar: "Usar a agenda da Vivara",
-    ajuda: "Desligue se marca consultas noutro sistema (por exemplo, o da clínica). Os dados dos utentes continuam disponíveis.",
+    ajuda:
+      "Desligue se marca consultas noutro sistema (por exemplo, o da clínica). Os dados dos utentes continuam disponíveis.",
     desligada: "A agenda está desligada nas Definições.",
     ligar: "Ligar agenda",
   },
@@ -186,7 +193,8 @@ const pt = {
     vazio: "Sem clínica indicada",
     editar: "Alterar clínica",
     titulo: "Clínica onde o utente é visto",
-    descricao: "Se mudar de clínica, pode continuar a acompanhar o mesmo utente. O histórico fica registado.",
+    descricao:
+      "Se mudar de clínica, pode continuar a acompanhar o mesmo utente. O histórico fica registado.",
     placeholder: "Nome da clínica ou consultório",
     historico: "Histórico",
     desde: (d: string) => `desde ${d}`,
@@ -198,14 +206,17 @@ const pt = {
     sub: "Plano Médico",
     nota: "No Plano Médico os dados são seus: pode exportá-los e importá-los quando quiser.",
     exportarTudo: "Exportar todos os dados",
-    exportarTudoAjuda: "Ficheiro JSON com utentes, consultas, diários, observações e conversas. Fica registado.",
+    exportarTudoAjuda:
+      "Ficheiro JSON com utentes, consultas, diários, observações e conversas. Fica registado.",
     importar: "Importar utentes",
-    importarAjuda: "JSON exportado da Vivara ou CSV com cabeçalho (nome, data_nascimento, sexo, telefone, email, cidade, clinica).",
+    importarAjuda:
+      "JSON exportado da Vivara ou CSV com cabeçalho (nome, data_nascimento, sexo, telefone, email, cidade, clinica).",
     importarTitulo: "Importar utentes",
     escolherFicheiro: "Escolher ficheiro",
     encontrados: (n: number) => `${n} utente(s) encontrados.`,
     linhasIgnoradas: (n: number) => `${n} linha(s) ignoradas por falta de nome.`,
-    formatoInvalido: "Formato não reconhecido. Use o JSON exportado da Vivara ou um CSV com cabeçalho.",
+    formatoInvalido:
+      "Formato não reconhecido. Use o JSON exportado da Vivara ou um CSV com cabeçalho.",
     continuar: "Continuar",
     cancelar: "Cancelar",
     importados: (n: number) => `${n} utente(s) importados.`,
@@ -234,9 +245,11 @@ const pt = {
     titulo: "Bem-vindo à Vivara",
     sub: "Como vai usar a plataforma?",
     individualTitulo: "Trabalho por conta própria",
-    individualTexto: "Plano Médico. Os dados dos seus utentes são seus: exporta e importa quando quiser.",
+    individualTexto:
+      "Plano Médico. Os dados dos seus utentes são seus: exporta e importa quando quiser.",
     clinicaTitulo: "Criar uma clínica",
-    clinicaTexto: "Plano Clínica. Vários médicos, profissionais de saúde e administrativos, cada um com o seu acesso.",
+    clinicaTexto:
+      "Plano Clínica. Vários médicos, profissionais de saúde e administrativos, cada um com o seu acesso.",
     convidadoTitulo: "Fui convidado por uma clínica",
     convidadoTexto: (email: string) =>
       `Peça à administração da clínica que o adicione com o email ${email}. Depois clique em «Verificar».`,
@@ -266,7 +279,8 @@ const pt = {
     ordRecentes: "Criados recentemente",
     ordenar: "Ordenar",
     vazioTitulo: "Ainda não tem utentes",
-    vazioTexto: "Crie o primeiro utente ou importe uma lista. Pode também ver um utente de exemplo para conhecer a ficha clínica.",
+    vazioTexto:
+      "Crie o primeiro utente ou importe uma lista. Pode também ver um utente de exemplo para conhecer a ficha clínica.",
     semResultados: "Nenhum utente corresponde à pesquisa.",
     criarPrimeiro: "Criar o primeiro utente",
     verExemplo: "Ver utente de exemplo",
@@ -295,9 +309,12 @@ const pt = {
     exemplo: "Utente de exemplo — dados fictícios para conhecer a ficha clínica.",
     segue: "Segue este utente",
     naoSegue: "Não segue este utente",
-    naoSegueTexto: "Vê apenas os dados de identificação e as observações partilhadas consigo. A ficha clínica e os diários ficam disponíveis quando tiver uma consulta marcada com este utente.",
-    adminTexto: "Como administração, vê os dados de identificação, os diários públicos e o que for partilhado consigo — nunca a ficha clínica.",
-    administrativoTexto: "Vê os dados de identificação, a agenda e as observações. Os diários e a ficha clínica são só para profissionais de saúde.",
+    naoSegueTexto:
+      "Vê apenas os dados de identificação e as observações partilhadas consigo. A ficha clínica e os diários ficam disponíveis quando tiver uma consulta marcada com este utente.",
+    adminTexto:
+      "Como administração, vê os dados de identificação, os diários públicos e o que for partilhado consigo — nunca a ficha clínica.",
+    administrativoTexto:
+      "Vê os dados de identificação, a agenda e as observações. Os diários e a ficha clínica são só para profissionais de saúde.",
     marcarConsulta: "Marcar consulta",
     chat: "Chat",
     editar: "Editar dados",
@@ -331,7 +348,8 @@ const pt = {
     vazioDiario: "Ainda não escreveu no diário deste utente.",
     vazioOutros: "Não há registos de outros profissionais visíveis para si.",
     vazioObs: "Sem observações.",
-    partilhadoCom: (n: number) => (n === 1 ? "Partilhado com 1 pessoa" : `Partilhado com ${n} pessoas`),
+    partilhadoCom: (n: number) =>
+      n === 1 ? "Partilhado com 1 pessoa" : `Partilhado com ${n} pessoas`,
     apagar: "Apagar",
     confirmarApagar: "Apagar este registo? Não pode ser anulado.",
     medico: "Médico",
@@ -339,7 +357,12 @@ const pt = {
     duracao: (n: number) => `${n} min`,
     presencial: "Presencial",
     video: "Vídeo",
-    estado: { agendada: "Agendada", realizada: "Realizada", cancelada: "Cancelada", falta: "Faltou" } as Record<string, string>,
+    estado: {
+      agendada: "Agendada",
+      realizada: "Realizada",
+      cancelada: "Cancelada",
+      falta: "Faltou",
+    } as Record<string, string>,
     abrirConsulta: "Abrir consulta",
   },
   marcar: {
@@ -362,7 +385,8 @@ const pt = {
     exportar: "Exportar",
     pedir: "Pedir exportação",
     pedirTitulo: "Pedir autorização para exportar",
-    pedirTexto: "Na clínica, a exportação de dados precisa de autorização da administração. Depois de aprovada, pode exportar uma vez nos 7 dias seguintes.",
+    pedirTexto:
+      "Na clínica, a exportação de dados precisa de autorização da administração. Depois de aprovada, pode exportar uma vez nos 7 dias seguintes.",
     motivo: "Motivo",
     motivoPlaceholder: "ex.: continuidade de cuidados noutra clínica",
     enviarPedido: "Enviar pedido",
@@ -475,7 +499,8 @@ const pt = {
   recomendar: {
     titulo: "Recomendar",
     sub: "O seu código pessoal de convite",
-    transparencia: "Recomendar a Vivara aos seus utentes não lhe dá nenhum benefício. O utente ganha um mês grátis.",
+    transparencia:
+      "Recomendar a Vivara aos seus utentes não lhe dá nenhum benefício. O utente ganha um mês grátis.",
     declaracao: "Compreendo que não recebo nenhum benefício por recomendar a Vivara a utentes.",
     declaracaoTitulo: "Antes de partilhar pela primeira vez",
     confirmar: "Confirmar",
@@ -491,22 +516,38 @@ const pt = {
     convite: (nome: string) => `Convite do(a) Dr(a). ${nome}`,
     cartaoChamada: "Registe-se na app Vivara com este código.",
     utentesEntraram: (n: number) => `Utentes que entraram pelo seu código: ${n}`,
-    medicosEntraram: (n: number, meses: number) => `Médicos que entraram: ${n} (meses ganhos: ${meses} de 12)`,
+    medicosEntraram: (n: number, meses: number) =>
+      `Médicos que entraram: ${n} (meses ganhos: ${meses} de 12)`,
     regras: "Como funciona",
     regraUtente: "Utente que entra pelo seu código: o utente ganha um mês grátis.",
     regraMedico: "Colega médico que entra pelo seu código: os dois ganham um mês grátis.",
-    regraPagamento: "O mês grátis só entra depois do primeiro pagamento de quem foi convidado. Máximo de 12 meses grátis por ano. Nos planos anuais, prolonga a subscrição um mês.",
+    regraPagamento:
+      "O mês grátis só entra depois do primeiro pagamento de quem foi convidado. Máximo de 12 meses grátis por ano. Nos planos anuais, prolonga a subscrição um mês.",
     clinicaTitulo: "Recomendações da clínica",
-    clinicaTexto: (p: number, u: number, m: number) => `${p} profissionais · ${u} utentes e ${m} médicos entraram pelos códigos da equipa.`,
+    clinicaTexto: (p: number, u: number, m: number) =>
+      `${p} profissionais · ${u} utentes e ${m} médicos entraram pelos códigos da equipa.`,
     codigoConvite: "Código de convite (opcional)",
     codigoValido: "Código válido.",
     codigoInvalido: "Código não encontrado.",
     codigoAjuda: "Se um colega ou um utente lhe deu um código, escreva-o aqui.",
     erroCodigo: "Não foi possível obter o seu código. Tente novamente.",
+    convidarApp: "Convidar para a app",
+    convidarAppTitulo: "Convidar para a app Vivara",
+    convidarAppTexto: (email: string) =>
+      `Vamos enviar um email para ${email} com uma ligação para criar conta na app. O email não tem dados de saúde.`,
+    convidarAppNota:
+      "O utente ganha um mês grátis depois do primeiro pagamento. Você não recebe nenhum benefício.",
+    enviar: "Enviar convite",
+    conviteEnviado: "Convite enviado.",
+    conviteSemEmail: "Este utente não tem email. Adicione-o na ficha para o convidar.",
+    conviteNaoConfigurado: "O envio de emails ainda não está configurado.",
+    conviteJaEnviado: "Já foi enviado um convite a este utente nas últimas 24 horas.",
+    conviteErro: "Não foi possível enviar o convite. Tente novamente.",
   },
   lista: {
     titulo: "Os meus utentes",
-    subtitulo: (n: number) => `${n} utentes ativos. Cada utente é uma série temporal que se lê como um livro.`,
+    subtitulo: (n: number) =>
+      `${n} utentes ativos. Cada utente é uma série temporal que se lê como um livro.`,
     novoUtente: "Novo utente",
     pesquisar: "Pesquisar por nome ou cidade…",
     ordenar: "Ordenar",
@@ -570,7 +611,8 @@ const pt = {
     clinica: "Clínica",
     clinicaSub: "Identidade institucional",
     contactos: "Contactos",
-    demoRodape: "Versão demonstrativa — alterações reais ficam disponíveis quando a conta for activada.",
+    demoRodape:
+      "Versão demonstrativa — alterações reais ficam disponíveis quando a conta for activada.",
   },
   utente: {
     tabClinico: "Clínico",
@@ -609,7 +651,8 @@ const pt = {
     proximaConsulta: "Próxima consulta",
     alertasClinicos: "alertas clínicos",
     foraDoAlvoInfo: "Alertas clínicos vs. fora do alvo",
-    foraDoAlvoTexto: "Nem tudo o que está fora do alvo gera alerta — só os marcadores com tendência ou magnitude relevante surgem como alerta para ação.",
+    foraDoAlvoTexto:
+      "Nem tudo o que está fora do alvo gera alerta — só os marcadores com tendência ou magnitude relevante surgem como alerta para ação.",
     foraDoAlvoN: "fora do alvo",
     verMarcador: "Ver marcador",
     lembrete: "Lembrete",
@@ -685,14 +728,16 @@ const en: Dicionario = {
     erroEmail: "Enter a valid email.",
     erroPalavraPasse: "The password must have at least 6 characters.",
     erroGenerico: "Something went wrong. Please try again.",
-    erroAceitacao: "Account created, but your acceptance could not be recorded. You will be asked again on your next visit.",
+    erroAceitacao:
+      "Account created, but your acceptance could not be recorded. You will be asked again on your next visit.",
     avisoConfirmarEmail: "Account created. Confirm your email and sign in to continue.",
     erroCredenciais: "Incorrect email or password.",
     esqueci: "Forgot your password?",
     recuperarTitulo: "Reset password",
     recuperarSub: "We'll email you a link to set a new password.",
     recuperarEnviar: "Send link",
-    recuperarEnviado: "If an account exists for this email, you'll get a link within minutes. Check your spam folder too.",
+    recuperarEnviado:
+      "If an account exists for this email, you'll get a link within minutes. Check your spam folder too.",
     voltarEntrar: "Back to sign in",
     novaTitulo: "New password",
     novaSub: "Choose a new password for your account.",
@@ -704,7 +749,8 @@ const en: Dicionario = {
     erroEmailPorConfirmar: "You have not confirmed your email yet. Check your inbox.",
     erroContaExiste: "An account with this email already exists. Sign in instead.",
     erroEmailInvalido: "This email address is not accepted. Use another one.",
-    erroPalavraPasseFraca: "The password is too weak or has appeared in a data breach. Choose another.",
+    erroPalavraPasseFraca:
+      "The password is too weak or has appeared in a data breach. Choose another.",
     erroDemasiadasTentativas: "Too many attempts. Wait a few minutes and try again.",
     erroLigacao: "Cannot reach the server. Check your connection and try again.",
   },
@@ -723,7 +769,8 @@ const en: Dicionario = {
     erroObrigatoria: "This declaration is required to create an account.",
     novaTab: "(opens in a new tab)",
     primeiraTitulo: "Before you start",
-    primeiraTexto: "To use the platform, confirm that you accept the legal documents and the professional declaration.",
+    primeiraTexto:
+      "To use the platform, confirm that you accept the legal documents and the professional declaration.",
     reTitulo: "Legal documents updated",
     reTexto: "The legal documents have been updated. To continue, you need to accept them again.",
     reContinuar: "Accept and continue",
@@ -789,7 +836,8 @@ const en: Dicionario = {
     titulo: "Schedule",
     sub: "Optional",
     usar: "Use the Vivara schedule",
-    ajuda: "Turn off if you book appointments in another system (for example, your clinic's). Patient data stays available.",
+    ajuda:
+      "Turn off if you book appointments in another system (for example, your clinic's). Patient data stays available.",
     desligada: "The schedule is turned off in Settings.",
     ligar: "Turn schedule on",
   },
@@ -798,7 +846,8 @@ const en: Dicionario = {
     vazio: "No clinic set",
     editar: "Change clinic",
     titulo: "Clinic where the patient is seen",
-    descricao: "If you move clinic, you can keep following the same patient. The history is recorded.",
+    descricao:
+      "If you move clinic, you can keep following the same patient. The history is recorded.",
     placeholder: "Clinic or practice name",
     historico: "History",
     desde: (d: string) => `since ${d}`,
@@ -810,14 +859,17 @@ const en: Dicionario = {
     sub: "Doctor plan",
     nota: "On the Doctor plan the data is yours: you can export and import it whenever you like.",
     exportarTudo: "Export all data",
-    exportarTudoAjuda: "JSON file with patients, appointments, journals, notes and conversations. It is logged.",
+    exportarTudoAjuda:
+      "JSON file with patients, appointments, journals, notes and conversations. It is logged.",
     importar: "Import patients",
-    importarAjuda: "JSON exported from Vivara or CSV with a header (nome, data_nascimento, sexo, telefone, email, cidade, clinica).",
+    importarAjuda:
+      "JSON exported from Vivara or CSV with a header (nome, data_nascimento, sexo, telefone, email, cidade, clinica).",
     importarTitulo: "Import patients",
     escolherFicheiro: "Choose file",
     encontrados: (n: number) => `${n} patient(s) found.`,
     linhasIgnoradas: (n: number) => `${n} row(s) skipped for missing name.`,
-    formatoInvalido: "Format not recognised. Use the JSON exported from Vivara or a CSV with a header row.",
+    formatoInvalido:
+      "Format not recognised. Use the JSON exported from Vivara or a CSV with a header row.",
     continuar: "Continue",
     cancelar: "Cancel",
     importados: (n: number) => `${n} patient(s) imported.`,
@@ -846,9 +898,11 @@ const en: Dicionario = {
     titulo: "Welcome to Vivara",
     sub: "How will you use the platform?",
     individualTitulo: "I work on my own",
-    individualTexto: "Doctor plan. Your patients' data is yours: export and import whenever you like.",
+    individualTexto:
+      "Doctor plan. Your patients' data is yours: export and import whenever you like.",
     clinicaTitulo: "Create a clinic",
-    clinicaTexto: "Clinic plan. Several doctors, health professionals and administrative staff, each with their own access.",
+    clinicaTexto:
+      "Clinic plan. Several doctors, health professionals and administrative staff, each with their own access.",
     convidadoTitulo: "I was invited by a clinic",
     convidadoTexto: (email: string) =>
       `Ask the clinic's administration to add you with the email ${email}. Then click "Check".`,
@@ -878,7 +932,8 @@ const en: Dicionario = {
     ordRecentes: "Recently created",
     ordenar: "Sort",
     vazioTitulo: "You have no patients yet",
-    vazioTexto: "Create your first patient or import a list. You can also open an example patient to see the clinical record.",
+    vazioTexto:
+      "Create your first patient or import a list. You can also open an example patient to see the clinical record.",
     semResultados: "No patients match your search.",
     criarPrimeiro: "Create the first patient",
     verExemplo: "Open example patient",
@@ -907,9 +962,12 @@ const en: Dicionario = {
     exemplo: "Example patient — fictitious data to explore the clinical record.",
     segue: "You follow this patient",
     naoSegue: "You don't follow this patient",
-    naoSegueTexto: "You only see identification data and notes shared with you. The clinical record and journals become available once you have an appointment with this patient.",
-    adminTexto: "As management, you see identification data, public journals and anything shared with you — never the clinical record.",
-    administrativoTexto: "You see identification data, the schedule and notes. Journals and the clinical record are for health professionals only.",
+    naoSegueTexto:
+      "You only see identification data and notes shared with you. The clinical record and journals become available once you have an appointment with this patient.",
+    adminTexto:
+      "As management, you see identification data, public journals and anything shared with you — never the clinical record.",
+    administrativoTexto:
+      "You see identification data, the schedule and notes. Journals and the clinical record are for health professionals only.",
     marcarConsulta: "Book appointment",
     chat: "Chat",
     editar: "Edit details",
@@ -951,7 +1009,12 @@ const en: Dicionario = {
     duracao: (n: number) => `${n} min`,
     presencial: "In person",
     video: "Video",
-    estado: { agendada: "Booked", realizada: "Done", cancelada: "Cancelled", falta: "No-show" } as Record<string, string>,
+    estado: {
+      agendada: "Booked",
+      realizada: "Done",
+      cancelada: "Cancelled",
+      falta: "No-show",
+    } as Record<string, string>,
     abrirConsulta: "Open appointment",
   },
   marcar: {
@@ -974,7 +1037,8 @@ const en: Dicionario = {
     exportar: "Export",
     pedir: "Request export",
     pedirTitulo: "Request permission to export",
-    pedirTexto: "At a clinic, exporting data needs approval from management. Once approved, you can export once within the next 7 days.",
+    pedirTexto:
+      "At a clinic, exporting data needs approval from management. Once approved, you can export once within the next 7 days.",
     motivo: "Reason",
     motivoPlaceholder: "e.g. continuity of care at another clinic",
     enviarPedido: "Send request",
@@ -1019,7 +1083,8 @@ const en: Dicionario = {
     marcarRealizada: "Mark as done",
     marcarFalta: "No-show",
     reabrir: "Back to booked",
-    soClinicos: "Only the professional who follows the patient can write this appointment's journal.",
+    soClinicos:
+      "Only the professional who follows the patient can write this appointment's journal.",
     jaRegistado: "Entries for this appointment",
   },
   equipa: {
@@ -1068,7 +1133,7 @@ const en: Dicionario = {
     escrever: "Write a message…",
     enviar: "Send",
     vazio: "No messages yet.",
-    nota: "Text messages within the team only (e.g. \"the patient has arrived\"). No calls or bookings.",
+    nota: 'Text messages within the team only (e.g. "the patient has arrived"). No calls or bookings.',
   },
   notifDb: {
     titulo: "Notifications",
@@ -1087,7 +1152,8 @@ const en: Dicionario = {
   recomendar: {
     titulo: "Recommend",
     sub: "Your personal invite code",
-    transparencia: "Recommending Vivara to your patients gives you no benefit. The patient gets one free month.",
+    transparencia:
+      "Recommending Vivara to your patients gives you no benefit. The patient gets one free month.",
     declaracao: "I understand that I receive no benefit for recommending Vivara to patients.",
     declaracaoTitulo: "Before sharing for the first time",
     confirmar: "Confirm",
@@ -1103,22 +1169,38 @@ const en: Dicionario = {
     convite: (nome: string) => `Invitation from Dr. ${nome}`,
     cartaoChamada: "Sign up to the Vivara app with this code.",
     utentesEntraram: (n: number) => `Patients who joined with your code: ${n}`,
-    medicosEntraram: (n: number, meses: number) => `Doctors who joined: ${n} (months earned: ${meses} of 12)`,
+    medicosEntraram: (n: number, meses: number) =>
+      `Doctors who joined: ${n} (months earned: ${meses} of 12)`,
     regras: "How it works",
     regraUtente: "A patient who joins with your code: the patient gets one free month.",
     regraMedico: "A fellow doctor who joins with your code: you both get one free month.",
-    regraPagamento: "The free month only applies after the invited person's first payment. Up to 12 free months per year. On annual plans, it extends the subscription by one month.",
+    regraPagamento:
+      "The free month only applies after the invited person's first payment. Up to 12 free months per year. On annual plans, it extends the subscription by one month.",
     clinicaTitulo: "Clinic recommendations",
-    clinicaTexto: (p: number, u: number, m: number) => `${p} professionals · ${u} patients and ${m} doctors joined with the team's codes.`,
+    clinicaTexto: (p: number, u: number, m: number) =>
+      `${p} professionals · ${u} patients and ${m} doctors joined with the team's codes.`,
     codigoConvite: "Invite code (optional)",
     codigoValido: "Valid code.",
     codigoInvalido: "Code not found.",
     codigoAjuda: "If a colleague or a patient gave you a code, enter it here.",
     erroCodigo: "Could not get your code. Please try again.",
+    convidarApp: "Invite to the app",
+    convidarAppTitulo: "Invite to the Vivara app",
+    convidarAppTexto: (email: string) =>
+      `We will email ${email} a link to create an account in the app. The email contains no health data.`,
+    convidarAppNota:
+      "The patient gets one free month after their first payment. You receive no benefit.",
+    enviar: "Send invite",
+    conviteEnviado: "Invite sent.",
+    conviteSemEmail: "This patient has no email. Add one to their record to invite them.",
+    conviteNaoConfigurado: "Email sending is not configured yet.",
+    conviteJaEnviado: "An invite was already sent to this patient in the last 24 hours.",
+    conviteErro: "Could not send the invite. Please try again.",
   },
   lista: {
     titulo: "My patients",
-    subtitulo: (n: number) => `${n} active patients. Each patient is a time series that reads like a book.`,
+    subtitulo: (n: number) =>
+      `${n} active patients. Each patient is a time series that reads like a book.`,
     novoUtente: "New patient",
     pesquisar: "Search by name or city…",
     ordenar: "Sort",
@@ -1221,7 +1303,8 @@ const en: Dicionario = {
     proximaConsulta: "Next appointment",
     alertasClinicos: "clinical alerts",
     foraDoAlvoInfo: "Clinical alerts vs. out of range",
-    foraDoAlvoTexto: "Not everything out of range triggers an alert — only markers with a relevant trend or magnitude appear as actionable alerts.",
+    foraDoAlvoTexto:
+      "Not everything out of range triggers an alert — only markers with a relevant trend or magnitude appear as actionable alerts.",
     foraDoAlvoN: "out of range",
     verMarcador: "View marker",
     lembrete: "Reminder",
