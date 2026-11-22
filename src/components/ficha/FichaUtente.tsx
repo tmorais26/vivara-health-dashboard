@@ -19,6 +19,7 @@ import { PedirExportacao } from "@/components/ficha/PedirExportacao";
 import { ConvidarApp } from "@/components/ficha/ConvidarApp";
 import { Documentos } from "@/components/ficha/Documentos";
 import { Medicacao } from "@/components/ficha/Medicacao";
+import { Analises } from "@/components/ficha/Analises";
 import { useIdioma, useT } from "@/lib/i18n";
 import { e_admin, e_clinico, iniciais, useAlinharEspaco, useSessao } from "@/lib/sessao";
 import {
@@ -34,7 +35,14 @@ import {
 } from "@/lib/dados";
 
 type Tab =
-  "resumo" | "diario" | "outros" | "observacoes" | "consultas" | "medicacao" | "documentos";
+  | "resumo"
+  | "diario"
+  | "outros"
+  | "observacoes"
+  | "consultas"
+  | "analises"
+  | "medicacao"
+  | "documentos";
 type Partilhas = Record<string, string[]>;
 
 export function FichaUtente({ utenteId }: { utenteId: string }) {
@@ -175,6 +183,7 @@ export function FichaUtente({ utenteId }: { utenteId: string }) {
     { id: "outros", label: tf.tabOutros, mostrar: souClinico || souAdmin },
     { id: "observacoes", label: tf.tabObservacoes, mostrar: true },
     { id: "consultas", label: tf.tabConsultas, mostrar: true },
+    { id: "analises", label: t.analises.tab, mostrar: sigo },
     { id: "medicacao", label: t.medicacao.tab, mostrar: sigo },
     {
       id: "documentos",
@@ -391,6 +400,7 @@ export function FichaUtente({ utenteId }: { utenteId: string }) {
               </Bloco>
             </div>
           )}
+          {tab === "analises" && sigo && <Analises utente={utente} nomeDe={nomeDe} />}
           {tab === "medicacao" && sigo && <Medicacao utente={utente} nomeDe={nomeDe} />}
           {tab === "documentos" && (
             <Documentos

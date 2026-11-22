@@ -39,6 +39,9 @@ export async function exportarEspaco(espacoId: string, pedidoId?: string) {
     medicacoes,
     alergias,
     documentos,
+    analises,
+    resultados,
+    alvos,
   ] = await Promise.all([
     supabase.from("utentes").select("*").eq("espaco_id", espacoId),
     supabase.from("consultas").select("*").eq("espaco_id", espacoId),
@@ -49,6 +52,9 @@ export async function exportarEspaco(espacoId: string, pedidoId?: string) {
     supabase.from("medicacoes").select("*").eq("espaco_id", espacoId),
     supabase.from("alergias").select("*").eq("espaco_id", espacoId),
     supabase.from("documentos_emitidos").select("*").eq("espaco_id", espacoId),
+    supabase.from("analises").select("*").eq("espaco_id", espacoId),
+    supabase.from("resultados").select("*").eq("espaco_id", espacoId),
+    supabase.from("alvos_marcador").select("*").eq("espaco_id", espacoId),
   ]);
   const dados = {
     formato: FORMATO_EXPORTACAO,
@@ -62,6 +68,9 @@ export async function exportarEspaco(espacoId: string, pedidoId?: string) {
     medicacoes: medicacoes.data ?? [],
     alergias: alergias.data ?? [],
     documentos: documentos.data ?? [],
+    analises: analises.data ?? [],
+    resultados: resultados.data ?? [],
+    alvosMarcadores: alvos.data ?? [],
   };
   descarregar(`vivara-dados-${hoje()}.json`, JSON.stringify(dados, null, 2), "application/json");
 }
@@ -90,6 +99,9 @@ export async function exportarUtenteDb(espacoId: string, utenteId: string, pedid
     medicacoes,
     alergias,
     documentos,
+    analises,
+    resultados,
+    alvos,
   ] = await Promise.all([
     supabase.from("utentes").select("*").eq("id", utenteId).maybeSingle(),
     supabase.from("consultas").select("*").eq("utente_id", utenteId),
@@ -100,6 +112,9 @@ export async function exportarUtenteDb(espacoId: string, utenteId: string, pedid
     supabase.from("medicacoes").select("*").eq("utente_id", utenteId),
     supabase.from("alergias").select("*").eq("utente_id", utenteId),
     supabase.from("documentos_emitidos").select("*").eq("utente_id", utenteId),
+    supabase.from("analises").select("*").eq("utente_id", utenteId),
+    supabase.from("resultados").select("*").eq("utente_id", utenteId),
+    supabase.from("alvos_marcador").select("*").eq("utente_id", utenteId),
   ]);
   const dados = {
     formato: FORMATO_EXPORTACAO,
@@ -113,6 +128,9 @@ export async function exportarUtenteDb(espacoId: string, utenteId: string, pedid
     medicacoes: medicacoes.data ?? [],
     alergias: alergias.data ?? [],
     documentos: documentos.data ?? [],
+    analises: analises.data ?? [],
+    resultados: resultados.data ?? [],
+    alvosMarcadores: alvos.data ?? [],
   };
   descarregar(`vivara-utente-${hoje()}.json`, JSON.stringify(dados, null, 2), "application/json");
 }

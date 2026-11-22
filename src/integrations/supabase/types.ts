@@ -47,6 +47,24 @@ export type Database = {
         Update: { codigo?: string; criado_em?: string; titular?: string; user_id?: string }
         Relationships: Rel[]
       }
+      analises: {
+        Row: { atualizado_em: string; autor_id: string; criado_em: string; data_colheita: string; espaco_id: string; estado: string; ficheiro_nome: string | null; ficheiro_path: string | null; id: string; laboratorio: string | null; notas: string | null; tipo: string; titulo: string | null; utente_id: string }
+        Insert: { atualizado_em?: string; autor_id: string; criado_em?: string; data_colheita: string; espaco_id: string; estado?: string; ficheiro_nome?: string | null; ficheiro_path?: string | null; id?: string; laboratorio?: string | null; notas?: string | null; tipo?: string; titulo?: string | null; utente_id: string }
+        Update: { atualizado_em?: string; autor_id?: string; criado_em?: string; data_colheita?: string; espaco_id?: string; estado?: string; ficheiro_nome?: string | null; ficheiro_path?: string | null; id?: string; laboratorio?: string | null; notas?: string | null; tipo?: string; titulo?: string | null; utente_id?: string }
+        Relationships: Rel[]
+      }
+      resultados: {
+        Row: { analise_id: string; atualizado_em: string; autor_id: string; criado_em: string; espaco_id: string; id: string; marcador: string; ref_max: number | null; ref_min: number | null; unidade: string | null; utente_id: string; valor: number | null; valor_texto: string | null }
+        Insert: { analise_id: string; atualizado_em?: string; autor_id: string; criado_em?: string; espaco_id: string; id?: string; marcador: string; ref_max?: number | null; ref_min?: number | null; unidade?: string | null; utente_id: string; valor?: number | null; valor_texto?: string | null }
+        Update: { analise_id?: string; atualizado_em?: string; autor_id?: string; criado_em?: string; espaco_id?: string; id?: string; marcador?: string; ref_max?: number | null; ref_min?: number | null; unidade?: string | null; utente_id?: string; valor?: number | null; valor_texto?: string | null }
+        Relationships: Rel[]
+      }
+      alvos_marcador: {
+        Row: { alvo_max: number | null; alvo_min: number | null; atualizado_em: string; autor_id: string; criado_em: string; espaco_id: string; id: string; justificacao: string | null; marcador: string; utente_id: string }
+        Insert: { alvo_max?: number | null; alvo_min?: number | null; atualizado_em?: string; autor_id: string; criado_em?: string; espaco_id: string; id?: string; justificacao?: string | null; marcador: string; utente_id: string }
+        Update: { alvo_max?: number | null; alvo_min?: number | null; atualizado_em?: string; autor_id?: string; criado_em?: string; espaco_id?: string; id?: string; justificacao?: string | null; marcador?: string; utente_id?: string }
+        Relationships: Rel[]
+      }
       medicacoes: {
         Row: { autor_id: string; criado_em: string; atualizado_em: string; cronica: boolean; dci: string; dosagem: string | null; embalagens: number | null; espaco_id: string; estado: string; estado_em: string | null; estado_motivo: string | null; fim: string | null; forma: string | null; id: string; inicio: string; motivo: string | null; nome_comercial: string | null; numero_receita: string | null; origem: string; posologia: string; utente_id: string; via: string | null }
         Insert: { autor_id: string; criado_em?: string; atualizado_em?: string; cronica?: boolean; dci: string; dosagem?: string | null; embalagens?: number | null; espaco_id: string; estado?: string; estado_em?: string | null; estado_motivo?: string | null; fim?: string | null; forma?: string | null; id?: string; inicio?: string; motivo?: string | null; nome_comercial?: string | null; numero_receita?: string | null; origem?: string; posologia: string; utente_id: string; via?: string | null }
