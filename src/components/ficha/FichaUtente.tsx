@@ -46,7 +46,24 @@ type Tab =
   | "documentos";
 type Partilhas = Record<string, string[]>;
 
-export function FichaUtente({ utenteId }: { utenteId: string }) {
+const SEPARADORES: Tab[] = [
+  "resumo",
+  "diario",
+  "outros",
+  "observacoes",
+  "consultas",
+  "analises",
+  "medicacao",
+  "documentos",
+];
+
+export function FichaUtente({
+  utenteId,
+  separadorInicial,
+}: {
+  utenteId: string;
+  separadorInicial?: string;
+}) {
   const t = useT();
   const tf = t.ficha;
   const idioma = useIdioma();
@@ -60,7 +77,9 @@ export function FichaUtente({ utenteId }: { utenteId: string }) {
   const [observacoes, setObservacoes] = useState<ObservacaoDb[]>([]);
   const [partilhasD, setPartilhasD] = useState<Partilhas>({});
   const [partilhasO, setPartilhasO] = useState<Partilhas>({});
-  const [tab, setTab] = useState<Tab>("resumo");
+  const [tab, setTab] = useState<Tab>(
+    SEPARADORES.includes(separadorInicial as Tab) ? (separadorInicial as Tab) : "resumo",
+  );
   const [marcarOpen, setMarcarOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 

@@ -519,40 +519,62 @@ function IdiomaCard() {
   );
 }
 
-const NOTIF_IDS = ["fora-alvo", "lembrete", "novo-doc", "falha-adesao"] as const;
-type NotifId = (typeof NOTIF_IDS)[number];
-
-function useNotifTipos(): { id: NotifId; label: string }[] {
-  const t = useT();
-  return [
-    { id: "fora-alvo", label: t.definicoes.notifForaAlvo },
-    { id: "lembrete", label: t.definicoes.notifLembrete },
-    { id: "novo-doc", label: t.definicoes.notifNovoDoc },
-    { id: "falha-adesao", label: t.definicoes.notifFalhaAdesao },
-  ];
-}
-
+// Preferências reais: os tipos desligados ficam guardados e a base de dados deixa de os criar.
 function NotificacoesGlobais() {
-  const t = useT();
-  const NOTIF_TIPOS = useNotifTipos();
-  const [state, setState] = useState<Record<NotifId, boolean>>({
-    "fora-alvo": true,
-    lembrete: true,
-    "novo-doc": false,
-    "falha-adesao": true,
-  });
+  const tn = useT().notifDb;
+  const tc = useT().conta;
+  const { user } = useSessao();
+  const [desligadas, setDesligadas] = useState<string[] | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    void supabase
+      .from("preferencias_notificacao")
+      .select("desligadas")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setDesligadas(data?.desligadas ?? []));
+  }, [user.id]);
+
+  async function mudar(tipo: string, ligado: boolean) {
+    if (!desligadas) return;
+    const antes = desligadas;
+    const novas = ligado
+      ? desligadas.filter((x) => x !== tipo)
+      : [...new Set([...desligadas, tipo])];
+    setDesligadas(novas);
+    setErro(null);
+    const { error } = await supabase
+      .from("preferencias_notificacao")
+      .upsert({ user_id: user.id, desligadas: novas, atualizado_em: new Date().toISOString() });
+    if (error) {
+      setDesligadas(antes);
+      setErro(tc.erroGenerico);
+    }
+  }
+
   return (
-    <Card
-      icon={<BellRing className="h-4 w-4" />}
-      title={t.definicoes.notifGlobais}
-      sub={t.definicoes.notifGlobaisSub}
-    >
-      {NOTIF_TIPOS.map((t) => (
-        <div key={t.id} className="flex items-center justify-between gap-4 px-5 py-3">
-          <span className="text-sm text-foreground">{t.label}</span>
-          <Toggle checked={state[t.id]} onChange={(v) => setState((s) => ({ ...s, [t.id]: v }))} />
+    <Card icon={<BellRing className="h-4 w-4" />} title={tn.prefsTitulo} sub={tn.prefsSub}>
+      {Object.entries(tn.prefs).map(([tipo, label]) => (
+        <div key={tipo} className="flex items-center justify-between gap-4 px-5 py-3">
+          <span id={`notif-${tipo}`} className="text-sm text-foreground">
+            {label}
+          </span>
+          <Toggle
+            checked={!!desligadas && !desligadas.includes(tipo)}
+            onChange={(v) => void mudar(tipo, v)}
+            labelledBy={`notif-${tipo}`}
+          />
         </div>
       ))}
+      <div className="px-5 py-3 text-[11px] text-muted-foreground">
+        {tn.prefsAjuda}
+        {erro && (
+          <span role="alert" className="ml-2 text-state-alert">
+            {erro}
+          </span>
+        )}
+      </div>
     </Card>
   );
 }
