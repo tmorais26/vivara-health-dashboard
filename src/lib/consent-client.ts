@@ -6,7 +6,12 @@ type Textos = { documentos: string; habilitacao: string; marketing: string };
 
 // Grava a aceitação no servidor (que regista o IP). Os dados do perfil e a opção de
 // marketing escolhidos no registo viajam em user_metadata até haver sessão.
-export async function gravarAceitacao(user: User, textos: Textos, marketingAgora = false) {
+export async function gravarAceitacao(
+  user: User,
+  textos: Textos,
+  marketingAgora = false,
+  declaracao: "habilitacao" | "funcoes" = "habilitacao",
+) {
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
   const codigoConvite = typeof meta.codigo_convite === "string" ? meta.codigo_convite : undefined;
   const pendente =
@@ -16,6 +21,7 @@ export async function gravarAceitacao(user: User, textos: Textos, marketingAgora
       textos,
       marketing: marketingAgora || meta.marketing_opt_in === true,
       codigoConvite,
+      declaracao,
       perfil: pendente
         ? {
             nome: meta.nome as string | undefined,

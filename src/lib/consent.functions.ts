@@ -22,6 +22,7 @@ type EntradaAceitacao = {
   marketing: boolean;
   perfil?: { nome?: string; especialidade?: string; cedula?: string; clinica?: string };
   codigoConvite?: string;
+  declaracao?: "habilitacao" | "funcoes";
 };
 
 export const registarAceitacao = createServerFn({ method: "POST" })
@@ -35,6 +36,7 @@ export const registarAceitacao = createServerFn({ method: "POST" })
     marketing: d?.marketing === true,
     perfil: d?.perfil,
     codigoConvite: typeof d?.codigoConvite === "string" ? d.codigoConvite.slice(0, 20) : undefined,
+    declaracao: d?.declaracao === "funcoes" ? ("funcoes" as const) : ("habilitacao" as const),
   }))
   .handler(async ({ data, context }) => {
     const ip = ipDoPedido();
@@ -61,8 +63,8 @@ export const registarAceitacao = createServerFn({ method: "POST" })
         ...base,
         tipo: "declaracao",
         codigo: "habilitacao",
-        versao: "habilitacao-v1",
-        caixa_id: CAIXA_IDS.habilitacao,
+        versao: data.declaracao === "funcoes" ? "funcoes-v1" : "habilitacao-v1",
+        caixa_id: data.declaracao === "funcoes" ? CAIXA_IDS.funcoes : CAIXA_IDS.habilitacao,
         texto_caixa: data.textos.habilitacao,
       },
     ]);

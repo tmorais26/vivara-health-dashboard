@@ -119,6 +119,8 @@ const pt = {
     aceitoPos: ".",
     habilitacao:
       "Declaro que estou habilitado a exercer e inscrito na respetiva ordem profissional, e que só registo utentes quando tenho fundamento legal para isso.",
+    habilitacaoAdmin:
+      "Declaro que só acedo a dados de utentes no âmbito das minhas funções na clínica e que respeito o dever de sigilo.",
     marketing: "Quero receber novidades da Vivara por email.",
     privacidadePre: "Os seus dados são tratados conforme a ",
     privacidade: "Política de Privacidade",
@@ -957,6 +959,8 @@ const en: Dicionario = {
     aceitoPos: ".",
     habilitacao:
       "I declare that I am qualified to practise and registered with the relevant professional body, and that I only register patients when I have a legal basis to do so.",
+    habilitacaoAdmin:
+      "I declare that I only access patient data within the scope of my duties at the clinic and that I respect the duty of confidentiality.",
     marketing: "I would like to receive Vivara news by email.",
     privacidadePre: "Your data is processed in accordance with the ",
     privacidade: "Privacy Policy",

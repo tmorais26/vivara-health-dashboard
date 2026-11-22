@@ -22,6 +22,7 @@ export const LEGAL_DOCS = {
 export const CAIXA_IDS = {
   documentos: "aceite-termos-acordo",
   habilitacao: "declaracao-habilitacao",
+  funcoes: "declaracao-funcoes",
   marketing: "marketing-email",
 } as const;
 

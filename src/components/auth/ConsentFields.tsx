@@ -3,11 +3,13 @@ import { LEGAL_DOCS } from "@/lib/legal-docs";
 
 export type ConsentState = { documentos: boolean; habilitacao: boolean; marketing: boolean };
 
-export function useConsentTextos() {
+// Quem só trabalha na gestão/administração não declara habilitação profissional, mas sim o
+// acesso limitado às suas funções e o dever de sigilo.
+export function useConsentTextos(administrativo = false) {
   const c = useT().consent;
   return {
     documentos: `${c.aceitoPre}${c.termos}${c.aceitoMeio}${c.acordo}${c.aceitoPos}`,
-    habilitacao: c.habilitacao,
+    habilitacao: administrativo ? c.habilitacaoAdmin : c.habilitacao,
     marketing: c.marketing,
   };
 }
@@ -34,11 +36,13 @@ export function ConsentFields({
   onChange,
   showErrors,
   includeMarketing = true,
+  administrativo = false,
 }: {
   value: ConsentState;
   onChange: (v: ConsentState) => void;
   showErrors: boolean;
   includeMarketing?: boolean;
+  administrativo?: boolean;
 }) {
   const c = useT().consent;
   const errDoc = showErrors && !value.documentos;
@@ -66,7 +70,11 @@ export function ConsentFields({
           </label>
         </div>
         {errDoc && (
-          <p id="consent-documentos-erro" role="alert" className="mt-1 pl-6 text-xs text-state-alert">
+          <p
+            id="consent-documentos-erro"
+            role="alert"
+            className="mt-1 pl-6 text-xs text-state-alert"
+          >
             {c.erroObrigatoria}
           </p>
         )}
@@ -85,11 +93,15 @@ export function ConsentFields({
             aria-describedby={errHab ? "consent-habilitacao-erro" : undefined}
           />
           <label htmlFor="consent-habilitacao" className="text-sm leading-snug text-foreground">
-            {c.habilitacao}
+            {administrativo ? c.habilitacaoAdmin : c.habilitacao}
           </label>
         </div>
         {errHab && (
-          <p id="consent-habilitacao-erro" role="alert" className="mt-1 pl-6 text-xs text-state-alert">
+          <p
+            id="consent-habilitacao-erro"
+            role="alert"
+            className="mt-1 pl-6 text-xs text-state-alert"
+          >
             {c.erroObrigatoria}
           </p>
         )}

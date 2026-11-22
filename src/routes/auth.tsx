@@ -112,7 +112,7 @@ type Funcao = "medico" | "profissional" | "administrativo";
 function AuthPage() {
   const t = useT();
   const idioma = useIdioma();
-  const textos = useConsentTextos();
+
   const navigate = useNavigate();
   const { codigo: codigoUrl, saiu } = Route.useSearch();
   const [plano, setPlano] = useState<Plano | null>(null);
@@ -120,6 +120,8 @@ function AuthPage() {
   const [profissao, setProfissao] = useState("");
   const [nomeClinica, setNomeClinica] = useState("");
   const [mostrarCodigo, setMostrarCodigo] = useState(!!codigoUrl);
+  const administrativo = funcao === "administrativo";
+  const textos = useConsentTextos(administrativo);
   const [mode, setMode] = useState<"login" | "signup" | "recuperar">(
     codigoUrl ? "signup" : "login",
   );
@@ -223,7 +225,12 @@ function AuthPage() {
         if (error) throw error;
         if (data.session && data.user) {
           try {
-            await gravarAceitacao(data.user, textos);
+            await gravarAceitacao(
+              data.user,
+              textos,
+              false,
+              administrativo ? "funcoes" : "habilitacao",
+            );
           } catch {
             setInfo(t.conta.erroAceitacao);
           }
@@ -507,7 +514,12 @@ function AuthPage() {
                         </button>
                       ))}
                     <div className="pt-2">
-                      <ConsentFields value={consent} onChange={setConsent} showErrors={tentou} />
+                      <ConsentFields
+                        value={consent}
+                        onChange={setConsent}
+                        showErrors={tentou}
+                        administrativo={administrativo}
+                      />
                     </div>
                   </>
                 )}

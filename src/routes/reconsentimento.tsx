@@ -18,7 +18,9 @@ export const Route = createFileRoute("/reconsentimento")({
 
 function Reconsentimento() {
   const t = useT();
-  const textos = useConsentTextos();
+  // Só administração: escolheu essa função no registo, ou todos os espaços a que pertence são de administração.
+  const [administrativo, setAdministrativo] = useState(false);
+  const textos = useConsentTextos(administrativo);
   const navigate = useNavigate();
   const [consent, setConsent] = useState<ConsentState>({
     documentos: false,
@@ -29,6 +31,20 @@ function Reconsentimento() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [primeiraVez, setPrimeiraVez] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
+      if (data.user.user_metadata?.funcao === "administrativo") return setAdministrativo(true);
+      const { data: ms } = await supabase
+        .from("membros")
+        .select("funcao")
+        .eq("user_id", data.user.id)
+        .eq("estado", "ativo");
+      setAdministrativo(!!ms?.length && ms.every((m) => m.funcao === "administrativo"));
+    })();
+  }, []);
 
   useEffect(() => {
     estadoConsentimento()
@@ -45,7 +61,7 @@ function Reconsentimento() {
     try {
       const { data } = await supabase.auth.getUser();
       if (!data.user) throw new Error();
-      await gravarAceitacao(data.user, textos);
+      await gravarAceitacao(data.user, textos, false, administrativo ? "funcoes" : "habilitacao");
       window.location.assign("/");
     } catch {
       setErro(t.conta.erroGenerico);
@@ -80,6 +96,7 @@ function Reconsentimento() {
               : t.consent.reTexto}
         </p>
         <ConsentFields
+          administrativo={administrativo}
           value={consent}
           onChange={setConsent}
           showErrors={tentou}

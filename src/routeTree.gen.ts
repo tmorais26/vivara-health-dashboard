@@ -11,8 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgendaRouteImport } from './routes/agenda'
-import { Route as AppRouteImport } from './routes/app'
-import { Route as AppV2RouteImport } from './routes/app-v2'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ComecarRouteImport } from './routes/comecar'
 import { Route as DefinicoesRouteImport } from './routes/definicoes'
@@ -33,16 +31,6 @@ const IndexRoute = IndexRouteImport.update({
 const AgendaRoute = AgendaRouteImport.update({
   id: '/agenda',
   path: '/agenda',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppV2Route = AppV2RouteImport.update({
-  id: '/app-v2',
-  path: '/app-v2',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -104,8 +92,6 @@ const UtentesUtenteIdRoute = UtentesUtenteIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
-  '/app': typeof AppRoute
-  '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
   '/comecar': typeof ComecarRoute
   '/definicoes': typeof DefinicoesRoute
@@ -121,8 +107,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
-  '/app': typeof AppRoute
-  '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
   '/comecar': typeof ComecarRoute
   '/definicoes': typeof DefinicoesRoute
@@ -139,8 +123,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
-  '/app': typeof AppRoute
-  '/app-v2': typeof AppV2Route
   '/auth': typeof AuthRoute
   '/comecar': typeof ComecarRoute
   '/definicoes': typeof DefinicoesRoute
@@ -158,8 +140,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/agenda'
-    | '/app'
-    | '/app-v2'
     | '/auth'
     | '/comecar'
     | '/definicoes'
@@ -175,8 +155,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/agenda'
-    | '/app'
-    | '/app-v2'
     | '/auth'
     | '/comecar'
     | '/definicoes'
@@ -192,8 +170,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/agenda'
-    | '/app'
-    | '/app-v2'
     | '/auth'
     | '/comecar'
     | '/definicoes'
@@ -210,8 +186,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgendaRoute: typeof AgendaRoute
-  AppRoute: typeof AppRoute
-  AppV2Route: typeof AppV2Route
   AuthRoute: typeof AuthRoute
   ComecarRoute: typeof ComecarRoute
   DefinicoesRoute: typeof DefinicoesRoute
@@ -239,20 +213,6 @@ declare module '@tanstack/react-router' {
       path: '/agenda'
       fullPath: '/agenda'
       preLoaderRoute: typeof AgendaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app-v2': {
-      id: '/app-v2'
-      path: '/app-v2'
-      fullPath: '/app-v2'
-      preLoaderRoute: typeof AppV2RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -338,8 +298,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
-  AppRoute: AppRoute,
-  AppV2Route: AppV2Route,
   AuthRoute: AuthRoute,
   ComecarRoute: ComecarRoute,
   DefinicoesRoute: DefinicoesRoute,
