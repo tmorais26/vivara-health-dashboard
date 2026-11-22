@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -85,25 +93,44 @@ export function useSessao(): Sessao {
   return s;
 }
 
+// Ao abrir um registo (utente, consulta) de outro espaço a que a pessoa pertence — por exemplo a partir
+// de uma notificação —, passa a trabalhar nesse espaço. Sem isto, as permissões seriam as do espaço errado.
+export function useAlinharEspaco(espacoId: string | null | undefined) {
+  const { atual, membros, escolherEspaco } = useSessao();
+  useEffect(() => {
+    if (!espacoId || atual?.espaco_id === espacoId) return;
+    if (membros.some((m) => m.espaco_id === espacoId)) escolherEspaco(espacoId);
+  }, [espacoId, atual?.espaco_id, membros, escolherEspaco]);
+}
+
 // Para componentes que também aparecem fora da sessão (ex.: demonstração).
 export function useSessaoOpcional(): Sessao | null {
   return useContext(SessaoContext);
 }
 
 export function nomeAtual(s: Sessao): string {
-  return s.atual?.nome_exibicao || s.perfil?.nome || (s.user.user_metadata?.nome as string | undefined) || s.user.email || "";
+  return (
+    s.atual?.nome_exibicao ||
+    s.perfil?.nome ||
+    (s.user.user_metadata?.nome as string | undefined) ||
+    s.user.email ||
+    ""
+  );
 }
 
 export function iniciais(nome: string): string {
-  return nome
-    .trim()
-    .split(/\s+/)
-    .filter((p) => p.length > 2 || p === p.toUpperCase())
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase() || "?";
+  return (
+    nome
+      .trim()
+      .split(/\s+/)
+      .filter((p) => p.length > 2 || p === p.toUpperCase())
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?"
+  );
 }
 
 export const e_admin = (m: Membro | null) => !!m?.papel_admin;
-export const e_clinico = (m: Membro | null) => m?.funcao === "medico" || m?.funcao === "profissional";
+export const e_clinico = (m: Membro | null) =>
+  m?.funcao === "medico" || m?.funcao === "profissional";

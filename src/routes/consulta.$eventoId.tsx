@@ -5,8 +5,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { PortalShell, MobileNavTabs } from "@/components/portal/PortalShell";
 import { Editor, ListaRegistos } from "@/components/ficha/FichaUtente";
 import { useIdioma, useT } from "@/lib/i18n";
-import { e_clinico, useSessao } from "@/lib/sessao";
-import { dataHora, membrosDoEspaco, rotuloMembro, type ConsultaDb, type DiarioDb, type MembroDb, type UtenteDb } from "@/lib/dados";
+import { e_clinico, useAlinharEspaco, useSessao } from "@/lib/sessao";
+import {
+  dataHora,
+  membrosDoEspaco,
+  rotuloMembro,
+  type ConsultaDb,
+  type DiarioDb,
+  type MembroDb,
+  type UtenteDb,
+} from "@/lib/dados";
 
 export const Route = createFileRoute("/consulta/$eventoId")({
   head: () => ({ meta: [{ title: "Consulta — Vivara Health" }] }),
@@ -22,27 +30,38 @@ function ConsultaPage() {
   const { atual } = useSessao();
   const [consulta, setConsulta] = useState<ConsultaDb | null | undefined>(undefined);
   const [utente, setUtente] = useState<UtenteDb | null>(null);
+  useAlinharEspaco(consulta?.espaco_id);
   const [membros, setMembros] = useState<MembroDb[]>([]);
   const [seguidores, setSeguidores] = useState<string[]>([]);
   const [registos, setRegistos] = useState<DiarioDb[]>([]);
   const [partilhas, setPartilhas] = useState<Record<string, string[]>>({});
 
   const carregar = useCallback(async () => {
-    const { data: c } = await supabase.from("consultas").select("*").eq("id", eventoId).maybeSingle();
+    const { data: c } = await supabase
+      .from("consultas")
+      .select("*")
+      .eq("id", eventoId)
+      .maybeSingle();
     setConsulta(c ?? null);
     if (!c) return;
     const [u, ms, ss, ds] = await Promise.all([
       supabase.from("utentes").select("*").eq("id", c.utente_id).maybeSingle(),
       membrosDoEspaco(c.espaco_id),
       supabase.from("seguimentos").select("membro_id").eq("utente_id", c.utente_id),
-      supabase.from("diarios").select("*").eq("consulta_id", c.id).order("criado_em", { ascending: false }),
+      supabase
+        .from("diarios")
+        .select("*")
+        .eq("consulta_id", c.id)
+        .order("criado_em", { ascending: false }),
     ]);
     setUtente(u.data ?? null);
     setMembros(ms);
     setSeguidores((ss.data ?? []).map((s) => s.membro_id));
     setRegistos(ds.data ?? []);
     const ids = (ds.data ?? []).map((d) => d.id);
-    const { data: ps } = ids.length ? await supabase.from("diario_partilhas").select("*").in("diario_id", ids) : { data: [] };
+    const { data: ps } = ids.length
+      ? await supabase.from("diario_partilhas").select("*").in("diario_id", ids)
+      : { data: [] };
     setPartilhas(
       (ps ?? []).reduce<Record<string, string[]>>((acc, p) => {
         (acc[p.diario_id] ??= []).push(p.membro_id);
@@ -62,7 +81,9 @@ function ConsultaPage() {
   if (consulta === undefined) {
     return (
       <PortalShell>
-        <div className="px-6 py-16 text-center text-xs text-muted-foreground">{t.conta.aProcessar}</div>
+        <div className="px-6 py-16 text-center text-xs text-muted-foreground">
+          {t.conta.aProcessar}
+        </div>
       </PortalShell>
     );
   }
@@ -82,7 +103,11 @@ function ConsultaPage() {
 
   const sigo = e_clinico(atual) && seguidores.includes(atual.id);
   const elegiveis = membros.filter(
-    (m) => m.id !== atual.id && m.estado === "ativo" && (!!m.papel_admin || ((m.funcao === "medico" || m.funcao === "profissional") && seguidores.includes(m.id))),
+    (m) =>
+      m.id !== atual.id &&
+      m.estado === "ativo" &&
+      (!!m.papel_admin ||
+        ((m.funcao === "medico" || m.funcao === "profissional") && seguidores.includes(m.id))),
   );
 
   async function mudarEstado(estado: "realizada" | "falta" | "agendada") {
@@ -90,12 +115,16 @@ function ConsultaPage() {
     void carregar();
   }
 
-  const botao = "inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-2 text-xs font-medium text-foreground hover:bg-accent";
+  const botao =
+    "inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-2 text-xs font-medium text-foreground hover:bg-accent";
 
   return (
     <PortalShell>
       <main className="mx-auto max-w-[1100px] px-4 py-6 pb-24 sm:px-6 sm:py-8 lg:pb-10">
-        <Link to="/agenda" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+        <Link
+          to="/agenda"
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="h-3.5 w-3.5" />
           {tc.voltar}
         </Link>
@@ -103,12 +132,20 @@ function ConsultaPage() {
           <div>
             <h1 className="font-serif text-3xl text-foreground">{tc.titulo(utente.nome)}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {dataHora(consulta.inicio, idioma)} · {tf.duracao(consulta.duracao_min)} · {consulta.tipo === "video" ? tf.video : tf.presencial} · {nomeDe(consulta.profissional_id)}
+              {dataHora(consulta.inicio, idioma)} · {tf.duracao(consulta.duracao_min)} ·{" "}
+              {consulta.tipo === "video" ? tf.video : tf.presencial} ·{" "}
+              {nomeDe(consulta.profissional_id)}
             </p>
             {consulta.motivo && <p className="mt-1 text-sm text-foreground">{consulta.motivo}</p>}
             <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
-              <span className="rounded-full bg-accent px-2 py-0.5 text-foreground">{tf.estado[consulta.estado]}</span>
-              <Link to="/utentes/$utenteId" params={{ utenteId: utente.id }} className="text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
+              <span className="rounded-full bg-accent px-2 py-0.5 text-foreground">
+                {tf.estado[consulta.estado]}
+              </span>
+              <Link
+                to="/utentes/$utenteId"
+                params={{ utenteId: utente.id }}
+                className="text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              >
                 {tc.abrirFicha}
               </Link>
             </div>
@@ -120,7 +157,11 @@ function ConsultaPage() {
                   <UserX className="h-3.5 w-3.5" />
                   {tc.marcarFalta}
                 </button>
-                <button type="button" onClick={() => mudarEstado("realizada")} className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-medium text-background hover:opacity-90">
+                <button
+                  type="button"
+                  onClick={() => mudarEstado("realizada")}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-medium text-background hover:opacity-90"
+                >
                   <Check className="h-3.5 w-3.5" />
                   {tc.marcarRealizada}
                 </button>
@@ -136,7 +177,16 @@ function ConsultaPage() {
 
         <div className="mt-6 space-y-4">
           {sigo ? (
-            <Editor tipo="diario" soap utente={utente} elegiveis={elegiveis} consultas={[consulta]} rot={rot} consultaFixaId={consulta.id} onGuardado={carregar} />
+            <Editor
+              tipo="diario"
+              soap
+              utente={utente}
+              elegiveis={elegiveis}
+              consultas={[consulta]}
+              rot={rot}
+              consultaFixaId={consulta.id}
+              onGuardado={carregar}
+            />
           ) : (
             <p className="flex items-start gap-2 rounded-xl border border-border bg-surface-raised px-4 py-3 text-xs text-muted-foreground">
               <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
@@ -145,7 +195,9 @@ function ConsultaPage() {
           )}
           {registos.length > 0 && (
             <section>
-              <h2 className="mb-2 text-[11px] uppercase tracking-wider text-muted-foreground">{tc.jaRegistado}</h2>
+              <h2 className="mb-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+                {tc.jaRegistado}
+              </h2>
               <ListaRegistos
                 itens={registos}
                 partilhas={partilhas}

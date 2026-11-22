@@ -20,7 +20,7 @@ import { ConvidarApp } from "@/components/ficha/ConvidarApp";
 import { Documentos } from "@/components/ficha/Documentos";
 import { Medicacao } from "@/components/ficha/Medicacao";
 import { useIdioma, useT } from "@/lib/i18n";
-import { e_admin, e_clinico, iniciais, useSessao } from "@/lib/sessao";
+import { e_admin, e_clinico, iniciais, useAlinharEspaco, useSessao } from "@/lib/sessao";
 import {
   dataHora,
   idade,
@@ -43,6 +43,7 @@ export function FichaUtente({ utenteId }: { utenteId: string }) {
   const idioma = useIdioma();
   const { atual } = useSessao();
   const [utente, setUtente] = useState<UtenteDb | null | undefined>(undefined);
+  useAlinharEspaco(utente?.espaco_id);
   const [membros, setMembros] = useState<MembroDb[]>([]);
   const [seguidores, setSeguidores] = useState<string[]>([]);
   const [consultas, setConsultas] = useState<ConsultaDb[]>([]);
