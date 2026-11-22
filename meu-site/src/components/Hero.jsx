@@ -14,7 +14,8 @@ const T = {
         <em>sempre acompanhada.</em>
       </>
     ),
-    desc: "Uma só plataforma, duas vistas: o utente tem a sua saúde num só lugar, o médico tem o historial completo. O mesmo registo para ambos, para que cada consulta valha a pena.",
+    desc: "Uma só plataforma, duas vistas:",
+    views: ["O utente tem a sua saúde num só lugar", "O médico tem o historial completo"],
     cta: "Ver como funciona",
     facts: [
       { big: "Qualquer laboratório", text: "PDF ou fotografia" },
@@ -30,7 +31,8 @@ const T = {
         <em>always looked after.</em>
       </>
     ),
-    desc: "One platform, two views: patients have their health in one place, doctors have the complete record. The same record for both, so that every appointment counts.",
+    desc: "One platform, two views:",
+    views: ["Patients have their health in one place", "Doctors have the complete record"],
     cta: "See how it works",
     facts: [
       { big: "Any lab", text: "PDF or photo" },
@@ -39,6 +41,18 @@ const T = {
     ],
   },
 };
+
+const ICONS = [
+  <>
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </>,
+  <>
+    <path d="M11 2v2M5 2v2M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1" />
+    <path d="M8 15a6 6 0 0 0 12 0v-3" />
+    <circle cx="20" cy="10" r="2" />
+  </>,
+];
 
 export default function Hero() {
   const t = useT();
@@ -75,14 +89,26 @@ export default function Hero() {
           {L.title}
         </motion.h1>
 
-        <motion.p
+        <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.25 }}
-          className="mt-6 max-w-xl text-base md:text-lg text-white/85 leading-relaxed"
+          className="mt-6 max-w-xl"
         >
-          {L.desc}
-        </motion.p>
+          <p className="text-base text-white/85 md:text-lg">{L.desc}</p>
+          <ul className="mt-4 space-y-3">
+            {L.views.map((v, i) => (
+              <li key={v} className="flex items-center gap-3 text-base text-white md:text-lg">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/10 backdrop-blur-sm">
+                  <svg viewBox="0 0 24 24" className="size-5 text-brand-lime" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    {ICONS[i]}
+                  </svg>
+                </span>
+                {v}
+              </li>
+            ))}
+          </ul>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 24 }}
