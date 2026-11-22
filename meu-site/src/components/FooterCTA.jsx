@@ -12,7 +12,7 @@ const T = {
     ),
     desc: "Um lugar seguro para exames, resultados e registos médicos — para médicos e pacientes.",
     cta: "Começar",
-    tagline: "Para que cada consulta médica valha a pena.",
+    tagline: "A sua saúde, todos os dias. Não só na consulta.",
   },
   en: {
     title: (
@@ -22,7 +22,7 @@ const T = {
     ),
     desc: "A safe place for exams, results and medical records — for doctors and patients.",
     cta: "Get started",
-    tagline: "So that every doctor's appointment counts.",
+    tagline: "Your health, every day. Not just at the appointment.",
   },
 };
 
