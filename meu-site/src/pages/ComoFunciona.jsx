@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import PhotoHeader from "../components/PhotoHeader";
-import photo from "../assets/pages/fim.webp";
+import photo from "../assets/pages/como-funciona.webp";
 import { SectionBadge, Reveal } from "../components/ui";
 import { useT } from "../i18n";
 
