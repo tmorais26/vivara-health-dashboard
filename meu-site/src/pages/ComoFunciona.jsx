@@ -16,7 +16,7 @@ const T = {
       desc: "Os resultados chegam de vários laboratórios e ficam num só sítio. Cada um vê o que precisa.",
       cta: "Começar",
     },
-    views: { patient: "Vista do paciente", doctor: "Vista do médico" },
+    views: { patient: "Vista do membro", doctor: "Vista do médico" },
     steps: [
       {
         title: "Tudo num só sítio",
@@ -98,7 +98,7 @@ const T = {
     startBadge: "Por onde começar",
     startTitle: <>Cada um começa <em>no seu lado.</em></>,
     starts: [
-      { who: "Paciente", title: "Carregue o primeiro resultado", cta: "Ver a vista do paciente", to: "/pacientes" },
+      { who: "Membro", title: "Carregue o primeiro resultado", cta: "Ver a vista do membro", to: "/membros" },
       { who: "Médico", title: "Crie a conta e comece a acompanhar", cta: "Ver a vista do médico", to: "/medicos" },
     ],
     startNote: "Os dois acessos são independentes e funcionam em conjunto.",
@@ -115,7 +115,7 @@ const T = {
       desc: "Results arrive from many labs and end up in one place. Everyone sees what they need.",
       cta: "Get started",
     },
-    views: { patient: "Patient view", doctor: "Doctor view" },
+    views: { patient: "Member view", doctor: "Doctor view" },
     steps: [
       {
         title: "Everything in one place",
@@ -197,7 +197,7 @@ const T = {
     startBadge: "Where to start",
     startTitle: <>Everyone starts <em>on their own side.</em></>,
     starts: [
-      { who: "Patient", title: "Upload your first result", cta: "See the patient view", to: "/pacientes" },
+      { who: "Member", title: "Upload your first result", cta: "See the member view", to: "/membros" },
       { who: "Doctor", title: "Create your account and start following", cta: "See the doctor view", to: "/medicos" },
     ],
     startNote: "The two accesses are independent and work together.",

@@ -31,12 +31,12 @@ const T = {
         a: "Apple Health, Oura e Whoop. Os dados dos wearables são sempre distinguidos das análises medidas em laboratório.",
       },
       {
-        q: "Os pacientes pagam?",
-        a: "Os médicos e clínicas têm os seus planos; o paciente tem um plano próprio com acesso completo à app. Os acessos são independentes.",
+        q: "Os membros pagam?",
+        a: "Os médicos e clínicas têm os seus planos; o membro tem um plano próprio com acesso completo à app. Os acessos são independentes.",
       },
       {
         q: "E se o meu médico ainda não usar a Vivara?",
-        a: "Pode começar sozinho como paciente. O seu historial fica organizado e pronto para partilhar com a sua equipa clínica assim que ela se juntar à Vivara.",
+        a: "Pode começar sozinho como membro. O seu historial fica organizado e pronto para partilhar com a sua equipa clínica assim que ela se juntar à Vivara.",
       },
       {
         q: "O meu paciente tem de ter a app?",
@@ -44,7 +44,7 @@ const T = {
       },
       {
         q: "Há vantagens em recomendar a Vivara?",
-        a: "Sim. Quando um paciente ou um médico recomenda a Vivara, quem recomenda e quem chega ganham um mês grátis. Quando é um médico a recomendar a um paciente, só o paciente beneficia. Os detalhes estão na página de Preços.",
+        a: "Sim. Quando um membro ou um médico recomenda a Vivara, quem recomenda e quem chega ganham um mês grátis. Quando é um médico a recomendar a um paciente, só o paciente beneficia. Os detalhes estão na página de Preços.",
       },
       {
         q: "Posso cancelar a qualquer momento?",
@@ -86,12 +86,12 @@ const T = {
         a: "Apple Health, Oura and Whoop. Wearable data is always kept distinct from lab-measured results.",
       },
       {
-        q: "Do patients pay?",
-        a: "Doctors and clinics have their own plans; patients have their own plan with full access to the app. The two are independent.",
+        q: "Do members pay?",
+        a: "Doctors and clinics have their own plans; members have their own plan with full access to the app. The two are independent.",
       },
       {
         q: "What if my doctor doesn't use Vivara yet?",
-        a: "You can start on your own as a patient. Your record stays organised and ready to share with your care team as soon as they join Vivara.",
+        a: "You can start on your own as a member. Your record stays organised and ready to share with your care team as soon as they join Vivara.",
       },
       {
         q: "Does my patient have to have the app?",
@@ -99,7 +99,7 @@ const T = {
       },
       {
         q: "Are there benefits to recommending Vivara?",
-        a: "Yes. When a patient or a doctor recommends Vivara, both the recommender and the newcomer get a free month. When a doctor recommends Vivara to a patient, only the patient benefits. Details are on the Pricing page.",
+        a: "Yes. When a member or a doctor recommends Vivara, both the recommender and the newcomer get a free month. When a doctor recommends Vivara to a patient, only the patient benefits. Details are on the Pricing page.",
       },
       {
         q: "Can I cancel at any time?",

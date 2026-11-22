@@ -15,12 +15,12 @@ const T = {
       </>
     ),
     desc: "Uma só plataforma, duas vistas:",
-    views: ["O paciente tem a sua saúde num só lugar", "O médico tem o historial completo"],
+    views: ["O membro tem a sua saúde num só lugar", "O médico tem o historial completo"],
     cta: "Ver como funciona",
     facts: [
       { big: "Qualquer laboratório", text: "PDF ou fotografia" },
       { big: "Médico e paciente", text: "O mesmo historial" },
-      { big: "Desde €{u}/dia", text: "Pacientes. Médicos: €{m} por dia", link: "Ver preços", to: "/precos" },
+      { big: "Desde €{u}/dia", text: "Membros. Médicos: €{m} por dia", link: "Ver preços", to: "/precos" },
     ],
   },
   en: {
@@ -32,12 +32,12 @@ const T = {
       </>
     ),
     desc: "One platform, two views:",
-    views: ["Patients have their health in one place", "Doctors have the complete record"],
+    views: ["Members have their health in one place", "Doctors have the complete record"],
     cta: "See how it works",
     facts: [
       { big: "Any lab", text: "PDF or photo" },
       { big: "Doctor and patient", text: "The same record" },
-      { big: "From €{u}/day", text: "Patients. Doctors: €{m} a day", link: "See pricing", to: "/precos" },
+      { big: "From €{u}/day", text: "Members. Doctors: €{m} a day", link: "See pricing", to: "/precos" },
     ],
   },
 };

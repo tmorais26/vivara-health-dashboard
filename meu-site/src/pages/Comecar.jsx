@@ -16,12 +16,12 @@ const T = {
     cards: [
       {
         key: "utente",
-        who: "Paciente",
+        who: "Membro",
         title: "Abra a app",
         points: ["Carregue as suas análises (PDF ou fotografia)", "Veja o seu historial numa só linha do tempo", "Convide o seu médico quando quiser"],
         cta: "Abrir a app",
-        more: "Ver a vista do paciente",
-        to: "/pacientes",
+        more: "Ver a vista do membro",
+        to: "/membros",
       },
       {
         key: "medico",
@@ -46,12 +46,12 @@ const T = {
     cards: [
       {
         key: "utente",
-        who: "Patient",
+        who: "Member",
         title: "Open the app",
         points: ["Upload your lab results (PDF or photo)", "See your record on a single timeline", "Invite your doctor whenever you like"],
         cta: "Open the app",
-        more: "See the patient view",
-        to: "/pacientes",
+        more: "See the member view",
+        to: "/membros",
       },
       {
         key: "medico",

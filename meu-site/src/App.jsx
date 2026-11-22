@@ -20,6 +20,7 @@ export default function App() {
         <Route path="/como-funciona" element={<ComoFunciona />} />
         <Route path="/medicos" element={<Medicos />} />
         <Route path="/clinicas" element={<Navigate to="/medicos?vista=clinica" replace />} />
+        <Route path="/membros" element={<Utentes />} />
         <Route path="/pacientes" element={<Utentes />} />
         <Route path="/utentes" element={<Utentes />} />
         <Route path="/funcionalidades" element={<Funcionalidades />} />

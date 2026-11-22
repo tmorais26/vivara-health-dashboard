@@ -55,7 +55,7 @@ const T = {
       },
       {
         thumb: "Resultados",
-        who: "Paciente",
+        who: "Membro",
         tag: "Resultados",
         title: "Todas as análises, num só sítio",
         desc: "Do laboratório que for. Carregue o PDF ou uma fotografia, e fica organizado por data.",
@@ -73,7 +73,7 @@ const T = {
       },
       {
         thumb: "Sono",
-        who: "Paciente",
+        who: "Membro",
         tag: "Wearables",
         title: "O sono, ao lado das análises",
         desc: "Ligue o seu wearable. Os dados aparecem junto do historial, mas sempre identificados como wearable.",
@@ -82,7 +82,7 @@ const T = {
       },
       {
         thumb: "A sua história",
-        who: "Paciente",
+        who: "Membro",
         tag: "Indicadores",
         title: "Os seus números, ao longo do tempo",
         desc: "Indicadores de acompanhamento, com a origem de cada dado à vista.",
@@ -118,7 +118,7 @@ const T = {
       },
       {
         thumb: "Results",
-        who: "Patient",
+        who: "Member",
         tag: "Results",
         title: "Every lab result, in one place",
         desc: "From whichever lab. Upload the PDF or a photo, and it is organised by date.",
@@ -136,7 +136,7 @@ const T = {
       },
       {
         thumb: "Sleep",
-        who: "Patient",
+        who: "Member",
         tag: "Wearables",
         title: "Sleep, next to your lab results",
         desc: "Connect your wearable. The data shows up with your record, always labelled as wearable.",
@@ -145,7 +145,7 @@ const T = {
       },
       {
         thumb: "Your story",
-        who: "Patient",
+        who: "Member",
         tag: "Indicators",
         title: "Your numbers, over time",
         desc: "Tracking indicators, with the source of each data point in plain view.",

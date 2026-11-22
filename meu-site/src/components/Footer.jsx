@@ -21,7 +21,7 @@ const T = {
         title: "Ajuda",
         links: [
           ["Médicos e clínicas", "/medicos"],
-          ["Pacientes", "/pacientes"],
+          ["Membros", "/membros"],
           ["FAQ", "/faq"],
           ["Contacto", "/contacto"],
         ],
@@ -56,7 +56,7 @@ const T = {
         title: "Help",
         links: [
           ["Doctors & clinics", "/medicos"],
-          ["Patients", "/pacientes"],
+          ["Members", "/membros"],
           ["FAQ", "/faq"],
           ["Contact", "/contacto"],
         ],

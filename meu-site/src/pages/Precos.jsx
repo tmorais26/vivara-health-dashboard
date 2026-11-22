@@ -12,18 +12,18 @@ const T = {
     header: {
       badge: "Preços",
       title: <>Simples e <em>transparente.</em></>,
-      desc: "Planos separados para quem acompanha e quem é acompanhado. O acesso do paciente é independente do da clínica.",
+      desc: "Planos separados para quem acompanha e quem é acompanhado. O acesso do membro é independente do da clínica.",
     },
     monthly: "Mensal",
     annual: "Anual",
-    patientsBadge: "Para pacientes",
+    patientsBadge: "Para membros",
     perMonth: "/mês",
     perYear: "/ano",
     perDayUnit: "/dia",
     billedMonthly: (v) => `€${v} por mês`,
     billedYearly: (v) => `€${v} por ano`,
     patient: {
-      name: "Paciente",
+      name: "Membro",
       desc: "Acesso completo à app Vivara. Histórico, wearables, mensagens com a equipa e resumos de cada consulta.",
       features: [
         "Resumo da saúde e histórico unificado",
@@ -32,9 +32,9 @@ const T = {
         "Lembretes e resumos de cada consulta",
         "Os seus dados, sempre seus — exportação completa",
       ],
-      cta: "Começar como paciente",
+      cta: "Começar como membro",
     },
-    patientSide1: "O plano do paciente dá-lhe acesso total à sua área na app Vivara, independentemente da clínica onde é acompanhado.",
+    patientSide1: "O plano de membro dá-lhe acesso total à sua área na app Vivara, independentemente da clínica onde é acompanhado.",
     patientSide2: "Os médicos e clínicas pagam os seus próprios planos à parte — o seu acesso não depende disso.",
     patientPoints: [
       "Funciona com qualquer médico na Vivara",
@@ -67,11 +67,11 @@ const T = {
     referral: {
       badge: "Recomendar a Vivara",
       title: <>Recomende e <em>ganhe um mês grátis.</em></>,
-      desc: "Quem recomenda e quem chega ganham um mês grátis — entre pacientes, entre médicos, e de paciente para médico.",
+      desc: "Quem recomenda e quem chega ganham um mês grátis — entre membros, entre médicos, e de membro para médico.",
       rules: [
-        { who: "Paciente → paciente", text: "Os dois ganham um mês grátis." },
+        { who: "Membro → membro", text: "Os dois ganham um mês grátis." },
         { who: "Médico → médico", text: "Os dois ganham um mês grátis." },
-        { who: "Paciente → o seu médico", text: "O paciente ganha um mês grátis e o médico começa com o primeiro mês grátis." },
+        { who: "Membro → o seu médico", text: "O membro ganha um mês grátis e o médico começa com o primeiro mês grátis." },
         { who: "Médico → paciente", text: "O paciente começa com o primeiro mês grátis. O médico não recebe nada em troca: a recomendação de um médico nunca deve depender de um benefício próprio." },
       ],
       fine: [
@@ -80,24 +80,24 @@ const T = {
         "Planos de clínica: condições a combinar.",
       ],
     },
-    footnote: "Sem custos de setup. Cancela quando quiser. IVA incluído. Os planos de médicos e pacientes são independentes.",
+    footnote: "Sem custos de setup. Cancela quando quiser. IVA incluído. Os planos de médicos e membros são independentes.",
   },
   en: {
     header: {
       badge: "Pricing",
       title: <>Simple and <em>transparent.</em></>,
-      desc: "Separate plans for those who provide care and those who receive it. Patient access is independent from the clinic's.",
+      desc: "Separate plans for those who provide care and those who receive it. Member access is independent from the clinic's.",
     },
     monthly: "Monthly",
     annual: "Annual",
-    patientsBadge: "For patients",
+    patientsBadge: "For members",
     perMonth: "/month",
     perYear: "/year",
     perDayUnit: "/day",
     billedMonthly: (v) => `€${v} a month`,
     billedYearly: (v) => `€${v} a year`,
     patient: {
-      name: "Patient",
+      name: "Member",
       desc: "Full access to the Vivara app. Record, wearables, messages with your team and a summary after every appointment.",
       features: [
         "Health summary and unified record",
@@ -106,9 +106,9 @@ const T = {
         "Reminders and summaries after every appointment",
         "Your data, always yours — full export",
       ],
-      cta: "Start as a patient",
+      cta: "Start as a member",
     },
-    patientSide1: "The patient plan gives you full access to your own area in the Vivara app, regardless of which clinic looks after you.",
+    patientSide1: "The member plan gives you full access to your own area in the Vivara app, regardless of which clinic looks after you.",
     patientSide2: "Doctors and clinics pay for their own plans separately — your access doesn't depend on it.",
     patientPoints: [
       "Works with any doctor on Vivara",
@@ -141,11 +141,11 @@ const T = {
     referral: {
       badge: "Recommend Vivara",
       title: <>Recommend us and <em>get a month free.</em></>,
-      desc: "Whoever recommends and whoever joins get a free month — between patients, between doctors, and from patient to doctor.",
+      desc: "Whoever recommends and whoever joins get a free month — between members, between doctors, and from member to doctor.",
       rules: [
-        { who: "Patient → patient", text: "Both get a free month." },
+        { who: "Member → member", text: "Both get a free month." },
         { who: "Doctor → doctor", text: "Both get a free month." },
-        { who: "Patient → their doctor", text: "The patient gets a free month and the doctor starts with their first month free." },
+        { who: "Member → their doctor", text: "The member gets a free month and the doctor starts with their first month free." },
         { who: "Doctor → patient", text: "The patient starts with their first month free. The doctor receives nothing in return: a doctor's recommendation should never depend on a personal benefit." },
       ],
       fine: [
@@ -154,7 +154,7 @@ const T = {
         "Clinic plans: terms to be agreed.",
       ],
     },
-    footnote: "No setup costs. Cancel anytime. VAT included. Doctor and patient plans are independent.",
+    footnote: "No setup costs. Cancel anytime. VAT included. Doctor and member plans are independent.",
   },
 };
 

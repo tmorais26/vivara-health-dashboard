@@ -8,7 +8,7 @@ import { useT } from "../i18n";
 const T = {
   pt: {
     header: {
-      badge: "Para pacientes · App do paciente",
+      badge: "Para membros · App Vivara",
       title: <>A sua saúde, <em>na palma da mão.</em></>,
       desc: "Um lugar seguro para exames, resultados, sintomas e registos médicos. Sem ruído — só o que importa, perto da sua equipa clínica.",
     },
@@ -21,7 +21,7 @@ const T = {
       { title: "Plano do dia e mensagens", desc: "O que tomar e como tomar, que exames fazer e como os fazer. Mais mensagens com a equipa clínica e lembretes de consultas." },
     ],
     start: "Abrir a app",
-    planBadge: "Plano de paciente",
+    planBadge: "Plano de membro",
     price: "€0,23",
     perMonth: "/dia",
     annualNote: "€6,99 por mês, ou €79 por ano com plano anual",
@@ -62,7 +62,7 @@ const T = {
   },
   en: {
     header: {
-      badge: "For patients · Patient app",
+      badge: "For members · Vivara app",
       title: <>Your health, <em>in the palm of your hand.</em></>,
       desc: "A safe place for exams, results, symptoms and medical records. No noise — only what matters, close to your care team.",
     },
@@ -75,7 +75,7 @@ const T = {
       { title: "Daily plan and messages", desc: "What to take and how to take it, which exams to do and how to do them. Plus messages with your care team and appointment reminders." },
     ],
     start: "Open the app",
-    planBadge: "Patient plan",
+    planBadge: "Member plan",
     price: "€0.23",
     perMonth: "/day",
     annualNote: "€6.99 a month, or €79 a year on the annual plan",
