@@ -252,7 +252,7 @@ export function ChatUtente({
                       if (e.key === "Enter" && !aEnviar) void enviar();
                     }}
                   />
-                  <button type="button" onClick={() => void enviar()} disabled={aEnviar} aria-label={t.enviar} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-background hover:opacity-90 disabled:opacity-50">
+                  <button type="button" onClick={() => void enviar()} disabled={aEnviar || (!draft.trim() && ficheiros.length === 0)} aria-label={t.enviar} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-background hover:opacity-90 disabled:opacity-50">
                     <Send className="h-3.5 w-3.5" />
                   </button>
                 </div>

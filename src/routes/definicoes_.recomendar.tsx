@@ -40,6 +40,11 @@ function RecomendarPage() {
   const [aceite, setAceite] = useState(false);
   const [aGuardar, setAGuardar] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [avisoCopia, setAvisoCopia] = useState<{
+    texto: string;
+    ok: boolean;
+    mensagem: string;
+  } | null>(null);
 
   const nome = nomeSemTitulo(sessao.perfil?.nome || nomeAtual(sessao));
   const lUtente = codigo ? ligacaoUtente(codigo) : "";
@@ -87,9 +92,20 @@ function RecomendarPage() {
     }
   }
 
+  // Copia para a área de transferência e mostra sempre o resultado. Se o browser recusar
+  // (acontece depois de uma espera, como a janela da declaração), mostra o texto para copiar à mão.
+  async function copiarTexto(texto: string, mensagem: string) {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setAvisoCopia({ texto, ok: true, mensagem });
+    } catch {
+      setAvisoCopia({ texto, ok: false, mensagem: tr.copiarManual });
+    }
+  }
+
   async function copiar() {
     if (!codigo) return;
-    await navigator.clipboard.writeText(codigo);
+    await copiarTexto(codigo, tr.codigoCopiado);
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2000);
   }
@@ -99,14 +115,12 @@ function RecomendarPage() {
     if (navigator.share) {
       try {
         await navigator.share({ title: "Vivara", text: texto, url: ligacao });
-      } catch {
-        // partilha cancelada
+        return;
+      } catch (e) {
+        if ((e as DOMException)?.name === "AbortError") return; // o médico cancelou
       }
-    } else {
-      await navigator.clipboard.writeText(ligacao);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
     }
+    await copiarTexto(ligacao, tr.ligacaoCopiada);
   }
 
   function descarregarQr() {
@@ -210,6 +224,21 @@ function RecomendarPage() {
                 {tr.cartao}
               </button>
               <p className="mt-1 text-[11px] text-muted-foreground">{tr.cartaoAjuda}</p>
+              {avisoCopia && (
+                <div
+                  role="status"
+                  className={`mt-3 rounded-xl border px-3 py-2 text-xs ${avisoCopia.ok ? "border-state-ok/30 bg-state-ok-soft text-foreground" : "border-state-warn/30 bg-state-warn-soft text-foreground"}`}
+                >
+                  <div>{avisoCopia.mensagem}</div>
+                  <input
+                    readOnly
+                    value={avisoCopia.texto}
+                    onFocus={(e) => e.currentTarget.select()}
+                    className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1 font-mono text-[11px] text-foreground"
+                    aria-label={avisoCopia.mensagem}
+                  />
+                </div>
+              )}
             </div>
             {qr && (
               <img

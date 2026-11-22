@@ -140,7 +140,7 @@ function MensagensPage() {
             >
               <div className="flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5">
                 <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={tm.escrever} aria-label={tm.escrever} maxLength={4000} className="flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground" />
-                <button type="submit" aria-label={tm.enviar} className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-background hover:opacity-90">
+                <button type="submit" disabled={!draft.trim()} aria-label={tm.enviar} className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-background hover:opacity-90 disabled:opacity-30">
                   <Send className="h-3.5 w-3.5" />
                 </button>
               </div>
