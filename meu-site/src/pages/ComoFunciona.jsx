@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
-import { PageHeader, SectionBadge, Reveal } from "../components/ui";
+import PhotoHeader from "../components/PhotoHeader";
+import photo from "../assets/pages/fim.webp";
+import { SectionBadge, Reveal } from "../components/ui";
 import { useT } from "../i18n";
 
 // Cada passo mostra sempre as duas vistas: a do utente e a do médico.
@@ -139,7 +141,7 @@ export default function ComoFunciona() {
   const L = t(T);
   return (
     <>
-      <PageHeader badge={L.header.badge} title={L.header.title} desc={L.header.desc} />
+      <PhotoHeader name="como-funciona" fallback={photo} position="72% 28%" badge={L.header.badge} title={L.header.title} desc={L.header.desc} />
 
       <section className="py-16 md:py-24 bg-white">
         <div className="mx-auto max-w-6xl px-6">
