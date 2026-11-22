@@ -65,7 +65,7 @@ const T = {
     closing: "Com a Vivara, cada resultado vai para o mesmo historial — e o seu médico vê o ano inteiro antes de a consulta começar.",
     closingFacts: [
       {
-        stat: "+22 920",
+        stat: "+22,9 k",
         fact: "Quando os resultados de outros hospitais deixaram de estar num separador à parte e passaram a aparecer junto dos restantes, os médicos passaram a abri-los mais 22 920 vezes por semana.",
         source: "JAMIA, 2020 · Universidade da Califórnia, São Francisco",
         url: JAMIA,
@@ -130,7 +130,7 @@ const T = {
     closing: "With Vivara, every result goes into the same record — and your doctor sees the whole year before the appointment begins.",
     closingFacts: [
       {
-        stat: "+22,920",
+        stat: "+22.9 k",
         fact: "When results from other hospitals stopped sitting in a separate tab and appeared alongside the rest, doctors opened them 22,920 more times a week.",
         source: "JAMIA, 2020 · University of California, San Francisco",
         url: JAMIA,
