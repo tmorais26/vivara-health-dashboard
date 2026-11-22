@@ -29,7 +29,7 @@ export const LEGAL = {
           body: [
             "A Vivara é explorada pela [denominação social a definir], com sede em [morada a definir], Portugal, NIPC [a definir] («Vivara» ou «nós»).",
             "Para qualquer questão sobre privacidade, escreva para privacidade@vivara.health. Encarregado de proteção de dados: [a definir].",
-            "Esta política aplica-se à app para utentes, ao portal para médicos e clínicas e a este site.",
+            "Esta política aplica-se à app para membros, ao portal para médicos e clínicas e a este site. Neste texto, «membro» é a pessoa com conta na app Vivara e «paciente» é a pessoa acompanhada por um médico ou clínica no portal. A mesma pessoa pode ser as duas coisas.",
           ],
         },
         {
@@ -38,8 +38,8 @@ export const LEGAL = {
           body: [
             {
               list: [
-                "Utentes com a app: a Vivara é responsável pelo tratamento da sua conta e dos dados que carrega.",
-                "Médicos e clínicas: quando um profissional regista um utente e acrescenta resultados no portal, é o profissional ou a clínica o responsável por esses dados. A Vivara trata-os apenas por conta dele, como subcontratante (artigo 28.º do RGPD), ao abrigo de um acordo de tratamento de dados.",
+                "Membros com a app: a Vivara é responsável pelo tratamento da sua conta e dos dados que carrega.",
+                "Médicos e clínicas: quando um profissional regista um paciente e acrescenta resultados no portal, é o profissional ou a clínica o responsável por esses dados. A Vivara trata-os apenas por conta dele, como subcontratante (artigo 28.º do RGPD), ao abrigo de um acordo de tratamento de dados.",
               ],
             },
             "Se tiver dúvidas sobre dados que o seu médico registou, pode falar diretamente com ele ou connosco — encaminhamos o pedido.",
@@ -222,7 +222,7 @@ export const LEGAL = {
           id: "servico",
           h: "O que é a Vivara — e o que não é",
           body: [
-            "A Vivara tem dois acessos: uma app para utentes e um portal para médicos e clínicas. Ambos servem para reunir resultados de análises, exames e registos num só historial.",
+            "A Vivara tem dois acessos: uma app para membros e um portal para médicos e clínicas. Ambos servem para reunir resultados de análises, exames e registos num só historial. Neste texto, «membro» é a pessoa com conta na app Vivara e «paciente» é a pessoa acompanhada por um médico ou clínica no portal. A mesma pessoa pode ser as duas coisas.",
             {
               list: [
                 "A Vivara não presta cuidados de saúde, não faz diagnósticos e não substitui o seu médico.",
@@ -241,7 +241,7 @@ export const LEGAL = {
         },
         {
           id: "utentes",
-          h: "Para utentes",
+          h: "Para membros",
           body: [
             {
               list: [
@@ -259,7 +259,7 @@ export const LEGAL = {
             {
               list: [
                 "Declara estar legalmente habilitado para exercer e inscrito na respetiva ordem profissional.",
-                "Só regista utentes e carrega os seus dados quando tem fundamento legal para isso, e mantém o sigilo profissional.",
+                "Só regista pacientes e carrega os seus dados quando tem fundamento legal para isso, e mantém o sigilo profissional.",
                 "É o responsável pelo tratamento dos dados que regista. A Vivara atua como sua subcontratante, nos termos do /acordo-medicos, que faz parte destes termos.",
                 "O plano Individual é para um profissional. Para clínicas com 2 ou mais profissionais, as condições são acordadas por escrito.",
                 "Cada profissional tem o seu próprio acesso. Não partilhe credenciais.",
@@ -273,7 +273,7 @@ export const LEGAL = {
           body: [
             {
               rows: [
-                ["Utente", "€6,99 por mês ou €79 por ano."],
+                ["Membro", "€6,99 por mês ou €79 por ano."],
                 ["Médico individual", "€29,99 por mês ou €320 por ano."],
                 ["Clínica (2 ou mais profissionais)", "Sob consulta."],
               ],
@@ -296,9 +296,9 @@ export const LEGAL = {
           body: [
             {
               list: [
-                "Quando um utente recomenda outro utente, ou um médico recomenda outro médico, ambos ganham um mês grátis.",
-                "Quando um utente recomenda o seu médico, ambos ganham um mês grátis.",
-                "Quando um médico recomenda a Vivara a um utente, só o utente ganha um mês grátis.",
+                "Quando um membro recomenda outro membro, ou um médico recomenda outro médico, ambos ganham um mês grátis.",
+                "Quando um membro recomenda o seu médico, ambos ganham um mês grátis.",
+                "Quando um médico recomenda a Vivara a um paciente, só o paciente ganha um mês grátis.",
                 "O mês é atribuído depois do primeiro pagamento de quem foi convidado. Máximo de 12 meses grátis por ano. Nos planos anuais, o mês grátis prolonga a subscrição. Nos planos de clínica, as condições são acordadas.",
               ],
             },
@@ -385,7 +385,7 @@ export const LEGAL = {
       title: ["Acordo de Tratamento ", "de Dados."],
       updated: UPDATED_PT,
       summary: [
-        "Este acordo aplica-se a médicos e clínicas que usam o portal da Vivara. O profissional é o responsável pelos dados dos seus utentes; a Vivara trata-os apenas por conta dele.",
+        "Este acordo aplica-se a médicos e clínicas que usam o portal da Vivara. O profissional é o responsável pelos dados dos seus pacientes; a Vivara trata-os apenas por conta dele.",
         "Só usamos os dados para prestar o serviço. Nunca para fins próprios, publicidade ou treino de modelos de inteligência artificial.",
         "Aceita este acordo ao criar a conta. Faz parte dos Termos de Serviço.",
       ],
@@ -395,7 +395,7 @@ export const LEGAL = {
           h: "Partes e objeto",
           body: [
             "Este acordo é celebrado entre o profissional de saúde ou clínica que cria a conta no portal («Responsável pelo tratamento» ou «Profissional») e a Vivara, explorada pela [denominação social a definir] («Subcontratante»), ao abrigo do artigo 28.º do Regulamento Geral sobre a Proteção de Dados (RGPD).",
-            "Define como a Vivara trata, por conta do Profissional, os dados pessoais dos utentes que ele regista e acompanha no portal.",
+            "Define como a Vivara trata, por conta do Profissional, os dados pessoais dos pacientes que ele regista e acompanha no portal.",
           ],
         },
         {
@@ -404,10 +404,10 @@ export const LEGAL = {
           body: [
             {
               rows: [
-                ["Finalidade", "Organizar o historial clínico dos utentes do Profissional: guardar resultados, exames e registos, mostrá-los em linha do tempo e disponibilizá-los ao Profissional."],
+                ["Finalidade", "Organizar o historial clínico dos pacientes do Profissional: guardar resultados, exames e registos, mostrá-los em linha do tempo e disponibilizá-los ao Profissional."],
                 ["Operações", "Alojamento, armazenamento, consulta, organização, leitura de documentos carregados, exportação e apagamento."],
-                ["Categorias de dados", "Identificação e contacto do utente; dados de saúde (resultados de análises e exames, notas, sintomas, medicação e, se o utente os ligar, dados de wearables)."],
-                ["Titulares", "Os utentes do Profissional."],
+                ["Categorias de dados", "Identificação e contacto do paciente; dados de saúde (resultados de análises e exames, notas, sintomas, medicação e, se o paciente os ligar, dados de wearables)."],
+                ["Titulares", "Os pacientes do Profissional."],
                 ["Duração", "Enquanto a conta do Profissional estiver ativa e até ao fim do prazo de devolução e apagamento (ver «Fim do acordo»)."],
               ],
             },
@@ -419,7 +419,7 @@ export const LEGAL = {
           body: [
             "A Vivara trata os dados apenas segundo as instruções documentadas do Profissional, que são este acordo e o uso normal do portal. Não os usa para fins próprios, publicidade, nem para treinar modelos de inteligência artificial.",
             "Se a Vivara considerar que uma instrução viola a lei, avisa o Profissional.",
-            "O Profissional garante que tem fundamento legal para registar os dados dos seus utentes e que mantém o sigilo profissional a que está obrigado.",
+            "O Profissional garante que tem fundamento legal para registar os dados dos seus pacientes e que mantém o sigilo profissional a que está obrigado.",
           ],
         },
         {
@@ -450,7 +450,7 @@ export const LEGAL = {
           h: "Outros prestadores",
           body: [
             "O Profissional autoriza a Vivara a recorrer a outros prestadores (por exemplo, alojamento, pagamentos ou envio de emails). A Vivara impõe-lhes obrigações de proteção de dados equivalentes às deste acordo e continua responsável perante o Profissional.",
-            "A lista atual está na Política de Privacidade. Antes de acrescentar um novo prestador que trate dados dos utentes, a Vivara avisa o Profissional, que pode opor-se; se a oposição for fundamentada e não houver alternativa, o Profissional pode cessar o acordo.",
+            "A lista atual está na Política de Privacidade. Antes de acrescentar um novo prestador que trate dados dos pacientes, a Vivara avisa o Profissional, que pode opor-se; se a oposição for fundamentada e não houver alternativa, o Profissional pode cessar o acordo.",
           ],
         },
         {
@@ -462,16 +462,16 @@ export const LEGAL = {
         },
         {
           id: "direitos",
-          h: "Direitos dos utentes",
+          h: "Direitos dos pacientes",
           body: [
-            "Se um utente pedir à Vivara o acesso, a retificação, o apagamento ou outro direito sobre dados que o Profissional registou, a Vivara encaminha o pedido ao Profissional sem demora. A Vivara ajuda o Profissional a responder, dentro do que o portal permite (por exemplo, exportar ou apagar os dados de um utente).",
+            "Se um paciente pedir à Vivara o acesso, a retificação, o apagamento ou outro direito sobre dados que o Profissional registou, a Vivara encaminha o pedido ao Profissional sem demora. A Vivara ajuda o Profissional a responder, dentro do que o portal permite (por exemplo, exportar ou apagar os dados de um paciente).",
           ],
         },
         {
           id: "violacoes",
           h: "Violações de dados",
           body: [
-            "Se a Vivara souber de uma violação de dados que afete os utentes do Profissional, avisa-o sem demora injustificada e, sempre que possível, nas 48 horas seguintes. Indica o que aconteceu, que dados estão em causa e o que está a ser feito, para o Profissional poder cumprir os seus deveres, incluindo notificar a CNPD no prazo de 72 horas quando for obrigatório.",
+            "Se a Vivara souber de uma violação de dados que afete os pacientes do Profissional, avisa-o sem demora injustificada e, sempre que possível, nas 48 horas seguintes. Indica o que aconteceu, que dados estão em causa e o que está a ser feito, para o Profissional poder cumprir os seus deveres, incluindo notificar a CNPD no prazo de 72 horas quando for obrigatório.",
           ],
         },
         {
@@ -526,7 +526,7 @@ export const LEGAL = {
           body: [
             "Vivara is operated by [company name to be defined], headquartered at [address to be defined], Portugal, tax number [to be defined] (\"Vivara\" or \"we\").",
             "For any privacy question, write to privacidade@vivara.health. Data protection officer: [to be defined].",
-            "This policy covers the patient app, the portal for doctors and clinics, and this website.",
+            "This policy covers the member app, the portal for doctors and clinics, and this website. In this text, a \"member\" is a person with an account in the Vivara app and a \"patient\" is a person followed by a doctor or clinic in the portal. The same person can be both.",
           ],
         },
         {
@@ -535,7 +535,7 @@ export const LEGAL = {
           body: [
             {
               list: [
-                "Patients using the app: Vivara is the controller of your account and of the data you upload.",
+                "Members using the app: Vivara is the controller of your account and of the data you upload.",
                 "Doctors and clinics: when a professional registers a patient and adds results in the portal, the professional or clinic is the controller of that data. Vivara processes it only on their behalf, as a processor (Article 28 GDPR), under a data processing agreement.",
               ],
             },
@@ -719,7 +719,7 @@ export const LEGAL = {
           id: "servico",
           h: "What Vivara is — and isn't",
           body: [
-            "Vivara has two kinds of access: an app for patients and a portal for doctors and clinics. Both bring lab results, exams and records together in a single history.",
+            "Vivara has two kinds of access: an app for members and a portal for doctors and clinics. Both bring lab results, exams and records together in a single history. In this text, a \"member\" is a person with an account in the Vivara app and a \"patient\" is a person followed by a doctor or clinic in the portal. The same person can be both.",
             {
               list: [
                 "Vivara does not provide healthcare, does not diagnose and does not replace your doctor.",
@@ -738,7 +738,7 @@ export const LEGAL = {
         },
         {
           id: "utentes",
-          h: "For patients",
+          h: "For members",
           body: [
             {
               list: [
@@ -770,7 +770,7 @@ export const LEGAL = {
           body: [
             {
               rows: [
-                ["Patient", "€6.99 per month or €79 per year."],
+                ["Member", "€6.99 per month or €79 per year."],
                 ["Individual doctor", "€29.99 per month or €320 per year."],
                 ["Clinic (2 or more professionals)", "On request."],
               ],
@@ -793,8 +793,8 @@ export const LEGAL = {
           body: [
             {
               list: [
-                "When a patient recommends another patient, or a doctor recommends another doctor, both get a free month.",
-                "When a patient recommends their doctor, both get a free month.",
+                "When a member recommends another member, or a doctor recommends another doctor, both get a free month.",
+                "When a member recommends their doctor, both get a free month.",
                 "When a doctor recommends Vivara to a patient, only the patient gets a free month.",
                 "The month is awarded after the invitee's first payment. Up to 12 free months per year. On annual plans, the free month extends the subscription. For clinic plans, terms are agreed.",
               ],
