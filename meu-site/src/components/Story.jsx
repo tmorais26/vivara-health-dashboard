@@ -14,7 +14,7 @@ const T = {
     pillars: [
       {
         title: "Médicos no desenho",
-        desc: "Cada ecrã validado por uma médica em prática ativa.",
+        desc: "Cada ecrã validado com médicos em prática ativa.",
       },
       {
         title: "Utentes no centro",
@@ -38,7 +38,7 @@ const T = {
     pillars: [
       {
         title: "Doctors in the design",
-        desc: "Every screen validated by a doctor in active practice.",
+        desc: "Every screen validated with doctors in active practice.",
       },
       {
         title: "Patients at the centre",
