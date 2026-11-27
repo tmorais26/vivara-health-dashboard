@@ -209,6 +209,38 @@ export type Database = {
         Update: { lembretes_email?: boolean; chat_estado?: string; cidade?: string | null; clinica_onde_visto?: string | null; criado_em?: string; criado_por?: string | null; data_nascimento?: string | null; email?: string | null; espaco_id?: string; id?: string; nome?: string; sexo?: string | null; telefone?: string | null }
         Relationships: Rel[]
       }
+      profiles: {
+        Row: { id: string; role: "physician" | "patient"; full_name: string | null; invite_code: string | null; created_at: string }
+        Insert: { id: string; role?: "physician" | "patient"; full_name?: string | null; invite_code?: string | null; created_at?: string }
+        Update: { id?: string; role?: "physician" | "patient"; full_name?: string | null; invite_code?: string | null; created_at?: string }
+        Relationships: []
+      }
+      meses_gratis: {
+        Row: { id: string; beneficiario_id: string; recomendacao_id: string; ano: number; estado: string; referencia_prestador: string | null; criado_em: string; aplicado_em: string | null }
+        Insert: { [_ in never]: never }
+        Update: { [_ in never]: never }
+        Relationships: []
+      }
+      consent_events: {
+        Row: {
+          id: number; user_id: string; consent_type: string; action: "granted" | "withdrawn"
+          doc_version: string | null; checkbox_id: string | null; text_hash: string | null
+          lang: string | null; ip: unknown; user_agent: string | null; created_at: string
+        }
+        Insert: {
+          id?: never; user_id: string; consent_type: string; action: "granted" | "withdrawn"
+          doc_version?: string | null; checkbox_id?: string | null; text_hash?: string | null
+          lang?: string | null; ip?: string | null; user_agent?: string | null; created_at?: string
+        }
+        Update: { [_ in never]: never }
+        Relationships: []
+      }
+      account_closures: {
+        Row: { id: number; user_id: string; reason: string; requested_at: string; export_until: string; deleted_at: string | null }
+        Insert: { id?: never; user_id: string; reason: string; requested_at?: string; export_until?: string; deleted_at?: string | null }
+        Update: { deleted_at?: string | null }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -237,6 +269,10 @@ export type Database = {
       resumo_recomendacoes_clinica: { Args: { p_espaco: string }; Returns: Json }
       registar_recomendacao: { Args: { p_codigo: string; p_convidado: string; p_convidado_tipo: string }; Returns: string }
       usar_codigo: { Args: { p_codigo: string }; Returns: string }
+      aceitar_convite_app: { Args: { p_token: string }; Returns: string }
+      meu_codigo_utente: { Args: Record<PropertyKey, never>; Returns: string }
+      registar_primeiro_pagamento: { Args: { p_user: string }; Returns: undefined }
+      marcar_mes_aplicado: { Args: { p_mes: string; p_referencia: string }; Returns: undefined }
     }
     Enums: {
       user_role: "physician" | "patient"

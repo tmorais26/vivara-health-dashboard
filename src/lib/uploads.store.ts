@@ -1,0 +1,213 @@
+// Armazenamento das análises carregadas — tudo no dispositivo.
+//
+// Os valores e o texto extraído ficam em localStorage (são poucos KB). O PDF
+// original vai para IndexedDB, que aguenta blobs e tem quota muito maior; se
+// não estiver disponível, grava-se na mesma o resto e perde-se só o botão de
+// abrir o original. Nada disto toca na rede.
+
+import type { ParsedValue } from "./lab-parse";
+
+export interface StoredValue {
+  marker: string | null;
+  label: string;
+  raw: string;
+  value: string;
+  unit: string;
+  ref: string;
+  /** Valor/unidade/referência tal como vêm no documento, quando foram convertidos. */
+  origValue?: string;
+  origUnit?: string;
+  origRef?: string;
+  /** O documento não indicava a unidade e a pessoa confirmou a assumida. */
+  unitAssumed?: boolean;
+}
+
+// Como o conteúdo foi lido. Muda o que o ecrã de documento mostra (texto do
+// PDF ou a imagem) e o aviso de fiabilidade: o texto de um PDF digital é
+// exacto, o que sai de OCR é uma leitura e pode ter erros.
+export type UploadKind = "pdf-text" | "pdf-ocr" | "image";
+
+export interface StoredUpload {
+  id: string;
+  kind: UploadKind;
+  filename: string;
+  mime: string;
+  sizeKb: number;
+  pages: number;
+  uploadedISO: string;
+  collectedISO: string;
+  lab: string | null;
+  lines: string[];
+  values: StoredValue[];
+  hasFile: boolean;
+}
+
+const KEY = "rv-uploads-v1";
+const MAX_LINES = 400; // um relatório longo cabe bem; evita encher o localStorage
+
+export function loadUploads(): StoredUpload[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as StoredUpload[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persist(list: StoredUpload[]) {
+  window.localStorage.setItem(KEY, JSON.stringify(list));
+}
+
+export function saveUpload(u: StoredUpload): StoredUpload[] {
+  const list = [u, ...loadUploads().filter((x) => x.id !== u.id)];
+  persist(list);
+  return list;
+}
+
+export function deleteUpload(id: string): StoredUpload[] {
+  const list = loadUploads().filter((x) => x.id !== id);
+  persist(list);
+  void deleteFile(id);
+  return list;
+}
+
+export function makeUpload(
+  file: File,
+  doc: { lines: string[]; pages: number; lab: string | null; collectedISO: string | null },
+  values: ParsedValue[],
+  kind: UploadKind,
+): StoredUpload {
+  const now = new Date();
+  return {
+    id: `u-${now.getTime()}`,
+    kind,
+    filename: file.name,
+    mime: file.type || "application/octet-stream",
+    sizeKb: Math.max(1, Math.round(file.size / 1024)),
+    pages: doc.pages,
+    uploadedISO: now.toISOString(),
+    collectedISO: doc.collectedISO ?? now.toISOString().slice(0, 10),
+    lab: doc.lab,
+    lines: doc.lines.slice(0, MAX_LINES),
+    values: values.map(({ marker, label, raw, value, unit, ref, origValue, origUnit, origRef, unitAssumed }) =>
+      ({ marker, label, raw, value, unit, ref, origValue, origUnit, origRef, unitAssumed })),
+    hasFile: false,
+  };
+}
+
+// ─── Durabilidade ────────────────────────────────────
+// Por omissão, o que uma app web guarda é "best-effort": o browser pode
+// apagá-lo quando lhe faltar espaço, e o Safari no iOS apaga tudo depois de
+// 7 dias sem visitas. Pedir armazenamento persistente muda isso — no Chrome
+// é concedido por envolvimento com o site, no Safari quando a app é
+// adicionada ao ecrã principal.
+export async function requestPersistence(): Promise<boolean> {
+  if (typeof navigator === "undefined" || !navigator.storage?.persist) return false;
+  try {
+    if (await navigator.storage.persisted?.()) return true;
+    return await navigator.storage.persist();
+  } catch {
+    return false;
+  }
+}
+
+export interface StorageStatus {
+  persisted: boolean;   // o browser comprometeu-se a não apagar
+  supported: boolean;   // a API existe neste browser
+  usedBytes: number;
+  quotaMb: number;
+}
+
+export async function storageStatus(): Promise<StorageStatus> {
+  const supported = typeof navigator !== "undefined" && !!navigator.storage?.estimate;
+  if (!supported) return { persisted: false, supported: false, usedBytes: 0, quotaMb: 0 };
+  try {
+    const est = await navigator.storage.estimate();
+    const persisted = (await navigator.storage.persisted?.()) ?? false;
+    return {
+      persisted,
+      supported: true,
+      usedBytes: est.usage ?? 0,
+      quotaMb: Math.round((est.quota ?? 0) / 1048576),
+    };
+  } catch {
+    return { persisted: false, supported: true, usedBytes: 0, quotaMb: 0 };
+  }
+}
+
+// Há espaço para este ficheiro? Melhor saber antes de dizer ao utente que
+// ficou guardado.
+export async function hasRoomFor(bytes: number): Promise<boolean> {
+  if (typeof navigator === "undefined" || !navigator.storage?.estimate) return true;
+  try {
+    const est = await navigator.storage.estimate();
+    if (est.quota == null || est.usage == null) return true;
+    return est.quota - est.usage > bytes * 1.5; // margem para o registo e o índice
+  } catch {
+    return true;
+  }
+}
+
+// ─── PDF original em IndexedDB ───────────────────────
+const DB_NAME = "rv-vivara";
+const STORE = "files";
+
+function openDb(): Promise<IDBDatabase | null> {
+  return new Promise((resolve) => {
+    if (typeof indexedDB === "undefined") return resolve(null);
+    let req: IDBOpenDBRequest;
+    try {
+      req = indexedDB.open(DB_NAME, 1);
+    } catch {
+      return resolve(null);
+    }
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(STORE)) req.result.createObjectStore(STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => resolve(null);
+  });
+}
+
+export async function putFile(id: string, file: File): Promise<boolean> {
+  const db = await openDb();
+  if (!db) return false;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(STORE, "readwrite");
+      tx.objectStore(STORE).put(file, id);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+      tx.onabort = () => resolve(false);
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
+export async function getFile(id: string): Promise<File | null> {
+  const db = await openDb();
+  if (!db) return null;
+  return new Promise((resolve) => {
+    try {
+      const req = db.transaction(STORE, "readonly").objectStore(STORE).get(id);
+      req.onsuccess = () => resolve((req.result as File) ?? null);
+      req.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+export async function deleteFile(id: string): Promise<void> {
+  const db = await openDb();
+  if (!db) return;
+  try {
+    db.transaction(STORE, "readwrite").objectStore(STORE).delete(id);
+  } catch {
+    /* ignorado — o registo já foi removido do localStorage */
+  }
+}

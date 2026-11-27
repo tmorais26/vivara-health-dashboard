@@ -98,6 +98,10 @@ function RootComponent() {
   );
 }
 
+// Rotas da app do utente: têm a sua própria autenticação e consentimentos, por isso
+// não passam pelas regras do portal do médico (reconsentimento, espaço, notificações).
+const PUBLIC_PREFIXES = ["/app-v2", "/registo"];
+
 function AuthGate({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
@@ -117,6 +121,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const isPublic = PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
   const isAuthRoute = pathname === "/auth";
   const isReconsentRoute = pathname === "/reconsentimento";
   const isNovaPalavraPasse = pathname === "/nova-palavra-passe";
@@ -124,7 +129,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   // Nova versão de um documento legal (ou aceitação em falta) → pede nova aceitação.
   useEffect(() => {
-    if (!userId) {
+    if (!userId || isPublic) {
       setPrecisaConsentir(null);
       return;
     }
@@ -138,10 +143,10 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, isPublic]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || isPublic) return;
     if (!session && !isAuthRoute && !isNovaPalavraPasse) {
       navigate({ to: "/auth" });
     }
@@ -151,7 +156,9 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     if (session && precisaConsentir && !isReconsentRoute && !isNovaPalavraPasse) {
       navigate({ to: "/reconsentimento" });
     }
-  }, [ready, session, isAuthRoute, isReconsentRoute, isNovaPalavraPasse, precisaConsentir, navigate]);
+  }, [ready, isPublic, session, isAuthRoute, isReconsentRoute, isNovaPalavraPasse, precisaConsentir, navigate]);
+
+  if (isPublic) return <>{children}</>;
 
   if (!ready) return <Carregar />;
 

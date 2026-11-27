@@ -11,6 +11,8 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // roteamento correto para SSR — daqui resultam 404 da Vercel em produção.
 // Dentro do sandbox da Lovable este preset é ignorado (força sempre Cloudflare).
 // A tarefa diária envia os lembretes das consultas de amanhã (17h UTC = 17h/18h em Lisboa).
+// As funções de servidor correm em Frankfurt (fra1), na UE, ao lado do Supabase
+// (eu-central-1): pedidos com dados de saúde, consentimentos e IP não saem da UE.
 export default defineConfig({
   nitro: {
     preset: "vercel",
@@ -18,6 +20,7 @@ export default defineConfig({
     ...({
       vercel: {
         config: { version: 3, crons: [{ path: "/api/lembretes", schedule: "0 17 * * *" }] },
+        functions: { regions: ["fra1"] },
       },
     } as object),
   },
