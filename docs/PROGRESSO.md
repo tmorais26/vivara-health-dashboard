@@ -26,6 +26,13 @@ Resumo do que foi feito e decidido, para quem abre o projeto sem ter visto as se
 - 20–21/11: consentimentos passam a usar a tabela `profiles` do Supabase da Vivara; a app usa o projeto Supabase da Vivara (eu-central-1); erro de email recusado aparece junto do campo; programa de recomendação por código pessoal (parte 1).
 - 22/11: recomendação do lado do utente ligada às funções do portal (`/registo?codigo=…&convite=…`, `validar_codigo`); Registos com vista de calendário; botão de calendário no Início; análises de laboratórios diferentes (tabela de unidades `lab-units.ts`, conversões, origem e duplicados).
 
+### Site de marketing (`meu-site/`)
+
+- React 19 + Vite + Tailwind, separado do portal. Deploy no projeto Vercel **`dist`** (produção em `dist-coral-one-31.vercel.app`), não no `vivara-plataforma-medico`.
+- 27/11: o trabalho do ramo `claude/vivara-health-updates-ohyeuw` (6/7 a 22/11) vai para o `main` por PR: versão EN com seletor PT/EN; melhorias de UX de agosto; preços finais (membro 6,99 €/mês ou 79 €/ano, médico 29,99 €/mês ou 320 €/ano, preço por dia em destaque, em PT com o símbolo depois do valor); Privacidade, Termos e Acordo de Tratamento de Dados (rascunho); formulário de contacto via Web3Forms; página Começar; «Membros» para o particular e «paciente» no contexto do médico (rotas `/membros`, `/pacientes`, `/clinicas`; `/utentes` continua a funcionar); páginas Como funciona, Para médicos e Sobre redesenhadas; novas fotografias.
+- Os deploys desse ramo no `vivara-plataforma-medico` davam ERROR porque o portal no ramo ainda tinha o TanStack Start de julho (bloqueado pela CVE-2026-102989). O site em si estava a ser publicado sem erros no projeto `dist`. Com o merge, o problema desaparece.
+
 ## Por fazer
 
 - Juntar o ramo da app do utente ao `main`. Há conflitos em `package.json`, `package-lock.json`, `.gitignore`, `.env`, `src/routeTree.gen.ts`, `src/integrations/supabase/types.ts`, `src/lib/consent.functions.ts` e `src/app-v2.css`. O ramo também não tem as migrações e rotas que o `main` ganhou em novembro, por isso o merge tem de manter as duas partes.
+- Site de marketing: o ecrã de login (`meu-site/src/components/SiteGate.jsx`) tem as credenciais escritas no código, por isso só esconde o site e não o protege. Falta decidir se sai quando o site abrir ao público ou se passa a usar a proteção do Vercel. Falta limpar `netlify.toml`, o README do template e os assets do Vite. Depois do merge, o projeto `dist` tem de passar a publicar a partir do `main`.
