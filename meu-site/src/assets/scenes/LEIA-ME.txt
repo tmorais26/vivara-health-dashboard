@@ -1,0 +1,11 @@
+Fotografias das cenas da secção "Visão geral" (página inicial).
+Basta guardar aqui os ficheiros com estes nomes (.jpg, .webp ou .png) e o site usa-os sozinho:
+
+  antes-consulta.jpg    Antes da consulta (médico)
+  resultados.jpg        Resultados (utente a fotografar uma análise)
+  entre-consultas.jpg   Entre consultas
+  sono.jpg              Sono / wearables
+  historia.jpg          A sua história (idade biológica)
+
+Formato: 16:9 (ex. 2400x1350), assunto do lado direito, espaço limpo à esquerda.
+Sem ficheiro, a cena usa a fotografia ou o fundo que já tem.

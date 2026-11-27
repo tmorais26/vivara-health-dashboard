@@ -1,16 +1,36 @@
-const ENTRIES = [
-  { date: "22 mai", label: "Análises carregadas", meta: "Hemograma completo · 12 valores", tone: "default" },
-  { date: "08 mai", label: "Vitamina D atualizada", meta: "24 ng/mL · alvo 50–80", tone: "alert" },
-  { date: "19 abr", label: "Wearable sincronizado", meta: "Sono e HRV dos últimos 30 dias", tone: "default" },
-  { date: "02 abr", label: "Consulta registada", meta: "Notas e plano de seguimento", tone: "default" },
-];
+import { useT } from "../i18n";
+
+const T = {
+  pt: {
+    header: "Linha do tempo",
+    sub: "Últimos 60 dias",
+    entries: [
+      { date: "22 mai", label: "Análises carregadas", meta: "Hemograma completo · 12 valores", tone: "default" },
+      { date: "08 mai", label: "Vitamina D atualizada", meta: "24 ng/mL · alvo 50–80", tone: "alert" },
+      { date: "19 abr", label: "Wearable sincronizado", meta: "Sono e HRV dos últimos 30 dias", tone: "default" },
+      { date: "02 abr", label: "Consulta registada", meta: "Notas e plano de seguimento", tone: "default" },
+    ],
+  },
+  en: {
+    header: "Timeline",
+    sub: "Last 60 days",
+    entries: [
+      { date: "22 May", label: "Lab results uploaded", meta: "Full blood count · 12 values", tone: "default" },
+      { date: "08 May", label: "Vitamin D updated", meta: "24 ng/mL · target 50–80", tone: "alert" },
+      { date: "19 Apr", label: "Wearable synced", meta: "Sleep and HRV from the last 30 days", tone: "default" },
+      { date: "02 Apr", label: "Appointment recorded", meta: "Notes and follow-up plan", tone: "default" },
+    ],
+  },
+};
 
 export default function TimelineMock() {
+  const t = useT();
+  const L = t(T);
   return (
     <div className="rounded-3xl border border-black/10 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs uppercase tracking-[0.15em] text-brand-muted/50">Linha do tempo</p>
-        <span className="text-xs text-brand-muted/40">Últimos 60 dias</span>
+        <p className="text-xs uppercase tracking-[0.15em] text-brand-muted/50">{L.header}</p>
+        <span className="text-xs text-brand-muted/40">{L.sub}</span>
       </div>
 
       <svg viewBox="0 0 320 70" className="w-full h-16 mt-2 mb-4">
@@ -25,7 +45,7 @@ export default function TimelineMock() {
 
       <div className="relative pl-5 space-y-5">
         <div className="absolute left-[5px] top-1 bottom-1 w-px bg-black/10" />
-        {ENTRIES.map((e) => (
+        {L.entries.map((e) => (
           <div key={e.label} className="relative">
             <span
               className={`absolute -left-5 top-1.5 size-2.5 rounded-full ${

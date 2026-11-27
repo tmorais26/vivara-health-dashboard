@@ -1,106 +1,153 @@
 import { Link } from "react-router-dom";
-import { PageHeader, SectionBadge, Reveal, CTAButton, Highlight } from "../components/ui";
-import sobrePhoto from "../assets/sobre-photo.jpg";
+import PhotoHeader from "../components/PhotoHeader";
+import windowPhoto from "../assets/scenes/historia.jpg";
+import teamPhoto from "../assets/pages/equipa.webp";
+import { SectionBadge, Reveal, CTAButton } from "../components/ui";
+import { useT } from "../i18n";
 
-const PILLARS = [
-  {
-    title: "Médicos no desenho",
-    desc: "Cada ecrã validado por clínicos que o usam em consulta — não desenhado numa sala isolada da prática real.",
+const T = {
+  pt: {
+    header: {
+      badge: "Sobre nós",
+      title: <>Nascida de uma <em>frustração partilhada.</em></>,
+      desc: "Nasceu de um problema que médicos e pacientes viviam todos os dias.",
+    },
+    problemBadge: "O problema",
+    problemTitle: <>A informação existia. <em>Só nunca estava junta.</em></>,
+    pains: [
+      ["01", "Análises perdidas em emails"],
+      ["02", "Exames em pastas diferentes"],
+      ["03", "Wearables que ninguém vê em consulta"],
+    ],
+    reset: "E cada consulta a começar do zero.",
+    solution: "Por isso construímos a Vivara: um lugar seguro onde o historial se constrói entre consultas, e não só durante cada uma.",
+    pillars: [
+      ["Médicos no desenho", "Cada ecrã validado com médicos em prática ativa."],
+      ["Pacientes no centro", "Para quem quer entender e acompanhar a sua própria saúde."],
+      ["Um só historial", "Partilhado só com quem o paciente escolher."],
+    ],
+    buildBadge: "Como construímos",
+    buildTitle: "Devagar, com quem vai usar.",
+    process: [
+      ["01", "Falámos com médicos e pacientes", "Ouvimos o que se perde entre consultas e o que gostariam de ter à mão."],
+      ["02", "Desenhámos com médicos em prática", "Cada funcionalidade validada por quem está na consulta todos os dias."],
+      ["03", "Vamos testar com pacientes antes de lançar", "Pessoas comuns, no dia a dia, e não só em laboratório de testes."],
+    ],
+    clearBadge: "Para ser claro",
+    clearTitle: "O que a Vivara não é.",
+    not: [
+      ["Não é um diagnóstico", "Indicadores como a idade biológica são estimativas de acompanhamento."],
+      ["Não substitui o seu médico", "A decisão clínica é sempre do médico."],
+      ["Não vende os seus dados", "Nunca."],
+    ],
+    moreTitle: "Quer saber mais?",
+    moreDesc: "Fale connosco. Respondemos em 1-2 dias úteis.",
+    moreCta: "Começar",
   },
-  {
-    title: "Utentes no centro",
-    desc: "Co-criada com pessoas que querem entender e acompanhar a sua própria saúde, não só ver números.",
+  en: {
+    header: {
+      badge: "About us",
+      title: <>Born from a <em>shared frustration.</em></>,
+      desc: "It started with a problem doctors and patients lived with every day.",
+    },
+    problemBadge: "The problem",
+    problemTitle: <>The information existed. <em>It was never in one place.</em></>,
+    pains: [
+      ["01", "Lab results lost in emails"],
+      ["02", "Exams scattered across folders"],
+      ["03", "Wearables nobody looks at during visits"],
+    ],
+    reset: "And every appointment starting from scratch.",
+    solution: "So we built Vivara: a safe place where the record is built between appointments, not just during each one.",
+    pillars: [
+      ["Doctors in the design", "Every screen validated with doctors in active practice."],
+      ["Patients at the centre", "For people who want to understand and follow their own health."],
+      ["One record", "Shared only with whoever the patient chooses."],
+    ],
+    buildBadge: "How we build",
+    buildTitle: "Slowly, with the people who will use it.",
+    process: [
+      ["01", "We talked to doctors and patients", "We listened to what gets lost between appointments and what they wish they had at hand."],
+      ["02", "We designed with practising doctors", "Every feature validated by people who are in the consulting room every day."],
+      ["03", "We will test with patients before launch", "Ordinary people, in daily life, not just in a testing lab."],
+    ],
+    clearBadge: "To be clear",
+    clearTitle: "What Vivara is not.",
+    not: [
+      ["Not a diagnosis", "Indicators such as biological age are tracking estimates."],
+      ["Not a replacement for your doctor", "The clinical decision always belongs to the doctor."],
+      ["We don't sell your data", "Ever."],
+    ],
+    moreTitle: "Want to know more?",
+    moreDesc: "Talk to us. We reply within 1-2 business days.",
+    moreCta: "Get started",
   },
-  {
-    title: "Tudo integrado",
-    desc: "Um único histórico, partilhado só entre o utente e a equipa que ele escolher — nunca fragmentado.",
-  },
-];
-
-const PROCESS = [
-  {
-    n: "01",
-    title: "Falámos com quem vive o problema",
-    desc: "Antes de desenhar um único ecrã, ouvimos médicos a explicar o que perdem entre consultas, e utentes a descrever o que gostariam de ter à mão.",
-  },
-  {
-    n: "02",
-    title: "Desenhámos com médicos reais",
-    desc: "Cada funcionalidade passou por clínicos em prática ativa, não só por designers a imaginar um fluxo ideal.",
-  },
-  {
-    n: "03",
-    title: "Testámos com utentes reais",
-    desc: "Antes de lançar, pessoas comuns usaram a app para o seu dia a dia — não só num laboratório de testes.",
-  },
-];
-
-const NOT = [
-  "Não é medicina de longevidade nem wellness.",
-  "Não substitui o seu médico nem faz diagnósticos.",
-  "Não vende os seus dados — nunca.",
-];
+};
 
 export default function Sobre() {
+  const t = useT();
+  const L = t(T);
   return (
     <>
-      <PageHeader
-        badge="Sobre nós"
-        title={<>Nascida de uma <em>frustração partilhada.</em></>}
-        desc="A Vivara Health não nasceu numa sala de reuniões. Nasceu de um problema que médicos e utentes viviam todos os dias."
-      />
+      <PhotoHeader name="sobre" fallback={windowPhoto} position="60% 45%" badge={L.header.badge} title={L.header.title} desc={L.header.desc} />
 
-      <section className="bg-brand-beige pb-16 md:pb-24">
-        <div className="mx-auto max-w-6xl px-6 grid md:grid-cols-2 gap-12 items-center">
+      <section className="bg-brand-beige py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-6">
           <Reveal>
-            <div className="rounded-3xl overflow-hidden aspect-[4/5]">
-              <img src={sobrePhoto} alt="" className="w-full h-full object-cover" />
-            </div>
+            <SectionBadge>{L.problemBadge}</SectionBadge>
+            <h2 className="mt-5 max-w-3xl font-serif text-4xl font-light tracking-tight md:text-6xl">{L.problemTitle}</h2>
           </Reveal>
-          <Reveal delay={0.15}>
-            <div className="space-y-5 text-lg text-brand-muted/85 leading-relaxed">
-              <p>
-                Análises perdidas em emails. Exames espalhados por pastas diferentes. Wearables
-                que ninguém olha em consulta. E cada visita a <Highlight>começar do zero</Highlight>,
-                como se a anterior nunca tivesse acontecido.
-              </p>
-              <p>
-                A informação existia. Só nunca estava junta — nem pertencia verdadeiramente a
-                quem mais precisava dela: o médico que decide, e o utente que{" "}
-                <Highlight>vive com a decisão</Highlight>.
-              </p>
-              <p>
-                Por isso construímos a Vivara: <Highlight>um lugar seguro</Highlight> onde o
-                historial clínico se constrói continuamente, entre consultas, e não só durante os
-                15 minutos que dura cada uma.
-              </p>
-              <p>
-                <Highlight className="font-normal" delay={0.1}>
-                  Hoje continuamos a construir com as mesmas duas pessoas em mente: o médico que
-                  precisa de contexto para decidir bem, e o utente que precisa de ser dono da sua
-                  própria história de saúde.
-                </Highlight>
-              </p>
-            </div>
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            {L.pains.map(([n, text], i) => (
+              <Reveal key={n} delay={i * 0.1}>
+                <div className="h-full rounded-3xl border border-black/10 bg-white p-7">
+                  <span className="font-serif text-4xl text-brand-olive/25">{n}</span>
+                  <p className="mt-3 font-serif text-2xl leading-snug">{text}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+          <Reveal delay={0.1}>
+            <p className="mt-8 font-serif text-2xl italic text-brand-muted md:text-3xl">{L.reset}</p>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-brand-muted/85">{L.solution}</p>
           </Reveal>
         </div>
       </section>
 
+      <section className="bg-brand-dark py-16 text-white md:py-24">
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 md:grid-cols-3">
+          {L.pillars.map(([tt, d], i) => (
+            <Reveal key={tt} delay={i * 0.08}>
+              <h3 className="font-serif text-2xl">{tt}</h3>
+              <p className="mt-2 leading-relaxed text-white/60">{d}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
       <section className="bg-white py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 md:grid-cols-2 md:gap-16">
           <Reveal>
-            <SectionBadge>O que nos move</SectionBadge>
-            <h2 className="font-serif font-light tracking-tight text-4xl md:text-5xl mt-5 max-w-2xl">
-              Três princípios, <em>desde o início.</em>
-            </h2>
+            <img src={teamPhoto} alt="" loading="lazy" className="aspect-[4/3] w-full rounded-3xl object-cover" style={{ objectPosition: "45% 35%" }} />
           </Reveal>
-          <div className="mt-12 grid md:grid-cols-3 gap-8">
-            {PILLARS.map((p, i) => (
-              <Reveal key={p.title} delay={i * 0.1}>
-                <h3 className="font-serif text-2xl mb-2">{p.title}</h3>
-                <p className="text-brand-muted/80 leading-relaxed">{p.desc}</p>
-              </Reveal>
-            ))}
+          <div>
+            <Reveal>
+              <SectionBadge>{L.buildBadge}</SectionBadge>
+              <h2 className="mt-5 font-serif text-4xl font-light tracking-tight md:text-5xl">{L.buildTitle}</h2>
+            </Reveal>
+            <ol className="mt-8 space-y-6">
+              {L.process.map(([n, title, desc], i) => (
+                <Reveal key={n} delay={i * 0.1}>
+                  <li className="flex gap-5">
+                    <span className="font-serif text-3xl text-brand-olive/30">{n}</span>
+                    <div>
+                      <h3 className="font-serif text-xl">{title}</h3>
+                      <p className="mt-1 text-brand-muted/75 leading-relaxed">{desc}</p>
+                    </div>
+                  </li>
+                </Reveal>
+              ))}
+            </ol>
           </div>
         </div>
       </section>
@@ -108,18 +155,15 @@ export default function Sobre() {
       <section className="bg-brand-beige py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6">
           <Reveal>
-            <SectionBadge>Como construímos</SectionBadge>
-            <h2 className="font-serif font-light tracking-tight text-4xl md:text-5xl mt-5 max-w-2xl">
-              Devagar, com quem vai usar.
-            </h2>
+            <SectionBadge>{L.clearBadge}</SectionBadge>
+            <h2 className="mt-5 font-serif text-4xl font-light tracking-tight md:text-5xl">{L.clearTitle}</h2>
           </Reveal>
-          <div className="mt-10 grid md:grid-cols-3 gap-8">
-            {PROCESS.map((p, i) => (
-              <Reveal key={p.n} delay={i * 0.1}>
-                <div className="rounded-3xl bg-white border border-black/10 p-8 h-full">
-                  <span className="text-sm text-brand-muted/50">{p.n}</span>
-                  <h3 className="font-serif text-xl mt-2 mb-3">{p.title}</h3>
-                  <p className="text-sm text-brand-muted/80 leading-relaxed">{p.desc}</p>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {L.not.map(([tt, d], i) => (
+              <Reveal key={tt} delay={i * 0.08}>
+                <div className="h-full rounded-3xl border border-black/10 bg-white p-7">
+                  <h3 className="font-serif text-xl">{tt}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-brand-muted/75">{d}</p>
                 </div>
               </Reveal>
             ))}
@@ -127,31 +171,13 @@ export default function Sobre() {
         </div>
       </section>
 
-      <section className="bg-white py-16 md:py-24">
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          <Reveal>
-            <SectionBadge>Para ser claro</SectionBadge>
-            <h2 className="font-serif font-light tracking-tight text-3xl md:text-4xl mt-5 mb-8">
-              O que a Vivara não é.
-            </h2>
-            <ul className="space-y-3 max-w-md mx-auto text-left">
-              {NOT.map((n) => (
-                <li key={n} className="text-brand-muted/80">{n}</li>
-              ))}
-            </ul>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="bg-brand-beige py-20 md:py-28 text-center">
+      <section className="bg-white py-20 text-center md:py-28">
         <div className="mx-auto max-w-2xl px-6">
           <Reveal>
-            <h2 className="font-serif font-light text-3xl md:text-5xl">Quer saber mais?</h2>
-            <p className="mt-4 text-brand-muted/80">
-              Fala connosco — respondemos em 1-2 dias úteis.
-            </p>
-            <Link to="/contacto">
-              <CTAButton className="mt-8">Pedir acesso</CTAButton>
+            <h2 className="font-serif text-3xl font-light md:text-5xl">{L.moreTitle}</h2>
+            <p className="mt-4 text-brand-muted/80">{L.moreDesc}</p>
+            <Link to="/comecar">
+              <CTAButton className="mt-8">{L.moreCta}</CTAButton>
             </Link>
           </Reveal>
         </div>

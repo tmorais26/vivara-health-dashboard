@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import ComoFunciona from "./pages/ComoFunciona";
@@ -8,6 +8,7 @@ import Funcionalidades from "./pages/Funcionalidades";
 import Precos from "./pages/Precos";
 import FaqPage from "./pages/FaqPage";
 import Contacto from "./pages/Contacto";
+import Comecar from "./pages/Comecar";
 import Sobre from "./pages/Sobre";
 import Legal from "./pages/Legal";
 
@@ -18,14 +19,19 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/como-funciona" element={<ComoFunciona />} />
         <Route path="/medicos" element={<Medicos />} />
+        <Route path="/clinicas" element={<Navigate to="/medicos?vista=clinica" replace />} />
+        <Route path="/membros" element={<Utentes />} />
+        <Route path="/pacientes" element={<Utentes />} />
         <Route path="/utentes" element={<Utentes />} />
         <Route path="/funcionalidades" element={<Funcionalidades />} />
         <Route path="/precos" element={<Precos />} />
         <Route path="/faq" element={<FaqPage />} />
+        <Route path="/comecar" element={<Comecar />} />
         <Route path="/contacto" element={<Contacto />} />
         <Route path="/sobre" element={<Sobre />} />
         <Route path="/privacidade" element={<Legal kind="privacidade" />} />
         <Route path="/termos" element={<Legal kind="termos" />} />
+        <Route path="/acordo-medicos" element={<Legal kind="acordo" />} />
         <Route path="*" element={<Home />} />
       </Route>
     </Routes>
