@@ -1,0 +1,9 @@
+Fotografias dos cabeçalhos das páginas. Guarde aqui o ficheiro com o nome da página
+(.jpg, .webp ou .png) e o site usa-o sozinho:
+
+  medicos.jpg    Para médicos
+  utentes.jpg    Para utentes
+  sobre.jpg      Sobre nós
+
+Formato 16:9 (ex. 2400x1350), assunto do lado direito, espaço limpo à esquerda.
+Sem ficheiro, a página usa a fotografia que já tem.

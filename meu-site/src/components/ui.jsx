@@ -94,19 +94,10 @@ export function Check({ className = "size-5 shrink-0 text-brand-green-dark", ...
   );
 }
 
-// Editorial highlight: fades from muted to amber as it enters the viewport
-export function Highlight({ children, delay = 0.3, className = "font-medium" }) {
-  return (
-    <motion.span
-      className={className}
-      initial={{ color: "var(--color-brand-muted)", opacity: 0.5 }}
-      whileInView={{ color: "var(--color-accent-amber)", opacity: 1 }}
-      viewport={{ once: true, margin: "-10% 0px" }}
-      transition={{ duration: 0.6, delay }}
-    >
-      {children}
-    </motion.span>
-  );
+// Editorial highlight: emphasis by type weight only, inheriting the
+// surrounding text colour (no colour of its own).
+export function Highlight({ children, className = "font-medium" }) {
+  return <span className={className}>{children}</span>;
 }
 
 export function TrustBadge({ top, bottom }) {
