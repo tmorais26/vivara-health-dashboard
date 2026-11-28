@@ -14,7 +14,7 @@ import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import {
-  DOC_VERSIONS, EXPORT_WINDOW_DAYS, RECONSENT_CHECKBOX, SIGNUP_CHECKBOXES, wearablePrompt,
+  DOC_VERSIONS, EXPORT_WINDOW_DAYS, RECONSENT_CHECKBOX, SIGNUP_CHECKBOXES, NUTRITION_AI_CONSENT, wearablePrompt,
   type ConsentLang, type SignupCheckboxId,
 } from "./consent.config";
 import { validateSignup, type SignupResult } from "./consent.validate";
@@ -119,6 +119,8 @@ export interface ConsentStatus {
   health: boolean;
   marketing: boolean;
   wearables: Record<string, boolean>;
+  /** Autorizou a orientação nutricional com IA. */
+  aiNutrition: boolean;
   closure: { requestedAt: string; exportUntil: string; reason: string } | null;
 }
 
@@ -143,6 +145,7 @@ export const getConsentStatus = createServerFn({ method: "GET" })
       health: granted("health_data"),
       marketing: granted("marketing"),
       wearables,
+      aiNutrition: granted("ai_nutricao"),
       closure: c ? { requestedAt: c.requested_at, exportUntil: c.export_until, reason: c.reason } : null,
     };
   });
@@ -152,7 +155,8 @@ export const getConsentStatus = createServerFn({ method: "GET" })
 type RecordInput =
   | { kind: "reconsent"; lang: ConsentLang }
   | { kind: "marketing"; granted: boolean; lang: ConsentLang }
-  | { kind: "wearable"; id: string; name: string; granted: boolean; lang: ConsentLang };
+  | { kind: "wearable"; id: string; name: string; granted: boolean; lang: ConsentLang }
+  | { kind: "ai_nutricao"; granted: boolean; lang: ConsentLang };
 
 const WEARABLE_ID_RE = /^[a-z0-9_-]{2,32}$/;
 
@@ -161,6 +165,7 @@ function validateRecord(raw: unknown): RecordInput {
   const lang = asLang(r.lang);
   if (r.kind === "reconsent") return { kind: "reconsent", lang };
   if (r.kind === "marketing") return { kind: "marketing", granted: r.granted === true, lang };
+  if (r.kind === "ai_nutricao") return { kind: "ai_nutricao", granted: r.granted === true, lang };
   if (r.kind === "wearable" && typeof r.id === "string" && WEARABLE_ID_RE.test(r.id) && typeof r.name === "string" && r.name.length <= 60) {
     return { kind: "wearable", id: r.id, name: r.name, granted: r.granted === true, lang };
   }
@@ -178,6 +183,12 @@ export const recordConsent = createServerFn({ method: "POST" })
         { ...base, action: "granted", consent_type: "terms", checkbox_id: RECONSENT_CHECKBOX.id, doc_version: DOC_VERSIONS.terms, text_hash: h },
         { ...base, action: "granted", consent_type: "privacy", checkbox_id: RECONSENT_CHECKBOX.id, doc_version: DOC_VERSIONS.privacy, text_hash: h },
       ]);
+    } else if (data.kind === "ai_nutricao") {
+      await insertEvents([{
+        ...base, action: data.granted ? "granted" : "withdrawn", consent_type: "ai_nutricao",
+        checkbox_id: data.granted ? NUTRITION_AI_CONSENT.id : "settings-nutri-ai-withdraw",
+        text_hash: data.granted ? await sha256(NUTRITION_AI_CONSENT.text[data.lang]) : null,
+      }]);
     } else if (data.kind === "marketing") {
       await insertEvents([{
         ...base, action: data.granted ? "granted" : "withdrawn", consent_type: "marketing", checkbox_id: "settings-marketing",

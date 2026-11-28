@@ -11,6 +11,6 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // não devem sair da UE. Só se aplica ao preset "vercel"; os outros ignoram.
 // O tipo do defineConfig só declara algumas opções do nitro; as restantes
 // (como `vercel`) passam tal e qual para o nitro.
-const nitro = { vercel: { functions: { regions: ["fra1"] } } } as unknown as { preset?: string };
+const nitro = { vercel: { functions: { regions: ["fra1"], maxDuration: 60 } } } as unknown as { preset?: string };
 
 export default defineConfig({ nitro });

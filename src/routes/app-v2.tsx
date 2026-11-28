@@ -20,13 +20,16 @@ import {
 } from "@/lib/consent.functions";
 import { validateSignup, type SignupField } from "@/lib/consent.validate";
 import {
-  LEGAL_URLS, LEGAL_LINK_PARTS, SIGNUP_CHECKBOXES, RECONSENT_CHECKBOX, EXPORT_WINDOW_DAYS, wearablePrompt,
+  LEGAL_URLS, LEGAL_LINK_PARTS, SIGNUP_CHECKBOXES, RECONSENT_CHECKBOX, EXPORT_WINDOW_DAYS, NUTRITION_AI_CONSENT, wearablePrompt,
   type SignupCheckboxId,
 } from "@/lib/consent.config";
 import { getMyFreeMonths } from "@/lib/referral.functions";
 import {
   normalizeCode, normalizeInvite, referralParams, doctorSignupLink, asReferralResult, type ReferralResult, type FreeMonth,
 } from "@/lib/referral";
+import { gerarOrientacaoNutricional, getOrientacoesNutricionais, pedirValidacaoNutricional, type OrientacaoView, type OrientacoesState } from "@/lib/nutrition.functions";
+import { gate, selectAiInput, inputHash, stableStringify, type GateReason, type MarkerReading, type NutritionProfile } from "@/lib/nutrition.rules";
+import { DEMO_GUIDANCE } from "@/lib/nutrition.demo";
 import "../app-v2.css";
 
 export const Route = createFileRoute("/app-v2")({
@@ -43,7 +46,7 @@ export const Route = createFileRoute("/app-v2")({
 type RouteId =
   | "home" | "data" | "upload" | "messages" | "alerts"
   | "diary" | "consultas" | "profile" | "marker" | "summary" | "schedule" | "devices" | "assistente"
-  | "recomendar" | "subscricao" | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar"
+  | "recomendar" | "subscricao" | "orientacao" | "pesquisa" | "notificacoes" | "privacidade" | "equipa" | "laboratorios" | "farmacia" | "exportar"
   | "sintomas" | "nutricao" | "registos" | "documento" | "guardadas" | "calendario" | "condicoes";
 
 type NavRoute =
@@ -1289,6 +1292,14 @@ function DadosScreen() {
             <div className="rv-list-text">
               <span className="rv-list-name">{L("Registos","Records")}</span>
               <span className="rv-list-sub">{L("Sintomas, consultas, medicação e análises","Symptoms, appointments, medication and labs")}</span>
+            </div>
+            <span className="rv-chev">{Icon.chev}</span>
+          </a>
+          <a className="rv-list-row" style={{cursor: "pointer"}} onClick={() => go("orientacao")}>
+            <div className="rv-list-icon">{Icon.sparkle}</div>
+            <div className="rv-list-text">
+              <span className="rv-list-name">{L("Ver orientação nutricional","See dietary guidance")}</span>
+              <span className="rv-list-sub">{L("Gerado por AI a partir das suas análises","AI-generated from your lab results")}</span>
             </div>
             <span className="rv-chev">{Icon.chev}</span>
           </a>
@@ -4218,6 +4229,14 @@ function NutricaoScreen() {
   const { L } = useLang();
   return (
     <SubScreen title={L("Nutrição & Suplementos", "Nutrition & Supplements")} onBack={() => go("profile")}>
+      <button type="button" className="rv-nutri-cta" onClick={() => go("orientacao")}>
+        <span className="rv-nutri-cta-icon" aria-hidden="true">{Icon.sparkle}</span>
+        <span className="rv-nutri-cta-text">
+          <strong>{L("Ver orientação nutricional", "See dietary guidance")}</strong>
+          <span>{L("Alimentos a privilegiar e a reduzir, ligados às suas análises. Gerado por AI, com validação opcional por um profissional.", "Foods to eat more of and to cut down on, linked to your results. AI-generated, with optional validation by a professional.")}</span>
+        </span>
+        <span className="rv-chev">{Icon.chev}</span>
+      </button>
       <div className="rv-consent">
         <div className="rv-consent-title">{L("Contexto e histórico", "Context and history")}</div>
         <p className="rv-consent-text">
@@ -4993,9 +5012,19 @@ function PrivacidadeScreen() {
   const record = useRecordConsent();
   const doClose = useServerFn(closeAccount);
   const [marketing, setMarketing] = useState(false);
+  const [aiNutri, setAiNutri] = useState(false);
   const [confirm, setConfirm] = useState<null | "health" | "delete">(null);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { if (status) setMarketing(status.marketing); }, [status]);
+  useEffect(() => { if (status) { setMarketing(status.marketing); setAiNutri(status.aiNutrition); } }, [status]);
+
+  const toggleAiNutri = async () => {
+    if (mode !== "real") { demoNote(); return; }
+    const next = !aiNutri;
+    setAiNutri(next);
+    const ok = await record({ kind: "ai_nutricao", granted: next });
+    if (!ok) { setAiNutri(!next); showToast(L("Não foi possível guardar", "Couldn't save")); return; }
+    showToast(next ? L("Orientação nutricional com IA autorizada", "AI dietary guidance authorised") : L("Autorização da IA retirada", "AI authorisation withdrawn"));
+  };
 
   const demoNote = () => showToast(L("Na conta de demonstração isto não é gravado", "Not saved on the demo account"));
 
@@ -5041,6 +5070,13 @@ function PrivacidadeScreen() {
             <div className="rv-toggle-sub">{L("Opcional. Pode mudar quando quiser.","Optional. You can change this at any time.")}</div>
           </div>
           <div className="rv-toggle-switch" data-on={marketing}><span/></div>
+        </button>
+        <button type="button" className="rv-toggle-row" role="switch" aria-checked={aiNutri} onClick={toggleAiNutri}>
+          <div className="rv-toggle-meta">
+            <div className="rv-toggle-label">{L("Orientação nutricional com IA","AI dietary guidance")}</div>
+            <div className="rv-toggle-sub">{L("Enviar alguns valores das análises a um serviço de IA (Anthropic). Pode desligar quando quiser.","Send some lab values to an AI service (Anthropic). You can switch it off at any time.")}</div>
+          </div>
+          <div className="rv-toggle-switch" data-on={aiNutri}><span/></div>
         </button>
       </div>
       <div className="rv-src-note" style={{margin: "10px 20px 0"}}>
@@ -5254,6 +5290,7 @@ function renderScreen(route: NavRoute): ReactNode {
     case "condicoes":    return <CondicoesScreen />;
     case "recomendar":   return <RecomendarMedicoScreen />;
     case "subscricao":   return <SubscricaoScreen />;
+    case "orientacao":   return <OrientacaoNutricionalScreen />;
     default:          return <HomeScreenV2 />;
   }
 }
@@ -5292,7 +5329,7 @@ function useRecordConsent() {
   const { mode, refresh } = useAccount();
   const { lang } = useLang();
   const record = useServerFn(recordConsent);
-  return useCallback(async (input: { kind: "reconsent" } | { kind: "marketing"; granted: boolean } | { kind: "wearable"; id: string; name: string; granted: boolean }) => {
+  return useCallback(async (input: { kind: "reconsent" } | { kind: "marketing"; granted: boolean } | { kind: "ai_nutricao"; granted: boolean } | { kind: "wearable"; id: string; name: string; granted: boolean }) => {
     if (mode !== "real") return true;
     try {
       await record({ data: { ...input, lang } });
@@ -5898,6 +5935,381 @@ async function applyPendingReferral(): Promise<ReferralResult | null> {
   if (error) return null;
   await supabase.auth.updateUser({ data: { codigo_pendente: null, convite_pendente: null } }).catch(() => {});
   return asReferralResult(res);
+}
+
+// ─── Orientação nutricional com IA ───────────────────
+// Orientação alimentar geral gerada por IA a partir dos marcadores, com
+// validação opcional por um profissional ligado ao utente. A IA não faz
+// diagnósticos, não fala de suplementos, doses nem medicação; marcadores em
+// zona crítica ou condições sensíveis não geram orientação (nutrition.rules.ts).
+
+// Etiquetas exigidas pela Vivara: não alterar sem aprovação.
+const NUTRI_LABEL_AI = { pt: "Gerado por AI · não validado por um profissional", en: "AI-generated · not validated by a professional" };
+const nutriLabelValidated = (name: string, date: string, lang: Lang) =>
+  lang === "en" ? `Validated by ${name}, ${date}` : `Validado por ${name}, ${date}`;
+
+// [Revisão jurídica: confirmar com o advogado antes de publicar.]
+const NUTRI_DISCLAIMER = {
+  pt: "Isto não é um diagnóstico nem uma prescrição. Não altere medicação nem suplementos sem falar com o seu médico.",
+  en: "This is not a diagnosis or a prescription. Do not change medication or supplements without talking to your doctor.",
+};
+
+const NUTRI_DEMO_KEY = "rv-nutri-demo-v1";
+
+/** Os marcadores e o perfil que a app tem neste momento (dados de demonstração + análises carregadas). */
+function useNutritionInputs() {
+  const uploads = useUploads();
+  const conds = useConditions();
+  const [age] = useChronoAge();
+  const markers = mergeUploads(BIOMARKERS, uploads);
+  const readings: MarkerReading[] = [];
+  for (const m of markers) {
+    if (m.points && m.points.length) {
+      for (const p of m.points) readings.push({ name: m.name, value: p.value, unit: p.unit, date: p.iso.slice(0, 10) });
+    } else if (m.state !== "nodata") {
+      const v = Number(m.value);
+      if (Number.isFinite(v)) readings.push({ name: m.name, value: v, unit: m.unit, ref: m.target, date: "2026-04-22" });
+    }
+  }
+  const conditions = conds.list.filter((c) => c.status === "active").map((c) => c.name);
+  // Persona de demonstração: mulher, IMC 25,2, cintura 82 cm.
+  const profile: NutritionProfile = { age, sex: "F", bmi: 25.2, waistCm: 82 };
+  return { readings, conditions, profile };
+}
+
+function NutriLabel({ v }: { v: OrientacaoView }) {
+  const { lang } = useLang();
+  if (v.estado === "validado" && v.validadoPorNome) {
+    return <span className="rv-nutri-label" data-state="validado">✓ {nutriLabelValidated(v.validadoPorNome, fmtDay((v.validadoEm ?? v.geradoEm).slice(0, 10), lang, true), lang)}</span>;
+  }
+  return <span className="rv-nutri-label" data-state="ia">{NUTRI_LABEL_AI[lang]}</span>;
+}
+
+function reasonText(r: GateReason, L: (pt: string, en: string) => string, lang: Lang): string {
+  switch (r.kind) {
+    case "critical": return L(`O valor de ${r.marker} (${fmtNum(r.value, lang)} ${r.unit}) deve ser visto por um profissional.`, `Your ${r.marker} value (${r.value} ${r.unit}) should be looked at by a professional.`);
+    case "condition": return L(`Registou «${r.condition}», que precisa de acompanhamento profissional na alimentação.`, `You recorded “${r.condition}”, which needs professional follow-up for diet.`);
+    case "pregnancy": return L("Gravidez ou amamentação pedem orientação de um profissional.", "Pregnancy or breastfeeding call for guidance from a professional.");
+    case "minor": return L("A orientação automática é só para adultos.", "Automatic guidance is for adults only.");
+    case "no-markers": return L("Ainda não há análises com marcadores ligados à alimentação.", "There are no lab results with diet-related markers yet.");
+  }
+}
+
+function NutriGuidance({ v, onShowOriginal }: { v: OrientacaoView; onShowOriginal?: () => void }) {
+  const { L, lang } = useLang();
+  const markerOf = (name: string) => v.marcadores.find((m) => m.name === name);
+  if (!v.conteudo) return null;
+  const groups: { tipo: "privilegiar" | "reduzir"; title: string }[] = [
+    { tipo: "privilegiar", title: L("A privilegiar", "Eat more of") },
+    { tipo: "reduzir", title: L("A reduzir", "Cut down on") },
+  ];
+  return (
+    <>
+      {groups.map((g) => {
+        const items = v.conteudo!.itens.filter((i) => i.tipo === g.tipo);
+        if (!items.length) return null;
+        return (
+          <section key={g.tipo} className="rv-nutri-group" aria-labelledby={`nutri-${g.tipo}`}>
+            <h3 id={`nutri-${g.tipo}`} className="rv-nutri-group-title" data-tipo={g.tipo}>{g.title}</h3>
+            <ul className="rv-nutri-list">
+              {items.map((it, i) => {
+                const m = markerOf(it.marcador);
+                return (
+                  <li key={i} className="rv-nutri-item">
+                    <div className="rv-nutri-food">{it.alimento}</div>
+                    <div className="rv-nutri-why">{it.porque}</div>
+                    <div className="rv-nutri-marker">
+                      {L("Ligado a", "Linked to")} <strong>{it.marcador}</strong>
+                      {m && <> · {fmtNum(m.value, lang)} {m.unit} · {fmtDay(m.date, lang, true)}</>}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
+      {v.conteudo.nota && <p className="rv-nutri-note">{v.conteudo.nota}</p>}
+      {v.observacao && (
+        <div className="rv-info-note" style={{margin: "0 20px 12px"}}>
+          <strong>{L("Nota do profissional", "Note from the professional")}</strong>
+          <span>{v.observacao}</span>
+        </div>
+      )}
+      {v.estado === "validado" && v.editado && onShowOriginal && (
+        <button type="button" className="rv-link-btn rv-nutri-orig" onClick={onShowOriginal}>{L("Ver o texto original da IA", "See the original AI text")}</button>
+      )}
+    </>
+  );
+}
+
+function OrientacaoNutricionalScreen() {
+  const { go, showToast } = useNav();
+  const { L, lang } = useLang();
+  const { mode, status: account, refresh } = useAccount();
+  const record = useRecordConsent();
+  const inputs = useNutritionInputs();
+  const fetchState = useServerFn(getOrientacoesNutricionais);
+  const generate = useServerFn(gerarOrientacaoNutricional);
+  const askValidation = useServerFn(pedirValidacaoNutricional);
+
+  const [state, setState] = useState<OrientacoesState | null>(null);
+  const [loadErr, setLoadErr] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [pregnant, setPregnant] = useState<"sim" | "nao" | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [genErr, setGenErr] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [showOriginal, setShowOriginal] = useState(false);
+  const [currentHash, setCurrentHash] = useState<string | null>(null);
+  const [noProfessional, setNoProfessional] = useState(false);
+
+  // Hash da entrada atual: se for diferente da última versão, há análises novas.
+  const aiInput = selectAiInput(inputs.readings, inputs.profile, lang);
+  const aiInputKey = stableStringify(aiInput);
+  useEffect(() => { inputHash(aiInput).then(setCurrentHash).catch(() => {}); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [aiInputKey]);
+
+  // ── carregar ──
+  useEffect(() => {
+    let alive = true;
+    if (mode !== "real") {
+      let saved: OrientacoesState | null = null;
+      try { saved = JSON.parse(localStorage.getItem(NUTRI_DEMO_KEY) ?? "null"); } catch { /* privado */ }
+      setState(saved ?? { consentimento: false, temProfissional: true, versoes: [] });
+      return;
+    }
+    fetchState().then((s) => { if (alive) setState(s); }).catch(() => { if (alive) setLoadErr(true); });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
+  const saveDemo = (s: OrientacoesState) => {
+    setState(s);
+    try { localStorage.setItem(NUTRI_DEMO_KEY, JSON.stringify(s)); } catch { /* privado */ }
+  };
+
+  const consented = mode === "real" ? !!(state?.consentimento || account?.aiNutrition) : !!state?.consentimento;
+
+  const accept = async () => {
+    if (!consentChecked) return;
+    setBusy(true);
+    const ok = await record({ kind: "ai_nutricao", granted: true });
+    setBusy(false);
+    if (!ok) { showToast(L("Não foi possível guardar", "Couldn't save")); return; }
+    if (mode !== "real") saveDemo({ ...(state ?? { temProfissional: true, versoes: [] }), consentimento: true });
+    else { setState((s) => (s ? { ...s, consentimento: true } : s)); void refresh(); }
+  };
+
+  const run = async () => {
+    if (pregnant == null) return;
+    setBusy(true); setGenErr(null);
+    try {
+      if (mode !== "real") {
+        // Demonstração: mesma barreira de segurança, texto fixo em vez da IA.
+        const reasons = gate({ markers: inputs.readings, conditions: inputs.conditions, pregnantOrBreastfeeding: pregnant === "sim", age: inputs.profile.age });
+        const prev = state?.versoes ?? [];
+        const v: OrientacaoView = {
+          id: `demo-${prev.length + 1}`, versao: prev.length + 1,
+          estado: reasons.length ? "bloqueado" : "gerado",
+          conteudo: reasons.length ? null : DEMO_GUIDANCE[lang], conteudoIa: null, motivos: reasons,
+          marcadores: aiInput.markers, entradaHash: currentHash ?? "", geradoEm: new Date().toISOString(),
+          validadoPorNome: null, validadoEm: null, editado: false, observacao: null, pedidoPendenteEm: null,
+        };
+        saveDemo({ ...(state as OrientacoesState), versoes: [v, ...prev] });
+        setSelected(null);
+        return;
+      }
+      const r = await generate({ data: { markers: inputs.readings, conditions: inputs.conditions, pregnantOrBreastfeeding: pregnant === "sim", profile: inputs.profile, lang } });
+      if (!r.ok) {
+        setGenErr(r.error === "not_configured"
+          ? L("A orientação com IA ainda não está ativa neste servidor.", "AI guidance isn't active on this server yet.")
+          : r.error === "sem_consentimento"
+            ? L("Falta a sua autorização para usar a IA.", "Your authorisation to use AI is missing.")
+            : r.error === "servidor"
+              ? L("Não foi possível gerar agora. Tente de novo dentro de momentos.", "Couldn't generate right now. Please try again shortly.")
+              : L("Não foi possível gerar uma orientação segura com estes dados. Pode pedir a um profissional.", "We couldn't generate safe guidance from this data. You can ask a professional."));
+        return;
+      }
+      setState((s) => s ? { ...s, versoes: r.reused ? s.versoes : [r.orientacao, ...s.versoes] } : s);
+      setSelected(null);
+      if (r.reused) showToast(L("Sem análises novas: mantém-se a orientação atual", "No new results: current guidance kept"));
+    } catch {
+      setGenErr(L("Sem ligação ao servidor. Tente de novo.", "No connection to the server. Please try again."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const requestValidation = async (v: OrientacaoView) => {
+    if (mode !== "real") {
+      const now = new Date().toISOString();
+      saveDemo({ ...(state as OrientacoesState), versoes: (state?.versoes ?? []).map((x) => x.id === v.id ? { ...x, estado: x.estado === "gerado" ? "em_validacao" : x.estado, pedidoPendenteEm: now } : x) });
+      showToast(L("Validação pedida (demonstração)", "Validation requested (demo)"));
+      return;
+    }
+    setBusy(true);
+    try {
+      const { result } = await askValidation({ data: { id: v.id } });
+      if (result === "sem_profissional") { setNoProfessional(true); return; }
+      if (result === "ok" || result === "ja_pedido") {
+        const now = new Date().toISOString();
+        setState((s) => s ? { ...s, versoes: s.versoes.map((x) => x.id === v.id ? { ...x, estado: x.estado === "gerado" ? "em_validacao" : x.estado, pedidoPendenteEm: x.pedidoPendenteEm ?? now } : x) } : s);
+        showToast(L("Validação pedida", "Validation requested"));
+      } else {
+        showToast(L("Não foi possível pedir a validação", "Couldn't request validation"));
+      }
+    } catch {
+      showToast(L("Sem ligação ao servidor", "No connection to the server"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const versions = state?.versoes ?? [];
+  const latest = versions[0] ?? null;
+  const shown = (selected ? versions.find((v) => v.id === selected) : latest) ?? null;
+  const latestHash = latest?.entradaHash.replace(/^bloq:/, "") ?? null;
+  const hasNewData = !!latest && !!currentHash && latestHash !== currentHash;
+  const hasMarkers = aiInput.markers.length > 0;
+
+  const pregnancyQuestion = (
+    <fieldset className="rv-field rv-field-set">
+      <legend className="rv-field-label">{L("Está grávida ou a amamentar?", "Are you pregnant or breastfeeding?")}</legend>
+      <label className="rv-radio"><input type="radio" name="nutri-preg" checked={pregnant === "nao"} onChange={() => setPregnant("nao")}/> {L("Não", "No")}</label>
+      <label className="rv-radio"><input type="radio" name="nutri-preg" checked={pregnant === "sim"} onChange={() => setPregnant("sim")}/> {L("Sim", "Yes")}</label>
+    </fieldset>
+  );
+
+  return (
+    <SubScreen title={L("Orientação nutricional", "Dietary guidance")} onBack={() => go("nutricao")}>
+      {!state && !loadErr && <div className="rv-ref-state" role="status"><div className="rv-modal-spinner" aria-hidden="true"/><span>{L("A carregar…", "Loading…")}</span></div>}
+      {loadErr && <div className="rv-ref-state" role="alert">{L("Não foi possível carregar a sua orientação.", "We couldn't load your guidance.")}</div>}
+
+      {state && !consented && (
+        <div className="rv-nutri-consent">
+          <h2 className="rv-reconsent-title" style={{marginTop: 4}}>{L("Orientação nutricional com IA", "AI dietary guidance")}</h2>
+          <ul className="rv-nutri-bullets">
+            <li>{L("Uma inteligência artificial sugere alimentos a privilegiar e a reduzir, ligados aos seus marcadores, em linguagem simples.", "An artificial intelligence suggests foods to eat more of and to cut down on, linked to your markers, in plain language.")}</li>
+            <li>{L("Não faz diagnósticos, não fala de suplementos nem doses, e não sugere mudar medicação.", "It doesn't diagnose, doesn't talk about supplements or doses, and doesn't suggest changing medication.")}</li>
+            <li>{L("Se algum valor estiver numa zona que precisa de atenção, ou se tiver uma condição sensível, não há orientação automática: indicamos-lhe falar com um profissional.", "If a value is in a range that needs attention, or you have a sensitive condition, there's no automatic guidance: we'll point you to a professional.")}</li>
+            <li>{L("O texto aparece sempre marcado como gerado por IA. Pode pedir a um profissional ligado a si que o reveja e valide.", "The text is always marked as AI-generated. You can ask a professional linked to you to review and validate it.")}</li>
+          </ul>
+          <div style={{margin: "0 20px"}}>
+            <ConsentCheck id={NUTRITION_AI_CONSENT.id} checked={consentChecked} onChange={setConsentChecked}>
+              {NUTRITION_AI_CONSENT.text[lang]}
+            </ConsentCheck>
+          </div>
+          <div className="rv-stack">
+            <button type="button" className="rv-cta-primary" disabled={!consentChecked || busy} onClick={accept}>{L("Continuar", "Continue")}</button>
+          </div>
+        </div>
+      )}
+
+      {state && consented && (
+        <>
+          {!latest && (
+            <div className="rv-nutri-start">
+              <p className="rv-ref-rule" style={{margin: "4px 20px 14px"}}>
+                {hasMarkers
+                  ? L("Vamos usar os marcadores das suas análises ligados à alimentação.", "We'll use the diet-related markers from your lab results.")
+                  : L("Ainda não há análises com marcadores ligados à alimentação. Carregue uma análise primeiro.", "There are no lab results with diet-related markers yet. Upload a lab result first.")}
+              </p>
+              {hasMarkers && pregnancyQuestion}
+              {hasMarkers && (
+                <div className="rv-stack">
+                  <button type="button" className="rv-cta-primary" disabled={pregnant == null || busy} onClick={run}>
+                    {busy ? L("A preparar…", "Preparing…") : L("Ver orientação nutricional", "See dietary guidance")}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {genErr && <div className="rv-login-error" role="alert" style={{margin: "0 20px 12px"}}>{genErr}</div>}
+
+          {shown && (
+            <article className="rv-nutri-card" aria-live="polite">
+              <div className="rv-nutri-head">
+                <NutriLabel v={shown}/>
+                <span className="rv-nutri-meta">{L("Versão", "Version")} {shown.versao} · {fmtDay(shown.geradoEm.slice(0, 10), lang, true)}</span>
+              </div>
+              {shown.pedidoPendenteEm && shown.estado !== "validado" && (
+                <div className="rv-nutri-pending">{L(`Validação pedida a ${fmtDay(shown.pedidoPendenteEm.slice(0, 10), "pt", true)}`, `Validation requested on ${fmtDay(shown.pedidoPendenteEm.slice(0, 10), "en", true)}`)}</div>
+              )}
+
+              {shown.estado === "bloqueado" && !shown.conteudo ? (
+                <div className="rv-nutri-blocked">
+                  <strong>{L("Não geramos orientação automática para si", "We didn't generate automatic guidance for you")}</strong>
+                  <ul>{shown.motivos.map((r, i) => <li key={i}>{reasonText(r, L, lang)}</li>)}</ul>
+                  <span>{L("Fale com o seu médico ou nutricionista. Pode pedir-lhe que escreva e valide uma orientação aqui.", "Talk to your doctor or dietitian. You can ask them to write and validate guidance here.")}</span>
+                </div>
+              ) : showOriginal && shown.conteudoIa ? (
+                <>
+                  <div className="rv-nutri-pending">{L("Texto original gerado pela IA, antes da revisão:", "Original AI text, before review:")}</div>
+                  <NutriGuidance v={{ ...shown, conteudo: shown.conteudoIa, observacao: null }}/>
+                  <button type="button" className="rv-link-btn rv-nutri-orig" onClick={() => setShowOriginal(false)}>{L("Ver a versão validada", "See the validated version")}</button>
+                </>
+              ) : (
+                <NutriGuidance v={shown} onShowOriginal={shown.conteudoIa ? () => setShowOriginal(true) : undefined}/>
+              )}
+
+              <p className="rv-nutri-disclaimer">{NUTRI_DISCLAIMER[lang]}</p>
+
+              {shown.estado !== "validado" && !shown.pedidoPendenteEm && (
+                <div className="rv-stack">
+                  <button type="button" className="rv-cta-ghost" disabled={busy} onClick={() => requestValidation(shown)}>{L("Pedir validação", "Request validation")}</button>
+                </div>
+              )}
+            </article>
+          )}
+
+          {latest && !selected && (
+            <div className="rv-nutri-update">
+              {hasNewData && <p className="rv-ref-rule" style={{margin: "0 0 10px"}}>{L("Há análises novas desde esta versão.", "There are new results since this version.")}</p>}
+              {hasNewData && pregnancyQuestion}
+              {hasNewData && (
+                <div className="rv-stack" style={{margin: "0"}}>
+                  <button type="button" className="rv-cta-primary" disabled={pregnant == null || busy} onClick={run}>
+                    {busy ? L("A preparar…", "Preparing…") : L("Atualizar com as análises novas", "Update with the new results")}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {versions.length > 1 && (
+            <>
+              <div className="rv-sub-section-head">{L("Versões anteriores", "Previous versions")}</div>
+              <ul className="rv-ref-list">
+                {versions.map((v) => (
+                  <li key={v.id}>
+                    <button type="button" className="rv-ref-row rv-nutri-ver" aria-current={(shown?.id === v.id) || undefined}
+                      onClick={() => { setSelected(v.id === latest?.id ? null : v.id); setShowOriginal(false); }}>
+                      <span>{L("Versão", "Version")} {v.versao} · {fmtDay(v.geradoEm.slice(0, 10), lang, true)}</span>
+                      <span className="rv-ref-when">
+                        {v.estado === "validado" ? L("Validada", "Validated") : v.estado === "bloqueado" ? L("Sem orientação automática", "No automatic guidance") : v.estado === "em_validacao" ? L("Validação pedida", "Validation requested") : L("Gerada por AI", "AI-generated")}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {mode !== "real" && <p className="rv-field-hint" style={{margin: "12px 20px 0"}}>{L("Conta de demonstração: o texto é fixo e não é enviado nada a nenhum serviço.", "Demo account: the text is fixed and nothing is sent to any service.")}</p>}
+        </>
+      )}
+
+      {noProfessional && (
+        <ConfirmDialog title={L("Ainda não tem um profissional ligado", "You don't have a linked professional yet")}
+          confirmLabel={L("Recomendar o meu médico", "Recommend my doctor")}
+          onCancel={() => setNoProfessional(false)} onConfirm={() => { setNoProfessional(false); go("recomendar"); }}>
+          {L("Para validar, o seu médico ou nutricionista tem de estar na Vivara e ligado a si (por convite ou código). Pode partilhar o seu código com ele.",
+             "To validate, your doctor or dietitian needs to be on Vivara and linked to you (by invitation or code). You can share your code with them.")}
+        </ConfirmDialog>
+      )}
+    </SubScreen>
+  );
 }
 
 // ─── Login ───────────────────────────────────────────

@@ -22,6 +22,9 @@ const { searchConditions, CONDITION_LIST } = await bundle("src/lib/conditions.ts
 const { monthGrid, dayKey, shiftMonth } = await bundle("src/lib/calendar.ts", "calendar.mjs");
 const { validateSignup } = await bundle("src/lib/consent.validate.ts", "consent-validate.mjs");
 const { normalizeCode, isCodeFormat, referralParams, doctorSignupLink, asReferralResult } = await bundle("src/lib/referral.ts", "referral.mjs");
+const nutri = await bundle("src/lib/nutrition.rules.ts", "nutrition.mjs");
+const { DEMO_GUIDANCE } = await bundle("src/lib/nutrition.demo.ts", "nutrition-demo.mjs");
+const { validateGenInput } = await bundle("src/lib/nutrition.input.ts", "nutrition-input.mjs");
 const { SIGNUP_CHECKBOXES, DOC_VERSIONS } = await bundle("src/lib/consent.config.ts", "consent-config.mjs");
 
 let passed = 0;
@@ -281,6 +284,76 @@ test("só os resultados conhecidos das funções do portal são aceites", () => 
   for (const r of ["ok", "codigo_invalido", "convite_invalido", "proprio_codigo", "nao_aplicavel", "ja_usado", "fora_do_registo"]) assert.equal(asReferralResult(r), r);
   assert.equal(asReferralResult("outra coisa"), null);
   assert.equal(asReferralResult(null), null);
+});
+
+// ── Orientação nutricional: regras de segurança ──
+const R = (name, value, unit, date = "2026-04-22") => ({ name, value, unit, date });
+const okMarkers = [R("LDL-C", 118, "mg/dL"), R("HbA1c", 5.7, "%"), R("Vitamina D", 48, "ng/mL"), R("TFG estimada", 92, "mL/min")];
+const baseGate = { markers: okMarkers, conditions: [], pregnantOrBreastfeeding: false, age: 47 };
+test("barreira: dados sem nada crítico deixam gerar", () => assert.deepEqual(nutri.gate(baseGate), []));
+test("barreira: marcador em zona crítica bloqueia (HbA1c 6,8 %, TFG 45)", () => {
+  const r = nutri.gate({ ...baseGate, markers: [...okMarkers, R("HbA1c", 6.8, "%", "2026-05-01"), R("TFG estimada", 45, "mL/min", "2026-05-01")] });
+  assert.deepEqual(r.map((x) => x.marker).sort(), ["HbA1c", "TFG estimada"]);
+});
+test("barreira: conta o valor MAIS RECENTE de cada marcador", () => {
+  const r = nutri.gate({ ...baseGate, markers: [R("HbA1c", 7.1, "%", "2025-01-01"), R("HbA1c", 5.6, "%", "2026-04-01")] });
+  assert.equal(r.filter((x) => x.kind === "critical").length, 0);
+});
+test("barreira: condições sensíveis, gravidez e menores bloqueiam", () => {
+  for (const c of ["Diabetes tipo 2", "Doença renal crónica", "Anorexia nervosa", "Doença celíaca", "Gravidez"]) {
+    assert.ok(nutri.gate({ ...baseGate, conditions: [c] }).some((x) => x.kind === "condition"), c);
+  }
+  assert.deepEqual(nutri.gate({ ...baseGate, conditions: ["Rinite alérgica", "Enxaqueca"] }), []);
+  assert.ok(nutri.gate({ ...baseGate, pregnantOrBreastfeeding: true }).some((x) => x.kind === "pregnancy"));
+  assert.ok(nutri.gate({ ...baseGate, age: 16 }).some((x) => x.kind === "minor"));
+});
+test("barreira: sem marcadores ligados à alimentação não gera", () => {
+  assert.ok(nutri.gate({ ...baseGate, markers: [R("TSH", 2, "mUI/L")] }).some((x) => x.kind === "no-markers"));
+});
+test("o que vai para a IA: só marcadores nutricionais, faixa etária, sem condições nem identificação", () => {
+  const input = nutri.selectAiInput([...okMarkers, R("TSH", 2, "mUI/L")], { age: 47, sex: "F", bmi: 25.24, waistCm: 82 }, "pt");
+  assert.deepEqual(input.markers.map((m) => m.name), ["HbA1c", "LDL-C", "Vitamina D"]);
+  assert.equal(input.ageBand, "40-49"); assert.equal(input.bmi, 25.2);
+  const txt = JSON.stringify(input);
+  for (const no of ["47", "TSH", "TFG", "Maria", "email", "conditions", "medica"]) assert.ok(!txt.includes(`"${no}`) && !txt.includes(no === "47" ? ":47" : no), no);
+});
+test("a mesma entrada dá sempre o mesmo hash (ordem dos marcadores não importa)", async () => {
+  const a = nutri.selectAiInput(okMarkers, { age: 47, sex: "F", bmi: 25.2, waistCm: 82 }, "pt");
+  const b = nutri.selectAiInput([...okMarkers].reverse(), { age: 47, sex: "F", bmi: 25.2, waistCm: 82 }, "pt");
+  assert.equal(await nutri.inputHash(a), await nutri.inputHash(b));
+  const c = nutri.selectAiInput([...okMarkers, R("Ferritina", 70, "ng/mL")], { age: 47, sex: "F", bmi: 25.2, waistCm: 82 }, "pt");
+  assert.notEqual(await nutri.inputHash(a), await nutri.inputHash(c));
+});
+const item = (over = {}) => ({ tipo: "privilegiar", alimento: "Leguminosas", marcador: "LDL-C", porque: "Fibra solúvel.", ...over });
+test("resposta: rejeita doses, suplementos, medicação e diagnósticos", () => {
+  const bad = [
+    { porque: "Tome 1000 UI por dia." }, { alimento: "Ómega-3 em cápsulas" }, { porque: "Um suplemento de ferro ajuda." },
+    { porque: "Fale sobre a metformina." }, { porque: "Pode deixar de tomar a estatina." }, { porque: "Isto indica pré-diabetes." },
+    { porque: "O diagnóstico provável é..." }, { porque: "Ajuste a dose." }, { alimento: "Magnésio 400 mg" },
+  ];
+  for (const b of bad) assert.ok(nutri.checkOutput({ itens: [item(b)], nota: "" }, ["LDL-C"]).some((p) => p.kind === "banned"), JSON.stringify(b));
+});
+test("resposta: rejeita marcadores que não foram enviados, vazia ou longa demais", () => {
+  assert.ok(nutri.checkOutput({ itens: [item({ marcador: "TSH" })], nota: "" }, ["LDL-C"]).some((p) => p.kind === "unknown-marker"));
+  assert.deepEqual(nutri.checkOutput({ itens: [], nota: "" }, ["LDL-C"]), [{ kind: "empty" }]);
+  assert.ok(nutri.checkOutput({ itens: Array.from({ length: 13 }, () => item()), nota: "" }, ["LDL-C"]).some((p) => p.kind === "too-many"));
+  assert.ok(nutri.checkOutput({ itens: [item({ porque: "x".repeat(300) })], nota: "" }, ["LDL-C"]).some((p) => p.kind === "too-long"));
+});
+test("resposta: texto normal passa (inclui «insulina» como marcador e porções do dia a dia)", () => {
+  assert.deepEqual(nutri.checkOutput({ itens: [item({ marcador: "Insulina", porque: "Ajuda a estabilizar a glicose e a insulina." }), item({ alimento: "Peixe gordo duas a três vezes por semana" })], nota: "Não substitui o seu médico." }, ["LDL-C", "Insulina"]), []);
+});
+test("a orientação de demonstração passa nas mesmas verificações (PT e EN)", () => {
+  const sent = ["LDL-C", "ApoB", "PCR-us", "Insulina", "HbA1c", "Colesterol total"];
+  assert.deepEqual(nutri.checkOutput(DEMO_GUIDANCE.pt, sent), []);
+  assert.deepEqual(nutri.checkOutput(DEMO_GUIDANCE.en, sent), []);
+});
+test("pedido vindo do telemóvel: descarta lixo e limita tamanhos", () => {
+  const v = validateGenInput({
+    markers: [{ name: "LDL-C", value: 118, unit: "mg/dL", date: "2026-04-22" }, { name: "", value: 1, date: "2026-01-01" }, { name: "X", value: "a", date: "2026-01-01" }, { name: "Y", value: 1, date: "ontem" }],
+    conditions: ["Rinite", 3], pregnantOrBreastfeeding: "sim", profile: { age: 500, sex: "X", bmi: 25 }, lang: "fr",
+  });
+  assert.equal(v.markers.length, 1); assert.deepEqual(v.conditions, ["Rinite"]);
+  assert.equal(v.pregnantOrBreastfeeding, false); assert.equal(v.profile.age, null); assert.equal(v.profile.sex, null); assert.equal(v.lang, "pt");
 });
 
 console.log(`\n${passed} testes passaram${process.exitCode ? " — HÁ FALHAS" : ""}`);

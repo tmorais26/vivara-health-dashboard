@@ -92,3 +92,15 @@ export const AI_READING_NOTICE = {
 
 /** Dias de exportação disponível depois de encerrar a conta. */
 export const EXPORT_WINDOW_DAYS = 90;
+
+/**
+ * Consentimento para a orientação nutricional com IA (pedido na primeira
+ * utilização). [Revisão jurídica: confirmar com o advogado antes de publicar.]
+ */
+export const NUTRITION_AI_CONSENT = {
+  id: "nutri-ai-consent",
+  text: {
+    pt: "Autorizo a Vivara a enviar alguns valores das minhas análises (só os que têm relação com a alimentação), a minha faixa etária, sexo, IMC e cintura a um serviço de inteligência artificial (Anthropic), para gerar uma orientação alimentar geral. Não são enviados o meu nome, contactos, condições, medicação nem documentos. Posso retirar esta autorização a qualquer momento.",
+    en: "I authorise Vivara to send some of my lab values (only those related to diet), my age band, sex, BMI and waist to an artificial intelligence service (Anthropic) to generate general dietary guidance. My name, contact details, conditions, medication and documents are not sent. I can withdraw this authorisation at any time.",
+  } as Record<ConsentLang, string>,
+};

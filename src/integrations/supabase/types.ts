@@ -20,6 +20,32 @@ export type Database = {
         Update: { id?: string; role?: "physician" | "patient"; full_name?: string | null; invite_code?: string | null; created_at?: string }
         Relationships: []
       }
+      orientacoes_nutricionais: {
+        Row: {
+          id: string; user_id: string; versao: number; estado: string; conteudo: Json; entrada: Json; entrada_hash: string
+          lang: string; modelo: string | null; versao_prompt: string | null; gerado_em: string
+          conteudo_validado: Json | null; editado: boolean; observacao: string | null
+          validado_por: string | null; validado_por_nome: string | null; validado_em: string | null
+        }
+        Insert: {
+          id?: string; user_id: string; versao: number; estado: string; conteudo: Json; entrada: Json; entrada_hash: string
+          lang?: string; modelo?: string | null; versao_prompt?: string | null; gerado_em?: string
+        }
+        Update: { [_ in never]: never }
+        Relationships: []
+      }
+      pedidos_validacao_nutricao: {
+        Row: { id: string; orientacao_id: string; user_id: string; estado: string; pedido_em: string; concluido_em: string | null; concluido_por: string | null }
+        Insert: { [_ in never]: never }
+        Update: { [_ in never]: never }
+        Relationships: []
+      }
+      orientacoes_auditoria: {
+        Row: { id: number; orientacao_id: string | null; user_id: string | null; ator_id: string | null; acao: string; detalhe: Json | null; criado_em: string }
+        Insert: { id?: never; orientacao_id?: string | null; user_id?: string | null; ator_id?: string | null; acao: string; detalhe?: Json | null; criado_em?: string }
+        Update: { [_ in never]: never }
+        Relationships: []
+      }
       meses_gratis: {
         Row: { id: string; beneficiario_id: string; recomendacao_id: string; ano: number; estado: string; referencia_prestador: string | null; criado_em: string; aplicado_em: string | null }
         Insert: { [_ in never]: never }
@@ -58,6 +84,8 @@ export type Database = {
     }
     Functions: {
       validar_codigo: { Args: { p_codigo: string }; Returns: boolean }
+      pedir_validacao_nutricao: { Args: { p_orientacao: string }; Returns: string }
+      tem_profissional_ligado: { Args: { p_user: string }; Returns: boolean }
       usar_codigo: { Args: { p_codigo: string }; Returns: string }
       aceitar_convite_app: { Args: { p_token: string }; Returns: string }
       meu_codigo_utente: { Args: Record<PropertyKey, never>; Returns: string }
